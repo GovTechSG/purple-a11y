@@ -1,0 +1,847 @@
+[
+  {
+    "id": "definition-list",
+    "wcag": [
+      "1.3.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "blink",
+    "wcag": [
+      "2.2.2"
+    ],
+    "disabilities": [
+      "Low Vision",
+      "Mobility",
+      "Cognitive"
+    ]
+  },
+  {
+    "id": "dlitem",
+    "wcag": [
+      "1.3.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "html-has-lang",
+    "wcag": [
+      "3.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Cognitive"
+    ]
+  },
+  {
+    "id": "html-xml-lang-mismatch",
+    "wcag": [
+      "3.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Cognitive"
+    ]
+  },
+  {
+    "id": "html-lang-valid",
+    "wcag": [
+      "3.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Cognitive"
+    ]
+  },
+  {
+    "id": "listitem",
+    "wcag": [
+      "1.3.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deaf",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "marquee",
+    "wcag": [
+      "2.2.2"
+    ],
+    "disabilities": [
+      "Low Vision",
+      "Mobility",
+      "Cognitive"
+    ]
+  },
+  {
+    "id": "object-alt",
+    "wcag": [
+      "1.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "list",
+    "wcag": [
+      "1.3.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "accesskeys",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Low Vision",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "th-has-data-cells",
+    "wcag": [
+      "1.3.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "area-alt",
+    "wcag": [
+      "1.1.1",
+      "2.4.4",
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "td-headers-attr",
+    "wcag": [
+      "1.3.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "td-has-header",
+    "wcag": [
+      "1.3.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "region",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-valid-attr",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-valid-attr-value",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-input-field-name",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-allowed-role",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-roles",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-toggle-field-name",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-hidden-focus",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Low Vision",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-hidden-body",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind"
+    ]
+  },
+  {
+    "id": "no-autoplay-audio",
+    "wcag": [
+      "1.4.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Cognitive"
+    ]
+  },
+  {
+    "id": "autocomplete-valid",
+    "wcag": [
+      "1.3.5"
+    ],
+    "disabilities": [
+      "Attention Deficit",
+      "Blind",
+      "Low Vision",
+      "Deafblind",
+      "Mobility",
+      "Cognitive"
+    ]
+  },
+  {
+    "id": "landmark-banner-is-top-level",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "p-as-heading",
+    "wcag": [
+      "1.3.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "button-name",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "aria-required-parent",
+    "wcag": [
+      "1.3.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-required-children",
+    "wcag": [
+      "1.3.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "landmark-complementary-is-top-level",
+    "wcag": [],
+    "disabilities": [
+      "Sighted Keyboard Users",
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "landmark-contentinfo-is-top-level",
+    "wcag": [],
+    "disabilities": [
+      "Sighted Keyboard Users",
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "css-orientation-lock",
+    "wcag": [
+      "1.3.4"
+    ],
+    "disabilities": [
+      "Attention Deficit",
+      "Dyslexia",
+      "Sighted Keyboard Users",
+      "Low Vision",
+      "Mobility",
+      "Cognitive"
+    ]
+  },
+  {
+    "id": "table-fake-caption",
+    "wcag": [
+      "1.3.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "document-title",
+    "wcag": [
+      "2.4.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "role-img-alt",
+    "wcag": [
+      "1.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "focus-order-semantics",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "tabindex",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-allowed-attr",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "identical-links-same-purpose",
+    "wcag": [
+      "2.4.9"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "scrollable-region-focusable",
+    "wcag": [
+      "2.4.7"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "label",
+    "wcag": [
+      "1.3.1",
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Low Vision",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "landmark-no-duplicate-main",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "label-title-only",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "form-field-multiple-labels",
+    "wcag": [
+      "3.3.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Low Vision",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "frame-tested",
+    "wcag": [],
+    "disabilities": [
+      "Sighted Keyboard Users",
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "frame-title",
+    "wcag": [
+      "2.4.1",
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "frame-title-unique",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "heading-order",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "empty-heading",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "hidden-content",
+    "wcag": [],
+    "disabilities": [
+      "Sighted Keyboard Users",
+      "Blind",
+      "Colorblindness"
+    ]
+  },
+  {
+    "id": "duplicate-id-active",
+    "wcag": [
+      "4.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "duplicate-id",
+    "wcag": [
+      "4.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "duplicate-id-aria",
+    "wcag": [
+      "4.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "input-image-alt",
+    "wcag": [
+      "1.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "image-alt",
+    "wcag": [
+      "1.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "avoid-inline-spacing",
+    "wcag": [
+      "1.4.12"
+    ],
+    "disabilities": [
+      "Attention Deficit",
+      "Blind",
+      "Low Vision",
+      "Deafblind",
+      "Mobility",
+      "Cognitive"
+    ]
+  },
+  {
+    "id": "label-content-name-mismatch",
+    "wcag": [
+      "2.5.3"
+    ],
+    "disabilities": [
+      "Blind",
+      "Low Vision",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "input-button-name",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "landmark-unique",
+    "wcag": [],
+    "disabilities": [
+      "Sighted Keyboard Users",
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "valid-lang",
+    "wcag": [
+      "3.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Cognitive"
+    ]
+  },
+  {
+    "id": "link-in-text-block",
+    "wcag": [
+      "1.4.1"
+    ],
+    "disabilities": [
+      "Low Vision",
+      "Colorblindness"
+    ]
+  },
+  {
+    "id": "link-name",
+    "wcag": [
+      "2.4.4",
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "landmark-main-is-top-level",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "page-has-heading-one",
+    "wcag": [],
+    "disabilities": [
+      "Sighted Keyboard Users",
+      "Blind",
+      "Low Vision",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "landmark-one-main",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "bypass",
+    "wcag": [
+      "2.4.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "landmark-no-duplicate-banner",
+    "wcag": [],
+    "disabilities": [
+      "Sighted Keyboard Users",
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "landmark-no-duplicate-contentinfo",
+    "wcag": [],
+    "disabilities": [
+      "Sighted Keyboard Users",
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "aria-required-attr",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "scope-attr-valid",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "svg-img-alt",
+    "wcag": [
+      "1.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "server-side-image-map",
+    "wcag": [
+      "2.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "image-redundant-alt",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "color-contrast",
+    "wcag": [
+      "1.4.3"
+    ],
+    "disabilities": [
+      "Low Vision",
+      "Colorblindness"
+    ]
+  },
+  {
+    "id": "skip-link",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "table-duplicate-name",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "meta-viewport-large",
+    "wcag": [],
+    "disabilities": [
+      "Low Vision"
+    ]
+  },
+  {
+    "id": "aria-roledescription",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "meta-refresh",
+    "wcag": [
+      "2.2.1",
+      "2.2.4",
+      "3.2.5"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "meta-viewport",
+    "wcag": [
+      "1.4.4"
+    ],
+    "disabilities": [
+      "Low Vision"
+    ]
+  }
+]

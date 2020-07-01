@@ -1,0 +1,314 @@
+[
+  {
+    "wcag": "1.1.1",
+    "href": "https://www.w3.org/TR/WCAG21/#non-text-content"
+  },
+  {
+    "wcag": "1.2.1",
+    "href": "https://www.w3.org/TR/WCAG21/#audio-only-and-video-only-prerecorded"
+  },
+  {
+    "wcag": "1.2.2",
+    "href": "https://www.w3.org/TR/WCAG21/#captions-prerecorded"
+  },
+  {
+    "wcag": "1.2.3",
+    "href": "https://www.w3.org/TR/WCAG21/#audio-description-or-media-alternative-prerecorded"
+  },
+  {
+    "wcag": "1.2.4",
+    "href": "https://www.w3.org/TR/WCAG21/#captions-live"
+  },
+  {
+    "wcag": "1.2.5",
+    "href": "https://www.w3.org/TR/WCAG21/#audio-description-prerecorded"
+  },
+  {
+    "wcag": "1.2.6",
+    "href": "https://www.w3.org/TR/WCAG21/#sign-language-prerecorded"
+  },
+  {
+    "wcag": "1.2.7",
+    "href": "https://www.w3.org/TR/WCAG21/#extended-audio-description-prerecorded"
+  },
+  {
+    "wcag": "1.2.8",
+    "href": "https://www.w3.org/TR/WCAG21/#media-alternative-prerecorded"
+  },
+  {
+    "wcag": "1.2.9",
+    "href": "https://www.w3.org/TR/WCAG21/#audio-only-live"
+  },
+  {
+    "wcag": "1.3.1",
+    "href": "https://www.w3.org/TR/WCAG21/#info-and-relationships"
+  },
+  {
+    "wcag": "1.3.2",
+    "href": "https://www.w3.org/TR/WCAG21/#meaningful-sequence"
+  },
+  {
+    "wcag": "1.3.3",
+    "href": "https://www.w3.org/TR/WCAG21/#sensory-characteristics"
+  },
+  {
+    "wcag": "1.3.4",
+    "href": "https://www.w3.org/TR/WCAG21/#orientation"
+  },
+  {
+    "wcag": "1.3.5",
+    "href": "https://www.w3.org/TR/WCAG21/#identify-input-purpose"
+  },
+  {
+    "wcag": "1.3.6",
+    "href": "https://www.w3.org/TR/WCAG21/#identify-purpose"
+  },
+  {
+    "wcag": "1.4.1",
+    "href": "https://www.w3.org/TR/WCAG21/#use-of-color"
+  },
+  {
+    "wcag": "1.4.2",
+    "href": "https://www.w3.org/TR/WCAG21/#audio-control"
+  },
+  {
+    "wcag": "1.4.3",
+    "href": "https://www.w3.org/TR/WCAG21/#contrast-minimum"
+  },
+  {
+    "wcag": "1.4.4",
+    "href": "https://www.w3.org/TR/WCAG21/#resize-text"
+  },
+  {
+    "wcag": "1.4.5",
+    "href": "https://www.w3.org/TR/WCAG21/#images-of-text"
+  },
+  {
+    "wcag": "1.4.6",
+    "href": "https://www.w3.org/TR/WCAG21/#contrast-enhanced"
+  },
+  {
+    "wcag": "1.4.7",
+    "href": "https://www.w3.org/TR/WCAG21/#low-or-no-background-audio"
+  },
+  {
+    "wcag": "1.4.8",
+    "href": "https://www.w3.org/TR/WCAG21/#visual-presentation"
+  },
+  {
+    "wcag": "1.4.9",
+    "href": "https://www.w3.org/TR/WCAG21/#images-of-text-no-exception"
+  },
+  {
+    "wcag": "1.4.10",
+    "href": "https://www.w3.org/TR/WCAG21/#reflow"
+  },
+  {
+    "wcag": "1.4.11",
+    "href": "https://www.w3.org/TR/WCAG21/#non-text-contrast"
+  },
+  {
+    "wcag": "1.4.12",
+    "href": "https://www.w3.org/TR/WCAG21/#text-spacing"
+  },
+  {
+    "wcag": "1.4.13",
+    "href": "https://www.w3.org/TR/WCAG21/#content-on-hover-or-focus"
+  },
+  {
+    "wcag": "2.1.1",
+    "href": "https://www.w3.org/TR/WCAG21/#keyboard"
+  },
+  {
+    "wcag": "2.1.2",
+    "href": "https://www.w3.org/TR/WCAG21/#no-keyboard-trap"
+  },
+  {
+    "wcag": "2.1.3",
+    "href": "https://www.w3.org/TR/WCAG21/#keyboard-no-exception"
+  },
+  {
+    "wcag": "2.1.4",
+    "href": "https://www.w3.org/TR/WCAG21/#character-key-shortcuts"
+  },
+  {
+    "wcag": "2.2.1",
+    "href": "https://www.w3.org/TR/WCAG21/#timing-adjustable"
+  },
+  {
+    "wcag": "2.2.2",
+    "href": "https://www.w3.org/TR/WCAG21/#pause-stop-hide"
+  },
+  {
+    "wcag": "2.2.3",
+    "href": "https://www.w3.org/TR/WCAG21/#no-timing"
+  },
+  {
+    "wcag": "2.2.4",
+    "href": "https://www.w3.org/TR/WCAG21/#interruptions"
+  },
+  {
+    "wcag": "2.2.5",
+    "href": "https://www.w3.org/TR/WCAG21/#re-authenticating"
+  },
+  {
+    "wcag": "2.2.6",
+    "href": "https://www.w3.org/TR/WCAG21/#timeouts"
+  },
+  {
+    "wcag": "2.3.1",
+    "href": "https://www.w3.org/TR/WCAG21/#three-flashes-or-below-threshold"
+  },
+  {
+    "wcag": "2.3.2",
+    "href": "https://www.w3.org/TR/WCAG21/#three-flashes"
+  },
+  {
+    "wcag": "2.3.3",
+    "href": "https://www.w3.org/TR/WCAG21/#animation-from-interactions"
+  },
+  {
+    "wcag": "2.4.1",
+    "href": "https://www.w3.org/TR/WCAG21/#bypass-blocks"
+  },
+  {
+    "wcag": "2.4.2",
+    "href": "https://www.w3.org/TR/WCAG21/#page-titled"
+  },
+  {
+    "wcag": "2.4.3",
+    "href": "https://www.w3.org/TR/WCAG21/#focus-order"
+  },
+  {
+    "wcag": "2.4.4",
+    "href": "https://www.w3.org/TR/WCAG21/#link-purpose-in-context"
+  },
+  {
+    "wcag": "2.4.5",
+    "href": "https://www.w3.org/TR/WCAG21/#multiple-ways"
+  },
+  {
+    "wcag": "2.4.6",
+    "href": "https://www.w3.org/TR/WCAG21/#headings-and-labels"
+  },
+  {
+    "wcag": "2.4.7",
+    "href": "https://www.w3.org/TR/WCAG21/#focus-visible"
+  },
+  {
+    "wcag": "2.4.8",
+    "href": "https://www.w3.org/TR/WCAG21/#location"
+  },
+  {
+    "wcag": "2.4.9",
+    "href": "https://www.w3.org/TR/WCAG21/#link-purpose-link-only"
+  },
+  {
+    "wcag": "2.4.10",
+    "href": "https://www.w3.org/TR/WCAG21/#section-headings"
+  },
+  {
+    "wcag": "2.5.1",
+    "href": "https://www.w3.org/TR/WCAG21/#pointer-gestures"
+  },
+  {
+    "wcag": "2.5.2",
+    "href": "https://www.w3.org/TR/WCAG21/#pointer-cancellation"
+  },
+  {
+    "wcag": "2.5.3",
+    "href": "https://www.w3.org/TR/WCAG21/#label-in-name"
+  },
+  {
+    "wcag": "2.5.4",
+    "href": "https://www.w3.org/TR/WCAG21/#motion-actuation"
+  },
+  {
+    "wcag": "2.5.5",
+    "href": "https://www.w3.org/TR/WCAG21/#target-size"
+  },
+  {
+    "wcag": "2.5.6",
+    "href": "https://www.w3.org/TR/WCAG21/#concurrent-input-mechanisms"
+  },
+  {
+    "wcag": "3.1.1",
+    "href": "https://www.w3.org/TR/WCAG21/#language-of-page"
+  },
+  {
+    "wcag": "3.1.2",
+    "href": "https://www.w3.org/TR/WCAG21/#language-of-parts"
+  },
+  {
+    "wcag": "3.1.3",
+    "href": "https://www.w3.org/TR/WCAG21/#unusual-words"
+  },
+  {
+    "wcag": "3.1.4",
+    "href": "https://www.w3.org/TR/WCAG21/#abbreviations"
+  },
+  {
+    "wcag": "3.1.5",
+    "href": "https://www.w3.org/TR/WCAG21/#reading-level"
+  },
+  {
+    "wcag": "3.1.6",
+    "href": "https://www.w3.org/TR/WCAG21/#pronunciation"
+  },
+  {
+    "wcag": "3.2.1",
+    "href": "https://www.w3.org/TR/WCAG21/#on-focus"
+  },
+  {
+    "wcag": "3.2.2",
+    "href": "https://www.w3.org/TR/WCAG21/#on-input"
+  },
+  {
+    "wcag": "3.2.3",
+    "href": "https://www.w3.org/TR/WCAG21/#consistent-navigation"
+  },
+  {
+    "wcag": "3.2.4",
+    "href": "https://www.w3.org/TR/WCAG21/#consistent-identification"
+  },
+  {
+    "wcag": "3.2.5",
+    "href": "https://www.w3.org/TR/WCAG21/#change-on-request"
+  },
+  {
+    "wcag": "3.3.1",
+    "href": "https://www.w3.org/TR/WCAG21/#error-identification"
+  },
+  {
+    "wcag": "3.3.2",
+    "href": "https://www.w3.org/TR/WCAG21/#labels-or-instructions"
+  },
+  {
+    "wcag": "3.3.3",
+    "href": "https://www.w3.org/TR/WCAG21/#error-suggestion"
+  },
+  {
+    "wcag": "3.3.4",
+    "href": "https://www.w3.org/TR/WCAG21/#error-prevention-legal-financial-data"
+  },
+  {
+    "wcag": "3.3.5",
+    "href": "https://www.w3.org/TR/WCAG21/#help"
+  },
+  {
+    "wcag": "3.3.6",
+    "href": "https://www.w3.org/TR/WCAG21/#error-prevention-all"
+  },
+  {
+    "wcag": "4.1.1",
+    "href": "https://www.w3.org/TR/WCAG21/#parsing"
+  },
+  {
+    "wcag": "4.1.2",
+    "href": "https://www.w3.org/TR/WCAG21/#name-role-value"
+  },
+  {
+    "wcag": "4.1.3",
+    "href": "https://www.w3.org/TR/WCAG21/#status-messages"
+  }
+]

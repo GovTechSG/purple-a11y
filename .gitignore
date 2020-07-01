@@ -1,0 +1,10 @@
+node_modules
+.vscode
+venv
+.a11y_storage
+a11y
+results/
+logs/
+errors.txt
+apify_storage
+.DS_Store

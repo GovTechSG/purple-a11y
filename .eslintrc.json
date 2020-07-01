@@ -1,0 +1,32 @@
+{
+    "plugins": [
+        "import",
+        "prettier"
+    ],
+    "env": {
+        "node": true,
+        "es6": true
+    },
+    "extends": [
+        "airbnb-base",
+        "eslint:recommended",
+        "prettier"
+    ],
+    "globals": {
+        "Atomics": "readonly",
+        "SharedArrayBuffer": "readonly"
+    },
+    "parserOptions": {
+        "ecmaVersion": 2018,
+        "sourceType": "module"
+    },
+    "rules": {
+        "camelcase": [
+            "error",
+            {
+                "properties": "always"
+            }
+        ],
+        "prettier/prettier": "error"
+    }
+}
