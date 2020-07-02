@@ -19,7 +19,7 @@ As MacOS does not have a builtin package manager. Node Version Manager (NVM) wil
 
 ```console
 # Navigate into the directory, if not done so
-cd purple-hats
+cd purple-hats/installers
 
 # Run the installer script for MacOS with admin privileges
 sudo sh mac-installer.sh
@@ -58,7 +58,7 @@ purple-hats can perform the following functions to crawl the target URI. Results
 
 ```console
 # Navigate into the directory, if not done so
-cd purple-hats/installers
+cd purple-hats
 
 # Execute run.sh with admin privileges to start using purple-hats
 sudo sh run.sh
