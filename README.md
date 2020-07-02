@@ -38,7 +38,7 @@ Depending on the Linux Distro, the builtin package manager (YUM, APT or Zypper) 
 
 ```console
 # Navigate into the directory, if not done so
-cd purple-hats
+cd purple-hats/installers
 
 # Run the installer script for MacOS with admin privileges
 sudo sh linux-installer.sh
@@ -58,7 +58,7 @@ purple-hats can perform the following functions to crawl the target URI. Results
 
 ```console
 # Navigate into the directory, if not done so
-cd purple-hats
+cd purple-hats/installers
 
 # Execute run.sh with admin privileges to start using purple-hats
 sudo sh run.sh
