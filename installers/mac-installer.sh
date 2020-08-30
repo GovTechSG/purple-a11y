@@ -1,4 +1,4 @@
-#!/bin.sh
+#!/bin/bash
 
 # Removing previous installation of /.nvm directory, node_modules and python pkgs
 if [ -d "node_modules" ]; then
