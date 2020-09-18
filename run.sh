@@ -1,4 +1,7 @@
-#!/bin/bash
+#! /bin/bash
+
+# source the shell_functions/commonShellFunctions.sh to utilize the check_format_url shell function
+. shell_functions/commonShellFunctions.sh
 
 # By deleting the entire folder (.a11y_storage) is deleted, Apify.pushData will be able to create the respective folders.
 # If only the subfolders are removed while retaining .a11y_storage folder, it will result in the datasets/default folder to not be created
@@ -24,7 +27,8 @@ echo "Welcome to HAT's Accessibility Testing Tool!"
 echo "We recommend using Chrome browser for the best experience."
 echo "What would you like to scan today?"
 
-options=("sitemap file containing links" "public domain URL") 
+options=("sitemap file containing links" "website") 
+
 select opt in "${options[@]}"
 do
     case $opt in
@@ -41,6 +45,8 @@ do
             if [ $page = "exit" ];then
                 exit
             else
+                check_reformat_url
+
                 #Validate the content of the link
                 #Curl the content of the page & check if it has the required XML tag or links
                 curl_check=$(curl --silent $page | egrep '<urlset|(http|https)://')
@@ -67,34 +73,55 @@ do
         break;;
     
 
-    "public domain URL")
+    "website")
 
-        crawler=crawlDomain
-        read -p "Please enter domain URL: " page
+        read -p "Do you need to login to your website? Y/N: " user_reply
+
+            case $user_reply in
+
+                "Y"|"y"):
+                    crawler=crawlLogin
+
+                    read -p "Please enter URL of login page: " page
+                    read -p "Please enter your login ID: " login_id
+                    read -sp "Please enter your password: " login_pwd
+
+                    echo ""
+                    echo "Now, go to your browser and right-click on these 3 elements,"
+                    echo "  1. Username field"
+                    echo "  2. Login password field"
+                    echo "  3. Submit button"
+                    echo ""
+                    echo "Select 'inspect' and 'copy selector'"
+                    echo "Next, navigate back here and paste the selector one by one."
+                    echo ""
+
+                    read -p "Please enter “username field” selector: " id_selector
+                    read -p "Please enter “login password field” selector: " pwd_selector
+                    read -p "Please enter “submit button” selector: " btn_selector
+
+                    check_reformat_url
+                    break;;
+                
+                "N"|"n"):
+                    crawler=crawlDomain
+                    read -p "Please enter URL of website: " page
+                    check_reformat_url
+
+                    break;;
+
+                "exit"):
+                    exit;;
+
+                *) echo "invalid option $REPLY"
+
+            esac
 
         break;;
 
     *) echo "invalid option $REPLY"
     esac
 done
-
-# added a check to see whether the input URL have // after http: or https:
-input_url=$(echo $page | perl -n -e '/^(https|http):(?!\/\/).*$/ && print')
-
-if ! [ -z "$input_url" ]
-then
-    # meaning url is in bad format (eg. https:isomer.gov.sg without //)
-    # https:/http: will first be removed from the url so that curl can get the final redirected url
-    # The final redirected url will be pass into the variable LOCATION
-    reformat_url=$(echo $input_url | sed -E 's/(https|http)://g')
-    LOCATION=$(curl -sIL -o /dev/null -w '%{url_effective}' $reformat_url | sed 's/%//g')
-    page=$LOCATION
-else
-    # for url that are in this format (eg. https://isomer.gov.sg or https://www.isomer.gov.sg)
-    # If url is in this format (eg. https://isomer.gov.sg), url will be curl and redirected to become https://www.isomer.gov.sg/
-    LOCATION=$(curl -Ls -w %{url_effective} -o /dev/null $page)
-    page=$LOCATION
-fi
 
 if curl --output /dev/null --silent --head --fail "$page"
 then
@@ -103,8 +130,9 @@ then
 
     echo "Scanning website..."
     
-    URL=$page RANDOMTOKEN=$randomToken TYPE=$crawler node -e 'require("./combine").combineRun()' | tee errors.txt
+    URL=$page LOGINID=$login_id LOGINPWD=$login_pwd IDSEL=$id_selector PWDSEL=$pwd_selector SUBMIT=$btn_selector RANDOMTOKEN=$randomToken TYPE=$crawler node -e 'require("./combine").combineRun()' | tee errors.txt
     open -a "Google Chrome" results/$currentDate/$randomToken/reports/report.html
 else
-    echo "This URL does not exist."
+    echo "Warning: This website does not exist"
 fi
+            prompt_website

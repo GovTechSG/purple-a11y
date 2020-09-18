@@ -1,5 +1,6 @@
 const { crawlSitemap } = require('./crawlers/crawlSitemap');
 const { crawlDomain } = require('./crawlers/crawlDomain');
+const { crawlLogin } = require('./crawlers/crawlLogin');
 const { mergeFiles } = require('./mergeAxeResults');
 const { getHostnameFromRegex, createAndUpdateFolders } = require('./utils');
 const { a11yStorage } = require('./constants/constants');
@@ -14,29 +15,44 @@ exports.combineRun = async details => {
     envDetails = {
       type: process.env.TYPE,
       url: process.env.URL,
+      idSelector: process.env.IDSEL,
+      loginID: process.env.LOGINID,
+      pwSelector: process.env.PWDSEL,
+      loginPW: process.env.LOGINPWD,
+      submitSelector: process.env.SUBMIT,
       randomToken: process.env.RANDOMTOKEN,
     };
   }
 
-  const { type, url, randomToken } = envDetails;
+  const { url, randomToken, idSelector, loginID, pwSelector, loginPW, submitSelector } = envDetails;
 
   const host = getHostnameFromRegex(url);
 
   const scanDetails = {
     startTime: new Date().getTime(),
-    crawlType: type,
+    crawlType: envDetails.type,
     requestUrl: url,
   };
 
   let urlsCrawled;
 
-  switch (type) {
+  switch (envDetails.type) {
     case 'crawlSitemap':
       urlsCrawled = await crawlSitemap(url, randomToken, host);
       break;
 
     case 'crawlDomain':
       urlsCrawled = await crawlDomain(url, randomToken, host);
+      break;
+
+    case 'crawlLogin':
+      urlsCrawled = await crawlLogin(url, randomToken, host, {
+        idSelector,
+        loginID,
+        pwSelector,
+        loginPW,
+        submitSelector,
+      });
       break;
 
     default:
