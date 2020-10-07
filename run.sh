@@ -102,9 +102,17 @@ then
     currentDate=$(date '+%Y-%-m-%-d')
 
     echo "Scanning website..."
-    
+
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        xdg-open results/$currentDate/$randomToken/reports/report.html
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        open -a "Google Chrome" results/$currentDate/$randomToken/reports/report.html     
+    else 
+        echo results/$currentDate/$randomToken/reports/report.html 
+    fi
+ 
     URL=$page RANDOMTOKEN=$randomToken TYPE=$crawler node -e 'require("./combine").combineRun()' | tee errors.txt
-    open -a "Google Chrome" results/$currentDate/$randomToken/reports/report.html
+    
 else
     echo "This URL does not exist."
 fi
