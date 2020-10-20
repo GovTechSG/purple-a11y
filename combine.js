@@ -1,5 +1,6 @@
 const { crawlSitemap } = require('./crawlers/crawlSitemap');
 const { crawlDomain } = require('./crawlers/crawlDomain');
+
 const { mergeFiles } = require('./mergeAxeResults');
 const { getHostnameFromRegex, createAndUpdateFolders } = require('./utils');
 const { a11yStorage } = require('./constants/constants');
@@ -14,6 +15,7 @@ exports.combineRun = async details => {
     envDetails = {
       type: process.env.TYPE,
       url: process.env.URL,
+
       randomToken: process.env.RANDOMTOKEN,
     };
   }
