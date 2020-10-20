@@ -1,0 +1,2046 @@
+
+{
+    "url": "https://www.designsystem.gov.sg/guides/",
+    "timestamp": "2020-02-06T02:54:13.915Z",
+    "extractedViolations": [
+        {
+            "description": "Ensures buttons have discernible text",
+            "help": "Buttons must have discernible text",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/button-name?application=webdriverjs",
+            "id": "button-name",
+            "impact": "critical",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "non-empty-if-present",
+                            "impact": "critical",
+                            "message": "Element has a value attribute and the value attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "non-empty-value",
+                            "impact": "critical",
+                            "message": "Element has no value attribute or the value attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": "",
+                            "id": "button-has-visible-text",
+                            "impact": "critical",
+                            "message": "Element does not have inner text that is visible to screen readers",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-label",
+                            "impact": "serious",
+                            "message": "aria-label attribute does not exist or is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-labelledby",
+                            "impact": "serious",
+                            "message": "aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-presentation",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"presentation\"",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-none",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"none\"",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element has a value attribute and the value attribute is empty\n  Element has no value attribute or the value attribute is empty\n  Element does not have inner text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible\n  Element's default semantics were not overridden with role=\"presentation\"\n  Element's default semantics were not overridden with role=\"none\"",
+                    "html": "<button id=\"main-search\" class=\"sgds-button is-white is-large search-toggle\" data-target=\"searchbar-main\" type=\"button\">",
+                    "impact": "critical",
+                    "none": [
+                        {
+                            "data": null,
+                            "id": "focusable-no-name",
+                            "impact": "serious",
+                            "message": "Element is in tab order and does not have accessible text",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "target": [
+                        "#main-search"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.name-role-value",
+                "wcag2a",
+                "wcag412",
+                "section508",
+                "section508.22.a"
+            ]
+        },
+        {
+            "description": "Ensures every id attribute value is unique",
+            "help": "id attribute value must be unique",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/duplicate-id?application=webdriverjs",
+            "id": "duplicate-id",
+            "impact": "moderate",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": "search",
+                            "id": "duplicate-id",
+                            "impact": "moderate",
+                            "message": "Document has multiple elements with the same id attribute: search",
+                            "relatedNodes": [
+                                {
+                                    "html": "<input class=\"input is-fullwidth is-borderless is-shadowless\" id=\"search\" type=\"text\" placeholder=\"What are you looking for?\" name=\"search\" autocomplete=\"off\" aria-label=\"search\">",
+                                    "target": [
+                                        "#searchbar-main > .col > form > div > div:nth-child(1) > input[type=\"text\"]"
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  Document has multiple elements with the same id attribute: search",
+                    "html": "<input class=\"input is-fullwidth is-borderless is-shadowless\" id=\"search\" type=\"text\" placeholder=\"What are you looking for?\" name=\"search\" autocomplete=\"off\" aria-label=\"search\">",
+                    "impact": "moderate",
+                    "none": [],
+                    "target": [
+                        "#navbarMain > .sgds-navbar-start > form > div > div:nth-child(1) > input[type=\"text\"]"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.parsing",
+                "wcag2a",
+                "wcag411"
+            ]
+        },
+        {
+            "description": "Ensures a navigation point to the primary content of the page. If the page contains iframes, each iframe should contain either no main landmarks or just one.",
+            "help": "Page must contain one main landmark.",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/landmark-one-main?application=webdriverjs",
+            "id": "landmark-one-main",
+            "impact": "moderate",
+            "nodes": [
+                {
+                    "all": [
+                        {
+                            "data": false,
+                            "id": "has-at-least-one-main",
+                            "impact": "moderate",
+                            "message": "Document has no main landmarks",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "any": [],
+                    "failureSummary": "Fix all of the following:\n  Document has no main landmarks",
+                    "html": "<html lang=\"en\">",
+                    "impact": "moderate",
+                    "none": [],
+                    "target": [
+                        "html"
+                    ]
+                }
+            ],
+            "tags": [
+                "best-practice"
+            ]
+        },
+        {
+            "description": "Ensures <meta name=\"viewport\"> does not disable text scaling and zooming",
+            "help": "Zooming and scaling must not be disabled",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/meta-viewport?application=webdriverjs",
+            "id": "meta-viewport",
+            "impact": "critical",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "meta-viewport",
+                            "impact": "critical",
+                            "message": "<meta> tag disables zooming on mobile devices",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  <meta> tag disables zooming on mobile devices",
+                    "html": "<meta name=\"viewport\" content=\"width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0\">",
+                    "impact": "critical",
+                    "none": [],
+                    "target": [
+                        "head > meta[name=\"viewport\"]"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.sensory-and-visual-cues",
+                "wcag2aa",
+                "wcag144"
+            ]
+        }
+    ]
+}{
+    "url": "https://www.designsystem.gov.sg/guides/designers-accessibility/",
+    "timestamp": "2020-02-06T02:54:15.408Z",
+    "extractedViolations": [
+        {
+            "description": "Ensures buttons have discernible text",
+            "help": "Buttons must have discernible text",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/button-name?application=webdriverjs",
+            "id": "button-name",
+            "impact": "critical",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "non-empty-if-present",
+                            "impact": "critical",
+                            "message": "Element has a value attribute and the value attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "non-empty-value",
+                            "impact": "critical",
+                            "message": "Element has no value attribute or the value attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": "",
+                            "id": "button-has-visible-text",
+                            "impact": "critical",
+                            "message": "Element does not have inner text that is visible to screen readers",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-label",
+                            "impact": "serious",
+                            "message": "aria-label attribute does not exist or is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-labelledby",
+                            "impact": "serious",
+                            "message": "aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-presentation",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"presentation\"",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-none",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"none\"",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element has a value attribute and the value attribute is empty\n  Element has no value attribute or the value attribute is empty\n  Element does not have inner text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible\n  Element's default semantics were not overridden with role=\"presentation\"\n  Element's default semantics were not overridden with role=\"none\"",
+                    "html": "<button id=\"main-search\" class=\"sgds-button is-white is-large search-toggle\" data-target=\"searchbar-main\" type=\"button\">",
+                    "impact": "critical",
+                    "none": [
+                        {
+                            "data": null,
+                            "id": "focusable-no-name",
+                            "impact": "serious",
+                            "message": "Element is in tab order and does not have accessible text",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "target": [
+                        "#main-search"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.name-role-value",
+                "wcag2a",
+                "wcag412",
+                "section508",
+                "section508.22.a"
+            ]
+        },
+        {
+            "description": "Ensures every id attribute value is unique",
+            "help": "id attribute value must be unique",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/duplicate-id?application=webdriverjs",
+            "id": "duplicate-id",
+            "impact": "moderate",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": "search",
+                            "id": "duplicate-id",
+                            "impact": "moderate",
+                            "message": "Document has multiple elements with the same id attribute: search",
+                            "relatedNodes": [
+                                {
+                                    "html": "<input class=\"input is-fullwidth is-borderless is-shadowless\" id=\"search\" type=\"text\" placeholder=\"What are you looking for?\" name=\"search\" autocomplete=\"off\" aria-label=\"search\">",
+                                    "target": [
+                                        "#searchbar-main > .col > form > div > div:nth-child(1) > input[type=\"text\"]"
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  Document has multiple elements with the same id attribute: search",
+                    "html": "<input class=\"input is-fullwidth is-borderless is-shadowless\" id=\"search\" type=\"text\" placeholder=\"What are you looking for?\" name=\"search\" autocomplete=\"off\" aria-label=\"search\">",
+                    "impact": "moderate",
+                    "none": [],
+                    "target": [
+                        "#navbarMain > .sgds-navbar-start > form > div > div:nth-child(1) > input[type=\"text\"]"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.parsing",
+                "wcag2a",
+                "wcag411"
+            ]
+        },
+        {
+            "description": "Ensures a navigation point to the primary content of the page. If the page contains iframes, each iframe should contain either no main landmarks or just one.",
+            "help": "Page must contain one main landmark.",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/landmark-one-main?application=webdriverjs",
+            "id": "landmark-one-main",
+            "impact": "moderate",
+            "nodes": [
+                {
+                    "all": [
+                        {
+                            "data": false,
+                            "id": "has-at-least-one-main",
+                            "impact": "moderate",
+                            "message": "Document has no main landmarks",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "any": [],
+                    "failureSummary": "Fix all of the following:\n  Document has no main landmarks",
+                    "html": "<html lang=\"en\">",
+                    "impact": "moderate",
+                    "none": [],
+                    "target": [
+                        "html"
+                    ]
+                }
+            ],
+            "tags": [
+                "best-practice"
+            ]
+        },
+        {
+            "description": "Ensures that lists are structured correctly",
+            "help": "<ul> and <ol> must only directly contain <li>, <script> or <template> elements",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/list?application=webdriverjs",
+            "id": "list",
+            "impact": "serious",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [],
+                    "failureSummary": "Fix all of the following:\n  List element has direct children that are not allowed inside <li> elements",
+                    "html": "<ul class=\"sgds-menu-list\">",
+                    "impact": "serious",
+                    "none": [
+                        {
+                            "data": null,
+                            "id": "only-listitems",
+                            "impact": "serious",
+                            "message": "List element has direct children that are not allowed inside <li> elements",
+                            "relatedNodes": [
+                                {
+                                    "html": "<ul class=\"second-level-nav-div\">",
+                                    "target": [
+                                        "html > body > .content-page > section > .sgds-container > .row.sidenav-container > .is-2 > .sidenav.is-affixed > .sidebar__inner.sgds-menu > ul > ul:nth-child(2)"
+                                    ]
+                                },
+                                {
+                                    "html": "<ul class=\"second-level-nav-div\">",
+                                    "target": [
+                                        "ul > ul:nth-child(4)"
+                                    ]
+                                },
+                                {
+                                    "html": "<ul class=\"second-level-nav-div\"><li>\n                        <a class=\"second-level-nav-item padding--top--none \" href=\"/guides/writers-accessibility/\">\n                            Accessibility for Content\n                        </a>\n                    </li></ul>",
+                                    "target": [
+                                        "ul > ul:nth-child(6)"
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "target": [
+                        ".sidebar__inner.sgds-menu > ul.sgds-menu-list"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.structure",
+                "wcag2a",
+                "wcag131"
+            ]
+        },
+        {
+            "description": "Ensures <meta name=\"viewport\"> does not disable text scaling and zooming",
+            "help": "Zooming and scaling must not be disabled",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/meta-viewport?application=webdriverjs",
+            "id": "meta-viewport",
+            "impact": "critical",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "meta-viewport",
+                            "impact": "critical",
+                            "message": "<meta> tag disables zooming on mobile devices",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  <meta> tag disables zooming on mobile devices",
+                    "html": "<meta name=\"viewport\" content=\"width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0\">",
+                    "impact": "critical",
+                    "none": [],
+                    "target": [
+                        "head > meta[name=\"viewport\"]"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.sensory-and-visual-cues",
+                "wcag2aa",
+                "wcag144"
+            ]
+        }
+    ]
+}{
+    "url": "https://www.designsystem.gov.sg/guides/designers-accessibility/",
+    "timestamp": "2020-02-06T02:54:15.630Z",
+    "extractedViolations": [
+        {
+            "description": "Ensures buttons have discernible text",
+            "help": "Buttons must have discernible text",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/button-name?application=webdriverjs",
+            "id": "button-name",
+            "impact": "critical",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "non-empty-if-present",
+                            "impact": "critical",
+                            "message": "Element has a value attribute and the value attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "non-empty-value",
+                            "impact": "critical",
+                            "message": "Element has no value attribute or the value attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": "",
+                            "id": "button-has-visible-text",
+                            "impact": "critical",
+                            "message": "Element does not have inner text that is visible to screen readers",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-label",
+                            "impact": "serious",
+                            "message": "aria-label attribute does not exist or is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-labelledby",
+                            "impact": "serious",
+                            "message": "aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-presentation",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"presentation\"",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-none",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"none\"",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element has a value attribute and the value attribute is empty\n  Element has no value attribute or the value attribute is empty\n  Element does not have inner text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible\n  Element's default semantics were not overridden with role=\"presentation\"\n  Element's default semantics were not overridden with role=\"none\"",
+                    "html": "<button id=\"main-search\" class=\"sgds-button is-white is-large search-toggle\" data-target=\"searchbar-main\" type=\"button\">",
+                    "impact": "critical",
+                    "none": [
+                        {
+                            "data": null,
+                            "id": "focusable-no-name",
+                            "impact": "serious",
+                            "message": "Element is in tab order and does not have accessible text",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "target": [
+                        "#main-search"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.name-role-value",
+                "wcag2a",
+                "wcag412",
+                "section508",
+                "section508.22.a"
+            ]
+        },
+        {
+            "description": "Ensures every id attribute value is unique",
+            "help": "id attribute value must be unique",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/duplicate-id?application=webdriverjs",
+            "id": "duplicate-id",
+            "impact": "moderate",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": "search",
+                            "id": "duplicate-id",
+                            "impact": "moderate",
+                            "message": "Document has multiple elements with the same id attribute: search",
+                            "relatedNodes": [
+                                {
+                                    "html": "<input class=\"input is-fullwidth is-borderless is-shadowless\" id=\"search\" type=\"text\" placeholder=\"What are you looking for?\" name=\"search\" autocomplete=\"off\" aria-label=\"search\">",
+                                    "target": [
+                                        "#searchbar-main > .col > form > div > div:nth-child(1) > input[type=\"text\"]"
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  Document has multiple elements with the same id attribute: search",
+                    "html": "<input class=\"input is-fullwidth is-borderless is-shadowless\" id=\"search\" type=\"text\" placeholder=\"What are you looking for?\" name=\"search\" autocomplete=\"off\" aria-label=\"search\">",
+                    "impact": "moderate",
+                    "none": [],
+                    "target": [
+                        "#navbarMain > .sgds-navbar-start > form > div > div:nth-child(1) > input[type=\"text\"]"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.parsing",
+                "wcag2a",
+                "wcag411"
+            ]
+        },
+        {
+            "description": "Ensures a navigation point to the primary content of the page. If the page contains iframes, each iframe should contain either no main landmarks or just one.",
+            "help": "Page must contain one main landmark.",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/landmark-one-main?application=webdriverjs",
+            "id": "landmark-one-main",
+            "impact": "moderate",
+            "nodes": [
+                {
+                    "all": [
+                        {
+                            "data": false,
+                            "id": "has-at-least-one-main",
+                            "impact": "moderate",
+                            "message": "Document has no main landmarks",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "any": [],
+                    "failureSummary": "Fix all of the following:\n  Document has no main landmarks",
+                    "html": "<html lang=\"en\">",
+                    "impact": "moderate",
+                    "none": [],
+                    "target": [
+                        "html"
+                    ]
+                }
+            ],
+            "tags": [
+                "best-practice"
+            ]
+        },
+        {
+            "description": "Ensures that lists are structured correctly",
+            "help": "<ul> and <ol> must only directly contain <li>, <script> or <template> elements",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/list?application=webdriverjs",
+            "id": "list",
+            "impact": "serious",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [],
+                    "failureSummary": "Fix all of the following:\n  List element has direct children that are not allowed inside <li> elements",
+                    "html": "<ul class=\"sgds-menu-list\">",
+                    "impact": "serious",
+                    "none": [
+                        {
+                            "data": null,
+                            "id": "only-listitems",
+                            "impact": "serious",
+                            "message": "List element has direct children that are not allowed inside <li> elements",
+                            "relatedNodes": [
+                                {
+                                    "html": "<ul class=\"second-level-nav-div\">",
+                                    "target": [
+                                        "html > body > .content-page > section > .sgds-container > .row.sidenav-container > .is-2 > .sidenav.is-affixed > .sidebar__inner.sgds-menu > ul > ul:nth-child(2)"
+                                    ]
+                                },
+                                {
+                                    "html": "<ul class=\"second-level-nav-div\">",
+                                    "target": [
+                                        "ul > ul:nth-child(4)"
+                                    ]
+                                },
+                                {
+                                    "html": "<ul class=\"second-level-nav-div\"><li>\n                        <a class=\"second-level-nav-item padding--top--none \" href=\"/guides/writers-accessibility/\">\n                            Accessibility for Content\n                        </a>\n                    </li></ul>",
+                                    "target": [
+                                        "ul > ul:nth-child(6)"
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "target": [
+                        ".sidebar__inner.sgds-menu > ul.sgds-menu-list"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.structure",
+                "wcag2a",
+                "wcag131"
+            ]
+        },
+        {
+            "description": "Ensures <meta name=\"viewport\"> does not disable text scaling and zooming",
+            "help": "Zooming and scaling must not be disabled",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/meta-viewport?application=webdriverjs",
+            "id": "meta-viewport",
+            "impact": "critical",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "meta-viewport",
+                            "impact": "critical",
+                            "message": "<meta> tag disables zooming on mobile devices",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  <meta> tag disables zooming on mobile devices",
+                    "html": "<meta name=\"viewport\" content=\"width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0\">",
+                    "impact": "critical",
+                    "none": [],
+                    "target": [
+                        "head > meta[name=\"viewport\"]"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.sensory-and-visual-cues",
+                "wcag2aa",
+                "wcag144"
+            ]
+        }
+    ]
+}{
+    "url": "https://www.designsystem.gov.sg/guides/designers-sketch-kit/",
+    "timestamp": "2020-02-06T02:54:16.921Z",
+    "extractedViolations": [
+        {
+            "description": "Ensures buttons have discernible text",
+            "help": "Buttons must have discernible text",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/button-name?application=webdriverjs",
+            "id": "button-name",
+            "impact": "critical",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "non-empty-if-present",
+                            "impact": "critical",
+                            "message": "Element has a value attribute and the value attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "non-empty-value",
+                            "impact": "critical",
+                            "message": "Element has no value attribute or the value attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": "",
+                            "id": "button-has-visible-text",
+                            "impact": "critical",
+                            "message": "Element does not have inner text that is visible to screen readers",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-label",
+                            "impact": "serious",
+                            "message": "aria-label attribute does not exist or is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-labelledby",
+                            "impact": "serious",
+                            "message": "aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-presentation",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"presentation\"",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-none",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"none\"",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element has a value attribute and the value attribute is empty\n  Element has no value attribute or the value attribute is empty\n  Element does not have inner text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible\n  Element's default semantics were not overridden with role=\"presentation\"\n  Element's default semantics were not overridden with role=\"none\"",
+                    "html": "<button id=\"main-search\" class=\"sgds-button is-white is-large search-toggle\" data-target=\"searchbar-main\" type=\"button\">",
+                    "impact": "critical",
+                    "none": [
+                        {
+                            "data": null,
+                            "id": "focusable-no-name",
+                            "impact": "serious",
+                            "message": "Element is in tab order and does not have accessible text",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "target": [
+                        "#main-search"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.name-role-value",
+                "wcag2a",
+                "wcag412",
+                "section508",
+                "section508.22.a"
+            ]
+        },
+        {
+            "description": "Ensures every id attribute value is unique",
+            "help": "id attribute value must be unique",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/duplicate-id?application=webdriverjs",
+            "id": "duplicate-id",
+            "impact": "moderate",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": "search",
+                            "id": "duplicate-id",
+                            "impact": "moderate",
+                            "message": "Document has multiple elements with the same id attribute: search",
+                            "relatedNodes": [
+                                {
+                                    "html": "<input class=\"input is-fullwidth is-borderless is-shadowless\" id=\"search\" type=\"text\" placeholder=\"What are you looking for?\" name=\"search\" autocomplete=\"off\" aria-label=\"search\">",
+                                    "target": [
+                                        "#searchbar-main > .col > form > div > div:nth-child(1) > input[type=\"text\"]"
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  Document has multiple elements with the same id attribute: search",
+                    "html": "<input class=\"input is-fullwidth is-borderless is-shadowless\" id=\"search\" type=\"text\" placeholder=\"What are you looking for?\" name=\"search\" autocomplete=\"off\" aria-label=\"search\">",
+                    "impact": "moderate",
+                    "none": [],
+                    "target": [
+                        "#navbarMain > .sgds-navbar-start > form > div > div:nth-child(1) > input[type=\"text\"]"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.parsing",
+                "wcag2a",
+                "wcag411"
+            ]
+        },
+        {
+            "description": "Ensures <img> elements have alternate text or a role of none or presentation",
+            "help": "Images must have alternate text",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/image-alt?application=webdriverjs",
+            "id": "image-alt",
+            "impact": "critical",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "has-alt",
+                            "impact": "critical",
+                            "message": "Element does not have an alt attribute",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-label",
+                            "impact": "serious",
+                            "message": "aria-label attribute does not exist or is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-labelledby",
+                            "impact": "serious",
+                            "message": "aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "non-empty-title",
+                            "impact": "serious",
+                            "message": "Element has no title attribute or the title attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-presentation",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"presentation\"",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-none",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"none\"",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  Element does not have an alt attribute\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible\n  Element has no title attribute or the title attribute is empty\n  Element's default semantics were not overridden with role=\"presentation\"\n  Element's default semantics were not overridden with role=\"none\"",
+                    "html": "<img src=\"/assets/img/img_uikit.png\" class=\"padding--bottom padding--top\">",
+                    "impact": "critical",
+                    "none": [],
+                    "target": [
+                        ".content.has-default-header-styles > img.padding--bottom.padding--top"
+                    ]
+                },
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "has-alt",
+                            "impact": "critical",
+                            "message": "Element does not have an alt attribute",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-label",
+                            "impact": "serious",
+                            "message": "aria-label attribute does not exist or is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-labelledby",
+                            "impact": "serious",
+                            "message": "aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "non-empty-title",
+                            "impact": "serious",
+                            "message": "Element has no title attribute or the title attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-presentation",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"presentation\"",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-none",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"none\"",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  Element does not have an alt attribute\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible\n  Element has no title attribute or the title attribute is empty\n  Element's default semantics were not overridden with role=\"presentation\"\n  Element's default semantics were not overridden with role=\"none\"",
+                    "html": "<img src=\"/assets/img/logo_sketch.svg\" width=\"30%\" height=\"auto\" class=\"padding--bottom--lg padding--top--lg\">",
+                    "impact": "critical",
+                    "none": [],
+                    "target": [
+                        ".content.has-default-header-styles > img.padding--bottom--lg.padding--top--lg"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.text-alternatives",
+                "wcag2a",
+                "wcag111",
+                "section508",
+                "section508.22.a"
+            ]
+        },
+        {
+            "description": "Ensures a navigation point to the primary content of the page. If the page contains iframes, each iframe should contain either no main landmarks or just one.",
+            "help": "Page must contain one main landmark.",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/landmark-one-main?application=webdriverjs",
+            "id": "landmark-one-main",
+            "impact": "moderate",
+            "nodes": [
+                {
+                    "all": [
+                        {
+                            "data": false,
+                            "id": "has-at-least-one-main",
+                            "impact": "moderate",
+                            "message": "Document has no main landmarks",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "any": [],
+                    "failureSummary": "Fix all of the following:\n  Document has no main landmarks",
+                    "html": "<html lang=\"en\">",
+                    "impact": "moderate",
+                    "none": [],
+                    "target": [
+                        "html"
+                    ]
+                }
+            ],
+            "tags": [
+                "best-practice"
+            ]
+        },
+        {
+            "description": "Ensures that lists are structured correctly",
+            "help": "<ul> and <ol> must only directly contain <li>, <script> or <template> elements",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/list?application=webdriverjs",
+            "id": "list",
+            "impact": "serious",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [],
+                    "failureSummary": "Fix all of the following:\n  List element has direct children that are not allowed inside <li> elements",
+                    "html": "<ul class=\"sgds-menu-list\">",
+                    "impact": "serious",
+                    "none": [
+                        {
+                            "data": null,
+                            "id": "only-listitems",
+                            "impact": "serious",
+                            "message": "List element has direct children that are not allowed inside <li> elements",
+                            "relatedNodes": [
+                                {
+                                    "html": "<ul class=\"second-level-nav-div\">",
+                                    "target": [
+                                        "ul > ul:nth-child(2)"
+                                    ]
+                                },
+                                {
+                                    "html": "<ul class=\"second-level-nav-div\">",
+                                    "target": [
+                                        "ul > ul:nth-child(4)"
+                                    ]
+                                },
+                                {
+                                    "html": "<ul class=\"second-level-nav-div\"><li>\n                        <a class=\"second-level-nav-item padding--top--none \" href=\"/guides/writers-accessibility/\">\n                            Accessibility for Content\n                        </a>\n                    </li></ul>",
+                                    "target": [
+                                        "ul > ul:nth-child(6)"
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "target": [
+                        ".sidebar__inner.sgds-menu > ul.sgds-menu-list"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.structure",
+                "wcag2a",
+                "wcag131"
+            ]
+        },
+        {
+            "description": "Ensures <meta name=\"viewport\"> does not disable text scaling and zooming",
+            "help": "Zooming and scaling must not be disabled",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/meta-viewport?application=webdriverjs",
+            "id": "meta-viewport",
+            "impact": "critical",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "meta-viewport",
+                            "impact": "critical",
+                            "message": "<meta> tag disables zooming on mobile devices",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  <meta> tag disables zooming on mobile devices",
+                    "html": "<meta name=\"viewport\" content=\"width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0\">",
+                    "impact": "critical",
+                    "none": [],
+                    "target": [
+                        "head > meta[name=\"viewport\"]"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.sensory-and-visual-cues",
+                "wcag2aa",
+                "wcag144"
+            ]
+        }
+    ]
+}{
+    "url": "https://www.designsystem.gov.sg/guides/designers-sketch-kit/",
+    "timestamp": "2020-02-06T02:54:17.166Z",
+    "extractedViolations": [
+        {
+            "description": "Ensures buttons have discernible text",
+            "help": "Buttons must have discernible text",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/button-name?application=webdriverjs",
+            "id": "button-name",
+            "impact": "critical",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "non-empty-if-present",
+                            "impact": "critical",
+                            "message": "Element has a value attribute and the value attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "non-empty-value",
+                            "impact": "critical",
+                            "message": "Element has no value attribute or the value attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": "",
+                            "id": "button-has-visible-text",
+                            "impact": "critical",
+                            "message": "Element does not have inner text that is visible to screen readers",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-label",
+                            "impact": "serious",
+                            "message": "aria-label attribute does not exist or is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-labelledby",
+                            "impact": "serious",
+                            "message": "aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-presentation",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"presentation\"",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-none",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"none\"",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element has a value attribute and the value attribute is empty\n  Element has no value attribute or the value attribute is empty\n  Element does not have inner text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible\n  Element's default semantics were not overridden with role=\"presentation\"\n  Element's default semantics were not overridden with role=\"none\"",
+                    "html": "<button id=\"main-search\" class=\"sgds-button is-white is-large search-toggle\" data-target=\"searchbar-main\" type=\"button\">",
+                    "impact": "critical",
+                    "none": [
+                        {
+                            "data": null,
+                            "id": "focusable-no-name",
+                            "impact": "serious",
+                            "message": "Element is in tab order and does not have accessible text",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "target": [
+                        "#main-search"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.name-role-value",
+                "wcag2a",
+                "wcag412",
+                "section508",
+                "section508.22.a"
+            ]
+        },
+        {
+            "description": "Ensures every id attribute value is unique",
+            "help": "id attribute value must be unique",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/duplicate-id?application=webdriverjs",
+            "id": "duplicate-id",
+            "impact": "moderate",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": "search",
+                            "id": "duplicate-id",
+                            "impact": "moderate",
+                            "message": "Document has multiple elements with the same id attribute: search",
+                            "relatedNodes": [
+                                {
+                                    "html": "<input class=\"input is-fullwidth is-borderless is-shadowless\" id=\"search\" type=\"text\" placeholder=\"What are you looking for?\" name=\"search\" autocomplete=\"off\" aria-label=\"search\">",
+                                    "target": [
+                                        "#searchbar-main > .col > form > div > div:nth-child(1) > input[type=\"text\"]"
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  Document has multiple elements with the same id attribute: search",
+                    "html": "<input class=\"input is-fullwidth is-borderless is-shadowless\" id=\"search\" type=\"text\" placeholder=\"What are you looking for?\" name=\"search\" autocomplete=\"off\" aria-label=\"search\">",
+                    "impact": "moderate",
+                    "none": [],
+                    "target": [
+                        "#navbarMain > .sgds-navbar-start > form > div > div:nth-child(1) > input[type=\"text\"]"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.parsing",
+                "wcag2a",
+                "wcag411"
+            ]
+        },
+        {
+            "description": "Ensures <img> elements have alternate text or a role of none or presentation",
+            "help": "Images must have alternate text",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/image-alt?application=webdriverjs",
+            "id": "image-alt",
+            "impact": "critical",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "has-alt",
+                            "impact": "critical",
+                            "message": "Element does not have an alt attribute",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-label",
+                            "impact": "serious",
+                            "message": "aria-label attribute does not exist or is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-labelledby",
+                            "impact": "serious",
+                            "message": "aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "non-empty-title",
+                            "impact": "serious",
+                            "message": "Element has no title attribute or the title attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-presentation",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"presentation\"",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-none",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"none\"",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  Element does not have an alt attribute\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible\n  Element has no title attribute or the title attribute is empty\n  Element's default semantics were not overridden with role=\"presentation\"\n  Element's default semantics were not overridden with role=\"none\"",
+                    "html": "<img src=\"/assets/img/img_uikit.png\" class=\"padding--bottom padding--top\">",
+                    "impact": "critical",
+                    "none": [],
+                    "target": [
+                        ".content.has-default-header-styles > img.padding--bottom.padding--top"
+                    ]
+                },
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "has-alt",
+                            "impact": "critical",
+                            "message": "Element does not have an alt attribute",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-label",
+                            "impact": "serious",
+                            "message": "aria-label attribute does not exist or is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-labelledby",
+                            "impact": "serious",
+                            "message": "aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "non-empty-title",
+                            "impact": "serious",
+                            "message": "Element has no title attribute or the title attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-presentation",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"presentation\"",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-none",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"none\"",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  Element does not have an alt attribute\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible\n  Element has no title attribute or the title attribute is empty\n  Element's default semantics were not overridden with role=\"presentation\"\n  Element's default semantics were not overridden with role=\"none\"",
+                    "html": "<img src=\"/assets/img/logo_sketch.svg\" width=\"30%\" height=\"auto\" class=\"padding--bottom--lg padding--top--lg\">",
+                    "impact": "critical",
+                    "none": [],
+                    "target": [
+                        ".content.has-default-header-styles > img.padding--bottom--lg.padding--top--lg"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.text-alternatives",
+                "wcag2a",
+                "wcag111",
+                "section508",
+                "section508.22.a"
+            ]
+        },
+        {
+            "description": "Ensures a navigation point to the primary content of the page. If the page contains iframes, each iframe should contain either no main landmarks or just one.",
+            "help": "Page must contain one main landmark.",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/landmark-one-main?application=webdriverjs",
+            "id": "landmark-one-main",
+            "impact": "moderate",
+            "nodes": [
+                {
+                    "all": [
+                        {
+                            "data": false,
+                            "id": "has-at-least-one-main",
+                            "impact": "moderate",
+                            "message": "Document has no main landmarks",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "any": [],
+                    "failureSummary": "Fix all of the following:\n  Document has no main landmarks",
+                    "html": "<html lang=\"en\">",
+                    "impact": "moderate",
+                    "none": [],
+                    "target": [
+                        "html"
+                    ]
+                }
+            ],
+            "tags": [
+                "best-practice"
+            ]
+        },
+        {
+            "description": "Ensures that lists are structured correctly",
+            "help": "<ul> and <ol> must only directly contain <li>, <script> or <template> elements",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/list?application=webdriverjs",
+            "id": "list",
+            "impact": "serious",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [],
+                    "failureSummary": "Fix all of the following:\n  List element has direct children that are not allowed inside <li> elements",
+                    "html": "<ul class=\"sgds-menu-list\">",
+                    "impact": "serious",
+                    "none": [
+                        {
+                            "data": null,
+                            "id": "only-listitems",
+                            "impact": "serious",
+                            "message": "List element has direct children that are not allowed inside <li> elements",
+                            "relatedNodes": [
+                                {
+                                    "html": "<ul class=\"second-level-nav-div\">",
+                                    "target": [
+                                        "ul > ul:nth-child(2)"
+                                    ]
+                                },
+                                {
+                                    "html": "<ul class=\"second-level-nav-div\">",
+                                    "target": [
+                                        "ul > ul:nth-child(4)"
+                                    ]
+                                },
+                                {
+                                    "html": "<ul class=\"second-level-nav-div\"><li>\n                        <a class=\"second-level-nav-item padding--top--none \" href=\"/guides/writers-accessibility/\">\n                            Accessibility for Content\n                        </a>\n                    </li></ul>",
+                                    "target": [
+                                        "ul > ul:nth-child(6)"
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "target": [
+                        ".sidebar__inner.sgds-menu > ul.sgds-menu-list"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.structure",
+                "wcag2a",
+                "wcag131"
+            ]
+        },
+        {
+            "description": "Ensures <meta name=\"viewport\"> does not disable text scaling and zooming",
+            "help": "Zooming and scaling must not be disabled",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/meta-viewport?application=webdriverjs",
+            "id": "meta-viewport",
+            "impact": "critical",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "meta-viewport",
+                            "impact": "critical",
+                            "message": "<meta> tag disables zooming on mobile devices",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  <meta> tag disables zooming on mobile devices",
+                    "html": "<meta name=\"viewport\" content=\"width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0\">",
+                    "impact": "critical",
+                    "none": [],
+                    "target": [
+                        "head > meta[name=\"viewport\"]"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.sensory-and-visual-cues",
+                "wcag2aa",
+                "wcag144"
+            ]
+        }
+    ]
+}{
+    "url": "https://www.designsystem.gov.sg/guides/developers-color-contrast/",
+    "timestamp": "2020-02-06T02:54:19.644Z",
+    "extractedViolations": [
+        {
+            "description": "Ensures buttons have discernible text",
+            "help": "Buttons must have discernible text",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/button-name?application=webdriverjs",
+            "id": "button-name",
+            "impact": "critical",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "non-empty-if-present",
+                            "impact": "critical",
+                            "message": "Element has a value attribute and the value attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "non-empty-value",
+                            "impact": "critical",
+                            "message": "Element has no value attribute or the value attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": "",
+                            "id": "button-has-visible-text",
+                            "impact": "critical",
+                            "message": "Element does not have inner text that is visible to screen readers",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-label",
+                            "impact": "serious",
+                            "message": "aria-label attribute does not exist or is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-labelledby",
+                            "impact": "serious",
+                            "message": "aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-presentation",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"presentation\"",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-none",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"none\"",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element has a value attribute and the value attribute is empty\n  Element has no value attribute or the value attribute is empty\n  Element does not have inner text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible\n  Element's default semantics were not overridden with role=\"presentation\"\n  Element's default semantics were not overridden with role=\"none\"",
+                    "html": "<button id=\"main-search\" class=\"sgds-button is-white is-large search-toggle\" data-target=\"searchbar-main\" type=\"button\">",
+                    "impact": "critical",
+                    "none": [
+                        {
+                            "data": null,
+                            "id": "focusable-no-name",
+                            "impact": "serious",
+                            "message": "Element is in tab order and does not have accessible text",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "target": [
+                        "#main-search"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.name-role-value",
+                "wcag2a",
+                "wcag412",
+                "section508",
+                "section508.22.a"
+            ]
+        },
+        {
+            "description": "Ensures every id attribute value is unique",
+            "help": "id attribute value must be unique",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/duplicate-id?application=webdriverjs",
+            "id": "duplicate-id",
+            "impact": "moderate",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": "search",
+                            "id": "duplicate-id",
+                            "impact": "moderate",
+                            "message": "Document has multiple elements with the same id attribute: search",
+                            "relatedNodes": [
+                                {
+                                    "html": "<input class=\"input is-fullwidth is-borderless is-shadowless\" id=\"search\" type=\"text\" placeholder=\"What are you looking for?\" name=\"search\" autocomplete=\"off\" aria-label=\"search\">",
+                                    "target": [
+                                        "#searchbar-main > .col > form > div > div:nth-child(1) > input[type=\"text\"]"
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  Document has multiple elements with the same id attribute: search",
+                    "html": "<input class=\"input is-fullwidth is-borderless is-shadowless\" id=\"search\" type=\"text\" placeholder=\"What are you looking for?\" name=\"search\" autocomplete=\"off\" aria-label=\"search\">",
+                    "impact": "moderate",
+                    "none": [],
+                    "target": [
+                        "#navbarMain > .sgds-navbar-start > form > div > div:nth-child(1) > input[type=\"text\"]"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.parsing",
+                "wcag2a",
+                "wcag411"
+            ]
+        },
+        {
+            "description": "Ensures <iframe> and <frame> elements contain a non-empty title attribute",
+            "help": "Frames must have title attribute",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/frame-title?application=webdriverjs",
+            "id": "frame-title",
+            "impact": "serious",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "aria-label",
+                            "impact": "serious",
+                            "message": "aria-label attribute does not exist or is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-labelledby",
+                            "impact": "serious",
+                            "message": "aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "non-empty-title",
+                            "impact": "serious",
+                            "message": "Element has no title attribute or the title attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-presentation",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"presentation\"",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-none",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"none\"",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible\n  Element has no title attribute or the title attribute is empty\n  Element's default semantics were not overridden with role=\"presentation\"\n  Element's default semantics were not overridden with role=\"none\"",
+                    "html": "<iframe class=\"iframe\" style=\"width:100%; height:800px;\" src=\"https://marijohannessen.github.io/color-contrast-checker/\" allowfullscreen=\"\"></iframe>",
+                    "impact": "serious",
+                    "none": [],
+                    "target": [
+                        ".content.has-default-header-styles > iframe.iframe"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.text-alternatives",
+                "wcag2a",
+                "wcag241",
+                "section508",
+                "section508.22.i"
+            ]
+        },
+        {
+            "description": "Ensures a navigation point to the primary content of the page. If the page contains iframes, each iframe should contain either no main landmarks or just one.",
+            "help": "Page must contain one main landmark.",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/landmark-one-main?application=webdriverjs",
+            "id": "landmark-one-main",
+            "impact": "moderate",
+            "nodes": [
+                {
+                    "all": [
+                        {
+                            "data": false,
+                            "id": "has-at-least-one-main",
+                            "impact": "moderate",
+                            "message": "Document has no main landmarks",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "any": [],
+                    "failureSummary": "Fix all of the following:\n  Document has no main landmarks",
+                    "html": "<html lang=\"en\">",
+                    "impact": "moderate",
+                    "none": [],
+                    "target": [
+                        "html"
+                    ]
+                }
+            ],
+            "tags": [
+                "best-practice"
+            ]
+        },
+        {
+            "description": "Ensures that lists are structured correctly",
+            "help": "<ul> and <ol> must only directly contain <li>, <script> or <template> elements",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/list?application=webdriverjs",
+            "id": "list",
+            "impact": "serious",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [],
+                    "failureSummary": "Fix all of the following:\n  List element has direct children that are not allowed inside <li> elements",
+                    "html": "<ul class=\"sgds-menu-list\">",
+                    "impact": "serious",
+                    "none": [
+                        {
+                            "data": null,
+                            "id": "only-listitems",
+                            "impact": "serious",
+                            "message": "List element has direct children that are not allowed inside <li> elements",
+                            "relatedNodes": [
+                                {
+                                    "html": "<ul class=\"second-level-nav-div\">",
+                                    "target": [
+                                        "ul > ul:nth-child(2)"
+                                    ]
+                                },
+                                {
+                                    "html": "<ul class=\"second-level-nav-div\">",
+                                    "target": [
+                                        "ul > ul:nth-child(4)"
+                                    ]
+                                },
+                                {
+                                    "html": "<ul class=\"second-level-nav-div\"><li>\n                        <a class=\"second-level-nav-item padding--top--none \" href=\"/guides/writers-accessibility/\">\n                            Accessibility for Content\n                        </a>\n                    </li></ul>",
+                                    "target": [
+                                        "ul > ul:nth-child(6)"
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "target": [
+                        ".sidebar__inner.sgds-menu > ul.sgds-menu-list"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.structure",
+                "wcag2a",
+                "wcag131"
+            ]
+        },
+        {
+            "description": "Ensures <meta name=\"viewport\"> does not disable text scaling and zooming",
+            "help": "Zooming and scaling must not be disabled",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/meta-viewport?application=webdriverjs",
+            "id": "meta-viewport",
+            "impact": "critical",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "meta-viewport",
+                            "impact": "critical",
+                            "message": "<meta> tag disables zooming on mobile devices",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  <meta> tag disables zooming on mobile devices",
+                    "html": "<meta name=\"viewport\" content=\"width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0\">",
+                    "impact": "critical",
+                    "none": [],
+                    "target": [
+                        "head > meta[name=\"viewport\"]"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.sensory-and-visual-cues",
+                "wcag2aa",
+                "wcag144"
+            ]
+        }
+    ]
+}{
+    "url": "https://www.designsystem.gov.sg/guides/developers-color-contrast/",
+    "timestamp": "2020-02-06T02:54:20.284Z",
+    "extractedViolations": [
+        {
+            "description": "Ensures buttons have discernible text",
+            "help": "Buttons must have discernible text",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/button-name?application=webdriverjs",
+            "id": "button-name",
+            "impact": "critical",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "non-empty-if-present",
+                            "impact": "critical",
+                            "message": "Element has a value attribute and the value attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "non-empty-value",
+                            "impact": "critical",
+                            "message": "Element has no value attribute or the value attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": "",
+                            "id": "button-has-visible-text",
+                            "impact": "critical",
+                            "message": "Element does not have inner text that is visible to screen readers",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-label",
+                            "impact": "serious",
+                            "message": "aria-label attribute does not exist or is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-labelledby",
+                            "impact": "serious",
+                            "message": "aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-presentation",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"presentation\"",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-none",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"none\"",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix all of the following:\n  Element is in tab order and does not have accessible text\n\nFix any of the following:\n  Element has a value attribute and the value attribute is empty\n  Element has no value attribute or the value attribute is empty\n  Element does not have inner text that is visible to screen readers\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible\n  Element's default semantics were not overridden with role=\"presentation\"\n  Element's default semantics were not overridden with role=\"none\"",
+                    "html": "<button id=\"main-search\" class=\"sgds-button is-white is-large search-toggle\" data-target=\"searchbar-main\" type=\"button\">",
+                    "impact": "critical",
+                    "none": [
+                        {
+                            "data": null,
+                            "id": "focusable-no-name",
+                            "impact": "serious",
+                            "message": "Element is in tab order and does not have accessible text",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "target": [
+                        "#main-search"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.name-role-value",
+                "wcag2a",
+                "wcag412",
+                "section508",
+                "section508.22.a"
+            ]
+        },
+        {
+            "description": "Ensures every id attribute value is unique",
+            "help": "id attribute value must be unique",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/duplicate-id?application=webdriverjs",
+            "id": "duplicate-id",
+            "impact": "moderate",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": "search",
+                            "id": "duplicate-id",
+                            "impact": "moderate",
+                            "message": "Document has multiple elements with the same id attribute: search",
+                            "relatedNodes": [
+                                {
+                                    "html": "<input class=\"input is-fullwidth is-borderless is-shadowless\" id=\"search\" type=\"text\" placeholder=\"What are you looking for?\" name=\"search\" autocomplete=\"off\" aria-label=\"search\">",
+                                    "target": [
+                                        "#searchbar-main > .col > form > div > div:nth-child(1) > input[type=\"text\"]"
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  Document has multiple elements with the same id attribute: search",
+                    "html": "<input class=\"input is-fullwidth is-borderless is-shadowless\" id=\"search\" type=\"text\" placeholder=\"What are you looking for?\" name=\"search\" autocomplete=\"off\" aria-label=\"search\">",
+                    "impact": "moderate",
+                    "none": [],
+                    "target": [
+                        "#navbarMain > .sgds-navbar-start > form > div > div:nth-child(1) > input[type=\"text\"]"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.parsing",
+                "wcag2a",
+                "wcag411"
+            ]
+        },
+        {
+            "description": "Ensures <iframe> and <frame> elements contain a non-empty title attribute",
+            "help": "Frames must have title attribute",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/frame-title?application=webdriverjs",
+            "id": "frame-title",
+            "impact": "serious",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "aria-label",
+                            "impact": "serious",
+                            "message": "aria-label attribute does not exist or is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "aria-labelledby",
+                            "impact": "serious",
+                            "message": "aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "non-empty-title",
+                            "impact": "serious",
+                            "message": "Element has no title attribute or the title attribute is empty",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-presentation",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"presentation\"",
+                            "relatedNodes": []
+                        },
+                        {
+                            "data": null,
+                            "id": "role-none",
+                            "impact": "minor",
+                            "message": "Element's default semantics were not overridden with role=\"none\"",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty or not visible\n  Element has no title attribute or the title attribute is empty\n  Element's default semantics were not overridden with role=\"presentation\"\n  Element's default semantics were not overridden with role=\"none\"",
+                    "html": "<iframe class=\"iframe\" style=\"width:100%; height:800px;\" src=\"https://marijohannessen.github.io/color-contrast-checker/\" allowfullscreen=\"\"></iframe>",
+                    "impact": "serious",
+                    "none": [],
+                    "target": [
+                        ".content.has-default-header-styles > iframe.iframe"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.text-alternatives",
+                "wcag2a",
+                "wcag241",
+                "section508",
+                "section508.22.i"
+            ]
+        },
+        {
+            "description": "Ensures a navigation point to the primary content of the page. If the page contains iframes, each iframe should contain either no main landmarks or just one.",
+            "help": "Page must contain one main landmark.",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/landmark-one-main?application=webdriverjs",
+            "id": "landmark-one-main",
+            "impact": "moderate",
+            "nodes": [
+                {
+                    "all": [
+                        {
+                            "data": false,
+                            "id": "has-at-least-one-main",
+                            "impact": "moderate",
+                            "message": "Document has no main landmarks",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "any": [],
+                    "failureSummary": "Fix all of the following:\n  Document has no main landmarks",
+                    "html": "<html lang=\"en\">",
+                    "impact": "moderate",
+                    "none": [],
+                    "target": [
+                        "html"
+                    ]
+                }
+            ],
+            "tags": [
+                "best-practice"
+            ]
+        },
+        {
+            "description": "Ensures that lists are structured correctly",
+            "help": "<ul> and <ol> must only directly contain <li>, <script> or <template> elements",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/list?application=webdriverjs",
+            "id": "list",
+            "impact": "serious",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [],
+                    "failureSummary": "Fix all of the following:\n  List element has direct children that are not allowed inside <li> elements",
+                    "html": "<ul class=\"sgds-menu-list\">",
+                    "impact": "serious",
+                    "none": [
+                        {
+                            "data": null,
+                            "id": "only-listitems",
+                            "impact": "serious",
+                            "message": "List element has direct children that are not allowed inside <li> elements",
+                            "relatedNodes": [
+                                {
+                                    "html": "<ul class=\"second-level-nav-div\">",
+                                    "target": [
+                                        "ul > ul:nth-child(2)"
+                                    ]
+                                },
+                                {
+                                    "html": "<ul class=\"second-level-nav-div\">",
+                                    "target": [
+                                        "ul > ul:nth-child(4)"
+                                    ]
+                                },
+                                {
+                                    "html": "<ul class=\"second-level-nav-div\"><li>\n                        <a class=\"second-level-nav-item padding--top--none \" href=\"/guides/writers-accessibility/\">\n                            Accessibility for Content\n                        </a>\n                    </li></ul>",
+                                    "target": [
+                                        "ul > ul:nth-child(6)"
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "target": [
+                        ".sidebar__inner.sgds-menu > ul.sgds-menu-list"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.structure",
+                "wcag2a",
+                "wcag131"
+            ]
+        },
+        {
+            "description": "Ensures <meta name=\"viewport\"> does not disable text scaling and zooming",
+            "help": "Zooming and scaling must not be disabled",
+            "helpUrl": "https://dequeuniversity.com/rules/axe/2.6/meta-viewport?application=webdriverjs",
+            "id": "meta-viewport",
+            "impact": "critical",
+            "nodes": [
+                {
+                    "all": [],
+                    "any": [
+                        {
+                            "data": null,
+                            "id": "meta-viewport",
+                            "impact": "critical",
+                            "message": "<meta> tag disables zooming on mobile devices",
+                            "relatedNodes": []
+                        }
+                    ],
+                    "failureSummary": "Fix any of the following:\n  <meta> tag disables zooming on mobile devices",
+                    "html": "<meta name=\"viewport\" content=\"width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0\">",
+                    "impact": "critical",
+                    "none": [],
+                    "target": [
+                        "head > meta[name=\"viewport\"]"
+                    ]
+                }
+            ],
+            "tags": [
+                "cat.sensory-and-visual-cues",
+                "wcag2aa",
+                "wcag144"
+            ]
+        }
+    ]
+}

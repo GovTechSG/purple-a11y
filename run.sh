@@ -1,110 +1,103 @@
-#!/bin/bash
+#! /bin/bash
 
-# By deleting the entire folder (.a11y_storage) is deleted, Apify.pushData will be able to create the respective folders.
-# If only the subfolders are removed while retaining .a11y_storage folder, it will result in the datasets/default folder to not be created
-# This will result in no such file or directory error
-if [ -d ".a11y_storage" ]; then
-    rm -r .a11y_storage 2> /dev/null
-fi
+# For common shell function
+. shell_functions/commonShellFunctions.sh
 
+# For Apify environment settings
+. shell_functions/settings.sh
 
-if [ -d "results/current" ]; then
-    rm -r results/current/* 2> /dev/null
-fi
+# Check if installer script is executed beforehand
+check_installer_status
 
-export APIFY_LOCAL_STORAGE_DIR=`pwd`/.a11y_storage
-export APIFY_HEADLESS=1
+# Delete .a11y_storage and results/current to remove previous scan data
+clean_up
 
-if ! [ -d "a11y/bin" ]; then
-    echo "Please run the installer script (mac-installer.sh / linux-installer.sh) to install the necessary components."
-    exit 0
-fi
+#0 == SUCCESS, 1 == FAIL
+_valid_url=1
 
-echo "Welcome to HAT's Accessibility Testing Tool!"
+echo "Welcome to HATS Accessibility Testing Tool!"
 echo "We recommend using Chrome browser for the best experience."
 echo "What would you like to scan today?"
 
-options=("sitemap file containing links" "public domain URL") 
+options=("sitemap file containing links" "website")
+
+# Get information related to scan type as well as the URL for URL validation
 select opt in "${options[@]}"
 do
     case $opt in
-    
-    "sitemap file containing links")
-        crawler=crawlSitemap
 
-        read -p "Please enter URL to sitemap: " page
-        # 0 == FALSE, 1 == TRUE
-        validate_status=0
-        
-        while [ $validate_status != 1 ]
-        do
-            if [ $page = "exit" ];then
-                exit
-            else
-                #Validate the content of the link
-                #Curl the content of the page & check if it has the required XML tag or links
-                curl_check=$(curl --silent $page | egrep '<urlset|(http|https)://')
-                if [ -z "$curl_check" ]
-                then
-                    echo ""
-                    echo "The provided link does not contain a sitemap."
-                    echo "A sitemap can be in the following format:"
-                    echo "  1. A text file with a list of links"
-                    echo "  2. A XML file with XML tags in Sitemap Protocol format"
-                    echo ""
-                    echo "Please try again or type 'exit' to stop the script."
-                    echo ""
-                    read -p "Please enter URL to sitemap: " page
-                else 
-                    validate_status=1
-                fi
+        "sitemap file containing links")
 
-            fi
-        done
+            scanType="sitemap"
+            crawler=crawlSitemap
+            prompt_message="Please enter URL to sitemap: "
+            break;;
 
-        echo ""
+        "website")
 
-        break;;
-    
+            prompt_website
+            break;;
 
-    "public domain URL")
+        "exit")
+            exit;;
 
-        crawler=crawlDomain
-        read -p "Please enter domain URL: " page
+        *)
+            echo "Invalid option $REPLY";;
 
-        break;;
-
-    *) echo "invalid option $REPLY"
     esac
+
 done
 
-# added a check to see whether the input URL have // after http: or https:
-input_url=$(echo $page | perl -n -e '/^(https|http):(?!\/\/).*$/ && print')
+# Prompt for URL (Common across all scan types)
+read -p "$prompt_message" page
 
-if ! [ -z "$input_url" ]
-then
-    # meaning url is in bad format (eg. https:isomer.gov.sg without //)
-    # https:/http: will first be removed from the url so that curl can get the final redirected url
-    # The final redirected url will be pass into the variable LOCATION
-    reformat_url=$(echo $input_url | sed -E 's/(https|http)://g')
-    LOCATION=$(curl -sIL -o /dev/null -w '%{url_effective}' $reformat_url | sed 's/%//g')
-    page=$LOCATION
+
+# URL validation
+while [ "$_valid_url" != 0 ]
+do
+    check_url
+
+    if [ "$page" = "exit" ]; then
+        exit
+    elif [ -n $check_url_status ] && [ $check_url_status = 0 ]; then
+        _valid_url=0
+    else
+        # Prompt error message to rectify error for URL
+        if [ $scanType = "sitemap" ]; then
+            sitemap_error
+        else
+            website_error
+        fi
+
+    fi
+
+done
+
+
+
+# Run the crawler
+randomToken=$(date +%s)$(openssl rand -hex 5)
+currentDate=$(date '+%Y-%-m-%-d')
+
+echo "Scanning website..."
+
+URL="$page" LOGINID="$login_id" LOGINPWD="$login_pwd" IDSEL="$id_selector" PWDSEL="$pwd_selector" SUBMIT="$btn_selector" RANDOMTOKEN="$randomToken" TYPE="$crawler" node -e 'require("./combine").combineRun()' | tee errors.txt
+
+# Verify that the newly generated directory exists
+if [ -d "results/$currentDate/$randomToken" ]; then
+
+    # Test for the command before attempting to open the report
+    if [ -n "command -v open" ]; then
+        open -a "Google Chrome" "results/$currentDate/$randomToken/reports/report.html"
+    elif [ -n "command -v xdg-open" ]; then
+        # Linux equivalent of open
+        xdg-open -a "Google Chrome" "results/$currentDate/$randomToken/reports/report.html"
+    else
+        echo "The scan has been completed."
+        current_dir=$(pwd)
+        reportPath="$current_dir/results/$currentDate/$randomToken/reports/report.html"
+        echo "You can find the report in $reportPath"
+    fi
 else
-    # for url that are in this format (eg. https://isomer.gov.sg or https://www.isomer.gov.sg)
-    # If url is in this format (eg. https://isomer.gov.sg), url will be curl and redirected to become https://www.isomer.gov.sg/
-    LOCATION=$(curl -Ls -w %{url_effective} -o /dev/null $page)
-    page=$LOCATION
-fi
-
-if curl --output /dev/null --silent --head --fail "$page"
-then
-    randomToken=$(date +%s)$(openssl rand -hex 5)
-    currentDate=$(date '+%Y-%-m-%-d')
-
-    echo "Scanning website..."
-    
-    URL=$page RANDOMTOKEN=$randomToken TYPE=$crawler node -e 'require("./combine").combineRun()' | tee errors.txt
-    open -a "Google Chrome" results/$currentDate/$randomToken/reports/report.html
-else
-    echo "This URL does not exist."
+    echo "WARNING: An unexpected error has occurred. Please try again later."
 fi

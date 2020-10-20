@@ -85,7 +85,7 @@ The crawler will then generate the results based on the links found **within the
 **Required inputs**
 - URL linking to the sitemap file
 - Examples of valid sitemap format
-  - XML (Recommended): https://www.sitemaps.org/sitemap.xml  
+  - XML (Recommended): https://www.sitemaps.org/sitemap.xml
   - RSS: https://itunes.apple.com/gb/rss/customerreviews/id=317212648/xml
   - Text: https://www.xml-sitemaps.com/urllist.txt  
 - For more information on sitemap: https://www.sitemaps.org/protocol.html
@@ -141,3 +141,52 @@ Scanning website...
 
 user@user-MacBook-Pro purple-hats %
 ```
+
+### 3. Crawling login page
+The crawler will automated the login and recursively visit the links to generate the results from **all the pages found from the input domain**.
+
+**Required inputs**
+- A website URL
+- User's login credential
+- Selectors of the username field, password field and submit button field
+
+**Sample Output - Public Domain with Login Page**
+```console
+user@user-MacBook-Pro  Desktop % cd purple-hats
+user@user-MacBook-Pro purple-hats %  bash run.sh
+Welcome to HAT's Accessibility Testing Tool!
+We recommend using Chrome browser for the best experience.
+
+What would you like to scan today?
+1) sitemap.xml file containing links
+2) public domain URL
+#? 2
+Please enter domain URL: https://fontawesome.com/sessions/sign-in
+Do you need to login to your domain? Y/N: y
+Please enter your login ID: user@gmail.com
+Please enter your password: 
+
+Now, go to your browser and right-click on these 3 elements,
+1. Username field
+2. Login password field
+3. Submit button
+
+Select 'inspect' and 'copy selector'
+Next, navigate back here and paste the selector one by one.
+
+Please enter “username field” selector: #email_address
+Please enter “login password field” selector: #password
+Please enter “submit button” selector: #page-top > div.view.flex.flex-column.min-vh-100.db-pr > div.flex-grow-1.flex-shrink-0.flex-basis-auto.flex.flex-column > main > div.relative.z-1.mw6-l.center-l > div > form > button
+Scanning website...
+
+#The crawler will then start scraping from the file link provided above.
+#Console results
+
+user@user-MacBook-Pro purple-hats %
+```
+
+
+
+
+
+
