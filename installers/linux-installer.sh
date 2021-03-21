@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#Linux in general
-
 # Removing previous installation of /.nvm directory and node_modules
 if [ -d "node_modules" ]; then
    rm -r node_modules
