@@ -1,9 +1,11 @@
 const fs = require('fs-extra');
+const crypto = require('crypto');
 const { a11yDataStoragePath, allIssueFileName } = require('./constants/constants');
 
 exports.getHostnameFromRegex = url => {
   // run against regex
   const matches = url.match(/^https?:\/\/([^/?#]+)(?:[/?#]|$)/i);
+
   // extract hostname (will be null if no match is found)
   return matches && matches[1];
 };
@@ -40,9 +42,9 @@ exports.validateUrl = url => {
 const getStoragePath = randomToken => {
   const date = new Date();
   const currentDate = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-  const storagePath = `results/${currentDate}/${randomToken}`;
-  return storagePath;
+  return `results/${currentDate}/${randomToken}`;
 };
+
 exports.getStoragePath = getStoragePath;
 
 exports.createAndUpdateFolders = async (scanDetails, randomToken) => {
@@ -62,6 +64,14 @@ exports.createAndUpdateFolders = async (scanDetails, randomToken) => {
   });
 };
 
+exports.cleanUp = async (pathToDelete) => {
+  await fs.pathExists(pathToDelete).then(exists => {
+    if (exists) {
+      fs.removeSync(pathToDelete);
+    }
+  });
+};
+
 exports.getCurrentTime = () => {
   return new Date().toLocaleTimeString('en-GB', {
     year: 'numeric',
@@ -72,3 +82,36 @@ exports.getCurrentTime = () => {
     minute: '2-digit',
   });
 };
+
+exports.zipResults = async (zipName, resultsPath) => {
+
+  const execFile = require('child_process').execFile;
+
+  //To zip up files recursively )-r) in the results folder path
+  //Will only zip up the content of the results folder path with (-j) i.e. junk the path
+  const command = '/usr/bin/zip'
+  const args = ['-r', '-j', zipName, resultsPath]
+  execFile(command, args, (err) => {
+    if(err){
+        throw err;
+    }
+  });
+
+}
+
+exports.rootPath = __dirname;
+
+exports.setHeadlessMode = (isHeadless) => {
+  if(isHeadless) {
+    process.env.APIFY_HEADLESS = 1;
+  } else {
+    process.env.APIFY_HEADLESS = 0;
+  }
+}
+
+exports.generateRandomToken = () => {
+  const timeStamp = Math.floor(Date.now() / 1000);
+  const randomString = crypto.randomBytes(16).toString("hex").slice(0,10);
+  return `${timeStamp}${randomString}`;
+};
+

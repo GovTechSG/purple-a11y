@@ -1,0 +1,221 @@
+[
+  {
+    "id": "aria-treeitem-name",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Low Vision",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-allowed-role",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-hidden-body",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind"
+    ]
+  },
+  {
+    "id": "aria-hidden-focus",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Low Vision",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "landmark-contentinfo-is-top-level",
+    "wcag": [],
+    "disabilities": [
+      "Sighted Keyboard Users",
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "no-autoplay-audio",
+    "wcag": [
+      "1.4.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Cognitive"
+    ]
+  },
+  {
+    "id": "landmark-complementary-is-top-level",
+    "wcag": [],
+    "disabilities": [
+      "Sighted Keyboard Users",
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-required-parent",
+    "wcag": [
+      "1.3.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-required-children",
+    "wcag": [
+      "1.3.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "label-content-name-mismatch",
+    "wcag": [
+      "2.5.3"
+    ],
+    "disabilities": [
+      "Blind",
+      "Low Vision",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "duplicate-id-aria",
+    "wcag": [
+      "4.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "input-image-alt",
+    "wcag": [
+      "1.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "image-alt",
+    "wcag": [
+      "1.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "avoid-inline-spacing",
+    "wcag": [
+      "1.4.12"
+    ],
+    "disabilities": [
+      "Attention Deficit",
+      "Blind",
+      "Low Vision",
+      "Deafblind",
+      "Mobility",
+      "Cognitive"
+    ]
+  },
+  {
+    "id": "input-button-name",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "landmark-unique",
+    "wcag": [],
+    "disabilities": [
+      "Sighted Keyboard Users",
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "valid-lang",
+    "wcag": [
+      "3.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Cognitive"
+    ]
+  },
+  {
+    "id": "link-in-text-block",
+    "wcag": [
+      "1.4.1"
+    ],
+    "disabilities": [
+      "Low Vision",
+      "Colorblindness"
+    ]
+  },
+  {
+    "id": "landmark-main-is-top-level",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "link-name",
+    "wcag": [
+      "2.4.4",
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "page-has-heading-one",
+    "wcag": [],
+    "disabilities": [
+      "Sighted Keyboard Users",
+      "Blind",
+      "Low Vision",
+      "Deafblind"
+    ]
+  }
+]

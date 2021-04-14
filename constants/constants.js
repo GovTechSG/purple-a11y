@@ -23,8 +23,6 @@ exports.a11yStorage = a11yStorage;
 
 exports.a11yDataStoragePath = `${a11yStorage}/datasets`;
 
-exports.currentResultsFolderPath = 'results/current';
-
 exports.allIssueFileName = 'all_issues';
 
 exports.rootPath = __dirname;
@@ -38,4 +36,5 @@ exports.impactOrder = {
 };
 
 exports.wcagWebPage = 'https://www.w3.org/TR/WCAG21/';
-exports.axeWebPage = 'https://dequeuniversity.com/rules/axe/3.5/';
+//exports.axeWebPage = 'https://dequeuniversity.com/rules/axe/3.5/';
+exports.axeWebPage = 'https://dequeuniversity.com/rules/axe/4.1/';

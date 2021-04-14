@@ -20,7 +20,10 @@ module.exports = {
   // An array of glob patterns indicating a set of files for which coverage information should be collected
   collectCoverageFrom: [
     "**/*.{js,jsx}",
-    "!**/node_modules/**"
+    "!**/node_modules/**",
+    "!**/constants/questions.js",
+    "!jest.config.js",
+    "testCode*.js"
   ],
 
   // The directory where Jest should output its coverage files
@@ -37,7 +40,8 @@ module.exports = {
   // A list of reporter names that Jest uses when writing coverage reports
   coverageReporters: [
     "text",
-    "text-summary"
+    "text-summary",
+    "json"
   ],
 
   // An object that configures minimum threshold enforcement for coverage results
