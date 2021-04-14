@@ -2,23 +2,14 @@ const { crawlSitemap } = require('./crawlers/crawlSitemap');
 const { crawlDomain } = require('./crawlers/crawlDomain');
 
 const { mergeFiles } = require('./mergeAxeResults');
-const { getHostnameFromRegex, createAndUpdateFolders } = require('./utils');
+const { getHostnameFromRegex, createAndUpdateFolders, roothPath } = require('./utils');
 const { a11yStorage } = require('./constants/constants');
 
 process.env.APIFY_LOCAL_STORAGE_DIR = a11yStorage;
-process.env.APIFY_HEADLESS = 1;
 
 exports.combineRun = async details => {
-  let envDetails = { ...details };
 
-  if (typeof details === 'undefined') {
-    envDetails = {
-      type: process.env.TYPE,
-      url: process.env.URL,
-
-      randomToken: process.env.RANDOMTOKEN,
-    };
-  }
+  const envDetails = { ...details };
 
   const { type, url, randomToken } = envDetails;
 
@@ -31,13 +22,12 @@ exports.combineRun = async details => {
   };
 
   let urlsCrawled;
-
   switch (type) {
-    case 'crawlSitemap':
+    case 'sitemap':
       urlsCrawled = await crawlSitemap(url, randomToken, host);
       break;
 
-    case 'crawlDomain':
+    case 'website':
       urlsCrawled = await crawlDomain(url, randomToken, host);
       break;
 

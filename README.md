@@ -1,192 +1,146 @@
-#purple-hats
-----
-
-purple-hats is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).
+# Purple HATS
+Purple HATS is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).
 
 ## Technology Stack
-1. Apify (Puppeteer)
-2. Axe-core
-3. NodeJS (NPM)
+1. [Apify SDK](https://sdk.apify.com/)
+2. [Axe-core](https://github.com/dequelabs/axe-core)
+3. [Node.js](https://Node.js.org/en/)
 
+## Prerequisites and Installations
+Please ensure the following requirements are met:
+- Node.js version to be version 10 and above.
+- Install the required NPM packages with `npm install`.
 
-## Installations
-purple-hats includes installer scripts which automates the installation of the required components used by purple-hats. Currently, it is supported on macOS and Linux (Red Hat, Centos, Ubuntu, OpenSuse/Suse).
-
-<details>
-  <summary>Instructions for changing file permissions</summary>
-  
-  #### Commands to modify file permissions
-  In the event you cannot access the files due to running the installer scripts with elevated privileges previously, you can modify the file permissions to the appropriate owner and group.
-
+### Usage of Node Version Manager (NVM)
 ```shell
-# Linux/Unix: The user id (uid) and group id (gid) by default should be the same
-# MacOS: The uid and gid may differ, if the user group doesn't exist, set the group as staff
+# If have not install a version > v8.1, install NodeJs version wiyh NVM
+nvm install <nodejs_version_greater_than_8.1>
 
-# You can check the current user's uid and gid with the following command
-id
-
-# Update permissions for files
-# Can provide the name or numerical id
-sudo chown <user:group> <filename>
-
-# Update permissions for directories
-sudo chown -R <user:group> <filename>
-```
-</details>
-
-
-### MacOS
-As MacOS does not have a builtin package manager. Node Version Manager (NVM) will be used to install NodeJS. Please run the installer script *mac-installer.sh*
-
-```shell
-# Navigate into the directory, if not done so
-cd purple-hats/installers
-
-# Run the installer script for MacOS with admin privileges
-bash mac-installer.sh
+# For subsequent use, you will need to run the command below as time you open a new terminal
+nvm use <nodejs_version_greater_than_8.1>
 ```
 
-```shell
-# If you cannot run the script due to insufficient permission, assign execute permission to the file
-chmod +x mac-installer.sh
+### Facing issues?
+Please refer to [Troubleshooting section](#troubleshooting) for more information.
 
-# Run the script again
-bash mac-isntaller.sh
-```
-
-### Linux
-Depending on the Linux Distro, the builtin package manager (YUM, APT or Zypper) will be used for the respective Linux Distro to install NodeJS. Please run the installer script *linux-installer.sh*
-
-```shell
-# If you cannot run the script due to insufficient permission, assign execute permission to the file
-chmod +x linux-installer.sh
-
-# Run the script again
-bash linux-installer.sh
-```
+---
 
 ## Features
-purple-hats can perform the following functions to crawl the target URI. Results will be generated in JSON format before being compiled into a HTML file. To start using purple-hats, run the following command(s)
+Purple HATS can perform the following to scan the target URL. 
+- Results will be compiled in JSON format, followed by generating a HTML report. 
+- To start using Purple HATS, run `node index`. Questions will be prompted to assist you in providing the right inputs. 
 
+> NOTE: For your initial scan, there may be some loading time required before use.
+
+### Scan Selection
+You can interact via your arrow keys.
 ```shell
-# Navigate into the directory, if not done so
-cd purple-hats
-
-# Execute run.sh with admin privileges to start using purple-hats
-bash run.sh
+% node index
+┌────────────────────────────────────────────────────────────┐
+│ Welcome to HATS Accessibility Testing Tool!                │
+│ We recommend using Chrome browser for the best experience. │
+└────────────────────────────────────────────────────────────┘
+? What would you like to scan today? 
+❯ Sitemap 
+  Website 
+```
+  
+### Headless Mode
+Headless mode would allow you to run the scan in the background. If you would like to observe the scraping process, please enter `n`
+```shell
+ % node index 
+┌────────────────────────────────────────────────────────────┐
+│ Welcome to HATS Accessibility Testing Tool!                │
+│ We recommend using Chrome browser for the best experience. │
+└────────────────────────────────────────────────────────────┘
+? What would you like to scan today? Sitemap
+? Do you want purple-hats to run in the background? (Y/n) Y
 ```
 
-> NOTE: An online test-site by Web Scraper is used to demonstrate purple-hats' features.
+### Sitemap Scan
+```shell
+% node index
+┌────────────────────────────────────────────────────────────┐
+│ Welcome to HATS Accessibility Testing Tool!                │
+│ We recommend using Chrome browser for the best experience. │
+└────────────────────────────────────────────────────────────┘
+? What would you like to scan today? Sitemap
+? Do you want purple-hats to run in the background? Yes
+? Do you need to login to your website? No
+? Please enter URL to sitemap:  https://www.sitemaps.org/sitemap.xml
 
+Scanning website... 
 
-### 1. Crawling of sitemap
-The crawler will then generate the results based on the links found **within the provided URL**.
-
-**Required inputs**
-- URL linking to the sitemap file
-- Examples of valid sitemap format
-  - XML (Recommended): https://www.sitemaps.org/sitemap.xml
-  - RSS: https://itunes.apple.com/gb/rss/customerreviews/id=317212648/xml
-  - Text: https://www.xml-sitemaps.com/urllist.txt  
-- For more information on sitemap: https://www.sitemaps.org/protocol.html
-
-**Sample Output**
-
-```console
-user@user-MacBook-Pro  Desktop % cd purple-hats
-user@user-MacBook-Pro purple-hats %  bash run.sh
-Welcome to HAT's Accessibility Testing Tool!
-We recommend using Chrome browser for the best experience.
-
-What would you like to scan today?
-1) sitemap.xml file containing links
-2) public domain URL
-#? 1
-Please enter file link: https://webscraper.io/test-sites/e-commerce/allinone
-Scanning website...
-
-#The crawler will then start scraping from the file link provided above.
+#purple-hats will then start scraping from the file link provided above.
 #Console results
 
-user@user-MacBook-Pro purple-hats %
 ```
-
-### 2. Crawling of Domain
-The crawler will recursively visit the links to generate the results from **all the pages found from the input domain**. This will take a longer time depending on the number of links and pages that are being transversed.
-
-Under this feature, it will also take into consideration of the presence of a login page.
-
-
-#### 2. Crawling of PublicDomain w/o Login Page
-**Required inputs**
-- A website URL
-
-**Sample Output - Public Domain without Login Page**
-```console
-user@user-MacBook-Pro  Desktop % cd purple-hats
-user@user-MacBook-Pro purple-hats % bash run.sh
-Welcome to HAT's Accessibility Testing Tool!
-We recommend using Chrome browser for the best experience.
-
-What would you like to scan today?
-1) sitemap.xml file containing links
-2) public domain URL
-#? 2
-Please enter domain URL: https://webscraper.io/test-sites/e-commerce/allinone
-Do you need to login to your domain? Y/N: N
-Scanning website...
-
-#The crawler will then start scraping from the file link provided above.
-#Console results
-
-user@user-MacBook-Pro purple-hats %
-```
-
-### 3. Crawling login page
-The crawler will automated the login and recursively visit the links to generate the results from **all the pages found from the input domain**.
-
-**Required inputs**
-- A website URL
-- User's login credential
-- Selectors of the username field, password field and submit button field
-
-**Sample Output - Public Domain with Login Page**
-```console
-user@user-MacBook-Pro  Desktop % cd purple-hats
-user@user-MacBook-Pro purple-hats %  bash run.sh
-Welcome to HAT's Accessibility Testing Tool!
-We recommend using Chrome browser for the best experience.
-
-What would you like to scan today?
-1) sitemap.xml file containing links
-2) public domain URL
-#? 2
-Please enter domain URL: https://fontawesome.com/sessions/sign-in
-Do you need to login to your domain? Y/N: y
-Please enter your login ID: user@gmail.com
-Please enter your password: 
-
-Now, go to your browser and right-click on these 3 elements,
-1. Username field
-2. Login password field
-3. Submit button
-
-Select 'inspect' and 'copy selector'
-Next, navigate back here and paste the selector one by one.
-
-Please enter “username field” selector: #email_address
-Please enter “login password field” selector: #password
-Please enter “submit button” selector: #page-top > div.view.flex.flex-column.min-vh-100.db-pr > div.flex-grow-1.flex-shrink-0.flex-basis-auto.flex.flex-column > main > div.relative.z-1.mw6-l.center-l > div > form > button
-Scanning website...
-
-#The crawler will then start scraping from the file link provided above.
-#Console results
-
-user@user-MacBook-Pro purple-hats %
+  
+If the sitemap URL provided is invalid, an error message will be prompted for you to provide a valid input.
+```shell
+>> Invalid sitemap format. Please provide a URL with a valid sitemap.
 ```
 
 
+### Website Scan
+```shell
+% node index
+┌────────────────────────────────────────────────────────────┐
+│ Welcome to HATS Accessibility Testing Tool!                │
+│ We recommend using Chrome browser for the best experience. │
+└────────────────────────────────────────────────────────────┘
+? What would you like to scan today? Website
+? Do you want purple-hats to run in the background? Yes
+? Do you need to login to your website? (Y/n) No
+? Please enter URL of website:  https://www.sitemaps.org
+```
+  
+If the website URL provided is invalid, an error message will be prompted for you to provide a valid input.
+```shell
+>> Cannot resolve URL. Please provide a valid URL.
+```
 
 
+## Troubleshooting
+Please refer to the information below to exist in debugging. Most errors below are due to the switching between Node.js versions.
 
+### Incompatible Node.js versions
+**Issue**: When your Node.js version is incompatible, you may face the following syntax error.  
+**Solution**: Install Node.js versions > v9, i.e. Node.js v10 and above.  
+```shell
+const URL_NO_COMMAS_REGEX = RegExp('https?://(www\\.)?[\\p{L}0-9][-\\p{L}0-9@:%._\\+~#=]{0,254}[\\p{L}0-9]\\.[a-z]{2,63}(:\\d{1,5})?(/[-\\p{L}0-9@:%_\\+.~#?&//=\\(\\)]*)?', 'giu'); // eslint-disable-line
+                            ^
+SyntaxError: Invalid regular expression: /https?://(www\.)?[\p{L}0-9][-\p{L}0-9@:%._\+~#=]{0,254}[\p{L}0-9]\.[a-z]{2,63}(:\d{1,5})?(/[-\p{L}0-9@:%_\+.~#?&//=\(\)]*)?/: Invalid escape
+```
 
+### Compiled against a different Node.js version
+**Issue**: When you switch between different versions of Node.js in your environment, you may face the following error.
+```shell
+<user_path>/purple-hats/node_modules/bindings/bindings.js:91
+        throw e
+        ^
+
+Error: The module '/Users/bzhen/Desktop/PURPLE_HATS/purple-hats/node_modules/libxmljs/build/Release/xmljs.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 57. This version of Node.js requires
+NODE_MODULE_VERSION 88. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+```
+**Solution**: As recommended in the error message, run `npm rebuild` or `npm install`
+
+### dyld Error
+**Issue**: Not able to run Purple HATS due to the following error shown below
+```shell
+dyld: lazy symbol binding failed: Symbol not found: __ZN2v87Isolate37AdjustAmountOfExternalAllocatedMemoryEx
+  Referenced from: <user_path>/purple-hats/node_modules/libxmljs/build/Release/xmljs.node
+  Expected in: flat namespace
+
+dyld: Symbol not found: __ZN2v87Isolate37AdjustAmountOfExternalAllocatedMemoryEx
+  Referenced from: <user_path>/PURPLE_HATS/purple-hats/node_modules/libxmljs/build/Release/xmljs.node
+  Expected in: flat namespace
+
+zsh: abort      node index.js
+```
+**Solutions**: 
+1. Delete existing `node_modules` folder and re-install the NPM packages with `npm install`.
+3. Refer to this [GitHub issue](https://github.com/fsevents/fsevents/issues/313) for more alternative solutions

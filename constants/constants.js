@@ -23,8 +23,6 @@ exports.a11yStorage = a11yStorage;
 
 exports.a11yDataStoragePath = `${a11yStorage}/datasets`;
 
-exports.currentResultsFolderPath = 'results/current';
-
 exports.allIssueFileName = 'all_issues';
 
 exports.rootPath = __dirname;

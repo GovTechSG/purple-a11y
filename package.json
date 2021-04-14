@@ -1,11 +1,20 @@
 {
   "name": "purple-hats",
+  "main": "index.js",
   "version": "1.0.0",
   "dependencies": {
     "apify": "^0.19.1",
     "axe-core": "^3.5.0",
+    "axios": "^0.21.1",
+    "cache-require-paths": "^0.3.0",
     "fs-extra": "^8.1.0",
-    "mustache": "^4.0.1"
+    "inquirer": "^7.3.3",
+    "jsdom": "^16.4.0",
+    "mustache": "^4.0.1",
+    "print-message": "^3.0.1",
+    "validator": "^13.1.17",
+    "xml2js": "^0.4.23",
+    "yargs": "^16.1.0"
   },
   "devDependencies": {
     "eslint": "^6.8.0",
