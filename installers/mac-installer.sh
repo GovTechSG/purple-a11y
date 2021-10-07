@@ -21,7 +21,7 @@ deactivate 2>/dev/null;
     # Then use the respective python version to create virtual environment & install Ansible
     if ! [ -z "which python3" ]; then
         echo "Skipping Python3 Installation"
-        python3 -m venv a11y
+        python3 -m virtualenv a11y
         . a11y/bin/activate
         yes | pip3 install ansible
     else
