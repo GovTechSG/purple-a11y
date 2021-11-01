@@ -9,7 +9,6 @@ WORKDIR /app/installers
 RUN bash linux-installer.sh
 
 WORKDIR /app
-RUN npm install
 RUN node node_modules/puppeteer/install.js
 
 CMD bash run.sh
