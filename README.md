@@ -1,4 +1,5 @@
-#purple-hats
+# purple-hats
+
 ----
 
 purple-hats is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).
@@ -8,8 +9,8 @@ purple-hats is a customisable, automated accessibility testing tool that allows 
 2. Axe-core
 3. NodeJS (NPM)
 
-
 ## Installations
+
 purple-hats includes installer scripts which automates the installation of the required components used by purple-hats. Currently, it is supported on macOS and Linux (Red Hat, Centos, Ubuntu, OpenSuse/Suse).
 
 <details>
@@ -184,6 +185,47 @@ Scanning website...
 
 user@user-MacBook-Pro purple-hats %
 ```
+
+
+## Docker
+
+### Usage in CI/CD
+
+Running the container
+
+```shell
+docker run -i --name purple-hats gowhere/purple-hats << EOF                       
+2
+supportgowhere.life.gov.sg
+EOF
+```
+
+Retrieving the results
+
+```shell
+docker cp purple-hats:/app/results <output-results-dir>
+
+# eg.
+# docker cp purple-hats:/app/results ~/Documents/purple-hats/results
+```
+
+### Local usage
+
+Running 
+```shell
+docker run -it -rm -v <output-results-dir>:/app/results gowhere/purple-hats
+
+# eg. 
+# docker run -it -v ~/Documents/purple-hats/results:/app/results gowhere/purple-hats
+```
+
+Retrieving results
+
+- Navigate to the path provided in `<output-results-dir>`
+- You should see the results here
+- Open `report.html` in your browser to view
+
+![screenshot of results](https://i.imgur.com/6bfAhLH.png)
 
 
 
