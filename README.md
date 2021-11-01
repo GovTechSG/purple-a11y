@@ -213,7 +213,7 @@ docker cp purple-hats:/app/results <output-results-dir>
 
 Running 
 ```shell
-docker run -it -v <output-results-dir>:/app/results gowhere/purple-hats
+docker run -it -rm -v <output-results-dir>:/app/results gowhere/purple-hats
 
 # eg. 
 # docker run -it -v ~/Documents/purple-hats/results:/app/results gowhere/purple-hats
