@@ -23,10 +23,10 @@ jobs:
         run: npm install
 
       - name: Build Docker File
-        run: docker build . -t gowhere/purple-hats:${GITHUB_REF#refs/*/}
+      - run: docker build . -t ${DOCKER_USERNAME}/purple-hats:${GITHUB_REF#refs/*/}
 
       - name: Login Docker
-        run: docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+      - run: docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
 
       - name: Push Docker Image
-        run: docker push gowhere/purple-hats:${GITHUB_REF#refs/*/}
+      - run: docker push ${DOCKER_USERNAME}/purple-hats:${GITHUB_REF#refs/*/}
