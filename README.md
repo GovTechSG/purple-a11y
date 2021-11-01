@@ -189,17 +189,12 @@ user@user-MacBook-Pro purple-hats %
 
 ## Docker
 
-### Local usage
-
-```shell
-```
-
 ### Usage in CI/CD
 
 Running the container
 
 ```shell
-docker run -i --name purple-hats gowhere/purple-hats << EOF                                       
+docker run -i --name purple-hats gowhere/purple-hats << EOF                       
 2
 supportgowhere.life.gov.sg
 EOF
@@ -208,8 +203,31 @@ EOF
 Retrieving the results
 
 ```shell
-docker cp purple-hats:/app/results ~/Downloads/purplehats
+docker cp purple-hats:/app/results <output-results-dir>
+
+# eg.
+# docker cp purple-hats:/app/results ~/Documents/purple-hats/results
 ```
+
+### Local usage
+
+Running 
+```shell
+docker run -it -v <output-results-dir>:/app/results gowhere/purple-hats
+
+# eg. 
+# docker run -it -v ~/Documents/purple-hats/results:/app/results gowhere/purple-hats
+```
+
+Retrieving results
+
+- Navigate to the path provided in `<output-results-dir>`
+- You should see the results here
+- Open `report.html` in your browser to view
+
+![screenshot of results](https://i.imgur.com/6bfAhLH.png)
+
+
 
 
 
