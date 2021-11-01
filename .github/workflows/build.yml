@@ -1,0 +1,32 @@
+name: Build & Push Docker Image
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 16.x
+
+      - name: Cache node_modules
+        id: cache_node_modules
+        uses: actions/cache@v1
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      - if: steps.cache_node_modules.outputs.cache-hit != 'true'
+        run: npm install
+
+      - name: Build Docker File
+        run: docker build . -t ${{ secrets.DOCKER_USERNAME }}/purple-hats:${GITHUB_REF#refs/*/}
+
+      - name: Login Docker
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push Docker Image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/purple-hats:${GITHUB_REF#refs/*/}
