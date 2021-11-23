@@ -16,14 +16,17 @@ exports.urlsCrawledObj = {
   outOfDomain: [],
 };
 
-// folder paths
-const a11yStorage = '.a11y_storage';
+exports.scannerTypes = {
+  login: 'login',
+  sitemap: 'sitemap',
+  website: 'website'
+}
 
+// folder paths
+const a11yStorage = 'apify_storage';
 exports.a11yStorage = a11yStorage;
 
 exports.a11yDataStoragePath = `${a11yStorage}/datasets`;
-
-exports.currentResultsFolderPath = 'results/current';
 
 exports.allIssueFileName = 'all_issues';
 
@@ -38,4 +41,6 @@ exports.impactOrder = {
 };
 
 exports.wcagWebPage = 'https://www.w3.org/TR/WCAG21/';
-exports.axeWebPage = 'https://dequeuniversity.com/rules/axe/3.5/';
+const latestAxeVersion = '4.2';
+exports.axeVersion = latestAxeVersion;
+exports.axeWebPage = `https://dequeuniversity.com/rules/axe/${latestAxeVersion}/`;
