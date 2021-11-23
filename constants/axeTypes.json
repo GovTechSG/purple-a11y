@@ -43,17 +43,6 @@
     ]
   },
   {
-    "id": "html-xml-lang-mismatch",
-    "wcag": [
-      "3.1.1"
-    ],
-    "disabilities": [
-      "Blind",
-      "Deafblind",
-      "Cognitive"
-    ]
-  },
-  {
     "id": "html-lang-valid",
     "wcag": [
       "3.1.1"
@@ -73,6 +62,17 @@
       "Blind",
       "Deaf",
       "Mobility"
+    ]
+  },
+  {
+    "id": "html-xml-lang-mismatch",
+    "wcag": [
+      "3.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Cognitive"
     ]
   },
   {
@@ -107,22 +107,22 @@
     ]
   },
   {
+    "id": "video-caption",
+    "wcag": [
+      "1.2.2",
+      "1.2.3"
+    ],
+    "disabilities": [
+      "Deaf"
+    ]
+  },
+  {
     "id": "accesskeys",
     "wcag": [],
     "disabilities": [
       "Blind",
       "Low Vision",
       "Mobility"
-    ]
-  },
-  {
-    "id": "th-has-data-cells",
-    "wcag": [
-      "1.3.1"
-    ],
-    "disabilities": [
-      "Blind",
-      "Deafblind"
     ]
   },
   {
@@ -136,6 +136,16 @@
       "Blind",
       "Deafblind",
       "Mobility"
+    ]
+  },
+  {
+    "id": "th-has-data-cells",
+    "wcag": [
+      "1.3.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
     ]
   },
   {
@@ -190,6 +200,26 @@
     ]
   },
   {
+    "id": "aria-command-name",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Low Vision",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-dialog-name",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Low Vision",
+      "Mobility"
+    ]
+  },
+  {
     "id": "aria-input-field-name",
     "wcag": [
       "4.1.2"
@@ -210,18 +240,29 @@
     ]
   },
   {
-    "id": "aria-roles",
+    "id": "aria-progressbar-name",
     "wcag": [
-      "4.1.2"
+      "1.1.1"
     ],
     "disabilities": [
       "Blind",
-      "Deafblind",
+      "Low Vision",
       "Mobility"
     ]
   },
   {
-    "id": "aria-toggle-field-name",
+    "id": "aria-meter-name",
+    "wcag": [
+      "1.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Low Vision",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-roles",
     "wcag": [
       "4.1.2"
     ],
@@ -244,12 +285,51 @@
     ]
   },
   {
+    "id": "aria-tooltip-name",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Low Vision",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-treeitem-name",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Low Vision",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-toggle-field-name",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
     "id": "aria-hidden-body",
     "wcag": [
       "4.1.2"
     ],
     "disabilities": [
       "Blind"
+    ]
+  },
+  {
+    "id": "landmark-banner-is-top-level",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
     ]
   },
   {
@@ -278,15 +358,29 @@
     ]
   },
   {
-    "id": "landmark-banner-is-top-level",
-    "wcag": [],
+    "id": "aria-required-children",
+    "wcag": [
+      "1.3.1"
+    ],
     "disabilities": [
       "Blind",
-      "Deafblind"
+      "Deafblind",
+      "Mobility"
     ]
   },
   {
     "id": "p-as-heading",
+    "wcag": [
+      "1.3.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-required-parent",
     "wcag": [
       "1.3.1"
     ],
@@ -307,25 +401,17 @@
     ]
   },
   {
-    "id": "aria-required-parent",
+    "id": "css-orientation-lock",
     "wcag": [
-      "1.3.1"
+      "1.3.4"
     ],
     "disabilities": [
-      "Blind",
-      "Deafblind",
-      "Mobility"
-    ]
-  },
-  {
-    "id": "aria-required-children",
-    "wcag": [
-      "1.3.1"
-    ],
-    "disabilities": [
-      "Blind",
-      "Deafblind",
-      "Mobility"
+      "Attention Deficit",
+      "Dyslexia",
+      "Sighted Keyboard Users",
+      "Low Vision",
+      "Mobility",
+      "Cognitive"
     ]
   },
   {
@@ -345,20 +431,6 @@
       "Sighted Keyboard Users",
       "Blind",
       "Deafblind"
-    ]
-  },
-  {
-    "id": "css-orientation-lock",
-    "wcag": [
-      "1.3.4"
-    ],
-    "disabilities": [
-      "Attention Deficit",
-      "Dyslexia",
-      "Sighted Keyboard Users",
-      "Low Vision",
-      "Mobility",
-      "Cognitive"
     ]
   },
   {
@@ -383,26 +455,7 @@
     ]
   },
   {
-    "id": "role-img-alt",
-    "wcag": [
-      "1.1.1"
-    ],
-    "disabilities": [
-      "Blind",
-      "Deafblind"
-    ]
-  },
-  {
     "id": "focus-order-semantics",
-    "wcag": [],
-    "disabilities": [
-      "Blind",
-      "Deafblind",
-      "Mobility"
-    ]
-  },
-  {
-    "id": "tabindex",
     "wcag": [],
     "disabilities": [
       "Blind",
@@ -422,13 +475,39 @@
     ]
   },
   {
-    "id": "identical-links-same-purpose",
+    "id": "role-img-alt",
     "wcag": [
-      "2.4.9"
+      "1.1.1"
     ],
     "disabilities": [
       "Blind",
       "Deafblind"
+    ]
+  },
+  {
+    "id": "tabindex",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "aria-text",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "presentation-role-conflict",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Low Vision",
+      "Mobility"
     ]
   },
   {
@@ -440,6 +519,25 @@
       "Blind",
       "Deafblind",
       "Mobility"
+    ]
+  },
+  {
+    "id": "landmark-no-duplicate-main",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "identical-links-same-purpose",
+    "wcag": [
+      "2.4.9"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
     ]
   },
   {
@@ -456,11 +554,30 @@
     ]
   },
   {
-    "id": "landmark-no-duplicate-main",
+    "id": "frame-tested",
+    "wcag": [],
+    "disabilities": [
+      "Sighted Keyboard Users",
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "frame-title-unique",
     "wcag": [],
     "disabilities": [
       "Blind",
       "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "frame-focusable-content",
+    "wcag": [
+      "2.1.1"
+    ],
+    "disabilities": [
+      "Blind",
       "Mobility"
     ]
   },
@@ -486,12 +603,31 @@
     ]
   },
   {
-    "id": "frame-tested",
+    "id": "duplicate-id-active",
+    "wcag": [
+      "4.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
+    "id": "hidden-content",
     "wcag": [],
     "disabilities": [
       "Sighted Keyboard Users",
       "Blind",
-      "Deafblind"
+      "Colorblindness"
+    ]
+  },
+  {
+    "id": "heading-order",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
     ]
   },
   {
@@ -500,24 +636,6 @@
       "2.4.1",
       "4.1.2"
     ],
-    "disabilities": [
-      "Blind",
-      "Deafblind",
-      "Mobility"
-    ]
-  },
-  {
-    "id": "frame-title-unique",
-    "wcag": [],
-    "disabilities": [
-      "Blind",
-      "Deafblind",
-      "Mobility"
-    ]
-  },
-  {
-    "id": "heading-order",
-    "wcag": [],
     "disabilities": [
       "Blind",
       "Deafblind",
@@ -534,16 +652,7 @@
     ]
   },
   {
-    "id": "hidden-content",
-    "wcag": [],
-    "disabilities": [
-      "Sighted Keyboard Users",
-      "Blind",
-      "Colorblindness"
-    ]
-  },
-  {
-    "id": "duplicate-id-active",
+    "id": "duplicate-id-aria",
     "wcag": [
       "4.1.1"
     ],
@@ -560,27 +669,6 @@
     "disabilities": [
       "Blind",
       "Deafblind"
-    ]
-  },
-  {
-    "id": "duplicate-id-aria",
-    "wcag": [
-      "4.1.1"
-    ],
-    "disabilities": [
-      "Blind",
-      "Deafblind"
-    ]
-  },
-  {
-    "id": "input-image-alt",
-    "wcag": [
-      "1.1.1"
-    ],
-    "disabilities": [
-      "Blind",
-      "Deafblind",
-      "Mobility"
     ]
   },
   {
@@ -608,6 +696,27 @@
     ]
   },
   {
+    "id": "input-image-alt",
+    "wcag": [
+      "1.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "link-in-text-block",
+    "wcag": [
+      "1.4.1"
+    ],
+    "disabilities": [
+      "Low Vision",
+      "Colorblindness"
+    ]
+  },
+  {
     "id": "label-content-name-mismatch",
     "wcag": [
       "2.5.3"
@@ -616,6 +725,27 @@
       "Blind",
       "Low Vision",
       "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "valid-lang",
+    "wcag": [
+      "3.1.2"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Cognitive"
+    ]
+  },
+  {
+    "id": "nested-interactive",
+    "wcag": [
+      "4.1.2"
+    ],
+    "disabilities": [
+      "Blind",
       "Mobility"
     ]
   },
@@ -639,41 +769,11 @@
     ]
   },
   {
-    "id": "valid-lang",
-    "wcag": [
-      "3.1.2"
-    ],
-    "disabilities": [
-      "Blind",
-      "Deafblind",
-      "Cognitive"
-    ]
-  },
-  {
-    "id": "link-in-text-block",
-    "wcag": [
-      "1.4.1"
-    ],
-    "disabilities": [
-      "Low Vision",
-      "Colorblindness"
-    ]
-  },
-  {
     "id": "link-name",
     "wcag": [
       "2.4.4",
       "4.1.2"
     ],
-    "disabilities": [
-      "Blind",
-      "Deafblind",
-      "Mobility"
-    ]
-  },
-  {
-    "id": "landmark-main-is-top-level",
-    "wcag": [],
     "disabilities": [
       "Blind",
       "Deafblind",
@@ -691,12 +791,12 @@
     ]
   },
   {
-    "id": "landmark-one-main",
+    "id": "landmark-no-duplicate-banner",
     "wcag": [],
     "disabilities": [
+      "Sighted Keyboard Users",
       "Blind",
-      "Deafblind",
-      "Mobility"
+      "Deafblind"
     ]
   },
   {
@@ -710,12 +810,21 @@
     ]
   },
   {
-    "id": "landmark-no-duplicate-banner",
+    "id": "landmark-main-is-top-level",
     "wcag": [],
     "disabilities": [
-      "Sighted Keyboard Users",
       "Blind",
-      "Deafblind"
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "landmark-one-main",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
     ]
   },
   {
@@ -748,13 +857,13 @@
     ]
   },
   {
-    "id": "svg-img-alt",
+    "id": "select-name",
     "wcag": [
-      "1.1.1"
+      "4.1.2"
     ],
     "disabilities": [
       "Blind",
-      "Deafblind",
+      "Low Vision",
       "Mobility"
     ]
   },
@@ -767,6 +876,27 @@
       "Blind",
       "Deafblind",
       "Mobility"
+    ]
+  },
+  {
+    "id": "svg-img-alt",
+    "wcag": [
+      "1.1.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Deafblind",
+      "Mobility"
+    ]
+  },
+  {
+    "id": "empty-table-header",
+    "wcag": [
+      "1.3.1"
+    ],
+    "disabilities": [
+      "Blind",
+      "Low Vision"
     ]
   },
   {
@@ -788,20 +918,20 @@
     ]
   },
   {
+    "id": "table-duplicate-name",
+    "wcag": [],
+    "disabilities": [
+      "Blind",
+      "Deafblind"
+    ]
+  },
+  {
     "id": "skip-link",
     "wcag": [],
     "disabilities": [
       "Blind",
       "Deafblind",
       "Mobility"
-    ]
-  },
-  {
-    "id": "table-duplicate-name",
-    "wcag": [],
-    "disabilities": [
-      "Blind",
-      "Deafblind"
     ]
   },
   {

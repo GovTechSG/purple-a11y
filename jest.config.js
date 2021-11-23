@@ -19,12 +19,16 @@ module.exports = {
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
   collectCoverageFrom: [
-    "**/*.{js,jsx}",
-    "!**/node_modules/**"
+    '**/*.{js,jsx}',
+    '!**/node_modules/**',
+    '!**/constants/questions.js',
+    '!jest.config.js',
+    '!**/coverage/lcov-report/*.js',
+    'testCode*.js',
   ],
 
   // The directory where Jest should output its coverage files
-  coverageDirectory: "coverage",
+  coverageDirectory: 'coverage',
 
   // An array of regexp pattern strings used to skip coverage collection
   // coveragePathIgnorePatterns: [
@@ -32,21 +36,18 @@ module.exports = {
   // ],
 
   // Indicates which provider should be used to instrument code for coverage
-  coverageProvider: "v8",
+  coverageProvider: 'v8',
 
   // A list of reporter names that Jest uses when writing coverage reports
-  coverageReporters: [
-    "text",
-    "text-summary"
-  ],
+  coverageReporters: ['lcov', 'text', 'text-summary', 'json'],
 
   // An object that configures minimum threshold enforcement for coverage results
   coverageThreshold: {
-    "global": {
-      "branches": 1,
-      "functions": 1,
-      "lines": 1,
-      "statements": 1
+    global: {
+      branches: 1,
+      functions: 1,
+      lines: 1,
+      statements: 1,
     },
   },
 
@@ -143,7 +144,7 @@ module.exports = {
   // snapshotSerializers: [],
 
   // The test environment that will be used for testing
-  testEnvironment: "node",
+  testEnvironment: 'node',
 
   // Options that will be passed to the testEnvironment
   // testEnvironmentOptions: {},
