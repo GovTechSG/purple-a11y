@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-param-reassign */
 const Apify = require('apify');
 const axe = require('axe-core');
 const { axeScript } = require('../constants/constants');
@@ -8,11 +10,9 @@ const filterAxeResults = (results, host) => {
 
   const errors = violations.map(violation => {
     const { id, nodes, help, impact, helpUrl } = violation;
-    const fixes = nodes.map(node => {
-      return {
-        htmlElement: node.html,
-      };
-    });
+    const fixes = nodes.map(node => ({
+      htmlElement: node.html,
+    }));
     return {
       id,
       description: help,
@@ -50,9 +50,11 @@ exports.createApifySubFolders = async randomToken => {
   return { dataset, requestQueue };
 };
 
-exports.gotoFunction = async ({ request, page }) => {
-  return page.goto(request.url, { waitUntil: 'networkidle2' }, { timeout: 30000 });
-};
+exports.preNavigationHooks = [
+  async (_crawlingContext, gotoOptions) => {
+    gotoOptions = { waitUntil: 'networkidle2', timeout: 30000 };
+  },
+];
 
 exports.handleFailedRequestFunction = async ({ request }) => {
   Apify.utils.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
