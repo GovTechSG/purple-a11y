@@ -1,17 +1,20 @@
 const fs = require('fs-extra');
+const crypto = require('crypto');
 const { a11yDataStoragePath, allIssueFileName } = require('./constants/constants');
 
 exports.getHostnameFromRegex = url => {
-  // run against regex
   const matches = url.match(/^https?:\/\/([^/?#]+)(?:[/?#]|$)/i);
+
   // extract hostname (will be null if no match is found)
   return matches && matches[1];
 };
 
-exports.getCurrentDate = () => {
+const getCurrentDate = () => {
   const date = new Date();
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 };
+
+exports.getCurrentDate = getCurrentDate;
 
 exports.validateUrl = url => {
   const invalidURLends = [
@@ -38,11 +41,10 @@ exports.validateUrl = url => {
 };
 
 const getStoragePath = randomToken => {
-  const date = new Date();
-  const currentDate = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-  const storagePath = `results/${currentDate}/${randomToken}`;
-  return storagePath;
+  const currentDate = getCurrentDate();
+  return `results/${currentDate}/${randomToken}`;
 };
+
 exports.getStoragePath = getStoragePath;
 
 exports.createAndUpdateFolders = async (scanDetails, randomToken) => {
@@ -62,8 +64,19 @@ exports.createAndUpdateFolders = async (scanDetails, randomToken) => {
   });
 };
 
-exports.getCurrentTime = () => {
-  return new Date().toLocaleTimeString('en-GB', {
+exports.cleanUp = async (pathToDelete, setDefaultFolders = false) => {
+  await fs.pathExists(pathToDelete).then(exists => {
+    if (exists) {
+      fs.removeSync(pathToDelete);
+    }
+  });
+
+
+};
+
+/* istanbul ignore next */
+exports.getCurrentTime = () =>
+  new Date().toLocaleTimeString('en-GB', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -71,4 +84,23 @@ exports.getCurrentTime = () => {
     hour: 'numeric',
     minute: '2-digit',
   });
+
+
+
+exports.setHeadlessMode = isHeadless => {
+  if (isHeadless) {
+    process.env.APIFY_HEADLESS = 1;
+  } else {
+    process.env.APIFY_HEADLESS = 0;
+  }
+};
+
+exports.generateRandomToken = () => {
+  const timeStamp = Math.floor(Date.now() / 1000);
+  const randomString = crypto.randomBytes(16).toString('hex').slice(0, 10);
+  return `${timeStamp}${randomString}`;
+};
+
+exports.setThresholdLimits = setWarnLevel => {
+  process.env.WARN_LEVEL = setWarnLevel;
 };
