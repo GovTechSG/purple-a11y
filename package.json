@@ -1,20 +1,37 @@
 {
   "name": "purple-hats",
+  "main": "index.js",
   "version": "1.0.0",
   "dependencies": {
-    "apify": "^0.19.1",
-    "axe-core": "^3.5.0",
-    "fs-extra": "^8.1.0",
-    "mustache": "^4.0.1"
+    "apify": "^1.2.1",
+    "axe-core": "^4.2.1",
+    "axios": "^0.21.1",
+    "fs-extra": "^10.0.0",
+    "inquirer": "^8.1.0",
+    "jsdom": "^16.5.3",
+    "mustache": "^4.2.0",
+    "print-message": "^3.0.1",
+    "puppeteer": "^10.0.0",
+    "validator": "^13.6.0",
+    "winston": "^3.3.3",
+    "xml2js": "^0.4.23",
+    "yargs": "^17.0.1"
   },
   "devDependencies": {
-    "eslint": "^6.8.0",
+    "babel-jest": "^27.0.2",
+    "babel-plugin-rewire": "^1.2.0",
+    "eslint": "^7.25.0",
     "eslint-config-airbnb-base": "^14.0.0",
-    "eslint-config-prettier": "^6.10.0",
+    "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-import": "^2.20.0",
     "eslint-plugin-prettier": "^3.1.2",
-    "jest": "^26.4.2",
-    "rewire": "^5.0.0"
+    "jest": "^27.0.3",
+    "prettier": "^2.4.1"
+  },
+  "babel": {
+    "plugins": [
+      "babel-plugin-rewire"
+    ]
   },
   "scripts": {
     "test": "jest --watchAll"

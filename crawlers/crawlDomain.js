@@ -1,7 +1,7 @@
 const Apify = require('apify');
 const {
   createApifySubFolders,
-  gotoFunction,
+  preNavigationHooks,
   runAxeScript,
   handleFailedRequestFunction,
 } = require('./commonCrawlerFunc');
@@ -21,7 +21,7 @@ exports.crawlDomain = async (url, randomToken, host) => {
 
   const crawler = new Apify.PuppeteerCrawler({
     requestQueue,
-    gotoFunction,
+    preNavigationHooks,
     handlePageFunction: async ({ page, request }) => {
       const currentUrl = request.url;
       const location = await page.evaluate('location');
