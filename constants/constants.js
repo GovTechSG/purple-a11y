@@ -19,8 +19,8 @@ exports.urlsCrawledObj = {
 exports.scannerTypes = {
   login: 'login',
   sitemap: 'sitemap',
-  website: 'website'
-}
+  website: 'website',
+};
 
 // folder paths
 const a11yStorage = 'apify_storage';
@@ -44,3 +44,8 @@ exports.wcagWebPage = 'https://www.w3.org/TR/WCAG21/';
 const latestAxeVersion = '4.2';
 exports.axeVersion = latestAxeVersion;
 exports.axeWebPage = `https://dequeuniversity.com/rules/axe/${latestAxeVersion}/`;
+
+exports.alertMessageOptions = {
+  border: true,
+  borderColor: 'red',
+};

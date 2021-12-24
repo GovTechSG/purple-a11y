@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 /* eslint-disable no-console */
 const fs = require('fs-extra');
 const printMessage = require('print-message');
@@ -7,24 +8,26 @@ const axeIssuesList = require('./constants/axeTypes.json');
 const wcagList = require('./constants/wcagLinks.json');
 const { allIssueFileName, impactOrder } = require('./constants/constants');
 const { getCurrentTime, getStoragePath } = require('./utils');
-const { alertMessageOptions } = require('./constants/bambooFunctions');
+const { alertMessageOptions } = require('./constants/constants');
 const { consoleLogger, silentLogger } = require('./logs');
 
-const extractFileNames = async directory => {
-  const allFiles = await fs.readdir(directory).catch(readdirError => {
-    consoleLogger.info('An error has occured when reading the file, please try again');
-    silentLogger.error(readdirError);
-  });
-  return allFiles.filter(file => path.extname(file).toLowerCase() === '.json');
-};
+const extractFileNames = async directory =>
+  fs
+    .readdir(directory)
+    .then(allFiles => allFiles.filter(file => path.extname(file).toLowerCase() === '.json'))
+    .catch(readdirError => {
+      consoleLogger.info('An error has occurred when retrieving files, please try again.');
+      silentLogger.error(`(extractFileNames) - ${readdirError}`);
+    });
 
-const parseContentToJson = async rPath => {
-  const content = await fs.readFile(rPath, 'utf8').catch(parseError => {
-    consoleLogger.info('An error has occured when parsing the content, please try again.');
-    silentLogger.error(parseError);
-  });
-  return JSON.parse(content);
-};
+const parseContentToJson = async rPath =>
+  fs
+    .readFile(rPath, 'utf8')
+    .then(content => JSON.parse(content))
+    .catch(parseError => {
+      consoleLogger.info('An error has occurred when parsing the content, please try again.');
+      silentLogger.error(`(parseContentToJson) - ${parseError}`);
+    });
 
 const fetchIcons = async (disabilities, impact) =>
   Promise.all(
@@ -32,48 +35,49 @@ const fetchIcons = async (disabilities, impact) =>
       const template = await fs
         .readFile(path.join(__dirname, `/static/${disability}.mustache`), 'utf8')
         .catch(templateError => {
-          consoleLogger.info('An error has occured when reading the template, please try again.');
-          silentLogger.error('error', templateError);
+          consoleLogger.info('An error has occurred when reading the template, please try again.');
+          silentLogger.error(`(fetchIcons, mapping disabilities) - ${templateError}`);
         });
 
       return Mustache.render(template, { impact });
     }),
   ).catch(iconError => {
-    consoleLogger.info('An error has occured when fetching icons, please try again.');
-    silentLogger.error(iconError);
+    consoleLogger.info('An error has occurred when fetching icons, please try again.');
+    silentLogger.error(`(fetchIcons) - ${iconError}`);
   });
 
-const writeResults = async (allissues, storagePath) => {
+const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResults') => {
   const finalResultsInJson = JSON.stringify(
     { startTime: getCurrentTime(), count: allissues.length, allissues },
     null,
     4,
   );
-  await fs
-    .writeFile(`${storagePath}/reports/compiledResults.json`, finalResultsInJson)
-    .catch(writeResultsError => {
-      consoleLogger.info(
-        'An error has occured when compiling the results into the report, please try again.',
-      );
-      silentLogger.error(writeResultsError);
-    });
+
+  try {
+    await fs.writeFile(`${storagePath}/reports/${jsonFilename}.json`, finalResultsInJson);
+  } catch (writeResultsError) {
+    consoleLogger.info(
+      'An error has occurred when compiling the results into the report, please try again.',
+    );
+    silentLogger.error(`(writeResults) - ${writeResultsError}`);
+  }
 };
 
-const writeHTML = async (allissues, storagePath) => {
+const writeHTML = async (allissues, storagePath, htmlFilename = 'report') => {
   const finalResultsInJson = JSON.stringify(
     { startTime: getCurrentTime(), count: allissues.length, allissues },
     null,
     4,
   );
 
-  const musTemp = await fs
-    .readFile(path.join(__dirname, '/static/report.mustache'))
-    .catch(templateError => {
-      consoleLogger.info('An error has ocurred when fetching the template, please try again');
-      silentLogger.error(templateError);
-    });
-  const output = Mustache.render(musTemp.toString(), JSON.parse(finalResultsInJson));
-  await fs.writeFile(`${storagePath}/reports/report.html`, output);
+  try {
+    const musTemp = await fs.readFile(path.join(__dirname, '/static/report.mustache'));
+    const output = Mustache.render(musTemp.toString(), JSON.parse(finalResultsInJson));
+    await fs.writeFile(`${storagePath}/reports/${htmlFilename}.html`, output);
+  } catch (templateError) {
+    consoleLogger.info('An error has ocurred when generating the report, please try again.');
+    silentLogger.error(`(writeHTML) - ${templateError}`);
+  }
 };
 
 const flattenAxeResults = async rPath => {
@@ -113,6 +117,36 @@ const flattenAxeResults = async rPath => {
   );
 };
 
+const granularReporting = async (randomToken, allIssues) => {
+  if (allIssues.length > 0) {
+    const storagePath = getStoragePath(randomToken);
+    const impactLevels = ['critical', 'serious', 'moderate', 'minor'];
+
+    let currentImpactLevelIssues;
+    impactLevels.forEach(async impactLevel => {
+      currentImpactLevelIssues = allIssues.filter(issue => issue.impact === impactLevel);
+
+      if (currentImpactLevelIssues.length > 0) {
+        const writeSeverityResult = writeResults(
+          currentImpactLevelIssues,
+          storagePath,
+          `compiledResults-${impactLevel}`,
+        );
+        const writeHTMLSeverityReport = writeHTML(
+          currentImpactLevelIssues,
+          storagePath,
+          `report-${impactLevel}`,
+        );
+        await Promise.all([writeSeverityResult, writeHTMLSeverityReport]);
+      }
+    });
+
+    return true;
+  }
+
+  return false;
+};
+
 const issueCountMap = allIssues => {
   const criticalImpact = allIssues.filter(issue => issue.impact === 'critical');
   const seriousImpact = allIssues.filter(issue => issue.impact === 'serious');
@@ -128,6 +162,7 @@ const issueCountMap = allIssues => {
 
   return issueCount;
 };
+
 const thresholdLimitCheck = async (warnLevel, allIssues) => {
   const issueCounts = issueCountMap(allIssues);
 
@@ -172,9 +207,13 @@ exports.generateArtifacts = async randomToken => {
       allIssues = allIssues.concat(flattenedIssues);
     }),
   ).catch(flattenIssuesError => {
-    consoleLogger.info('An error has occured when flattening the issues, please try again.');
+    consoleLogger.info('An error has occurred when flattening the issues, please try again.');
     silentLogger.error(flattenIssuesError);
   });
+
+  if (process.env.REPORT_BREAKDOWN === '1') {
+    await granularReporting(randomToken, allIssues);
+  }
 
   await thresholdLimitCheck(process.env.WARN_LEVEL, allIssues);
 
