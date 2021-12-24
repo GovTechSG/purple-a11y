@@ -1,10 +1,11 @@
+/* eslint-disable no-shadow */
 const { createLogger, format, transports } = require('winston');
 
 const { combine, timestamp, printf } = format;
 
 // Sample output
 // {"timestamp":"2020-11-25 17:29:07","level":"error","message":"hello world"}
-const logFormat = printf(({ level, message }) => {
+const logFormat = printf(({ timestamp, level, message }) => {
   const log = {
     timestamp: `${timestamp}`,
     level: `${level}`,

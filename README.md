@@ -8,16 +8,16 @@ Purple HATS is a customisable, automated accessibility testing tool that allows 
 
 ## Prerequisites and Installations
 Please ensure the following requirements are met:
-- Node.js version to be version 10 and above.
+- **Node.js version to be version 12 and above.**
 - Install the required NPM packages with `npm install`.
 
 ### Usage of Node Version Manager (NVM)
 ```shell
-# If have not install a version > v8.1, install NodeJs version wiyh NVM
-nvm install <nodejs_version_greater_than_8.1>
+# If have not install a version >= v12, install NodeJs version wiyh NVM
+nvm install <nodejs_version_greater_than_12>
 
 # For subsequent use, you will need to run the command below as time you open a new terminal
-nvm use <nodejs_version_greater_than_8.1>
+nvm use <nodejs_version_greater_than_12>
 ```
 
 ### Facing issues?
@@ -110,7 +110,7 @@ Please refer to the information below to exist in debugging. Most errors below a
 ```shell
 const URL_NO_COMMAS_REGEX = RegExp('https?://(www\\.)?[\\p{L}0-9][-\\p{L}0-9@:%._\\+~#=]{0,254}[\\p{L}0-9]\\.[a-z]{2,63}(:\\d{1,5})?(/[-\\p{L}0-9@:%_\\+.~#?&//=\\(\\)]*)?', 'giu'); // eslint-disable-line
                             ^
-SyntaxError: Invalid regular expression: /https?://(www\.)?[\p{L}0-9][-\p{L}0-9@:%._\+~#=]{0,254}[\p{L}0-9]\.[a-z]{2,63}(:\d{1,5})?(/[-\p{L}0-9@:%_\+.~#?&//=\(\)]*)?/: Invalid escape
+SyntaxError: Invalid regular expression: /https?://(www\.)?[\p{L}0-9][-\p{L}0-9@:%\._\+~#=]{0,254}[\p{L}0-9]\.[a-z]{2,63}(:\d{1,5})?(/[-\p{L}0-9@:%_\+.~#?&//=\(\)]*)?/: Invalid escape
 ```
 
 ### Compiled against a different Node.js version
