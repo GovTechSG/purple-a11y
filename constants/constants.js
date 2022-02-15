@@ -23,7 +23,7 @@ exports.scannerTypes = {
 };
 
 // folder paths
-const a11yStorage = 'apify_storage';
+const a11yStorage = '.a11y_storage';
 exports.a11yStorage = a11yStorage;
 
 exports.a11yDataStoragePath = `${a11yStorage}/datasets`;
@@ -41,7 +41,7 @@ exports.impactOrder = {
 };
 
 exports.wcagWebPage = 'https://www.w3.org/TR/WCAG21/';
-const latestAxeVersion = '4.2';
+const latestAxeVersion = '4.4';
 exports.axeVersion = latestAxeVersion;
 exports.axeWebPage = `https://dequeuniversity.com/rules/axe/${latestAxeVersion}/`;
 
