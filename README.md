@@ -8,16 +8,18 @@ Purple HATS is a customisable, automated accessibility testing tool that allows 
 
 ## Prerequisites and Installations
 Please ensure the following requirements are met:
-- **Node.js version to be version 12 and above.**
+- **Node.js version to be version 15.10.0 and above.**
+- If you do not have node, or if there is a need to manage your node versions, you can consider using [Node Version Manager (NVM)](https://github.com/nvm-sh/nvm).
+- Make sure NVM is pointing to a node version >= 15.10.0. Please refer to [Usage of Node Version Manager (NVM)](#usage-of-node-version-manager-(NVM))
 - Install the required NPM packages with `npm install`.
 
 ### Usage of Node Version Manager (NVM)
 ```shell
-# If have not install a version >= v12, install NodeJs version wiyh NVM
-nvm install <nodejs_version_greater_than_12>
+# If have not installed a version >= v15, install NodeJs version with NVM
+nvm install <nodejs_version_greater_than_15>
 
 # For subsequent use, you will need to run the command below as time you open a new terminal
-nvm use <nodejs_version_greater_than_12>
+nvm use <nodejs_version_greater_than_15>
 ```
 
 ### Facing issues?
@@ -106,7 +108,7 @@ Please refer to the information below to exist in debugging. Most errors below a
 
 ### Incompatible Node.js versions
 **Issue**: When your Node.js version is incompatible, you may face the following syntax error.
-**Solution**: Install Node.js versions > v9, i.e. Node.js v10 and above.
+**Solution**: Install Node.js versions > v15.10.0, i.e. Node.js v16 and above.
 ```shell
 const URL_NO_COMMAS_REGEX = RegExp('https?://(www\\.)?[\\p{L}0-9][-\\p{L}0-9@:%._\\+~#=]{0,254}[\\p{L}0-9]\\.[a-z]{2,63}(:\\d{1,5})?(/[-\\p{L}0-9@:%_\\+.~#?&//=\\(\\)]*)?', 'giu'); // eslint-disable-line
                             ^

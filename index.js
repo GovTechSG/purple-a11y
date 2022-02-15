@@ -7,8 +7,10 @@ const { cleanUp, setHeadlessMode, generateRandomToken } = require('./utils');
 const { prepareData, messageOptions } = require('./constants/common');
 const { questions } = require('./constants/questions');
 const { combineRun } = require('./combine');
+const { a11yStorage } = require('./constants/constants');
+
 // Delete dataset and request queues
-cleanUp('apify_storage');
+cleanUp(a11yStorage);
 
 printMessage(
   [
