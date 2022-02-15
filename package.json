@@ -3,30 +3,28 @@
   "main": "index.js",
   "version": "1.0.0",
   "dependencies": {
-    "apify": "^1.2.1",
-    "axe-core": "^4.3.3",
-    "axios": "^0.22.0",
+    "apify": "^2.2.1",
+    "axe-core": "^4.4.1",
+    "axios": "^0.25.0",
     "fs-extra": "^10.0.0",
     "inquirer": "^8.2.0",
-    "jsdom": "^18.0.0",
+    "jsdom": "^19.0.0",
     "mustache": "^4.2.0",
     "print-message": "^3.0.1",
-    "puppeteer": "^10.4.0",
-    "validator": "^13.6.0",
-    "winston": "^3.3.3",
+    "validator": "^13.7.0",
+    "winston": "^3.5.1",
     "xml2js": "^0.4.23",
-    "yargs": "^17.2.1"
+    "yargs": "^17.3.1"
   },
   "devDependencies": {
-    "babel-jest": "^27.0.2",
     "babel-plugin-rewire": "^1.2.0",
-    "eslint": "^7.25.0",
-    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint": "^8.8.0",
+    "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-import": "^2.20.0",
-    "eslint-plugin-prettier": "^3.1.2",
-    "jest": "^27.0.3",
-    "prettier": "^2.4.1"
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-prettier": "^4.0.0",
+    "jest": "^27.5.1",
+    "prettier": "^2.5.1"
   },
   "babel": {
     "plugins": [
