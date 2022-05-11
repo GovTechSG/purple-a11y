@@ -146,3 +146,8 @@ zsh: abort      node index.js
 **Solutions**:
 1. Delete existing `node_modules` folder and re-install the NPM packages with `npm install`.
 3. Refer to this [GitHub issue](https://github.com/fsevents/fsevents/issues/313) for more alternative solutions
+
+## How do I limit number of pages scanned?
+If you find a scan takes too long to complete due to large website, or there are too many pages in a sitemap to scan, you may choose to limit number of pages scanned.  
+
+To do this, open `constants\constants.js` with a text editor.  Change the value `exports.maxRequestsPerCrawl` to a smaller number, e.g. `exports.maxRequestsPerCrawl = 10;` and save the file.  Start a new purple-hats scan.
