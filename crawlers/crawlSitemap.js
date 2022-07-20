@@ -25,17 +25,14 @@ exports.crawlSitemap = async (sitemapUrl, randomToken, host) => {
     handlePageFunction: async ({ page, request }) => {
       const currentUrl = request.url;
       const location = await page.evaluate('location');
-      if (location.host.includes(host)) {
-        if (validateUrl(currentUrl)) {
-          const results = await runAxeScript(page, host);
-          await dataset.pushData(results);
-          urlsCrawled.scanned.push(currentUrl);
-        } else {
-          urlsCrawled.invalid.push(currentUrl);
-        }
+      if (validateUrl(currentUrl)) {
+        const results = await runAxeScript(page, host);
+        await dataset.pushData(results);
+        urlsCrawled.scanned.push(currentUrl);
       } else {
-        urlsCrawled.outOfDomain.push(currentUrl);
+        urlsCrawled.invalid.push(currentUrl);
       }
+
     },
     handleFailedRequestFunction,
     maxRequestsPerCrawl,
