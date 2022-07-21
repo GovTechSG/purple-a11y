@@ -151,3 +151,9 @@ zsh: abort      node index.js
 If you find a scan takes too long to complete due to large website, or there are too many pages in a sitemap to scan, you may choose to limit number of pages scanned.  
 
 To do this, open `constants\constants.js` with a text editor.  Change the value `exports.maxRequestsPerCrawl` to a smaller number, e.g. `exports.maxRequestsPerCrawl = 10;` and save the file.  Start a new purple-hats scan.
+
+## Additional Information on Data
+
+Purple HATS uses third-party open-source tools that may be downloaded over the Internet during the installation process of Purple HATS.  Users should be aware of the libraries used by examining `package.json`.
+
+Purple HATS may send information to the website or URL where the user chooses to initiate a Purple HATS scan.  By default, data collected by Purple HATS is processed and stored locally on the machine where the tool is run.  
