@@ -101,6 +101,10 @@ If the website URL provided is invalid, an error message will be prompted for yo
 ```
 
 
+### CLI Mode
+CLI mode is designed to be run in continuous integration (CI) environment.  Run `node cli.js` for a set of command-line parameters available.  Please note CLI mode is only supported on Mac/Linux at this moment.
+
+
 ## Troubleshooting
 Please refer to the information below to exist in debugging. Most errors below are due to the switching between Node.js versions.
 

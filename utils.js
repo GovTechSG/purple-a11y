@@ -104,3 +104,18 @@ exports.generateRandomToken = () => {
 exports.setThresholdLimits = setWarnLevel => {
   process.env.WARN_LEVEL = setWarnLevel;
 };
+
+exports.zipResults = async (zipName, resultsPath) => {
+  // eslint-disable-next-line global-require
+  const { execFile } = require('child_process');
+
+  // To zip up files recursively )-r) in the results folder path
+  // Will only zip up the content of the results folder path with (-j) i.e. junk the path
+  const command = '/usr/bin/zip';
+  const args = ['-r', '-j', zipName, resultsPath];
+  execFile(command, args, err => {
+    if (err) {
+      throw err;
+    }
+  });
+};
