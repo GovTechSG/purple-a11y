@@ -68,7 +68,6 @@ Headless mode would allow you to run the scan in the background. If you would li
 └────────────────────────────────────────────────────────────┘
 ? What would you like to scan today? Sitemap
 ? Do you want purple-hats to run in the background? Yes
-? Do you need to login to your website? No
 ? Please enter URL to sitemap:  https://www.sitemaps.org/sitemap.xml
 
 Scanning website...
@@ -93,7 +92,6 @@ If the sitemap URL provided is invalid, an error message will be prompted for yo
 └────────────────────────────────────────────────────────────┘
 ? What would you like to scan today? Website
 ? Do you want purple-hats to run in the background? Yes
-? Do you need to login to your website? (Y/n) No
 ? Please enter URL of website:  https://www.sitemaps.org
 ```
 
