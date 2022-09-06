@@ -104,6 +104,33 @@ If the website URL provided is invalid, an error message will be prompted for yo
 ### CLI Mode
 CLI mode is designed to be run in continuous integration (CI) environment.  Run `node cli.js` for a set of command-line parameters available.  Please note CLI mode is only supported on Mac/Linux at this moment.
 
+```shell
+Usage: node cli.js -c <crawler> -u <url> OPTIONS
+
+Options:
+      --help             Show help                                     [boolean]
+      --version          Show version number                           [boolean]
+  -c, --scanner          Type of crawler, 1) sitemap or 2) website
+                                      [required] [choices: "sitemap", "website"]
+  -u, --url              Website URL you want to scan        [string] [required]
+  -o, --zip              Zip filename to save results                   [string]
+      --reportbreakdown  Will break down the main report according to impact
+                                                      [boolean] [default: false]
+      --warn             Track for issues of target impact level
+         [choices: "critical", "serious", "moderate", "minor", "none"] [default:
+                                                                         "none"]
+
+Examples:
+  To scan sitemap of website:', 'node cli.js -c [ 1 | sitemap ] -u <url_link>
+  To scan a website', 'node cli.js -c [ 2 | website ] -u <url_link>
+
+Missing required arguments: c, u
+```
+
+For example, to conduct a website scan to the URL `http://localhost:8000` and write to `a11y-scan-results.zip`, run
+```shell
+node cli.js -c 2 -o a11y-scan-results.zip -u http://localhost:8000
+```
 
 ## Troubleshooting
 Please refer to the information below to exist in debugging. Most errors below are due to the switching between Node.js versions.
