@@ -18,8 +18,12 @@ const {
   messageOptions,
   configureReportSetting,
 } = require('./constants/cliFunctions');
+
 const { 
   scannerTypes,
+} = require('./constants/constants');
+
+let { 
   cliZipFileName,
 } = require('./constants/constants');
 
@@ -94,7 +98,13 @@ const scanInit = async argvs => {
 };
 
 scanInit(options).then(async () => {
+  // Path to scan result
   const storagePath = getStoragePath(randomToken);
+
+  // Take option if set
+  if (typeof options.zip === 'string') {
+    cliZipFileName = options.zip;
+  }
 
   await fs
     .ensureDir(storagePath)

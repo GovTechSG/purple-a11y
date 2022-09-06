@@ -22,6 +22,12 @@ exports.cliOptions = {
     type: 'string',
     demandOption: true,
   },
+  o: {
+    alias: 'zip',
+    describe: 'Zip filename to save results',
+    type: 'string',
+    demandOption: false,
+  },
   reportbreakdown: {
     describe: 'Will break down the main report according to impact',
     type: 'boolean',

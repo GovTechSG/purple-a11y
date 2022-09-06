@@ -109,6 +109,11 @@ exports.zipResults = async (zipName, resultsPath) => {
   // eslint-disable-next-line global-require
   const { execFile } = require('child_process');
 
+  // Validate Zip filename
+  const zipFilenamePattern = /^(?!^(PRN|AUX|CLOCK\$|NUL|CON|COM\d|LPT\d|\..*)(\..+)?$)[^\x00-\x1f\\?*:\";|/]+\.zipx*$/;
+  if (!zipFilenamePattern.test(zipName)) {
+  }
+
   // Check prior zip file exist and remove
   if (fs.existsSync(zipName)) {
     fs.unlink(zipName);  
