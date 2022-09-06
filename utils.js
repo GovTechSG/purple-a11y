@@ -108,12 +108,7 @@ exports.setThresholdLimits = setWarnLevel => {
 exports.zipResults = async (zipName, resultsPath) => {
   // eslint-disable-next-line global-require
   const { execFile } = require('child_process');
-
-  // Validate Zip filename
-  if (!(/^[a-z0-9_.@()-]+\.zip$/.test(zipName))) {
-    throw "Invalid filename " + zipName;
-  }
-
+  
   // Check prior zip file exist and remove
   if (fs.existsSync(zipName)) {
     fs.unlink(zipName);  
