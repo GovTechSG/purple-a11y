@@ -14,11 +14,19 @@ const {
 } = require('./utils');
 const { checkUrl, prepareData, isSelectorValid, isInputValid } = require('./constants/common');
 const {
-  bambooOptions,
+  cliOptions,
   messageOptions,
   configureReportSetting,
 } = require('./constants/cliFunctions');
-const { scannerTypes } = require('./constants/constants');
+
+const { 
+  scannerTypes,
+} = require('./constants/constants');
+
+let { 
+  cliZipFileName,
+} = require('./constants/constants');
+
 const { consoleLogger } = require('./logs');
 const { combineRun } = require('./combine');
 
@@ -29,7 +37,7 @@ cleanUp('apify_storage');
 const options = yargs
   .usage('Usage: node cli.js -c <crawler> -u <url> OPTIONS')
   .strictOptions(true)
-  .options(bambooOptions)
+  .options(cliOptions)
   .example([
     [`To scan sitemap of website:', 'node cli.js -c [ 1 | ${scannerTypes.sitemap} ] -u <url_link>`],
     [`To scan a website', 'node cli.js -c [ 2 | ${scannerTypes.website} ] -u <url_link>`]
@@ -90,16 +98,20 @@ const scanInit = async argvs => {
 };
 
 scanInit(options).then(async () => {
+  // Path to scan result
   const storagePath = getStoragePath(randomToken);
-  const reportPath = `${storagePath}/reports`;
-  const finalPath = `${reportPath}/${randomToken}.zip`;
+
+  // Take option if set
+  if (typeof options.zip === 'string') {
+    cliZipFileName = options.zip;
+  }
 
   await fs
-    .ensureDir(reportPath)
+    .ensureDir(storagePath)
     .then(async () => {
-      await zipResults(finalPath, reportPath);
+      await zipResults(cliZipFileName, storagePath);
       const messageToDisplay = [
-        `Report of this run is ${randomToken}.zip under ${reportPath}.`,
+        `Report of this run is at ${cliZipFileName}`,
       ];
 
       if (process.env.REPORT_BREAKDOWN === '1') {

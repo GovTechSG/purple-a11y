@@ -9,7 +9,7 @@ exports.alertMessageOptions = {
   borderColor: 'red',
 };
 
-exports.bambooOptions = {
+exports.cliOptions = {
   c: {
     alias: 'scanner',
     describe: 'Type of crawler, 1) sitemap or 2) website',
@@ -21,6 +21,12 @@ exports.bambooOptions = {
     describe: 'Website URL you want to scan',
     type: 'string',
     demandOption: true,
+  },
+  o: {
+    alias: 'zip',
+    describe: 'Zip filename to save results',
+    type: 'string',
+    demandOption: false,
   },
   reportbreakdown: {
     describe: 'Will break down the main report according to impact',
