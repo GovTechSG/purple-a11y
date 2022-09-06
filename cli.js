@@ -14,7 +14,7 @@ const {
 } = require('./utils');
 const { checkUrl, prepareData, isSelectorValid, isInputValid } = require('./constants/common');
 const {
-  bambooOptions,
+  cliOptions,
   messageOptions,
   configureReportSetting,
 } = require('./constants/cliFunctions');
@@ -33,7 +33,7 @@ cleanUp('apify_storage');
 const options = yargs
   .usage('Usage: node cli.js -c <crawler> -u <url> OPTIONS')
   .strictOptions(true)
-  .options(bambooOptions)
+  .options(cliOptions)
   .example([
     [`To scan sitemap of website:', 'node cli.js -c [ 1 | ${scannerTypes.sitemap} ] -u <url_link>`],
     [`To scan a website', 'node cli.js -c [ 2 | ${scannerTypes.website} ] -u <url_link>`]

@@ -9,7 +9,7 @@ exports.alertMessageOptions = {
   borderColor: 'red',
 };
 
-exports.bambooOptions = {
+exports.cliOptions = {
   c: {
     alias: 'scanner',
     describe: 'Type of crawler, 1) sitemap or 2) website',
