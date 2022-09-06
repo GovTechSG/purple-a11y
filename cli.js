@@ -18,7 +18,11 @@ const {
   messageOptions,
   configureReportSetting,
 } = require('./constants/cliFunctions');
-const { scannerTypes } = require('./constants/constants');
+const { 
+  scannerTypes,
+  cliZipFileName,
+} = require('./constants/constants');
+
 const { consoleLogger } = require('./logs');
 const { combineRun } = require('./combine');
 
@@ -91,15 +95,13 @@ const scanInit = async argvs => {
 
 scanInit(options).then(async () => {
   const storagePath = getStoragePath(randomToken);
-  const reportPath = `${storagePath}/reports`;
-  const finalPath = `${reportPath}/${randomToken}.zip`;
 
   await fs
-    .ensureDir(reportPath)
+    .ensureDir(storagePath)
     .then(async () => {
-      await zipResults(finalPath, reportPath);
+      await zipResults(cliZipFileName, storagePath);
       const messageToDisplay = [
-        `Report of this run is ${randomToken}.zip under ${reportPath}.`,
+        `Report of this run is at ${cliZipFileName}`,
       ];
 
       if (process.env.REPORT_BREAKDOWN === '1') {

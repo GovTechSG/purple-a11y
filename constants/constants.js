@@ -30,6 +30,8 @@ exports.a11yDataStoragePath = `${a11yStorage}/datasets`;
 
 exports.allIssueFileName = 'all_issues';
 
+exports.cliZipFileName = 'a11y-scan-results.zip';
+
 exports.rootPath = __dirname;
 
 // others
