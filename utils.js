@@ -110,8 +110,10 @@ exports.zipResults = async (zipName, resultsPath) => {
   const { execFile } = require('child_process');
 
   // Validate Zip filename
-  const zipFilenamePattern = /^(?!^(PRN|AUX|CLOCK\$|NUL|CON|COM\d|LPT\d|\..*)(\..+)?$)[^\x00-\x1f\\?*:\";|/]+\.zipx*$/;
+  const zipFilenamePattern = /^[a-z0-9_.@()-]+\.zip$/;
+
   if (!zipFilenamePattern.test(zipName)) {
+    throw "Invalid filename " + zipName;
   }
 
   // Check prior zip file exist and remove
