@@ -109,6 +109,11 @@ exports.zipResults = async (zipName, resultsPath) => {
   // eslint-disable-next-line global-require
   const { execFile } = require('child_process');
 
+  // Check prior zip file exist and remove
+  if (fs.existsSync(zipName)) {
+    fs.unlink(zipName);  
+  }
+
   // To zip up files recursively )-r) in the results folder path
   // Will only zip up the content of the results folder path with (-j) i.e. junk the path
   const command = '/usr/bin/zip';
