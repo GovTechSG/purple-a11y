@@ -30,6 +30,8 @@ const filterAxeResults = (results, host) => {
 
 exports.runAxeScript = async (page, host) => {
   await Apify.utils.puppeteer.injectFile(page, axeScript);
+  await page.waitForNavigation();
+  
   const results = await page.evaluate(() => {
     axe.configure({
       branding: {
