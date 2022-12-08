@@ -35,6 +35,9 @@ jobs:
 
       - name: Check out repository
         uses: actions/checkout@v2
+      
+      - name: Unzip nodejs-win.zip
+        run: tar -xf nodejs-win.zip
 
       - name: Prepare Windows portable version of zip file
         run: |
@@ -77,6 +80,9 @@ jobs:
       - name: Install Node Modules
         if: steps.cache-primes.outputs.cache-hit != 'true'
         run: npm i fsevents@latest -f --save-optional && npm ci 
+
+      - name: Unzip nodejs-mac.zip
+        run: unzip nodejs-mac.zip 
 
       - name: Prepare MAC portable version of zip file
         run: zip -r ./purple-hats-portable-mac.zip ./* -x nodejs-win.zip
