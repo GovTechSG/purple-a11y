@@ -18,12 +18,12 @@ cd $PATH_TO_HATS
 echo "INFO: Set path to hats $(pwd)"
 
 echo "INFO: Set path to node for this session"
-export PATH="$(pwd)/nodejs/bin:$PATH"
+export PATH="$(pwd)/nodejs-mac/bin:$PATH"
 
 export PATH_TO_BETTER_SQLITE3="../node_modules/better-sqlite3-with-prebuilds/build/Release/better_sqlite3.node"
 echo "path to better_sqlite3: $PATH_TO_BETTER_SQLITE3"
 
-export PATH_TO_NODE="../nodejs/bin/node"
+export PATH_TO_NODE="../nodejs-mac/bin/node"
 echo "path to node: $PATH_TO_NODE"
 
 declare -a exec=($PATH_TO_BETTER_SQLITE3 $PATH_TO_NODE)
