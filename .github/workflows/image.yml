@@ -41,7 +41,7 @@ jobs:
 
       - name: Prepare Windows portable version of zip file
         run: |
-          $file=Get-ChildItem -Path ./ -Exclude "nodejs-mac.zip" "nodejs-win.zip"
+          $file=Get-ChildItem -Path ./ -Exclude "nodejs-mac.zip nodejs-win.zip"
           $compress = @{
             Path = $file
             CompressionLevel = "Fastest"
