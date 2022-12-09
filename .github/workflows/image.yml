@@ -21,27 +21,19 @@ jobs:
         with:
           node-version: ${{matrix.node-version}}
           cache: 'npm'
-
-      - name: Cache NPM dependencies 
-        uses: actions/cache@v3
-        id: cache-primes
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          cache-dependency-path: purple-hats/package-lock.json
         
-      - name: Install Node Modules
-        if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: npm i fsevents@latest -f --save-optional && npm ci 
-
-      - name: Check out repository
-        uses: actions/checkout@v2
-      
       - name: Unzip nodejs-win.zip
         run: tar -xf nodejs-win.zip
 
+      - name: Install Node Modules
+        run: npm i fsevents@latest -f --save-optional && npm ci 
+        working-directory: purple-hats
+
       - name: Prepare Windows portable version of zip file
         run: |
-          $file=Get-ChildItem -Path ./ -Exclude "nodejs-mac.zip nodejs-win.zip"
+          rd -r "nodejs-win.zip"        
+          $file=Get-ChildItem -Path ./ -Exclude "nodejs-mac.zip"
           $compress = @{
             Path = $file
             CompressionLevel = "Fastest"
@@ -49,7 +41,7 @@ jobs:
           }
           Compress-Archive @compress
 
-      - name: Download zip file Windows
+      - name: Download Windows zip file 
         uses: actions/upload-artifact@v1
         with:
           name: windows-artifact
@@ -65,43 +57,41 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v2
 
+      - name: Unzip nodejs-mac.zip
+        run: |
+          unzip nodejs-mac.zip 
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{matrix.node-version}}
           cache: 'npm'
-
-      - name: Cache NPM dependencies
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }} 
-
+          cache-dependency-path: purple-hats/package-lock.json
+          
       - name: Install Node Modules
         if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: npm i fsevents@latest -f --save-optional && npm ci 
-
-      - name: Unzip nodejs-mac.zip
         run: |
-          unzip nodejs-mac.zip 
-          chmod +x ./scripts/hats_shell.command ./scripts/hats_shell.sh
-
-      - name: Prepare MAC portable version of zip file
-        run: zip -r ./purple-hats-portable-mac.zip ./* -x nodejs-win.zip nodejs-mac.zip
-      
-      - name: Download zip file Mac
-        uses: actions/upload-artifact@v1
-        with:
-          name: mac-artifact
-          path: ${{ github.workspace }}/purple-hats-portable-mac.zip
+          cd purple-hats
+          npm ci 
           
       - name: Grant permission for node modules
         run: |
-          export PATH_TO_BETTER_SQLITE3="./node_modules/better-sqlite3-with-prebuilds/build/Release/better_sqlite3.node"
+          export PATH_TO_BETTER_SQLITE3="./purple-hats/node_modules/better-sqlite3-with-prebuilds/build/Release/better_sqlite3.node"
           echo "path to better_sqlite3: $PATH_TO_BETTER_SQLITE3"
 
           xattr -d com.apple.quarantine $PATH_TO_BETTER_SQLITE3
         continue-on-error: true
+
+      - name: Prepare MAC portable version of zip file
+        run: |
+          chmod ugo+rwx ./scripts/hats_shell.command ./scripts/hats_shell.sh
+          zip -r ./purple-hats-portable-mac.zip ./* -x nodejs-win.zip nodejs-mac.zip
+      
+      - name: Download Mac zip file
+        uses: actions/upload-artifact@v1
+        with:
+          name: mac-artifact
+          path: ${{ github.workspace }}/purple-hats-portable-mac.zip
 
       - name: Use chrome for Mac OSX
         run: |

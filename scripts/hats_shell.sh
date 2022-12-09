@@ -20,7 +20,8 @@ echo "INFO: Set path to hats $(pwd)"
 echo "INFO: Set path to node for this session"
 export PATH="$(pwd)/nodejs-mac/bin:$PATH"
 
-export PATH_TO_BETTER_SQLITE3="../node_modules/better-sqlite3-with-prebuilds/build/Release/better_sqlite3.node"
+export PATH_TO_BETTER_SQLITE3="
+../purple-hats/node_modules/better-sqlite3-with-prebuilds/build/Release/better_sqlite3.node"
 echo "path to better_sqlite3: $PATH_TO_BETTER_SQLITE3"
 
 export PATH_TO_NODE="../nodejs-mac/bin/node"
