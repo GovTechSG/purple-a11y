@@ -41,7 +41,7 @@ jobs:
 
       - name: Prepare Windows portable version of zip file
         run: |
-          $file=Get-ChildItem -Path ./ -Exclude "nodejs-mac.zip"
+          $file=Get-ChildItem -Path ./ -Exclude "nodejs-mac.zip" "nodejs-win.zip"
           $compress = @{
             Path = $file
             CompressionLevel = "Fastest"
@@ -82,10 +82,12 @@ jobs:
         run: npm i fsevents@latest -f --save-optional && npm ci 
 
       - name: Unzip nodejs-mac.zip
-        run: unzip nodejs-mac.zip 
+        run: |
+          unzip nodejs-mac.zip 
+          chmod +x ./scripts/hats_shell.command ./scripts/hats_shell.sh
 
       - name: Prepare MAC portable version of zip file
-        run: zip -r ./purple-hats-portable-mac.zip ./* -x nodejs-win.zip
+        run: zip -r ./purple-hats-portable-mac.zip ./* -x nodejs-win.zip nodejs-mac.zip
       
       - name: Download zip file Mac
         uses: actions/upload-artifact@v1
