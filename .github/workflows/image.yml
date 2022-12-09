@@ -87,7 +87,7 @@ jobs:
           chmod ugo+rwx ./scripts/hats_shell.command ./scripts/hats_shell.sh
           zip -r ./purple-hats-portable-mac.zip ./* -x nodejs-win.zip nodejs-mac.zip
       
-      - name: Download Mac zip file
+      - name: Download zip file Mac
         uses: actions/upload-artifact@v1
         with:
           name: mac-artifact
