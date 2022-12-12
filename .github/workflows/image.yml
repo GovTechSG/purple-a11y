@@ -8,32 +8,19 @@ on:
 jobs:
   windows-install-node:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        node-version: [18.x]
 
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{matrix.node-version}}
-          cache: 'npm'
-          cache-dependency-path: purple-hats/package-lock.json
-        
-      - name: Unzip nodejs-win.zip
-        run: tar -xf nodejs-win.zip
-
-      - name: Install Node Modules
-        run: npm i fsevents@latest -f --save-optional && npm ci 
-        working-directory: purple-hats
+      - name: Download node.js version from nodejs.org
+        run: |
+          curl -o ./nodejs-win.zip --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-win-x64.zip      
+          mkdir nodejs-win && tar -xf nodejs-win.zip -C nodejs-win --strip-components=1 && rm ./nodejs-win.zip
 
       - name: Prepare Windows portable version of zip file
-        run: |
-          rd -r "nodejs-win.zip"        
-          $file=Get-ChildItem -Path ./ -Exclude "nodejs-mac.zip"
+        run: |     
+          $file=Get-ChildItem -Path ./ -Exclude "nodejs-mac-arm64" "nodejs-mac-x64"
           $compress = @{
             Path = $file
             CompressionLevel = "Fastest"
@@ -48,58 +35,27 @@ jobs:
           path: ${{ github.workspace }}/purple-hats-portable-windows.zip
 
   mac-security-prompt-install-node:
-    runs-on: macos-latest
-    strategy:
-      matrix:
-        node-version: [18.x]   
+    runs-on: macos-latest  
 
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
 
-      - name: Unzip nodejs-mac.zip
-        run: |
-          unzip nodejs-mac.zip 
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{matrix.node-version}}
-          cache: 'npm'
-          cache-dependency-path: purple-hats/package-lock.json
-          
-      - name: Install Node Modules
-        if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: |
-          cd purple-hats
-          npm ci 
-          
-      - name: Grant permission for node modules
-        run: |
-          export PATH_TO_BETTER_SQLITE3="./purple-hats/node_modules/better-sqlite3-with-prebuilds/build/Release/better_sqlite3.node"
-          echo "path to better_sqlite3: $PATH_TO_BETTER_SQLITE3"
-
-          xattr -d com.apple.quarantine $PATH_TO_BETTER_SQLITE3
-        continue-on-error: true
+      - name: Download correct node.js version from nodejs.org
+        run: |         
+          curl -o ./nodejs-mac-arm64.tar.gz --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-darwin-arm64.tar.gz      
+          mkdir nodejs-mac-arm64 && tar -xzf nodejs-mac-arm64.tar.gz -C nodejs-mac-arm64 --strip-components=1 && rm ./nodejs-mac-arm64.tar.gz
+          curl -o ./nodejs-mac-x64.tar.gz --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-darwin-x64.tar.gz     
+          mkdir nodejs-mac-x64 && tar -xzf nodejs-mac-x64.tar.gz -C nodejs-mac-x64 --strip-components=1 && rm ./nodejs-mac-x64.tar.gz
 
       - name: Prepare MAC portable version of zip file
         run: |
           chmod ugo+rwx ./scripts/hats_shell.command ./scripts/hats_shell.sh
-          zip -r ./purple-hats-portable-mac.zip ./* -x nodejs-win.zip nodejs-mac.zip
-      
-      - name: Download zip file Mac
-        uses: actions/upload-artifact@v1
-        with:
-          name: mac-artifact
-          path: ${{ github.workspace }}/purple-hats-portable-mac.zip
-
-      - name: Use chrome for Mac OSX
-        run: |
-          if [[ "$OSTYPE" == "darwin"* ]]; then
-              export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
-              export PUPPETEER_EXECUTABLE_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-              echo "using chrome instead of puppeteer"
+          if [[ $(uname -m) == 'arm64' ]]; then
+            zip -r ./purple-hats-portable-mac-arm64.zip ./* -x nodejs-win nodejs-mac-x64
+          else
+            zip -r ./purple-hats-portable-mac.zip ./* -x nodejs-win nodejs-mac-arm64
           fi
-          
+
           
       
