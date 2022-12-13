@@ -18,7 +18,7 @@ jobs:
           curl -o ./nodejs-win.zip --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-win-x64.zip      
           mkdir nodejs-win && tar -xzf nodejs-win.zip -C nodejs-win --strip-components=1 && rm ./nodejs-win.zip
 
-      - name: Download Windows zip file 
+      - name: Upload Windows artifact
         uses: actions/upload-artifact@v1
         with:
           name: windows-artifact
@@ -44,8 +44,16 @@ jobs:
       - name: Grant execute permissions for user
         run: |
           chmod ugo+rwx ./scripts/hats_shell.command ./scripts/hats_shell.sh
+      
+      - name: Zip entire Purple Hats folder
+        run: |
+          if [[ $(uname -m) == 'arm64' ]]; then        
+            zip -r purple-hats-portable-mac-arm64.zip ./
+          else
+            zip -r purple-hats-portable-mac-x64.zip ./
+          fi
 
-      - name: Download zip file Mac
+      - name: Upload MAC artifact
         uses: actions/upload-artifact@v1
         with:
           name: mac-artifact
