@@ -16,23 +16,13 @@ jobs:
       - name: Download node.js version from nodejs.org
         run: |
           curl -o ./nodejs-win.zip --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-win-x64.zip      
-          mkdir nodejs-win && tar -xf nodejs-win.zip -C nodejs-win --strip-components=1 && rm ./nodejs-win.zip
-
-      - name: Prepare Windows portable version of zip file
-        run: |     
-          $file=Get-ChildItem -Path ./ -Exclude "nodejs-mac-arm64" "nodejs-mac-x64"
-          $compress = @{
-            Path = $file
-            CompressionLevel = "Fastest"
-            DestinationPath = "./purple-hats-portable-windows.zip"
-          }
-          Compress-Archive @compress
+          mkdir nodejs-win && tar -xzf nodejs-win.zip -C nodejs-win --strip-components=1 && rm ./nodejs-win.zip
 
       - name: Download Windows zip file 
         uses: actions/upload-artifact@v1
         with:
           name: windows-artifact
-          path: ${{ github.workspace }}/purple-hats-portable-windows.zip
+          path: ${{ github.workspace }}
 
   mac-security-prompt-install-node:
     runs-on: macos-latest  
@@ -43,19 +33,20 @@ jobs:
 
       - name: Download correct node.js version from nodejs.org
         run: |         
-          curl -o ./nodejs-mac-arm64.tar.gz --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-darwin-arm64.tar.gz      
-          mkdir nodejs-mac-arm64 && tar -xzf nodejs-mac-arm64.tar.gz -C nodejs-mac-arm64 --strip-components=1 && rm ./nodejs-mac-arm64.tar.gz
-          curl -o ./nodejs-mac-x64.tar.gz --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-darwin-x64.tar.gz     
-          mkdir nodejs-mac-x64 && tar -xzf nodejs-mac-x64.tar.gz -C nodejs-mac-x64 --strip-components=1 && rm ./nodejs-mac-x64.tar.gz
-
-      - name: Prepare MAC portable version of zip file
+          if [[ $(uname -m) == 'arm64' ]]; then
+            curl -o ./nodejs-mac-arm64.tar.gz --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-darwin-arm64.tar.gz      
+            mkdir nodejs-mac-arm64 && tar -xzf nodejs-mac-arm64.tar.gz -C nodejs-mac-arm64 --strip-components=1 && rm ./nodejs-mac-arm64.tar.gz
+          else
+            curl -o ./nodejs-mac-x64.tar.gz --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-darwin-x64.tar.gz     
+            mkdir nodejs-mac-x64 && tar -xzf nodejs-mac-x64.tar.gz -C nodejs-mac-x64 --strip-components=1 && rm ./nodejs-mac-x64.tar.gz
+          fi
+          
+      - name: Grant execute permissions for user
         run: |
           chmod ugo+rwx ./scripts/hats_shell.command ./scripts/hats_shell.sh
-          if [[ $(uname -m) == 'arm64' ]]; then
-            zip -r ./purple-hats-portable-mac-arm64.zip ./* -x nodejs-win nodejs-mac-x64
-          else
-            zip -r ./purple-hats-portable-mac.zip ./* -x nodejs-win nodejs-mac-arm64
-          fi
 
-          
-      
+      - name: Download zip file Mac
+        uses: actions/upload-artifact@v1
+        with:
+          name: mac-artifact
+          path: ${{ github.workspace }}
