@@ -32,7 +32,7 @@
                 </g>
               </svg>
               <div class="pl-3">
-                <h1>Accessibility Report </h1>
+                <h1>Access Report </h1>
                 <p class="mb-0">Measure of compliance against GovTech-defined and WCAG 2.1 standards</p>
               </div>
             </div>
@@ -81,7 +81,7 @@
               </thead>
               <tbody>
                 {{#allissues}}
-                <tr>
+                <tr class="a11y-table-row">
                   <td><span class="impact {{impact}}"><span class="hidden">{{order}}</span>{{impact}}</span><br>
                     {{#disabilities}}
                       <div class="impact-icon-size">
@@ -123,6 +123,10 @@
       </div>
     </div>
 
+    <div class="dt-more-container" style="text-align:center ;margin:2em 0">
+    <button id="btn-example-load-more">Load More</button>
+    </div>
+
     <div class="footer">
       <div class="container-fluid">
         <div class="row text-center pt-2 pb-2">
@@ -137,14 +141,73 @@
       </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.6.1.js"
+      integrity="sha256-3zlB5s2uwoUzrXK3BT7AX3FyvojsraNFxCc2vC/7pNI="
+      crossorigin="anonymous"
+    ></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
     <script src="https://cdn.datatables.net/select/1.3.1/js/dataTables.select.min.js"></script>
+
+
+    <script src="https://cdn.datatables.net/v/dt/dt-1.10.15/datatables.min.css"></script>
+    <script src="https://gyrocode.github.io/jquery-datatables-pageLoadMore/1.0.2/js/dataTables.pageLoadMore.min.js"></script>
     <script>
-    function closeWarning(){}$(document).ready(function(){$("#a11y-table").DataTable({paging:!1,columnDefs:[{targets:[3,4,5],orderable:!1},{width:500,targets:1},{width:150,targets:2},{width:300,targets:3},{orderable:!1,className:"select-checkbox",targets:5}],select:{style:"multi",selector:"td:last-child"},language:{select:{rows:{_:"%d issues fixed",0:"0 issue fixed",1:"1 issue fixed"}},emptyTable:"No issue found in your website."},oLanguage:{sInfo:"Showing _TOTAL_ issues"},order:[[0,"desc"]],scrollX:!0});(window.onbeforeunload=function(e){var t="Sure you want to leave?";return void 0===e&&(e=window.event),e&&(e.returnValue=t),t},$(function(){$('[data-toggle="tooltip"]').tooltip()}),document.getElementById("dm").addEventListener("change",function(e){if(e.target.checked){var t=document.body;t.classList.add("dark")}else{var t=document.body;t.classList.remove("dark")}},!1),window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)?(document.getElementById("dm").checked=!0,document.body.classList.add("dark")):document.body.classList.remove("dark")});
+      function closeWarning() {}
+      $(document).ready(function () {
+        ((window.onbeforeunload = function (e) {
+          var t = 'Sure you want to leave?';
+          return void 0 === e && (e = window.event), e && (e.returnValue = t), t;
+        }),
+        $(function () {
+          $('[data-toggle="tooltip"]').tooltip();
+        }),
+        document.getElementById('dm').addEventListener(
+          'change',
+          function (e) {
+            if (e.target.checked) {
+              var t = document.body;
+              t.classList.add('dark');
+            } else {
+              var t = document.body;
+              t.classList.remove('dark');
+            }
+          },
+          !1,
+        ),
+        window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          ? ((document.getElementById('dm').checked = !0), document.body.classList.add('dark'))
+          : document.body.classList.remove('dark');
+      });
+    </script>
+    <script>
+      $(document).ready(function (){
+        var table = $('#a11y-table').DataTable({
+          columnDefs:[{targets:[3,4,5],orderable:!1},{width:500,targets:1},{width:150,targets:2},{width:300,targets:3},{orderable:!1,className:"select-checkbox",targets:5}],
+          select:{style:"multi",selector:"td:last-child"},
+          language:{select:{rows:{_:"%d issues fixed",0:"0 issue fixed",1:"1 issue fixed"}},emptyTable:"No issue found in your website."},
+          oLanguage:{sInfo:"Showing _TOTAL_ issues"},
+          order:[[0,"desc"]],
+          scrollX:!0,
+          dom: 'frt',
+          drawCallback: function(){
+            if($('#btn-example-load-more').is(':visible')){
+                $('html, body').animate({
+                  scrollTop: $('#btn-example-load-more').offset().top
+                }, 1000);
+            }
+    
+            $('#btn-example-load-more').toggle(this.api().page.hasMore());
+          }      
+        });
+      
+        $('#btn-example-load-more').on('click', function(){  
+           table.page.loadMore();
+        });
+     });
     </script>
     <script>
     var timeout;function load() {timeout = setTimeout(showPage, 2000);} function showPage() {document.getElementById("loader").style.display = "none";document.getElementById("report").style.visibility = "visible";}
