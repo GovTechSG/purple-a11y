@@ -13,22 +13,24 @@ jobs:
       - name: Download node.js version from nodejs.org
         run: |
           curl -o ./nodejs-win.zip --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-win-x64.zip      
-          mkdir nodejs-win && tar -xzf nodejs-win.zip -C nodejs-win --strip-components=1 && rm ./nodejs-win.zip
+          mkdir nodejs-win && tar -xzf nodejs-win.zip -C nodejs-win --strip-components=1 
+          rm ./nodejs-win.zip
 
       - name: Check out repository code
         uses: actions/checkout@v2
         with:
           path: purple-hats
 
-      - name: Install Node Modules for Windows
-        run: |
-          powershell.exe -NoProfile -ExecutionPolicy Bypass "& .\hats_shell_ps.ps1" "cd .\purple-hats; npm i fsevents@latest -f --save-optional && npm install"
-             
       - name: Copy scripts to parent directory
         run: |
           cp ${{github.workspace}}/purple-hats/scripts/*.ps1 ${{github.workspace}}
           cp ${{github.workspace}}/purple-hats/scripts/*.cmd ${{github.workspace}}      
           rd -r ${{github.workspace}}/purple-hats/scripts
+
+      - name: Run hats_shell._ps.ps1 before installing node modules
+        shell: pwsh
+        run: powershell.exe -NoProfile -ExecutionPolicy Bypass "& ${{github.workspace}}\hats_shell_ps.ps1" "cd ${{github.workspace}}\purple-hats;npm i fsevents@latest -f --save-optional"     
+        working-directory:  ${{github.workspace}}
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v1
