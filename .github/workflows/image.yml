@@ -34,7 +34,7 @@ jobs:
 
       - name: Zip entire Purple Hats folder (Windows)
         shell: pwsh
-        run: Compress-Archive -Path ${{github.workspace}} -DestinationPath purple-hats-portable-windows.zip
+        run: Compress-Archive -Path ${{github.workspace}}/* -DestinationPath purple-hats-portable-windows.zip
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v3
