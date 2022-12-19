@@ -17,7 +17,7 @@ jobs:
           rm ./nodejs-win.zip
 
       - name: Check out repository code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: purple-hats
 
@@ -32,11 +32,15 @@ jobs:
         run: powershell.exe -NoProfile -ExecutionPolicy Bypass "& ${{github.workspace}}\hats_shell_ps.ps1" "cd ${{github.workspace}}\purple-hats;npm i fsevents@latest -f --save-optional"     
         working-directory:  ${{github.workspace}}
 
+      - name: Zip entire Purple Hats folder (Windows)
+        shell: pwsh
+        run: Compress-Archive -Path ${{github.workspace}} -DestinationPath purple-hats-portable-windows.zip
+
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
-          name: windows-artifact
-          path: ${{ github.workspace }}
+          name: purple-hats-portable-windows
+          path: ./purple-hats-portable-windows.zip
 
   mac-security-prompt-install-node:
     runs-on: macos-latest  
@@ -50,7 +54,7 @@ jobs:
           mkdir nodejs-mac-x64 && tar -xzf nodejs-mac-x64.tar.gz -C nodejs-mac-x64 --strip-components=1 && rm ./nodejs-mac-x64.tar.gz
 
       - name: Check out repository code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: purple-hats
 
@@ -75,16 +79,17 @@ jobs:
           cp ./purple-hats/scripts/{hats_shell.command,hats_shell.sh,purple_hats_install.command}  ${{ github.workspace }}
           rm -rf ./purple-hats/scripts
       
-      - name: Zip entire Purple Hats folder
+      - name: Zip entire Purple Hats folder (Mac)
         run: |
-          if [[ $(uname -m) == 'arm64' ]]; then        
-            zip -r purple-hats-portable-mac-arm64.zip ./ --exclude 'hats_shell_ps.ps1' 'hats_shell.cmd' './nodejs-mac-x64/*' './nodejs-mac-arm64/*' 
+          if [[ $(uname -m) == 'arm64' ]]
+          then        
+            zip purple-hats-portable-mac-arm64.zip -y -r ./ --exclude 'hats_shell_ps.ps1' 'hats_shell.cmd'
           else
-            zip purple-hats-portable-mac-x64.zip -r ./ --exclude 'hats_shell_ps.ps1' 'hats_shell.cmd'  './nodejs-mac-x64/*' './nodejs-mac-arm64/*' 
+            zip purple-hats-portable-mac-x64.zip -y -r ./ --exclude 'hats_shell_ps.ps1' 'hats_shell.cmd'
           fi
-
-      - name: Upload MAC artifact
-        uses: actions/upload-artifact@v1
+      
+      - name: Upload Mac artifact
+        uses: actions/upload-artifact@v3
         with:
-          name: mac-artifact
-          path: ${{ github.workspace }}
+          name: purple-hats-portable-mac
+          path: ./purple-hats-portable-mac-*.zip
