@@ -1,3 +1,4 @@
+/* Functions specific to the domain crawls */
 const Apify = require('apify');
 const {
   createApifySubFolders,
