@@ -22,6 +22,12 @@ exports.crawlDomain = async (url, randomToken, host) => {
   const crawler = new Apify.PuppeteerCrawler({
     requestQueue,
     preNavigationHooks,
+    
+    /* Run on each page of the crawl. This function evaluates the page's 
+    location and, if it includes the given host, pushes the results of running 
+    the runAxeScript function on the page to the dataset and adds any links on the 
+    page to the request queue. If the location does not include the host, it adds 
+    the current URL to an array of out-of-domain URLs. */
     handlePageFunction: async ({ page, request }) => {
       const currentUrl = request.url;
       const location = await page.evaluate('location');
