@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-param-reassign */
+/* Common crawler functions used by both domain and sitemap crawling functions. */
 const Apify = require('apify');
 const axe = require('axe-core');
 const { axeScript } = require('../constants/constants');
