@@ -15,8 +15,8 @@ Purple hats is a customisable, automated accessibility testing tool that allows 
   <summary>Click here for Windows setup instructions</summary>
   
 #### Download Portable Copy
-* Download and extract latest [purple-hats-portable-windows.zip](https://github.com/GovTechSG/purple-hats/releases/latest/download/purple-hats-portable-windows.zip) which is also available below.
-* Tip: To extract files, right-click the Compressed zip file and click "Extract All".
+* Download and extract latest [purple-hats-portable-windows.zip](https://github.com/GovTechSG/purple-hats/releases/latest/download/purple-hats-portable-windows.zip).
+* Tip: To extract files, right-click the Compressed zip file and click "Extract All…" in the context menu.
 
 #### Run Purple hats
  * Navigate to the folder containing purple-hats-portable. 
@@ -58,7 +58,7 @@ node index
  * If you are using a Mac, identify your Mac is running on Intel or Apple Silicon.  To do so, Go to  at the top-left of your screen, and click “About This Mac”.
  * If the description starts with “Chip: Apple M…” , you have an Apple Silicon Mac.
  * If the description instead starts with "Processor:… Intel…", you have an Intel Mac.
- * You can also follow Apple article https://support.apple.com/en-us/HT211814 for more information.
+ * You can also refer to the following Apple article https://support.apple.com/en-us/HT211814 for more information.
 
 #### Download Portable Copy
  * If you are running on an Apple Silicon Mac (made 2021 or later), download and extract [purple-hats-portable-mac-arm64.zip](https://github.com/GovTechSG/purple-hats/releases/latest/download/purple-hats-portable-mac-arm64.zip) version.
@@ -67,7 +67,7 @@ node index
  
 #### Run Purple hats
  * Depending on the version downloaded, navigate to the folder containing  `purple-hats-mac-arm64` or `purple-hats-mac-x64`. 
- * Press and hold [⌘ Command] key on your keyboard, and simultaneously right-click `hats_shell.command`. Then Click “Open”.
+ * Press and hold [⌘ Command] key on your keyboard, and simultaneously right-click `hats_shell.command`. Then Click “Open” in the context menu.
  * A prompt as follows will appear like below. Click "Open". You only have to do this step once. 
  <img width="164" alt="MacOS prompt for unidentified developer" src="https://user-images.githubusercontent.com/2021525/208457749-3a0a573d-5a6d-4905-b11e-c957d2073979.png">
 
