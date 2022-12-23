@@ -59,9 +59,6 @@
         </div>
       </div>
     </div>
-    <div class="show-ondark container-fluid">
-      <em>Dark mode is an experimental feature, do <a href="mailto:accessibility[at]tech.gov.sg">drop us an email</a> to let us know what you think about it! :)</em>
-    </div>
 
     <div class="main">
       <div id="loader"></div>
@@ -144,7 +141,7 @@
     <script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
     <script src="https://cdn.datatables.net/select/1.3.1/js/dataTables.select.min.js"></script>
     <script>
-    function closeWarning(){}$(document).ready(function(){$("#a11y-table").DataTable({paging:!1,columnDefs:[{targets:[3,4,5],orderable:!1},{width:500,targets:1},{width:150,targets:2},{width:300,targets:3},{orderable:!1,className:"select-checkbox",targets:5}],select:{style:"multi",selector:"td:last-child"},language:{select:{rows:{_:"%d issues fixed",0:"0 issue fixed",1:"1 issue fixed"}},emptyTable:"No issue found in your website."},oLanguage:{sInfo:"Showing _TOTAL_ issues"},order:[[0,"desc"]],scrollX:!0});(window.onbeforeunload=function(e){var t="Sure you want to leave?";return void 0===e&&(e=window.event),e&&(e.returnValue=t),t},$(function(){$('[data-toggle="tooltip"]').tooltip()}),document.getElementById("dm").addEventListener("change",function(e){if(e.target.checked){var t=document.body;t.classList.add("dark")}else{var t=document.body;t.classList.remove("dark")}},!1),window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)?(document.getElementById("dm").checked=!0,document.body.classList.add("dark")):document.body.classList.remove("dark")});
+    function closeWarning(){}$(document).ready(function(){$("#a11y-table").DataTable({paging:!1,columnDefs:[{targets:[3,4,5],orderable:!1},{width:500,targets:1},{width:150,targets:2},{width:300,targets:3},{orderable:!1,className:"select-checkbox",targets:5}],select:{style:"multi",selector:"td:last-child"},language:{select:{rows:{_:"%d issues fixed",0:"0 issue fixed",1:"1 issue  fixed"}},emptyTable:"No issue found in your website."},oLanguage:{sInfo:"Showing _TOTAL_ issues"},order:[[0,"desc"]],scrollX:!0});(window.onbeforeunload=function(e){var t="Sure you want to leave?";return void 0===e&&(e=window.event),e&&(e.returnValue=t),t},$(function(){$('[data-toggle="tooltip"]').tooltip()}),document.getElementById("dm").addEventListener("change",function(e){if(e.target.checked){var t=document.body;t.classList.add("dark")}else{var t=document.body;t.classList.remove("dark")}},!1),window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)?(document.getElementById("dm").checked=!0,document.body.classList.add("dark")):document.body.classList.remove("dark")});
     </script>
     <script>
     var timeout;function load() {timeout = setTimeout(showPage, 2000);} function showPage() {document.getElementById("loader").style.display = "none";document.getElementById("report").style.visibility = "visible";}
