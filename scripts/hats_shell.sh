@@ -19,23 +19,29 @@ echo "INFO: Set path to hats $(pwd)"
 
 echo "INFO: Set path to node for this session"
 if [[ $(uname -m) == 'arm64' ]]; then
-    export PATH="$(pwd)/nodejs-mac-arm64/bin:$PATH"
-    export PATH_TO_NODE="../nodejs-mac-arm64/bin/node"
+    export PATH_TO_NODE="$(pwd)/nodejs-mac-arm64/bin"
+    export PATH="$PATH_TO_NODE:$PATH"
+   
     echo "path to node: $PATH_TO_NODE"
 else
-    export PATH="$(pwd)/nodejs-mac-x64/bin:$PATH"
-    export PATH_TO_NODE="../nodejs-mac-x64/bin/node"
+    export PATH_TO_NODE="$(pwd)/nodejs-mac-x64/bin"
+    export PATH="$PATH_TO_NODE:$PATH"
+   
     echo "path to node: $PATH_TO_NODE"
 fi
 
-declare -a exec=($PATH_TO_NODE)
+export PATH_TO_BETTER_SQLITE3="./purple-hats/node_modules/better-sqlite3-with-prebuilds/build/Release"
+echo "path to better_sqlite3: $PATH_TO_BETTER_SQLITE3"
+
+declare -a exec=($PATH_TO_BETTER_SQLITE3/better_sqlite3.node $PATH_TO_NODE/node)
 
 for p in ${exec[@]} ; do
     xattr -d com.apple.quarantine $p
 done
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
+    export PUPPETEER_SKIP_DOWNLOAD='true'
+    export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD='true'
     export PUPPETEER_EXECUTABLE_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
     echo "using chrome instead of puppeteer"
 fi

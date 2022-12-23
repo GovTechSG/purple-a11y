@@ -10,15 +10,29 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Check out repository code
-        uses: actions/checkout@v2
-
       - name: Download node.js version from nodejs.org
         run: |
           curl -o ./nodejs-win.zip --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-win-x64.zip      
-          mkdir nodejs-win && tar -xzf nodejs-win.zip -C nodejs-win --strip-components=1 && rm ./nodejs-win.zip
+          mkdir nodejs-win && tar -xzf nodejs-win.zip -C nodejs-win --strip-components=1 
+          rm ./nodejs-win.zip
 
-      - name: Download Windows zip file 
+      - name: Check out repository code
+        uses: actions/checkout@v2
+        with:
+          path: purple-hats
+
+      - name: Copy scripts to parent directory
+        run: |
+          cp ${{github.workspace}}/purple-hats/scripts/*.ps1 ${{github.workspace}}
+          cp ${{github.workspace}}/purple-hats/scripts/*.cmd ${{github.workspace}}      
+          rd -r ${{github.workspace}}/purple-hats/scripts
+
+      - name: Run hats_shell._ps.ps1 before installing node modules
+        shell: pwsh
+        run: powershell.exe -NoProfile -ExecutionPolicy Bypass "& ${{github.workspace}}\hats_shell_ps.ps1" "cd ${{github.workspace}}\purple-hats;npm i fsevents@latest -f --save-optional"     
+        working-directory:  ${{github.workspace}}
+
+      - name: Upload Windows artifact
         uses: actions/upload-artifact@v1
         with:
           name: windows-artifact
@@ -28,24 +42,48 @@ jobs:
     runs-on: macos-latest  
 
     steps:
+      - name: Download node.js version from nodejs.org
+        run: |         
+          curl -o ./nodejs-mac-arm64.tar.gz --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-darwin-arm64.tar.gz      
+          mkdir nodejs-mac-arm64 && tar -xzf nodejs-mac-arm64.tar.gz -C nodejs-mac-arm64 --strip-components=1 && rm ./nodejs-mac-arm64.tar.gz
+          curl -o ./nodejs-mac-x64.tar.gz --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-darwin-x64.tar.gz     
+          mkdir nodejs-mac-x64 && tar -xzf nodejs-mac-x64.tar.gz -C nodejs-mac-x64 --strip-components=1 && rm ./nodejs-mac-x64.tar.gz
+
       - name: Check out repository code
         uses: actions/checkout@v2
+        with:
+          path: purple-hats
 
-      - name: Download correct node.js version from nodejs.org
-        run: |         
-          if [[ $(uname -m) == 'arm64' ]]; then
-            curl -o ./nodejs-mac-arm64.tar.gz --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-darwin-arm64.tar.gz      
-            mkdir nodejs-mac-arm64 && tar -xzf nodejs-mac-arm64.tar.gz -C nodejs-mac-arm64 --strip-components=1 && rm ./nodejs-mac-arm64.tar.gz
-          else
-            curl -o ./nodejs-mac-x64.tar.gz --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-darwin-x64.tar.gz     
-            mkdir nodejs-mac-x64 && tar -xzf nodejs-mac-x64.tar.gz -C nodejs-mac-x64 --strip-components=1 && rm ./nodejs-mac-x64.tar.gz
-          fi
-          
-      - name: Grant execute permissions for user
+      - name: Install Node Modules for Mac0S
         run: |
-          chmod ugo+rwx ./scripts/hats_shell.command ./scripts/hats_shell.sh
+          if [[ $(uname -m) == 'arm64' ]]; then
+            export PATH_TO_NODE="${{github.workspace}}/nodejs-mac-arm64/bin"
+            export PATH="$PATH_TO_NODE:$PATH"
+          else
+            export PATH_TO_NODE="${{github.workspace}}/nodejs-mac-x64/bin"
+            export PATH="$PATH_TO_NODE:$PATH"
+          fi
+          npm ci 
+        working-directory: purple-hats
 
-      - name: Download zip file Mac
+      - name: Grant execute permissions for user
+        run: chmod ugo+rwx ./scripts/hats_shell.command ./scripts/hats_shell.sh ./scripts/purple_hats_install.command
+        working-directory: purple-hats
+
+      - name: Copy scripts to parent directory
+        run: |
+          cp ./purple-hats/scripts/{hats_shell.command,hats_shell.sh,purple_hats_install.command}  ${{ github.workspace }}
+          rm -rf ./purple-hats/scripts
+      
+      - name: Zip entire Purple Hats folder
+        run: |
+          if [[ $(uname -m) == 'arm64' ]]; then        
+            zip -r purple-hats-portable-mac-arm64.zip ./ --exclude 'hats_shell_ps.ps1' 'hats_shell.cmd' './nodejs-mac-x64/*' './nodejs-mac-arm64/*' 
+          else
+            zip purple-hats-portable-mac-x64.zip -r ./ --exclude 'hats_shell_ps.ps1' 'hats_shell.cmd'  './nodejs-mac-x64/*' './nodejs-mac-arm64/*' 
+          fi
+
+      - name: Upload MAC artifact
         uses: actions/upload-artifact@v1
         with:
           name: mac-artifact
