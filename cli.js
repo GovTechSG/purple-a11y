@@ -33,6 +33,7 @@ const options = yargs
   .example([
     [`To scan sitemap of website:', 'node cli.js -c [ 1 | ${scannerTypes.sitemap} ] -u <url_link>`],
     [`To scan a website', 'node cli.js -c [ 2 | ${scannerTypes.website} ] -u <url_link>`]
+  ])
   .coerce('c', option => {
     if (typeof option === 'number') {
       // Will also allow integer choices
