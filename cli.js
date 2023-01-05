@@ -13,26 +13,18 @@ const {
   setThresholdLimits,
 } = require('./utils');
 const { checkUrl, prepareData, isSelectorValid, isInputValid } = require('./constants/common');
-const {
-  cliOptions,
-  messageOptions,
-  configureReportSetting,
-} = require('./constants/cliFunctions');
+const { cliOptions, messageOptions, configureReportSetting } = require('./constants/cliFunctions');
 
-const { 
-  scannerTypes,
-} = require('./constants/constants');
+const { scannerTypes } = require('./constants/constants');
 
-let { 
-  cliZipFileName,
-} = require('./constants/constants');
+let { cliZipFileName } = require('./constants/constants');
 
 const { consoleLogger } = require('./logs');
 const { combineRun } = require('./combine');
 
 setHeadlessMode(true);
 
-cleanUp('apify_storage');
+cleanUp('.a11y_storage');
 
 const options = yargs
   .usage('Usage: node cli.js -c <crawler> -u <url> OPTIONS')
@@ -41,7 +33,6 @@ const options = yargs
   .example([
     [`To scan sitemap of website:', 'node cli.js -c [ 1 | ${scannerTypes.sitemap} ] -u <url_link>`],
     [`To scan a website', 'node cli.js -c [ 2 | ${scannerTypes.website} ] -u <url_link>`]
-  ])
   .coerce('c', option => {
     if (typeof option === 'number') {
       // Will also allow integer choices
@@ -68,9 +59,14 @@ const options = yargs
   })
   .epilogue('').argv;
 
-const randomToken = generateRandomToken();
-
 const scanInit = async argvs => {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const curHour = today.getHours() < 10 ? '0' + today.getHours() : today.getHours();
+  const curMinute = today.getMinutes() < 10 ? '0' + today.getMinutes() : today.getMinutes();
+
   // Set the parameters required to indicate whether to break down report
   configureReportSetting(argvs.reportbreakdown);
 
@@ -84,7 +80,9 @@ const scanInit = async argvs => {
     argvs.url = res.url;
 
     const data = prepareData(argvs.scanner, argvs);
-    data.randomToken = randomToken;
+    const domain = new URL(argvs.url).hostname;
+
+    data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.device}`;
 
     printMessage(['Scanning website...'], messageOptions);
     await combineRun(data);
@@ -95,11 +93,14 @@ const scanInit = async argvs => {
     );
     process.exit(1);
   }
+
+  const domain = new URL(argvs.url).hostname;
+  return `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.device}`;
 };
 
-scanInit(options).then(async () => {
+scanInit(options).then(async storagePath => {
   // Path to scan result
-  const storagePath = getStoragePath(randomToken);
+  storagePath = fs.readdirSync('results').filter(fn => fn.startsWith(storagePath));
 
   // Take option if set
   if (typeof options.zip === 'string') {
@@ -107,12 +108,10 @@ scanInit(options).then(async () => {
   }
 
   await fs
-    .ensureDir(storagePath)
+    .ensureDir(`results/${storagePath[0]}`)
     .then(async () => {
-      await zipResults(cliZipFileName, storagePath);
-      const messageToDisplay = [
-        `Report of this run is at ${cliZipFileName}`,
-      ];
+      await zipResults(cliZipFileName, `results/${storagePath[0]}`);
+      const messageToDisplay = [`Report of this run is at ${cliZipFileName}`];
 
       if (process.env.REPORT_BREAKDOWN === '1') {
         messageToDisplay.push(
