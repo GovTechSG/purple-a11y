@@ -82,7 +82,7 @@ const scanInit = async argvs => {
     const data = prepareData(argvs.scanner, argvs);
     const domain = new URL(argvs.url).hostname;
 
-    data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.device}`;
+    data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}`;
 
     printMessage(['Scanning website...'], messageOptions);
     await combineRun(data);
@@ -95,7 +95,7 @@ const scanInit = async argvs => {
   }
 
   const domain = new URL(argvs.url).hostname;
-  return `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.device}`;
+  return `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}`;
 };
 
 scanInit(options).then(async storagePath => {
