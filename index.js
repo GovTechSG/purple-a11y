@@ -35,7 +35,18 @@ inquirer.prompt(questions).then(async answers => {
 
   data = prepareData(answers.scanner, answers);
 
-  data.randomToken = generateRandomToken();
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const curHour = today.getHours() < 10 ? '0' + today.getHours() : today.getHours();
+  const curMinute = today.getMinutes() < 10 ? '0' + today.getMinutes() : today.getMinutes();
+  const domain = new URL(answers.url).hostname;
+
+  data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}`.replace(
+    /[- )(]/g,
+    '',
+  );
 
   printMessage(['Scanning website...'], messageOptions);
   await combineRun(data);
