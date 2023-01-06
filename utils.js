@@ -1,6 +1,6 @@
 const fs = require('fs-extra');
 const crypto = require('crypto');
-const { a11yDataStoragePath, allIssueFileName } = require('./constants/constants');
+const { a11yDataStoragePath, allIssueFileName, urlsCrawledObj } = require('./constants/constants');
 
 exports.getHostnameFromRegex = url => {
   const matches = url.match(/^https?:\/\/([^/?#]+)(?:[/?#]|$)/i);
@@ -40,10 +40,8 @@ exports.validateUrl = url => {
   return !invalidURLends.some(urlEnd => url.includes(urlEnd));
 };
 
-const getStoragePath = randomToken => {
-  const currentDate = getCurrentDate();
-  return `results/${currentDate}/${randomToken}`;
-};
+const getStoragePath = randomToken =>
+  `results/${randomToken}_${urlsCrawledObj.scanned.length}pages`;
 
 exports.getStoragePath = getStoragePath;
 
@@ -70,8 +68,6 @@ exports.cleanUp = async (pathToDelete, setDefaultFolders = false) => {
       fs.removeSync(pathToDelete);
     }
   });
-
-
 };
 
 /* istanbul ignore next */
@@ -85,20 +81,12 @@ exports.getCurrentTime = () =>
     minute: '2-digit',
   });
 
-
-
 exports.setHeadlessMode = isHeadless => {
   if (isHeadless) {
     process.env.APIFY_HEADLESS = 1;
   } else {
     process.env.APIFY_HEADLESS = 0;
   }
-};
-
-exports.generateRandomToken = () => {
-  const timeStamp = Math.floor(Date.now() / 1000);
-  const randomString = crypto.randomBytes(16).toString('hex').slice(0, 10);
-  return `${timeStamp}${randomString}`;
 };
 
 exports.setThresholdLimits = setWarnLevel => {
@@ -108,10 +96,10 @@ exports.setThresholdLimits = setWarnLevel => {
 exports.zipResults = async (zipName, resultsPath) => {
   // eslint-disable-next-line global-require
   const { execFile } = require('child_process');
-  
+
   // Check prior zip file exist and remove
   if (fs.existsSync(zipName)) {
-    fs.unlink(zipName);  
+    fs.unlink(zipName);
   }
 
   // To zip up files recursively )-r) in the results folder path
