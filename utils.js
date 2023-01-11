@@ -83,9 +83,9 @@ exports.getCurrentTime = () =>
 
 exports.setHeadlessMode = isHeadless => {
   if (isHeadless) {
-    process.env.APIFY_HEADLESS = 1;
+    process.env.CRAWLEE_HEADLESS = 1;
   } else {
-    process.env.APIFY_HEADLESS = 0;
+    process.env.CRAWLEE_HEADLESS = 0;
   }
 };
 

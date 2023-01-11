@@ -93,21 +93,21 @@ describe('test getStoragePath', () => {
 describe('test setHeadlessMode', () => {
   test('should headlessMode is true', () => {
     setHeadlessMode(true);
-    expect(process.env.APIFY_HEADLESS).toEqual('1');
+    expect(process.env.CRAWLEE_HEADLESS).toEqual('1');
   });
   test('should headlessMode is false', () => {
     setHeadlessMode(false);
-    expect(process.env.APIFY_HEADLESS).toEqual('0');
+    expect(process.env.CRAWLEE_HEADLESS).toEqual('0');
   });
 });
 
 describe('test setHeadlessMode', () => {
   test('should headlessMode is true', () => {
     setHeadlessMode(true);
-    expect(process.env.APIFY_HEADLESS).toEqual('1');
+    expect(process.env.CRAWLEE_HEADLESS).toEqual('1');
   });
   test('should headlessMode is false', () => {
     setHeadlessMode(false);
-    expect(process.env.APIFY_HEADLESS).toEqual('0');
+    expect(process.env.CRAWLEE_HEADLESS).toEqual('0');
   });
 });

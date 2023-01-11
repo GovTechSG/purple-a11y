@@ -3,9 +3,9 @@
   "main": "index.js",
   "version": "1.0.0",
   "dependencies": {
-    "apify": "^2.3.2",
     "axe-core": "^4.4.1",
     "axios": "^0.25.0",
+    "crawlee": "^3.1.4",
     "fs-extra": "^10.0.0",
     "inquirer": "^8.2.0",
     "jsdom": "^19.0.0",

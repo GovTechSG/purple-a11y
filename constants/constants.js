@@ -5,11 +5,6 @@ exports.maxRequestsPerCrawl = 100;
 
 exports.maxConcurrency = 5;
 
-exports.pseudoUrls = host => [
-  // eslint-disable-next-line no-useless-escape
-  `[.*(?<!mailto.*)]${host}[(?!.*\.(gif|jpg|jpeg|png|pdf|doc|css|svg|js|ts|xml|csv|tgz|zip|xls|ppt|ico|woff)).*]`,
-];
-
 exports.urlsCrawledObj = {
   scanned: [],
   invalid: [],

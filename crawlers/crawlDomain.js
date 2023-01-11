@@ -1,28 +1,27 @@
-const Apify = require('apify');
+const crawlee = require('crawlee');
 const {
-  createApifySubFolders,
+  createCrawleeSubFolders,
   preNavigationHooks,
   runAxeScript,
-  handleFailedRequestFunction,
+  failedRequestHandler,
 } = require('./commonCrawlerFunc');
 const {
   maxRequestsPerCrawl,
   maxConcurrency,
-  pseudoUrls,
   urlsCrawledObj,
 } = require('../constants/constants');
 
 exports.crawlDomain = async (url, randomToken, host) => {
   const urlsCrawled = { ...urlsCrawledObj };
 
-  const { dataset, requestQueue } = await createApifySubFolders(randomToken);
+  const { dataset, requestQueue } = await createCrawleeSubFolders(randomToken);
 
   await requestQueue.addRequest({ url });
 
-  const crawler = new Apify.PuppeteerCrawler({
+  const crawler = new crawlee.PuppeteerCrawler({
     requestQueue,
     preNavigationHooks,
-    handlePageFunction: async ({ page, request }) => {
+    requestHandler: async ({ page, request, enqueueLinks }) => {
       const currentUrl = request.url;
       const location = await page.evaluate('location');
       if (location.host.includes(host)) {
@@ -30,17 +29,16 @@ exports.crawlDomain = async (url, randomToken, host) => {
         await dataset.pushData(results);
         urlsCrawled.scanned.push(currentUrl);
 
-        await Apify.utils.enqueueLinks({
-          page,
+        await enqueueLinks({
           selector: 'a',
-          pseudoUrls: pseudoUrls(host),
+          strategy: 'same-domain',
           requestQueue,
         });
       } else {
         urlsCrawled.outOfDomain.push(currentUrl);
       }
     },
-    handleFailedRequestFunction,
+    failedRequestHandler,
     maxRequestsPerCrawl,
     maxConcurrency,
   });

@@ -5,7 +5,7 @@ const { generateArtifacts } = require('./mergeAxeResults');
 const { getHostnameFromRegex, createAndUpdateFolders } = require('./utils');
 const { a11yStorage, scannerTypes } = require('./constants/constants');
 
-process.env.APIFY_LOCAL_STORAGE_DIR = a11yStorage;
+process.env.CRAWLEE_STORAGE_DIR = a11yStorage;
 
 exports.combineRun = async details => {
   const envDetails = { ...details };
