@@ -7,7 +7,7 @@ import constants from './constants/constants.js';
 
 process.env.CRAWLEE_STORAGE_DIR = constants.a11yStorage;
 
-export let combineRun = async details => {
+export const combineRun = async details => {
   const envDetails = { ...details };
 
   // eslint-disable-next-line prettier/prettier
