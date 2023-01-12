@@ -1,12 +1,13 @@
 /* eslint-disable no-undef */
-const {
+import {jest} from '@jest/globals'
+import {
   setThresholdLimits,
   getHostnameFromRegex,
   getCurrentDate,
   validateUrl,
   getStoragePath,
   setHeadlessMode,
-} = require('../utils');
+} from '../utils.js';
 
 describe('test setting of threshold warn level', () => {
   const OLD_ENV = process.env;
