@@ -1,8 +1,8 @@
 import { checkUrl, isInputValid, isSelectorValid, getUrlMessage } from './common.js';
-import { scannerTypes } from './constants.js';
+import constants from './constants.js';
 
 const isLoginScan = (answers) => {
-  return !!answers.scanner && answers.scanner === scannerTypes.login;
+  return !!answers.scanner && answers.scanner === constants.scannerTypes.login;
 }
 
 // Questions used in Inquirer.js
@@ -11,7 +11,7 @@ export const questions = [
     type: 'list',
     name: 'scanner',
     message: 'What would you like to scan today?',
-    choices: [scannerTypes.sitemap, scannerTypes.website],
+    choices: [constants.scannerTypes.sitemap, constants.scannerTypes.website],
   },
   {
     type: 'confirm',
@@ -44,7 +44,7 @@ export const questions = [
         return true;
       }
 
-      if (answers.scanner === scannerTypes.sitemap) {
+      if (answers.scanner === constants.scannerTypes.sitemap) {
         return 'Invalid sitemap format. Please provide a URL with a valid sitemap.';
       }
       return 'Cannot resolve URL. Please provide a valid URL.';

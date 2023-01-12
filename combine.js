@@ -3,9 +3,9 @@ import { crawlDomain } from './crawlers/crawlDomain.js';
 
 import { generateArtifacts } from './mergeAxeResults.js';
 import { getHostnameFromRegex, createAndUpdateFolders } from './utils.js';
-import { a11yStorage, scannerTypes } from './constants/constants.js';
+import constants from './constants/constants.js';
 
-process.env.CRAWLEE_STORAGE_DIR = a11yStorage;
+process.env.CRAWLEE_STORAGE_DIR = constants.a11yStorage;
 
 export let combineRun = async details => {
   const envDetails = { ...details };
@@ -23,11 +23,11 @@ export let combineRun = async details => {
 
   let urlsCrawled;
   switch (type) {
-    case scannerTypes.sitemap:
+    case constants.scannerTypes.sitemap:
       urlsCrawled = await crawlSitemap(url, randomToken, host);
       break;
 
-    case scannerTypes.website:
+    case constants.scannerTypes.website:
       urlsCrawled = await crawlDomain(url, randomToken, host);
       break;
 

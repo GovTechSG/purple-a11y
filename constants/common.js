@@ -4,7 +4,7 @@ import validator from 'validator';
 import axios from 'axios';
 import { JSDOM } from 'jsdom';
 import { parseString } from 'xml2js';
-import { scannerTypes } from './constants.js';
+import constants from './constants.js';
 import { consoleLogger, silentLogger } from '../logs.js';
 
 const document = new JSDOM('').window;
@@ -52,9 +52,9 @@ const isValidXML = async content => {
 
 export const getUrlMessage = scanner => {
   switch (scanner) {
-    case scannerTypes.website:
+    case constants.scannerTypes.website:
       return 'Please enter URL of website: ';
-    case scannerTypes.sitemap:
+    case constants.scannerTypes.sitemap:
       return 'Please enter URL to sitemap: ';
 
     default:
@@ -153,7 +153,7 @@ export const checkUrl = async (scanner, url) => {
   const res = await checkUrlConnectivity(url);
 
   if (res.status === 200) {
-    if (scanner === scannerTypes.sitemap) {
+    if (scanner === constants.scannerTypes.sitemap) {
       const isSitemap = await isSitemapContent(res.content);
 
       if (!isSitemap) {
@@ -173,14 +173,14 @@ export const prepareData = (scanType, argv) => {
   }
 
   let data;
-  if (scanType === scannerTypes.sitemap || scanType === scannerTypes.website) {
+  if (scanType === constants.scannerTypes.sitemap || scanType === constants.scannerTypes.website) {
     data = {
       type: argv.scanner,
       url: argv.url,
     };
   }
 
-  if (scanType === scannerTypes.login) {
+  if (scanType === constants.scannerTypes.login) {
     data = {
       type: argv.scanner,
       url: argv.url,

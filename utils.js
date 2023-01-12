@@ -1,3 +1,4 @@
+import { execFile } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
@@ -5,7 +6,8 @@ const __dirname = path.dirname(__filename);
 
 import fs from 'fs-extra';
 import crypto from 'crypto';
-import { a11yDataStoragePath, allIssueFileName, urlsCrawledObj } from './constants/constants.js';
+
+import constants from './constants/constants.js';
 
 export let getHostnameFromRegex = url => {
   const matches = url.match(/^https?:\/\/([^/?#]+)(?:[/?#]|$)/i);
@@ -44,7 +46,7 @@ export let validateUrl = url => {
 };
 
 export const getStoragePath = randomToken =>
-  `results/${randomToken}_${urlsCrawledObj.scanned.length}pages`;
+  `results/${randomToken}_${constants.urlsCrawledObj.scanned.length}pages`;
 
 export let createAndUpdateFolders = async (scanDetails, randomToken) => {
   const storagePath = getStoragePath(randomToken);
@@ -52,7 +54,7 @@ export let createAndUpdateFolders = async (scanDetails, randomToken) => {
 
   await fs.ensureDir(`${storagePath}/reports`);
   await fs.writeFile(`${storagePath}/details.json`, JSON.stringify(scanDetails, 0, 2));
-  await fs.copy(`${a11yDataStoragePath}/${randomToken}`, `${storagePath}/${allIssueFileName}`);
+  await fs.copy(`${constants.a11yDataStoragePath}/${randomToken}`, `${storagePath}/${constants.allIssueFileName}`);
 
   // update logs
   await fs.ensureDir(logPath);
@@ -95,9 +97,6 @@ export let setThresholdLimits = setWarnLevel => {
 };
 
 export let zipResults = async (zipName, resultsPath) => {
-  // eslint-disable-next-line global-require
-  const { execFile } = require('child_process');
-
   // Check prior zip file exist and remove
   if (fs.existsSync(zipName)) {
     fs.unlink(zipName);

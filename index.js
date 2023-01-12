@@ -7,10 +7,10 @@ import { cleanUp, setHeadlessMode} from './utils.js';
 import { prepareData, messageOptions } from './constants/common.js';
 import { questions } from './constants/questions.js';
 import { combineRun } from './combine.js';
-import { a11yStorage } from './constants/constants.js';
+import constants from './constants/constants.js';
 
 // Delete dataset and request queues
-cleanUp(a11yStorage);
+cleanUp(constants.a11yStorage);
 
 printMessage(
   [

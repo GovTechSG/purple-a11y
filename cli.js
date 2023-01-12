@@ -26,8 +26,7 @@ import {
   configureReportSetting
 } from './constants/cliFunctions.js';
 
-import { scannerTypes } from './constants/constants.js';
-import { cliZipFileName } from './constants/constants.js';
+import constants from './constants/constants.js';
 import { consoleLogger } from './logs.js';
 import { combineRun } from './combine.js';
 
@@ -42,24 +41,24 @@ const options = yargs
   .strictOptions(true)
   .options(cliOptions)
   .example([
-    [`To scan sitemap of website:', 'node cli.js -c [ 1 | ${scannerTypes.sitemap} ] -u <url_link>`],
-    [`To scan a website', 'node cli.js -c [ 2 | ${scannerTypes.website} ] -u <url_link>`]
+    [`To scan sitemap of website:', 'node cli.js -c [ 1 | ${constants.scannerTypes.sitemap} ] -u <url_link>`],
+    [`To scan a website', 'node cli.js -c [ 2 | ${constants.scannerTypes.website} ] -u <url_link>`]
   ])
   .coerce('c', option => {
     if (typeof option === 'number') {
       // Will also allow integer choices
       switch (option) {
         case 1:
-          option = scannerTypes.sitemap;
+          option = constants.scannerTypes.sitemap;
           break;
         case 2:
-          option = scannerTypes.website;
+          option = constants.scannerTypes.website;
           break;
         default:
           printMessage(
             [
               'Invalid option',
-              `Please choose to enter numbers (1,2) or keywords (${scannerTypes.sitemap}, ${scannerTypes.website}).`,
+              `Please choose to enter numbers (1,2) or keywords (${constants.scannerTypes.sitemap}, ${constants.scannerTypes.website}).`,
             ],
             messageOptions,
           );
@@ -116,14 +115,14 @@ scanInit(options).then(async storagePath => {
 
   // Take option if set
   if (typeof options.zip === 'string') {
-    cliZipFileName = options.zip;
+    constants.cliZipFileName = options.zip;
   }
 
   await fs
     .ensureDir(`results/${storagePath[0]}`)
     .then(async () => {
-      await zipResults(cliZipFileName, `results/${storagePath[0]}`);
-      const messageToDisplay = [`Report of this run is at ${cliZipFileName}`];
+      await zipResults(constants.cliZipFileName, `results/${storagePath[0]}`);
+      const messageToDisplay = [`Report of this run is at ${constants.cliZipFileName}`];
 
       if (process.env.REPORT_BREAKDOWN === '1') {
         messageToDisplay.push(

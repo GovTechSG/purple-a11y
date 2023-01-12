@@ -5,7 +5,7 @@ import printMessage from 'print-message';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Mustache from 'mustache';
-import { allIssueFileName, impactOrder, alertMessageOptions } from './constants/constants.js';
+import constants from './constants/constants.js';
 import { getCurrentTime, getStoragePath } from './utils.js';
 import { consoleLogger, silentLogger } from './logs.js';
 
@@ -105,7 +105,7 @@ const flattenAxeResults = async rPath => {
         impact,
         helpUrl,
         htmlElement: item.htmlElement,
-        order: impactOrder[impact],
+        order: constants.impactOrder[impact],
         wcagLinks,
         disabilities,
       });
@@ -190,7 +190,7 @@ const thresholdLimitCheck = async (warnLevel, allIssues) => {
 
   messages.forEach((message, index, array) => {
     if (array.length !== 1 && index === array.length - 1) {
-      printMessage(message, alertMessageOptions);
+      printMessage(message, constants.alertMessageOptions);
     } else {
       printMessage(message);
     }
@@ -199,7 +199,7 @@ const thresholdLimitCheck = async (warnLevel, allIssues) => {
 
 export const generateArtifacts = async randomToken => {
   const storagePath = getStoragePath(randomToken);
-  const directory = `${storagePath}/${allIssueFileName}`;
+  const directory = `${storagePath}/${constants.allIssueFileName}`;
   let allIssues = [];
   const allFiles = await extractFileNames(directory);
 

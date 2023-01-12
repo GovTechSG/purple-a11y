@@ -5,15 +5,13 @@ import {
   runAxeScript,
   failedRequestHandler,
 } from './commonCrawlerFunc.js';
-import { 
-  maxRequestsPerCrawl, 
-  maxConcurrency, 
-  urlsCrawledObj 
-} from '../constants/constants.js';
+import constants from '../constants/constants.js';
 
 export const crawlDomain = async (url, randomToken, host) => {
-  const urlsCrawled = { ...urlsCrawledObj };
-
+  const urlsCrawled = { ...constants.urlsCrawledObj };
+  const maxRequestsPerCrawl = constants.maxRequestsPerCrawl;
+  const maxConcurrency = constants.maxConcurrency;
+  
   const { dataset, requestQueue } = await createCrawleeSubFolders(randomToken);
 
   await requestQueue.addRequest({ url });

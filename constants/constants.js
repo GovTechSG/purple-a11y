@@ -4,49 +4,48 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // for crawlers
-export let axeScript = 'node_modules/axe-core/axe.min.js';
+export const axeScript = 'node_modules/axe-core/axe.min.js';
 
-export let maxRequestsPerCrawl = 100;
-
-export let maxConcurrency = 5;
-
-export let urlsCrawledObj = {
+const urlsCrawledObj = {
   scanned: [],
   invalid: [],
   outOfDomain: [],
 };
 
-export let scannerTypes = {
+const scannerTypes = {
   login: 'login',
   sitemap: 'sitemap',
   website: 'website',
 };
 
-// folder paths
-export let a11yStorage = '.a11y_storage';
+const a11yStorage = '.a11y_storage';
 
-export let a11yDataStoragePath = `${a11yStorage}/datasets`;
-
-export let allIssueFileName = 'all_issues';
-
-export let cliZipFileName = 'a11y-scan-results.zip';
-
-export let rootPath = __dirname;
-
-// others
-export let impactOrder = {
+export const impactOrder = {
   minor: 0,
   moderate: 1,
   serious: 2,
   critical: 3,
 };
 
-export let wcagWebPage = 'https://www.w3.org/TR/WCAG21/';
-const latestAxeVersion = '4.4';
-export let axeVersion = latestAxeVersion;
-export let axeWebPage = `https://dequeuniversity.com/rules/axe/${latestAxeVersion}/`;
+export default {
+  a11yStorage: a11yStorage,
+  a11yDataStoragePath: `${a11yStorage}/datasets`,
+  allIssueFileName: 'all_issues',
+  cliZipFileName: 'a11y-scan-results.zip',
+  maxRequestsPerCrawl: 100,
+  maxConcurrency: 5,
+  scannerTypes: scannerTypes,
+  urlsCrawledObj: urlsCrawledObj,
+  impactOrder: impactOrder,
+}
 
-export let alertMessageOptions = {
+export const rootPath = __dirname;
+export const wcagWebPage = 'https://www.w3.org/TR/WCAG21/';
+const latestAxeVersion = '4.4';
+export const axeVersion = latestAxeVersion;
+export const axeWebPage = `https://dequeuniversity.com/rules/axe/${latestAxeVersion}/`;
+
+export const alertMessageOptions = {
   border: true,
   borderColor: 'red',
 };

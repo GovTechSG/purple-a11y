@@ -7,11 +7,13 @@ import {
 } from './commonCrawlerFunc.js';
 
 import { validateUrl } from '../utils.js';
-import { maxRequestsPerCrawl, maxConcurrency, urlsCrawledObj } from '../constants/constants.js';
+import constants from '../constants/constants.js';
 
 export const crawlSitemap = async (sitemapUrl, randomToken, host) => {
-  const urlsCrawled = { ...urlsCrawledObj };
-
+  const urlsCrawled = { ...constants.urlsCrawledObj };
+  const maxRequestsPerCrawl = constants.maxRequestsPerCrawl;
+  const maxConcurrency = constants.maxConcurrency;
+  
   const requestList = new crawlee.RequestList({
     sources: [{ requestsFromUrl: sitemapUrl }],
   });
