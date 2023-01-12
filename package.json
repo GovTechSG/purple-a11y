@@ -11,7 +11,6 @@
     "inquirer": "^9.1.4",
     "jsdom": "^21.0.0",
     "mustache": "^4.2.0",
-    "node-fetch": "^3.3.0",
     "print-message": "^3.0.1",
     "puppeteer": "^19.5.2",
     "validator": "^13.7.0",
@@ -25,9 +24,11 @@
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-import": "^2.27.4",
     "eslint-plugin-prettier": "^4.2.1",
-    "fb-watchman": "^2.0.2",
     "jest": "^29.3.1",
     "prettier": "^2.8.2"
+  },
+  "overrides": {
+    "node-fetch": "^3.3.0"
   },
   "scripts": {
     "test": "node --experimental-vm-modules ./node_modules/.bin/jest"
