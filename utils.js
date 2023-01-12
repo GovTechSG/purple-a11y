@@ -9,19 +9,19 @@ import crypto from 'crypto';
 
 import constants from './constants/constants.js';
 
-export let getHostnameFromRegex = url => {
+export const getHostnameFromRegex = url => {
   const matches = url.match(/^https?:\/\/([^/?#]+)(?:[/?#]|$)/i);
 
   // extract hostname (will be null if no match is found)
   return matches && matches[1];
 };
 
-export let getCurrentDate = () => {
+export const getCurrentDate = () => {
   const date = new Date();
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 };
 
-export let validateUrl = url => {
+export const validateUrl = url => {
   const invalidURLends = [
     '.gif',
     '.jpg',
@@ -48,7 +48,7 @@ export let validateUrl = url => {
 export const getStoragePath = randomToken =>
   `results/${randomToken}_${constants.urlsCrawledObj.scanned.length}pages`;
 
-export let createAndUpdateFolders = async (scanDetails, randomToken) => {
+export const createAndUpdateFolders = async (scanDetails, randomToken) => {
   const storagePath = getStoragePath(randomToken);
   const logPath = `logs/${randomToken}`;
 
@@ -65,7 +65,7 @@ export let createAndUpdateFolders = async (scanDetails, randomToken) => {
   });
 };
 
-export let cleanUp = async (pathToDelete, setDefaultFolders = false) => {
+export const cleanUp = async (pathToDelete, setDefaultFolders = false) => {
   await fs.pathExists(pathToDelete).then(exists => {
     if (exists) {
       fs.removeSync(pathToDelete);
@@ -74,7 +74,7 @@ export let cleanUp = async (pathToDelete, setDefaultFolders = false) => {
 };
 
 /* istanbul ignore next */
-export let getCurrentTime = () =>
+export const getCurrentTime = () =>
   new Date().toLocaleTimeString('en-GB', {
     year: 'numeric',
     month: 'short',
@@ -84,7 +84,7 @@ export let getCurrentTime = () =>
     minute: '2-digit',
   });
 
-export let setHeadlessMode = isHeadless => {
+export const setHeadlessMode = isHeadless => {
   if (isHeadless) {
     process.env.CRAWLEE_HEADLESS = 1;
   } else {
@@ -92,11 +92,11 @@ export let setHeadlessMode = isHeadless => {
   }
 };
 
-export let setThresholdLimits = setWarnLevel => {
+export const setThresholdLimits = setWarnLevel => {
   process.env.WARN_LEVEL = setWarnLevel;
 };
 
-export let zipResults = async (zipName, resultsPath) => {
+export const zipResults = async (zipName, resultsPath) => {
   // Check prior zip file exist and remove
   if (fs.existsSync(zipName)) {
     fs.unlink(zipName);
