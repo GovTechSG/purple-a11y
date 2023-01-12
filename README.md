@@ -2,7 +2,7 @@
 Purple HATS is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).
 
 ## Technology Stack
-1. [Apify SDK](https://sdk.apify.com/)
+1. [Crawlee](https://crawlee.dev/)
 2. [Axe-core](https://github.com/dequelabs/axe-core)
 3. [Node.js](https://Node.js.org/en/)
 
@@ -184,7 +184,7 @@ zsh: abort      node index.js
 ## How do I limit number of pages scanned?
 If you find a scan takes too long to complete due to large website, or there are too many pages in a sitemap to scan, you may choose to limit number of pages scanned.  
 
-To do this, open `constants\constants.js` with a text editor.  Change the value `exports.maxRequestsPerCrawl` to a smaller number, e.g. `exports.maxRequestsPerCrawl = 10;` and save the file.  Start a new purple-hats scan.
+To do this, open `constants\constants.js` with a text editor.  Change the value for `maxRequestsPerCrawl` to a smaller number like 10, e.g. `export let maxRequestsPerCrawl = 10;` and save the file.  Start a new purple-hats scan.
 
 ## Additional Information on Data
 

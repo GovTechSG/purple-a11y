@@ -1,12 +1,13 @@
 /* eslint-disable no-undef */
-const {
+import {jest} from '@jest/globals'
+import {
   setThresholdLimits,
   getHostnameFromRegex,
   getCurrentDate,
   validateUrl,
   getStoragePath,
   setHeadlessMode,
-} = require('../utils');
+} from '../utils.js';
 
 describe('test setting of threshold warn level', () => {
   const OLD_ENV = process.env;
@@ -93,21 +94,21 @@ describe('test getStoragePath', () => {
 describe('test setHeadlessMode', () => {
   test('should headlessMode is true', () => {
     setHeadlessMode(true);
-    expect(process.env.APIFY_HEADLESS).toEqual('1');
+    expect(process.env.CRAWLEE_HEADLESS).toEqual('1');
   });
   test('should headlessMode is false', () => {
     setHeadlessMode(false);
-    expect(process.env.APIFY_HEADLESS).toEqual('0');
+    expect(process.env.CRAWLEE_HEADLESS).toEqual('0');
   });
 });
 
 describe('test setHeadlessMode', () => {
   test('should headlessMode is true', () => {
     setHeadlessMode(true);
-    expect(process.env.APIFY_HEADLESS).toEqual('1');
+    expect(process.env.CRAWLEE_HEADLESS).toEqual('1');
   });
   test('should headlessMode is false', () => {
     setHeadlessMode(false);
-    expect(process.env.APIFY_HEADLESS).toEqual('0');
+    expect(process.env.CRAWLEE_HEADLESS).toEqual('0');
   });
 });
