@@ -1,13 +1,13 @@
-const { crawlSitemap } = require('./crawlers/crawlSitemap');
-const { crawlDomain } = require('./crawlers/crawlDomain');
+import { crawlSitemap } from './crawlers/crawlSitemap.js';
+import { crawlDomain } from './crawlers/crawlDomain.js';
 
-const { generateArtifacts } = require('./mergeAxeResults');
-const { getHostnameFromRegex, createAndUpdateFolders } = require('./utils');
-const { a11yStorage, scannerTypes } = require('./constants/constants');
+import { generateArtifacts } from './mergeAxeResults.js';
+import { getHostnameFromRegex, createAndUpdateFolders } from './utils.js';
+import { a11yStorage, scannerTypes } from './constants/constants.js';
 
-process.env.APIFY_LOCAL_STORAGE_DIR = a11yStorage;
+process.env.CRAWLEE_STORAGE_DIR = a11yStorage;
 
-exports.combineRun = async details => {
+export let combineRun = async details => {
   const envDetails = { ...details };
 
   // eslint-disable-next-line prettier/prettier

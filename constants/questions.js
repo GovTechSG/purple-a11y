@@ -1,13 +1,12 @@
-const { isInputValid, isSelectorValid, getUrlMessage } = require('./common');
-const { checkUrl } = require('./common');
-const { scannerTypes } = require('./constants')
+import { checkUrl, isInputValid, isSelectorValid, getUrlMessage } from './common.js';
+import { scannerTypes } from './constants.js';
 
 const isLoginScan = (answers) => {
   return !!answers.scanner && answers.scanner === scannerTypes.login;
 }
 
 // Questions used in Inquirer.js
-exports.questions = [
+export const questions = [
   {
     type: 'list',
     name: 'scanner',

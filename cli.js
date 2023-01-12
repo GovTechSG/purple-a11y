@@ -1,30 +1,41 @@
 #!/usr/bin/env node
 /* eslint-disable no-undef */
 /* eslint-disable no-param-reassign */
-const fs = require('fs-extra');
-const yargs = require('yargs');
-const printMessage = require('print-message');
-const {
+import fs from 'fs-extra';
+import _yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
+import printMessage from 'print-message';
+import {
   cleanUp,
   getStoragePath,
   zipResults,
   setHeadlessMode,
-  generateRandomToken,
   setThresholdLimits,
-} = require('./utils');
-const { checkUrl, prepareData, isSelectorValid, isInputValid } = require('./constants/common');
-const { cliOptions, messageOptions, configureReportSetting } = require('./constants/cliFunctions');
+} from './utils.js';
 
-const { scannerTypes } = require('./constants/constants');
+import { 
+  checkUrl, 
+  prepareData, 
+  isSelectorValid, 
+  isInputValid 
+} from './constants/common.js';
 
-let { cliZipFileName } = require('./constants/constants');
+import { 
+  cliOptions, 
+  messageOptions, 
+  configureReportSetting
+} from './constants/cliFunctions.js';
 
-const { consoleLogger } = require('./logs');
-const { combineRun } = require('./combine');
+import { scannerTypes } from './constants/constants.js';
+import { cliZipFileName } from './constants/constants.js';
+import { consoleLogger } from './logs.js';
+import { combineRun } from './combine.js';
 
 setHeadlessMode(true);
 
 cleanUp('.a11y_storage');
+
+const yargs = _yargs(hideBin(process.argv));
 
 const options = yargs
   .usage('Usage: node cli.js -c <crawler> -u <url> OPTIONS')

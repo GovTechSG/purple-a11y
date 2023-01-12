@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /* eslint-disable func-names */
 /* eslint-disable no-param-reassign */
-const printMessage = require('print-message');
-const inquirer = require('inquirer');
-const { cleanUp, setHeadlessMode, generateRandomToken } = require('./utils');
-const { prepareData, messageOptions } = require('./constants/common');
-const { questions } = require('./constants/questions');
-const { combineRun } = require('./combine');
-const { a11yStorage } = require('./constants/constants');
+import printMessage from 'print-message';
+import inquirer from 'inquirer';
+import { cleanUp, setHeadlessMode} from './utils.js';
+import { prepareData, messageOptions } from './constants/common.js';
+import { questions } from './constants/questions.js';
+import { combineRun } from './combine.js';
+import { a11yStorage } from './constants/constants.js';
 
 // Delete dataset and request queues
 cleanUp(a11yStorage);

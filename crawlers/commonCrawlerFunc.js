@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-param-reassign */
-const Apify = require('apify');
-const axe = require('axe-core');
-const { axeScript } = require('../constants/constants');
+import crawlee from 'crawlee';
+import axe from 'axe-core';
+import { axeScript } from '../constants/constants.js';
 
 const filterAxeResults = (results, host) => {
   const { violations, url } = results;
@@ -28,8 +28,8 @@ const filterAxeResults = (results, host) => {
   };
 };
 
-exports.runAxeScript = async (page, host) => {
-  await Apify.utils.puppeteer.injectFile(page, axeScript);
+export const runAxeScript = async (page, host) => {
+  await crawlee.puppeteerUtils.injectFile(page, axeScript);
   const results = await page.evaluate(() => {
     axe.configure({
       branding: {
@@ -44,18 +44,18 @@ exports.runAxeScript = async (page, host) => {
   return filterAxeResults(results, host);
 };
 
-exports.createApifySubFolders = async randomToken => {
-  const dataset = await Apify.openDataset(randomToken);
-  const requestQueue = await Apify.openRequestQueue(randomToken);
+export const createCrawleeSubFolders = async randomToken => {
+  const dataset = await crawlee.Dataset.open(randomToken);
+  const requestQueue = await crawlee.RequestQueue.open(randomToken);
   return { dataset, requestQueue };
 };
 
-exports.preNavigationHooks = [
+export const preNavigationHooks = [
   async (_crawlingContext, gotoOptions) => {
     gotoOptions = { waitUntil: 'networkidle2', timeout: 30000 };
   },
 ];
 
-exports.handleFailedRequestFunction = async ({ request }) => {
-  Apify.utils.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
+export const failedRequestHandler = async ({ request }) => {
+  crawlee.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
 };

@@ -1,28 +1,29 @@
-const Apify = require('apify');
-const {
-  createApifySubFolders,
+import crawlee from 'crawlee';
+import {
+  createCrawleeSubFolders,
   preNavigationHooks,
   runAxeScript,
-  handleFailedRequestFunction,
-} = require('./commonCrawlerFunc');
-const { validateUrl } = require('../utils');
-const { maxRequestsPerCrawl, maxConcurrency, urlsCrawledObj } = require('../constants/constants');
+  failedRequestHandler,
+} from './commonCrawlerFunc.js';
 
-exports.crawlSitemap = async (sitemapUrl, randomToken, host) => {
+import { validateUrl } from '../utils.js';
+import { maxRequestsPerCrawl, maxConcurrency, urlsCrawledObj } from '../constants/constants.js';
+
+export const crawlSitemap = async (sitemapUrl, randomToken, host) => {
   const urlsCrawled = { ...urlsCrawledObj };
 
-  const requestList = new Apify.RequestList({
+  const requestList = new crawlee.RequestList({
     sources: [{ requestsFromUrl: sitemapUrl }],
   });
   await requestList.initialize();
 
-  const { dataset, requestQueue } = await createApifySubFolders(randomToken);
+  const { dataset, requestQueue } = await createCrawleeSubFolders(randomToken);
 
-  const crawler = new Apify.PuppeteerCrawler({
+  const crawler = new crawlee.PuppeteerCrawler({
     requestList,
     requestQueue,
     preNavigationHooks,
-    handlePageFunction: async ({ page, request }) => {
+    requestHandler: async ({ page, request }) => {
       const currentUrl = request.url;
       const location = await page.evaluate('location');
       if (validateUrl(currentUrl)) {
@@ -34,7 +35,7 @@ exports.crawlSitemap = async (sitemapUrl, randomToken, host) => {
       }
 
     },
-    handleFailedRequestFunction,
+    failedRequestHandler,
     maxRequestsPerCrawl,
     maxConcurrency,
   });

@@ -2,7 +2,7 @@
 Purple HATS is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).
 
 ## Technology Stack
-1. [Apify SDK](https://sdk.apify.com/)
+1. [Crawlee](https://crawlee.dev/)
 2. [Axe-core](https://github.com/dequelabs/axe-core)
 3. [Node.js](https://Node.js.org/en/)
 

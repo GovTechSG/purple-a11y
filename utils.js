@@ -1,22 +1,25 @@
-const fs = require('fs-extra');
-const crypto = require('crypto');
-const { a11yDataStoragePath, allIssueFileName, urlsCrawledObj } = require('./constants/constants');
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-exports.getHostnameFromRegex = url => {
+import fs from 'fs-extra';
+import crypto from 'crypto';
+import { a11yDataStoragePath, allIssueFileName, urlsCrawledObj } from './constants/constants.js';
+
+export let getHostnameFromRegex = url => {
   const matches = url.match(/^https?:\/\/([^/?#]+)(?:[/?#]|$)/i);
 
   // extract hostname (will be null if no match is found)
   return matches && matches[1];
 };
 
-const getCurrentDate = () => {
+export let getCurrentDate = () => {
   const date = new Date();
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 };
 
-exports.getCurrentDate = getCurrentDate;
-
-exports.validateUrl = url => {
+export let validateUrl = url => {
   const invalidURLends = [
     '.gif',
     '.jpg',
@@ -40,12 +43,10 @@ exports.validateUrl = url => {
   return !invalidURLends.some(urlEnd => url.includes(urlEnd));
 };
 
-const getStoragePath = randomToken =>
+export const getStoragePath = randomToken =>
   `results/${randomToken}_${urlsCrawledObj.scanned.length}pages`;
 
-exports.getStoragePath = getStoragePath;
-
-exports.createAndUpdateFolders = async (scanDetails, randomToken) => {
+export let createAndUpdateFolders = async (scanDetails, randomToken) => {
   const storagePath = getStoragePath(randomToken);
   const logPath = `logs/${randomToken}`;
 
@@ -62,7 +63,7 @@ exports.createAndUpdateFolders = async (scanDetails, randomToken) => {
   });
 };
 
-exports.cleanUp = async (pathToDelete, setDefaultFolders = false) => {
+export let cleanUp = async (pathToDelete, setDefaultFolders = false) => {
   await fs.pathExists(pathToDelete).then(exists => {
     if (exists) {
       fs.removeSync(pathToDelete);
@@ -71,7 +72,7 @@ exports.cleanUp = async (pathToDelete, setDefaultFolders = false) => {
 };
 
 /* istanbul ignore next */
-exports.getCurrentTime = () =>
+export let getCurrentTime = () =>
   new Date().toLocaleTimeString('en-GB', {
     year: 'numeric',
     month: 'short',
@@ -81,19 +82,19 @@ exports.getCurrentTime = () =>
     minute: '2-digit',
   });
 
-exports.setHeadlessMode = isHeadless => {
+export let setHeadlessMode = isHeadless => {
   if (isHeadless) {
-    process.env.APIFY_HEADLESS = 1;
+    process.env.CRAWLEE_HEADLESS = 1;
   } else {
-    process.env.APIFY_HEADLESS = 0;
+    process.env.CRAWLEE_HEADLESS = 0;
   }
 };
 
-exports.setThresholdLimits = setWarnLevel => {
+export let setThresholdLimits = setWarnLevel => {
   process.env.WARN_LEVEL = setWarnLevel;
 };
 
-exports.zipResults = async (zipName, resultsPath) => {
+export let zipResults = async (zipName, resultsPath) => {
   // eslint-disable-next-line global-require
   const { execFile } = require('child_process');
 
