@@ -2,18 +2,23 @@
 Purple HATS is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).
 
 ## Technology Stack
-1. [Apify SDK](https://sdk.apify.com/)
+1. [Crawlee](https://crawlee.dev/)
 2. [Axe-core](https://github.com/dequelabs/axe-core)
 3. [Node.js](https://Node.js.org/en/)
 
 ## Prerequisites and Installations
+
+### Portable Purple hats
+Portable Purple hats is the recommended way to run Purple hats as it reduces the difficulty for installation.  Refer to [Installation Guide](/INSTALLATION.md) for step-by-step instructions.
+
+### Manual Installation
 Please ensure the following requirements are met:
 - **Node.js version to be version 15.10.0 and above.**
 - If you do not have node, or if there is a need to manage your node versions, you can consider using [Node Version Manager (NVM)](https://github.com/nvm-sh/nvm).
 - Make sure NVM is pointing to a node version >= 15.10.0. Please refer to [Usage of Node Version Manager (NVM)](#usage-of-node-version-manager-(NVM))
 - Install the required NPM packages with `npm install`.
 
-### Usage of Node Version Manager (NVM)
+#### Usage of Node Version Manager (NVM)
 ```shell
 # If have not installed a version >= v15, install NodeJs version with NVM
 nvm install <nodejs_version_greater_than_15>
@@ -22,7 +27,7 @@ nvm install <nodejs_version_greater_than_15>
 nvm use <nodejs_version_greater_than_15>
 ```
 
-### Facing issues?
+#### Facing issues?
 Please refer to [Troubleshooting section](#troubleshooting) for more information.
 
 ---
@@ -179,7 +184,7 @@ zsh: abort      node index.js
 ## How do I limit number of pages scanned?
 If you find a scan takes too long to complete due to large website, or there are too many pages in a sitemap to scan, you may choose to limit number of pages scanned.  
 
-To do this, open `constants\constants.js` with a text editor.  Change the value `exports.maxRequestsPerCrawl` to a smaller number, e.g. `exports.maxRequestsPerCrawl = 10;` and save the file.  Start a new purple-hats scan.
+To do this, open `constants\constants.js` with a text editor.  Change the value for `maxRequestsPerCrawl` to a smaller number like 10, e.g. `export let maxRequestsPerCrawl = 10;` and save the file.  Start a new purple-hats scan.
 
 ## Additional Information on Data
 

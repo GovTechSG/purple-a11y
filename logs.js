@@ -1,6 +1,5 @@
 /* eslint-disable no-shadow */
-const { createLogger, format, transports } = require('winston');
-
+import { createLogger, format, transports } from 'winston';
 const { combine, timestamp, printf } = format;
 
 // Sample output
@@ -33,7 +32,7 @@ const silentLogger = createLogger({
   ],
 });
 
-module.exports = {
+export {
   logFormat,
   consoleLogger,
   silentLogger,

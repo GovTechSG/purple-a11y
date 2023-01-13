@@ -1,15 +1,19 @@
 /* eslint-disable consistent-return */
 /* eslint-disable no-console */
-const fs = require('fs-extra');
-const printMessage = require('print-message');
-const path = require('path');
-const Mustache = require('mustache');
-const axeIssuesList = require('./constants/axeTypes.json');
-const wcagList = require('./constants/wcagLinks.json');
-const { allIssueFileName, impactOrder } = require('./constants/constants');
-const { getCurrentTime, getStoragePath } = require('./utils');
-const { alertMessageOptions } = require('./constants/constants');
-const { consoleLogger, silentLogger } = require('./logs');
+import fs from 'fs-extra';
+import printMessage from 'print-message';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import Mustache from 'mustache';
+import constants from './constants/constants.js';
+import { getCurrentTime, getStoragePath } from './utils.js';
+import { consoleLogger, silentLogger } from './logs.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const axeIssuesList  = JSON.parse(fs.readFileSync('./constants/axeTypes.json'));
+const wcagList = JSON.parse(fs.readFileSync('./constants/wcagLinks.json'));
 
 const extractFileNames = async directory =>
   fs
@@ -101,7 +105,7 @@ const flattenAxeResults = async rPath => {
         impact,
         helpUrl,
         htmlElement: item.htmlElement,
-        order: impactOrder[impact],
+        order: constants.impactOrder[impact],
         wcagLinks,
         disabilities,
       });
@@ -186,16 +190,16 @@ const thresholdLimitCheck = async (warnLevel, allIssues) => {
 
   messages.forEach((message, index, array) => {
     if (array.length !== 1 && index === array.length - 1) {
-      printMessage(message, alertMessageOptions);
+      printMessage(message, constants.alertMessageOptions);
     } else {
       printMessage(message);
     }
   });
 };
 
-exports.generateArtifacts = async randomToken => {
+export const generateArtifacts = async randomToken => {
   const storagePath = getStoragePath(randomToken);
-  const directory = `${storagePath}/${allIssueFileName}`;
+  const directory = `${storagePath}/${constants.allIssueFileName}`;
   let allIssues = [];
   const allFiles = await extractFileNames(directory);
 
