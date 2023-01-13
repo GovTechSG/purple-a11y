@@ -167,7 +167,7 @@ const issueCountMap = allIssues => {
   return issueCount;
 };
 
-const thresholdLimitCheck = async (warnLevel, allIssues) => {
+const thresholdLimitCheck = async (warnLevel, allIssues, totalUniqueIssues) => {
   const issueCounts = issueCountMap(allIssues);
 
   const messages = [
@@ -178,6 +178,7 @@ const thresholdLimitCheck = async (warnLevel, allIssues) => {
       `Serious: ${issueCounts.get('serious')}`,
       `Moderate: ${issueCounts.get('moderate')}`,
       `Minor: ${issueCounts.get('minor')}`,
+      `Unique: ${totalUniqueIssues}`,
     ],
   ];
 
@@ -207,7 +208,6 @@ export const generateArtifacts = async randomToken => {
     allFiles.map(async file => {
       const rPath = `${directory}/${file}`;
       const flattenedIssues = await flattenAxeResults(rPath);
-
       allIssues = allIssues.concat(flattenedIssues);
     }),
   ).catch(flattenIssuesError => {
@@ -215,11 +215,12 @@ export const generateArtifacts = async randomToken => {
     silentLogger.error(flattenIssuesError);
   });
 
+  const totalUniqueIssues = new Set(allIssues.map(issue => issue.description)).size;
   if (process.env.REPORT_BREAKDOWN === '1') {
     await granularReporting(randomToken, allIssues);
   }
 
-  await thresholdLimitCheck(process.env.WARN_LEVEL, allIssues);
+  await thresholdLimitCheck(process.env.WARN_LEVEL, allIssues, totalUniqueIssues);
 
   await writeResults(allIssues, storagePath);
   await writeHTML(allIssues, storagePath);
