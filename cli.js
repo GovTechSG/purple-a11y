@@ -1,62 +1,64 @@
 #!/usr/bin/env node
 /* eslint-disable no-undef */
 /* eslint-disable no-param-reassign */
-const fs = require('fs-extra');
-const yargs = require('yargs');
-const printMessage = require('print-message');
-const {
+import fs from 'fs-extra';
+import _yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
+import printMessage from 'print-message';
+import {
   cleanUp,
   getStoragePath,
   zipResults,
   setHeadlessMode,
-  generateRandomToken,
   setThresholdLimits,
-} = require('./utils');
-const { checkUrl, prepareData, isSelectorValid, isInputValid } = require('./constants/common');
-const {
-  cliOptions,
-  messageOptions,
-  configureReportSetting,
-} = require('./constants/cliFunctions');
+} from './utils.js';
 
-const { 
-  scannerTypes,
-} = require('./constants/constants');
+import { 
+  checkUrl, 
+  prepareData, 
+  isSelectorValid, 
+  isInputValid 
+} from './constants/common.js';
 
-let { 
-  cliZipFileName,
-} = require('./constants/constants');
+import { 
+  cliOptions, 
+  messageOptions, 
+  configureReportSetting
+} from './constants/cliFunctions.js';
 
-const { consoleLogger } = require('./logs');
-const { combineRun } = require('./combine');
+import constants from './constants/constants.js';
+import { consoleLogger } from './logs.js';
+import { combineRun } from './combine.js';
 
 setHeadlessMode(true);
 
-cleanUp('apify_storage');
+cleanUp('.a11y_storage');
+
+const yargs = _yargs(hideBin(process.argv));
 
 const options = yargs
   .usage('Usage: node cli.js -c <crawler> -u <url> OPTIONS')
   .strictOptions(true)
   .options(cliOptions)
   .example([
-    [`To scan sitemap of website:', 'node cli.js -c [ 1 | ${scannerTypes.sitemap} ] -u <url_link>`],
-    [`To scan a website', 'node cli.js -c [ 2 | ${scannerTypes.website} ] -u <url_link>`]
+    [`To scan sitemap of website:', 'node cli.js -c [ 1 | ${constants.scannerTypes.sitemap} ] -u <url_link>`],
+    [`To scan a website', 'node cli.js -c [ 2 | ${constants.scannerTypes.website} ] -u <url_link>`]
   ])
   .coerce('c', option => {
     if (typeof option === 'number') {
       // Will also allow integer choices
       switch (option) {
         case 1:
-          option = scannerTypes.sitemap;
+          option = constants.scannerTypes.sitemap;
           break;
         case 2:
-          option = scannerTypes.website;
+          option = constants.scannerTypes.website;
           break;
         default:
           printMessage(
             [
               'Invalid option',
-              `Please choose to enter numbers (1,2) or keywords (${scannerTypes.sitemap}, ${scannerTypes.website}).`,
+              `Please choose to enter numbers (1,2) or keywords (${constants.scannerTypes.sitemap}, ${constants.scannerTypes.website}).`,
             ],
             messageOptions,
           );
@@ -68,9 +70,14 @@ const options = yargs
   })
   .epilogue('').argv;
 
-const randomToken = generateRandomToken();
-
 const scanInit = async argvs => {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const curHour = today.getHours() < 10 ? '0' + today.getHours() : today.getHours();
+  const curMinute = today.getMinutes() < 10 ? '0' + today.getMinutes() : today.getMinutes();
+
   // Set the parameters required to indicate whether to break down report
   configureReportSetting(argvs.reportbreakdown);
 
@@ -84,7 +91,9 @@ const scanInit = async argvs => {
     argvs.url = res.url;
 
     const data = prepareData(argvs.scanner, argvs);
-    data.randomToken = randomToken;
+    const domain = new URL(argvs.url).hostname;
+
+    data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}`;
 
     printMessage(['Scanning website...'], messageOptions);
     await combineRun(data);
@@ -95,24 +104,25 @@ const scanInit = async argvs => {
     );
     process.exit(1);
   }
+
+  const domain = new URL(argvs.url).hostname;
+  return `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}`;
 };
 
-scanInit(options).then(async () => {
+scanInit(options).then(async storagePath => {
   // Path to scan result
-  const storagePath = getStoragePath(randomToken);
+  storagePath = fs.readdirSync('results').filter(fn => fn.startsWith(storagePath));
 
   // Take option if set
   if (typeof options.zip === 'string') {
-    cliZipFileName = options.zip;
+    constants.cliZipFileName = options.zip;
   }
 
   await fs
-    .ensureDir(storagePath)
+    .ensureDir(`results/${storagePath[0]}`)
     .then(async () => {
-      await zipResults(cliZipFileName, storagePath);
-      const messageToDisplay = [
-        `Report of this run is at ${cliZipFileName}`,
-      ];
+      await zipResults(constants.cliZipFileName, `results/${storagePath[0]}`);
+      const messageToDisplay = [`Report of this run is at ${constants.cliZipFileName}`];
 
       if (process.env.REPORT_BREAKDOWN === '1') {
         messageToDisplay.push(

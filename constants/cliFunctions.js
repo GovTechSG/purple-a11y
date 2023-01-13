@@ -1,15 +1,15 @@
-exports.messageOptions = {
+export const messageOptions = {
   border: false,
   marginTop: 2,
   marginBottom: 2,
 };
 
-exports.alertMessageOptions = {
+export const alertMessageOptions = {
   border: true,
   borderColor: 'red',
 };
 
-exports.cliOptions = {
+export const cliOptions = {
   c: {
     alias: 'scanner',
     describe: 'Type of crawler, 1) sitemap or 2) website',
@@ -42,7 +42,7 @@ exports.cliOptions = {
   },
 };
 
-exports.configureReportSetting = isEnabled => {
+export const configureReportSetting = isEnabled => {
   if (isEnabled) {
     process.env.REPORT_BREAKDOWN = 1;
   } else {

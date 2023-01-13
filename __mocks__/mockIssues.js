@@ -1,5 +1,6 @@
 // Issues with all warn level except none
-const allIssues = [
+// 0: critical, 1: serious, 2: moderate, 3: minor
+export const allIssues = [
   {
     url: 'https://www.isomer.gov.sg/terms-of-use/',
     page: '/terms-of-use/',
@@ -50,17 +51,15 @@ const allIssues = [
   },
 ];
 
-// 0: critical, 1: serious, 2: moderate, 3: minor
-exports.allIssues = allIssues;
 
 // All Except Target Warn Level Issues
-exports.allExceptCritical = [allIssues[1], allIssues[2], allIssues[3]];
-exports.allExceptSerious = [allIssues[0], allIssues[2], allIssues[3]];
-exports.allExceptModerate = [allIssues[0], allIssues[1], allIssues[3]];
-exports.allExceptMinor = [allIssues[0], allIssues[1], allIssues[2]];
+export const allExceptCritical = [allIssues[1], allIssues[2], allIssues[3]];
+export const allExceptSerious = [allIssues[0], allIssues[2], allIssues[3]];
+export const allExceptModerate = [allIssues[0], allIssues[1], allIssues[3]];
+export const allExceptMinor = [allIssues[0], allIssues[1], allIssues[2]];
 
 // Individual Target Warn Level Issues
-exports.criticalOnly = [allIssues[0]];
-exports.seriousOnly = [allIssues[1]];
-exports.moderateOnly = [allIssues[2]];
-exports.minorOnly = [allIssues[3]];
+export const criticalOnly = [allIssues[0]];
+export const seriousOnly = [allIssues[1]];
+export const moderateOnly = [allIssues[2]];
+export const minorOnly = [allIssues[3]];

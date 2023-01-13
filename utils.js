@@ -1,22 +1,27 @@
-const fs = require('fs-extra');
-const crypto = require('crypto');
-const { a11yDataStoragePath, allIssueFileName } = require('./constants/constants');
+import { execFile } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-exports.getHostnameFromRegex = url => {
+import fs from 'fs-extra';
+import crypto from 'crypto';
+
+import constants from './constants/constants.js';
+
+export const getHostnameFromRegex = url => {
   const matches = url.match(/^https?:\/\/([^/?#]+)(?:[/?#]|$)/i);
 
   // extract hostname (will be null if no match is found)
   return matches && matches[1];
 };
 
-const getCurrentDate = () => {
+export const getCurrentDate = () => {
   const date = new Date();
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 };
 
-exports.getCurrentDate = getCurrentDate;
-
-exports.validateUrl = url => {
+export const validateUrl = url => {
   const invalidURLends = [
     '.gif',
     '.jpg',
@@ -40,20 +45,16 @@ exports.validateUrl = url => {
   return !invalidURLends.some(urlEnd => url.includes(urlEnd));
 };
 
-const getStoragePath = randomToken => {
-  const currentDate = getCurrentDate();
-  return `results/${currentDate}/${randomToken}`;
-};
+export const getStoragePath = randomToken =>
+  `results/${randomToken}_${constants.urlsCrawledObj.scanned.length}pages`;
 
-exports.getStoragePath = getStoragePath;
-
-exports.createAndUpdateFolders = async (scanDetails, randomToken) => {
+export const createAndUpdateFolders = async (scanDetails, randomToken) => {
   const storagePath = getStoragePath(randomToken);
   const logPath = `logs/${randomToken}`;
 
   await fs.ensureDir(`${storagePath}/reports`);
   await fs.writeFile(`${storagePath}/details.json`, JSON.stringify(scanDetails, 0, 2));
-  await fs.copy(`${a11yDataStoragePath}/${randomToken}`, `${storagePath}/${allIssueFileName}`);
+  await fs.copy(`${constants.a11yDataStoragePath}/${randomToken}`, `${storagePath}/${constants.allIssueFileName}`);
 
   // update logs
   await fs.ensureDir(logPath);
@@ -64,18 +65,16 @@ exports.createAndUpdateFolders = async (scanDetails, randomToken) => {
   });
 };
 
-exports.cleanUp = async (pathToDelete, setDefaultFolders = false) => {
+export const cleanUp = async (pathToDelete, setDefaultFolders = false) => {
   await fs.pathExists(pathToDelete).then(exists => {
     if (exists) {
       fs.removeSync(pathToDelete);
     }
   });
-
-
 };
 
 /* istanbul ignore next */
-exports.getCurrentTime = () =>
+export const getCurrentTime = () =>
   new Date().toLocaleTimeString('en-GB', {
     year: 'numeric',
     month: 'short',
@@ -85,33 +84,22 @@ exports.getCurrentTime = () =>
     minute: '2-digit',
   });
 
-
-
-exports.setHeadlessMode = isHeadless => {
+export const setHeadlessMode = isHeadless => {
   if (isHeadless) {
-    process.env.APIFY_HEADLESS = 1;
+    process.env.CRAWLEE_HEADLESS = 1;
   } else {
-    process.env.APIFY_HEADLESS = 0;
+    process.env.CRAWLEE_HEADLESS = 0;
   }
 };
 
-exports.generateRandomToken = () => {
-  const timeStamp = Math.floor(Date.now() / 1000);
-  const randomString = crypto.randomBytes(16).toString('hex').slice(0, 10);
-  return `${timeStamp}${randomString}`;
-};
-
-exports.setThresholdLimits = setWarnLevel => {
+export const setThresholdLimits = setWarnLevel => {
   process.env.WARN_LEVEL = setWarnLevel;
 };
 
-exports.zipResults = async (zipName, resultsPath) => {
-  // eslint-disable-next-line global-require
-  const { execFile } = require('child_process');
-  
+export const zipResults = async (zipName, resultsPath) => {
   // Check prior zip file exist and remove
   if (fs.existsSync(zipName)) {
-    fs.unlink(zipName);  
+    fs.unlink(zipName);
   }
 
   // To zip up files recursively )-r) in the results folder path

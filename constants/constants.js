@@ -1,53 +1,51 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // for crawlers
-exports.axeScript = 'node_modules/axe-core/axe.min.js';
+export const axeScript = 'node_modules/axe-core/axe.min.js';
 
-exports.maxRequestsPerCrawl = 100;
-
-exports.maxConcurrency = 5;
-
-exports.pseudoUrls = host => [
-  // eslint-disable-next-line no-useless-escape
-  `[.*(?<!mailto.*)]${host}[(?!.*\.(gif|jpg|jpeg|png|pdf|doc|css|svg|js|ts|xml|csv|tgz|zip|xls|ppt|ico|woff)).*]`,
-];
-
-exports.urlsCrawledObj = {
+const urlsCrawledObj = {
   scanned: [],
   invalid: [],
   outOfDomain: [],
 };
 
-exports.scannerTypes = {
+const scannerTypes = {
   login: 'login',
   sitemap: 'sitemap',
   website: 'website',
 };
 
-// folder paths
 const a11yStorage = '.a11y_storage';
-exports.a11yStorage = a11yStorage;
 
-exports.a11yDataStoragePath = `${a11yStorage}/datasets`;
-
-exports.allIssueFileName = 'all_issues';
-
-exports.cliZipFileName = 'a11y-scan-results.zip';
-
-exports.rootPath = __dirname;
-
-// others
-exports.impactOrder = {
+export const impactOrder = {
   minor: 0,
   moderate: 1,
   serious: 2,
   critical: 3,
 };
 
-exports.wcagWebPage = 'https://www.w3.org/TR/WCAG21/';
-const latestAxeVersion = '4.4';
-exports.axeVersion = latestAxeVersion;
-exports.axeWebPage = `https://dequeuniversity.com/rules/axe/${latestAxeVersion}/`;
+export default {
+  a11yStorage: a11yStorage,
+  a11yDataStoragePath: `${a11yStorage}/datasets`,
+  allIssueFileName: 'all_issues',
+  cliZipFileName: 'a11y-scan-results.zip',
+  maxRequestsPerCrawl: 100,
+  maxConcurrency: 5,
+  scannerTypes: scannerTypes,
+  urlsCrawledObj: urlsCrawledObj,
+  impactOrder: impactOrder,
+}
 
-exports.alertMessageOptions = {
+export const rootPath = __dirname;
+export const wcagWebPage = 'https://www.w3.org/TR/WCAG21/';
+const latestAxeVersion = '4.4';
+export const axeVersion = latestAxeVersion;
+export const axeWebPage = `https://dequeuniversity.com/rules/axe/${latestAxeVersion}/`;
+
+export const alertMessageOptions = {
   border: true,
   borderColor: 'red',
 };
