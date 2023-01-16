@@ -6,8 +6,14 @@ import { JSDOM } from 'jsdom';
 import { parseString } from 'xml2js';
 import constants from './constants.js';
 import { consoleLogger, silentLogger } from '../logs.js';
+import * as https from "https";
 
 const document = new JSDOM('').window;
+
+const httpsAgent = new https.Agent({
+  // Run in environments with custom certificates
+  rejectUnauthorized: false,
+});
 
 export const messageOptions = {
   border: false,
@@ -89,6 +95,7 @@ const sanitizeUrlInput = url => {
 };
 
 const checkUrlConnectivity = async url => {
+
   const res = {};
 
   const data = sanitizeUrlInput(url);
@@ -96,7 +103,7 @@ const checkUrlConnectivity = async url => {
   if (data.isValid) {
     // Validate the connectivity of URL if the string format is url format
     await axios
-      .get(data.url, { timeout: 15000 })
+      .get(data.url, { httpsAgent, timeout: 15000 })
       .then(async response => {
         const redirectUrl = response.request.res.responseUrl;
         res.status = response.status;

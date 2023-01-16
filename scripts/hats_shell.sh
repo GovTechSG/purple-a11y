@@ -14,7 +14,7 @@ export CURRENT_PATH="$(pwd)"
 echo "INFO: Stored current working directory at $CURRENT_PATH"
 
 export PATH_TO_HATS="$(dirname "$0")"
-cd $PATH_TO_HATS
+cd "$PATH_TO_HATS"
 echo "INFO: Set path to hats $(pwd)"
 
 echo "INFO: Set path to node for this session"

@@ -121,6 +121,19 @@ If the website URL provided is invalid, an error message will be prompted for yo
 >> Cannot resolve URL. Please provide a valid URL.
 ```
 
+### Customised Mobile Device Scan
+
+```
+? What would you like to scan today? website
+? Do you want purple-hats to run in the background? No
+? Which screen size would you like to scan? (Use arrow keys) 
+  Desktop 
+❯ Mobile 
+  Custom 
+```
+
+Choose `Mobile` for a default mobile screen size scan and `Custom` to choose a device or specify viewport width options.
+
 ### CLI Mode
 
 CLI mode is designed to be run in continuous integration (CI) environment. Run `node cli.js` for a set of command-line parameters available. Please note CLI mode is only supported on Mac/Linux at this moment.
@@ -150,7 +163,9 @@ Examples:
 Missing required arguments: c, u
 ```
 
-#### Devices for emulating scan
+### Mobile Device Options
+<details>
+  <summary>Click here for list of device options supported</summary>
 
 - 'Desktop'
 - 'Blackberry_PlayBook'
@@ -268,14 +283,21 @@ Missing required arguments: c, u
 - 'Pixel_5_landscape'
 - 'Moto_G4'
 - 'Moto_G4_landscape'
+</details>
 
 If the device name contains ```(``` and ```)```, wrap the device name in single quotes when entered into the CLI.
 Please note that ```-d``` and ```-w``` are mutually exclusive. If none are specified, the default device used for the CLI scan is Desktop.
 
-For example, to conduct a website scan to the URL `http://localhost:8000` and write to `a11y-scan-results.zip`, run
+For example, to conduct a website scan to the URL `http://localhost:8000` and write to `a11y-scan-results.zip` with an `iPad_(gen_7)_landscape` screen, run
 
 ```shell
 node cli.js -c 2 -o a11y-scan-results.zip -u http://localhost:8000 -d 'iPad_(gen_7)_landscape'
+```
+
+For example, to conduct a website scan to the URL `http://localhost:8000` and write to `a11y-scan-results.zip` with a custom screen width `360`, run
+
+```shell
+node cli.js -c 2 -o a11y-scan-results.zip -u http://localhost:8000 -w 360
 ```
 
 ## Troubleshooting
