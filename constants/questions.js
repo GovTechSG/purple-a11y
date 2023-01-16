@@ -1,12 +1,12 @@
-import { checkUrl, isInputValid, isSelectorValid, getUrlMessage } from './common.js';
+import { checkUrl, getUrlMessage } from './common.js';
 import constants from './constants.js';
 
-const isLoginScan = (answers) => {
-  return !!answers.scanner && answers.scanner === constants.scannerTypes.login;
-}
+// const isLoginScan = (answers) => {
+//   return !!answers.scanner && answers.scanner === constants.scannerTypes.login;
+// }
 
 // Questions used in Inquirer.js
-export const questions = [
+const questions = [
   {
     type: 'list',
     name: 'scanner',
@@ -19,14 +19,38 @@ export const questions = [
     message: 'Do you want purple-hats to run in the background?',
     choices: ['Yes', 'No'],
   },
-
+  {
+    type: 'list',
+    name: 'deviceChosen',
+    message: 'Which screen size would you like to scan? (Use arrow keys)',
+    choices: ['Desktop', 'Mobile', 'Custom'],
+  },
+  {
+    type: 'list',
+    name: 'customDevice',
+    message: 'Custom: (use arrow keys)',
+    when: answers => answers.deviceChosen === 'Custom',
+    choices: ['iPhone 11', 'Samsung Galaxy S9+', 'Specify viewport'],
+  },
+  {
+    type: 'input',
+    name: 'viewportWidth',
+    message: 'Specify width of the viewport in pixels (e.g. 360):',
+    when: answers => answers.customDevice === 'Specify viewport',
+    validate: viewport => {
+      if (!Number.isInteger(Number(viewport))) {
+        return 'Invalid viewport width. Please provide a number.';
+      }
+      if (viewport < 320 || viewport > 1080) {
+        return 'Invalid viewport width! Please provide a viewport width between 320-1080 pixels.';
+      }
+      return true;
+    },
+  },
   {
     type: 'input',
     name: 'url',
-    message: (answers) => {
-
-      return getUrlMessage(answers.scanner)
-    },
+    message: answers => getUrlMessage(answers.scanner),
     // eslint-disable-next-line func-names
     // eslint-disable-next-line object-shorthand
     validate: async function (url, answers) {
@@ -50,6 +74,6 @@ export const questions = [
       return 'Cannot resolve URL. Please provide a valid URL.';
     },
   },
-
 ];
 
+export default questions;
