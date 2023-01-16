@@ -171,19 +171,26 @@ export const prepareData = (scanType, argv) => {
   if (isEmptyObject(argv)) {
     throw Error('No inputs should be provided');
   }
+  const { scanner, url, deviceChosen, customDevice, viewportWidth } = argv;
 
   let data;
   if (scanType === constants.scannerTypes.sitemap || scanType === constants.scannerTypes.website) {
     data = {
-      type: argv.scanner,
-      url: argv.url,
+      type: scanner,
+      url,
+      deviceChosen,
+      customDevice,
+      viewportWidth,
     };
   }
 
   if (scanType === constants.scannerTypes.login) {
     data = {
       type: argv.scanner,
-      url: argv.url,
+      url,
+      deviceChosen,
+      customDevice,
+      viewportWidth,
       loginID: argv.username,
       loginPW: argv.userPassword,
       idSelector: argv.usernameField,
