@@ -115,9 +115,12 @@ const scanInit = async argvs => {
 
     if (!argvs.customDevice && !argvs.viewportWidth) {
       argvs.customDevice = 'Desktop';
+      data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
+    } else if (argvs.customDevice) {
+      data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
+    } else if (!argvs.customDevice) {
+      data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_CustomWidth_${argvs.viewportWidth}px`;
     }
-
-    data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
 
     printMessage(['Scanning website...'], messageOptions);
     await combineRun(data);
