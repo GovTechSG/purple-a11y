@@ -36,7 +36,7 @@ export const isSelectorValid = selector => {
 // Refer to NPM validator's special characters under sanitizers for escape()
 const blackListCharacters = '\\<>&\'"';
 
-const isValidXML = async content => {
+export const isValidXML = async content => {
   let status;
   let parsedContent = '';
   parseString(content, (err, result) => {
@@ -215,7 +215,11 @@ export const prepareData = (scanType, argv) => {
 
 export const getLinksFromSitemap = async (url) => {
   const { data } = await axios.get(url);
-  const { parsedContent } = await isValidXML(data);
+  const { status: isXML, parsedContent } = await isValidXML(data);
+
+  if (!isXML) {
+    return crawlee.extractUrls({ string: data });
+  }
 
   const urls = [];
   const addedUrls = new Set();
@@ -245,7 +249,7 @@ export const getLinksFromSitemap = async (url) => {
       })
       break;
     default:
-      return await crawlee.downloadListOfUrls({ url });
+      return crawlee.extractUrls({ string: data });
   }
 
   return urls;
