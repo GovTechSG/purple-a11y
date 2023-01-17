@@ -33,6 +33,11 @@ const crawlSitemap = async (sitemapUrl, randomToken, host, viewportSettings) => 
     }
   }
   const crawler = new crawlee.PuppeteerCrawler({
+    launchContext: {
+      launchOptions: {
+          args: ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage'],
+      }
+    },
     requestList,
     requestQueue,
     preNavigationHooks,

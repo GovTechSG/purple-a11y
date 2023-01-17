@@ -29,9 +29,14 @@ const crawlDomain = async (url, randomToken, host, viewportSettings) => {
   }
 
   const crawler = new crawlee.PuppeteerCrawler({
+    launchContext: {
+      launchOptions: {
+          args: ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage'],
+      }
+    },
     requestQueue,
     preNavigationHooks,
-    requestHandler: async ({ page, request, enqueueLinks }) => {
+    requestHandler: async ({page, request, enqueueLinks }) => {
       if (deviceChosen === 'Custom') {
         if (device) {
           await page.emulate(device);
@@ -49,7 +54,7 @@ const crawlDomain = async (url, randomToken, host, viewportSettings) => {
           isMobile: true,
         });
       }
-
+      
       const currentUrl = request.url;
       const location = await page.evaluate('location');
 
@@ -66,6 +71,7 @@ const crawlDomain = async (url, randomToken, host, viewportSettings) => {
       } else {
         urlsCrawled.outOfDomain.push(currentUrl);
       }
+      
     },
     failedRequestHandler,
     maxRequestsPerCrawl,
