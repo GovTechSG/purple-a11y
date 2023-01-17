@@ -27,6 +27,13 @@ export const impactOrder = {
   critical: 3,
 };
 
+const xmlSitemapTypes = {
+  xml: 0,
+  rss: 1,
+  atom: 2,
+  unknown: 3
+}
+
 export default {
   a11yStorage: a11yStorage,
   a11yDataStoragePath: `${a11yStorage}/datasets`,
@@ -37,6 +44,7 @@ export default {
   scannerTypes: scannerTypes,
   urlsCrawledObj: urlsCrawledObj,
   impactOrder: impactOrder,
+  xmlSitemapTypes
 }
 
 export const rootPath = __dirname;

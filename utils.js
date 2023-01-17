@@ -45,6 +45,10 @@ export const validateUrl = url => {
   return !invalidURLends.some(urlEnd => url.includes(urlEnd));
 };
 
+export const checkIsXml = url => {
+  return url.includes('.xml');
+}
+
 export const getStoragePath = randomToken =>
   `results/${randomToken}_${constants.urlsCrawledObj.scanned.length}pages`;
 

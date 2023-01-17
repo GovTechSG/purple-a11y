@@ -3,6 +3,8 @@
 import validator from 'validator';
 import axios from 'axios';
 import { JSDOM } from 'jsdom';
+import * as cheerio from 'cheerio';
+import crawlee from 'crawlee';
 import { parseString } from 'xml2js';
 import constants from './constants.js';
 import { consoleLogger, silentLogger } from '../logs.js';
@@ -121,7 +123,19 @@ const checkUrlConnectivity = async url => {
   return res;
 };
 
-const isSitemapContent = async content => {
+const checkXmlSitemapType = (content) => {
+  if ('urlset' in content || 'sitemapindex' in content) {
+    return constants.xmlSitemapTypes.xml;
+  } else if ('rss' in content) {
+    return constants.xmlSitemapTypes.rss;
+  } else if ('feed' in content) {
+    return constants.xmlSitemapTypes.atom;
+  } else {
+    return constants.xmlSitemapTypes.unknown;
+  }
+}
+
+export const isSitemapContent = async content => {
   const { status: isValid, parsedContent } = await isValidXML(content);
 
   if (!isValid) {
@@ -137,14 +151,19 @@ const isSitemapContent = async content => {
     silentLogger.info('Not a sitemap, is most likely a HTML page; Possibly a malformed sitemap.');
     return false;
   }
-  if ('urlset' in parsedContent || 'sitemapindex' in parsedContent) {
-    silentLogger.info(`This is a XML sitemap format sitemap.`);
-  }
-  if ('rss' in parsedContent) {
-    silentLogger.info(`This is a RSS format sitemap.`);
-  }
-  if ('feed' in parsedContent) {
-    silentLogger.info(`This is a feed format sitemap.`);
+
+  switch (checkXmlSitemapType(parsedContent)) {
+    case constants.xmlSitemapTypes.xml:
+      silentLogger.info(`This is a XML sitemap format sitemap.`);
+      break;
+    case constants.xmlSitemapTypes.rss:
+      silentLogger.info(`This is a RSS format sitemap.`);
+      break;
+    case constants.xmlSitemapTypes.atom:
+      silentLogger.info(`This is a atom format sitemap.`);
+      break;
+    default:
+      silentLogger.info(`This is an unrecognised XML sitemap format.`);
   }
   return true;
 };
@@ -193,3 +212,41 @@ export const prepareData = (scanType, argv) => {
   }
   return data;
 };
+
+export const getLinksFromSitemap = async (url) => {
+  const { data } = await axios.get(url);
+  const { parsedContent } = await isValidXML(data);
+
+  const urls = [];
+  const addedUrls = new Set();
+  const $ = cheerio.load(data, { xml: true });
+
+  const addUrl = (url) => {
+    if (!addedUrls.has(url)) {
+      addedUrls.add(url);
+      urls.push(url);
+    }
+  }
+
+  switch (checkXmlSitemapType(parsedContent)) {
+    case constants.xmlSitemapTypes.xml:
+      $('loc').each(function() {
+        addUrl($(this).text());
+      })
+      break;
+    case constants.xmlSitemapTypes.rss:
+      $('link').each(function() {
+        addUrl($(this).text());
+      })
+      break;
+    case constants.xmlSitemapTypes.atom:
+      $('link').each(function() {
+        addUrl($(this).prop('href'));
+      })
+      break;
+    default:
+      return await crawlee.downloadListOfUrls({ url });
+  }
+
+  return urls;
+}
