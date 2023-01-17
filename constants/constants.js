@@ -1,5 +1,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs-extra';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -17,6 +19,13 @@ const scannerTypes = {
   sitemap: 'sitemap',
   website: 'website',
 };
+
+
+// Check if running in docker container
+let launchOptionsArgs = [];
+if (fs.existsSync('/.dockerenv')) {
+  launchOptionsArgs = ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage'];
+}
 
 const devices = [
   'Desktop',
@@ -158,6 +167,7 @@ export default {
   urlsCrawledObj,
   impactOrder,
   devices,
+  launchOptionsArgs: launchOptionsArgs,
 }
 
 export const rootPath = __dirname;
