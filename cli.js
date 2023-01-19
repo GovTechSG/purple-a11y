@@ -113,17 +113,20 @@ const scanInit = async argvs => {
     const data = prepareData(argvs.scanner, argvs);
     const domain = new URL(argvs.url).hostname;
 
+    let deviceToScan;
     if (!argvs.customDevice && !argvs.viewportWidth) {
       argvs.customDevice = 'Desktop';
       data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
     } else if (argvs.customDevice) {
+      deviceToScan = argvs.customDevice.replaceAll('_', ' ');
       data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
     } else if (!argvs.customDevice) {
       data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_CustomWidth_${argvs.viewportWidth}px`;
     }
 
     printMessage(['Scanning website...'], messageOptions);
-    await combineRun(data);
+
+    await combineRun(data, deviceToScan);
   } else {
     printMessage(
       [`Invalid ${argvs.scanner} page. Please provide a URL to start the ${argvs.scanner} scan.`],

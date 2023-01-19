@@ -12,7 +12,7 @@ import { consoleLogger, silentLogger } from './logs.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const axeIssuesList  = JSON.parse(fs.readFileSync('./constants/axeTypes.json'));
+const axeIssuesList = JSON.parse(fs.readFileSync('./constants/axeTypes.json'));
 const wcagList = JSON.parse(fs.readFileSync('./constants/wcagLinks.json'));
 
 const extractFileNames = async directory =>
@@ -67,9 +67,62 @@ const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResu
   }
 };
 
-const writeHTML = async (allissues, storagePath, htmlFilename = 'report') => {
+const writeHTML = async (allissues, storagePath, deviceToScan, htmlFilename = 'report') => {
+  const issueCounts = issueCountMap(allissues);
+  const domainScanned = storagePath.split('_')[1];
+  var deviceUsed = storagePath.split('_')[4];
+
+  const totalIssues = issueCounts.get('total');
+  const totalCritical = issueCounts.get('critical');
+  const totalSerious = issueCounts.get('serious');
+  const totalModerate = issueCounts.get('moderate');
+  const totalMinor = issueCounts.get('minor');
+  const totalUnique = new Set(allissues.map(issue => issue.description)).size;
+
+  const issueImpact = {
+    totalIssues,
+    totalCritical,
+    totalSerious,
+    totalModerate,
+    totalMinor,
+    totalUnique,
+  };
+
+  let deviceIconHtml;
+  switch (deviceUsed){
+    case 'Desktop':
+      deviceIconHtml = `<svg viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M80.24 19.76H19.76C16.9736 19.76 14.72 22.0208 14.72 24.8072V65.1776C14.72 67.964 16.9736 70.2248 19.76 70.2248H42.44V75.1928H37.4C36.0104 75.1928 34.88 76.3232 34.88 77.7128C34.88 79.1096 36.0104 80.2328 37.4 80.2328H62.6C63.9896 80.2328 65.12 79.1024 65.12 77.7128C65.12 76.316 63.9896 75.1928 62.6 75.1928H57.56V70.2248H80.24C83.0264 70.2248 85.28 67.964 85.28 65.1776V24.8072C85.28 22.0208 83.0264 19.76 80.24 19.76ZM80.24 63.68C80.24 64.5512 79.5344 65.2568 78.6632 65.2568H21.3368C20.4656 65.2568 19.76 64.5512 19.76 63.68V26.4632C19.76 25.592 20.4656 24.8864 21.3368 24.8864H78.6704C79.5416 24.8864 80.2472 25.592 80.2472 26.4632L80.24 63.68Z">
+      </svg>`;
+      break;
+    case 'Mobile':
+      deviceIconHtml = `<svg viewBox="0 0 100 100" aria-hidden="true">
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M36.6667 17C33.353 17 30.6667 19.6456 30.6667 22.9091V76.0909C30.6667 79.3544 33.353 82 36.6667 82H61.6667C64.9805 82 67.6667 79.3544 67.6667 76.0909V22.9091C67.6667 19.6456 64.9805 17 61.6667 17H36.6667ZM63.6667 24.8788H34.6667V72.1515H63.6667V24.8788ZM43.6667 20.447C43.6667 20.175 43.8906 19.9545 44.1667 19.9545H55.1667C55.4429 19.9545 55.6667 20.175 55.6667 20.447C55.6667 20.7189 55.4429 20.9394 55.1667 20.9394H44.1667C43.8906 20.9394 43.6667 20.7189 43.6667 20.447ZM49.6667 80.0303C51.3236 80.0303 52.6667 78.7075 52.6667 77.0758C52.6667 75.444 51.3236 74.1212 49.6667 74.1212C48.0099 74.1212 46.6667 75.444 46.6667 77.0758C46.6667 78.7075 48.0099 80.0303 49.6667 80.0303Z">
+      </svg>`;
+      break;
+    case 'CustomWidth':
+      deviceUsed = storagePath.split('_')[5] + ' width viewport';
+      deviceIconHtml = `<svg viewBox="0 0 100 100" aria-hidden="true">
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M25 35C25 29.4772 29.4772 25 35 25H65C70.5228 25 75 29.4772 75 35V65C75 70.5228 70.5228 75 65 75H35C29.4772 75 25 70.5228 25 65V35ZM34.2466 52.3973C32.9226 52.3973 31.8493 53.4705 31.8493 54.7945V65.7534C31.8493 67.0774 32.9226 68.1507 34.2466 68.1507C34.3627 68.1507 34.4769 68.1424 34.5887 68.1265C34.7007 68.1425 34.8151 68.1508 34.9315 68.1508H45.8904C47.2144 68.1508 48.2877 67.0775 48.2877 65.7535C48.2877 64.4296 47.2144 63.3563 45.8904 63.3563H36.6438V54.7945C36.6438 53.4706 35.5705 52.3973 34.2466 52.3973ZM68.8356 45.2055C68.8356 46.5295 67.7623 47.6027 66.4384 47.6027C65.1144 47.6027 64.0411 46.5295 64.0411 45.2055V36.6437L54.7945 36.6437C53.4706 36.6437 52.3973 35.5704 52.3973 34.2465C52.3973 32.9225 53.4706 31.8492 54.7945 31.8492L65.7534 31.8492C65.8698 31.8492 65.9843 31.8575 66.0963 31.8735C66.208 31.8576 66.3222 31.8493 66.4384 31.8493C67.7623 31.8493 68.8356 32.9226 68.8356 34.2466V45.2055Z">
+      </svg>`;
+      break;
+    default:
+      deviceUsed = deviceToScan.replaceAll("_", " ");
+      deviceIconHtml = `<svg viewBox="0 0 100 100" aria-hidden="true">
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M36.6667 17C33.353 17 30.6667 19.6456 30.6667 22.9091V76.0909C30.6667 79.3544 33.353 82 36.6667 82H61.6667C64.9805 82 67.6667 79.3544 67.6667 76.0909V22.9091C67.6667 19.6456 64.9805 17 61.6667 17H36.6667ZM63.6667 24.8788H34.6667V72.1515H63.6667V24.8788ZM43.6667 20.447C43.6667 20.175 43.8906 19.9545 44.1667 19.9545H55.1667C55.4429 19.9545 55.6667 20.175 55.6667 20.447C55.6667 20.7189 55.4429 20.9394 55.1667 20.9394H44.1667C43.8906 20.9394 43.6667 20.7189 43.6667 20.447ZM49.6667 80.0303C51.3236 80.0303 52.6667 78.7075 52.6667 77.0758C52.6667 75.444 51.3236 74.1212 49.6667 74.1212C48.0099 74.1212 46.6667 75.444 46.6667 77.0758C46.6667 78.7075 48.0099 80.0303 49.6667 80.0303Z">
+      </svg>`;
+  }
+
   const finalResultsInJson = JSON.stringify(
-    { startTime: getCurrentTime(), count: allissues.length, allissues },
+    {
+      startTime: getCurrentTime(),
+      count: allissues.length,
+      allissues,
+      issueImpact,
+      domainScanned,
+      deviceUsed,
+      deviceIconHtml,
+    },
     null,
     4,
   );
@@ -182,6 +235,8 @@ const thresholdLimitCheck = async (warnLevel, allIssues, totalUniqueIssues) => {
     ],
   ];
 
+  const uniqueIssues = [`Unique: ${totalUniqueIssues}`];
+
   if (warnLevel !== 'none' && issueCounts.get(warnLevel) > 0) {
     messages.push([
       `Issues with impact level - ${warnLevel} found in your project. Please review the accessibility issues.`,
@@ -198,7 +253,7 @@ const thresholdLimitCheck = async (warnLevel, allIssues, totalUniqueIssues) => {
   });
 };
 
-export const generateArtifacts = async randomToken => {
+export const generateArtifacts = async (randomToken, deviceToScan) => {
   const storagePath = getStoragePath(randomToken);
   const directory = `${storagePath}/${constants.allIssueFileName}`;
   let allIssues = [];
@@ -223,5 +278,5 @@ export const generateArtifacts = async randomToken => {
   await thresholdLimitCheck(process.env.WARN_LEVEL, allIssues, totalUniqueIssues);
 
   await writeResults(allIssues, storagePath);
-  await writeHTML(allIssues, storagePath);
+  await writeHTML(allIssues, storagePath, deviceToScan);
 };
