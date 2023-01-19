@@ -24,7 +24,7 @@ export const crawlSitemap = async (sitemapUrl, randomToken, host) => {
 
   const crawler = new crawlee.PuppeteerCrawler({
     requestList,
-    requestQueue,
+    // requestQueue,
     preNavigationHooks,
     requestHandler: async ({ page, request, enqueueLinks }) => {
       const currentUrl = request.url;
@@ -33,12 +33,14 @@ export const crawlSitemap = async (sitemapUrl, randomToken, host) => {
         const results = await runAxeScript(page, host);
         await dataset.pushData(results);
         urlsCrawled.scanned.push(currentUrl);
-      } else if (checkIsXml(currentUrl) && isSitemapContent(await page.content())) {
+      } 
+      else if (checkIsXml(currentUrl) && isSitemapContent(await page.content())) {
         await enqueueLinks({
           urls: await getLinksFromSitemap(currentUrl),
           requestQueue
         })
-      } else {
+      } 
+      else {
         urlsCrawled.invalid.push(currentUrl);
       }
     },

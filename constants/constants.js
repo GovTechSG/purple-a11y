@@ -29,9 +29,10 @@ export const impactOrder = {
 
 const xmlSitemapTypes = {
   xml: 0,
-  rss: 1,
-  atom: 2,
-  unknown: 3
+  xmlIndex: 1,
+  rss: 2,
+  atom: 3,
+  unknown: 4
 }
 
 export default {

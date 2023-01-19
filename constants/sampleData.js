@@ -21,8 +21,10 @@ export const sampleXmlSitemap = `
 </url> -->
 </urlset>`;
 
-export const sampleXmlSitemapLinks = ['http://www.google.com/', 
-'http://www.google.com/intl/en/policies/privacy/'];
+export const sampleXmlSitemapLinks = [
+  'http://www.google.com/',
+  'http://www.google.com/intl/en/policies/privacy/',
+];
 
 // Source: https://www.feedforall.com/sample-feed.xml
 export const sampleRssFeed = `<?xml version="1.0" encoding="windows-1252"?>
@@ -76,113 +78,110 @@ More &lt;a href=&quot;http://www.surfpack.com/&quot;&gt;Information on SurfPack&
       <pubDate>Tue, 26 Oct 2004 14:06:44 -0500</pubDate>
     </item>
   </channel>
-</rss>`
+</rss>`;
 
-export const sampleRssFeedLinks = ['http://www.feedforall.com', 
-'http://www.feedforall.com/industry-solutions.htm', 
-'http://www.feedforall.com/feedforall-partners.htm'];
+export const sampleRssFeedLinks = [
+  'http://www.feedforall.com',
+  'http://www.feedforall.com/industry-solutions.htm',
+  'http://www.feedforall.com/feedforall-partners.htm',
+];
 
-// Source: http://dev.fyicenter.com/1000790_Real_Atom_XML_Examples.html
+// Source: https://www.ietf.org/rfc/rfc4287.txt
 export const sampleAtomFeed = `<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>FYI Center for Software Developers</title>
-  <subtitle>FYI (For Your Information) Center for Software Developers with 
-large collection of FAQs, tutorials and tips codes for application and 
-wWeb developers on Java, .NET, C, PHP, JavaScript, XML, HTML, CSS, RSS, 
-MySQL and Oracle - dev.fyicenter.com.</subtitle>
-  <link rel="self" href="http://dev.fyicenter.com/atom_xml.php"/>
-  <id>http://dev.fyicenter.com/atom_xml.php</id>
-  <updated>2017-09-22T03:58:52+02:00</updated>
-  <author>
-    <name>FYIcenter.com</name>
-  </author>
-  <rights>Copyright (c) 2017 FYIcenter.com</rights>
-  <category term="Programming"/>
-  <category term="Computer"/>
-  <category term="Developer"/>
+  <title type="text">dive into mark</title>
+  <subtitle type="html">
+    A &lt;em&gt;lot&lt;/em&gt; of effort
+    went into making this effortless
+  </subtitle>
+  <updated>2005-07-31T12:29:29Z</updated>
+  <id>tag:example.org,2003:3</id>
+  <link rel="alternate" type="text/html"
+   hreflang="en" href="http://example.org/"/>
+  <link rel="self" type="application/atom+xml"
+   href="http://example.org/feed.atom"/>
+  <rights>Copyright (c) 2003, Mark Pilgrim</rights>
+  <generator uri="http://www.example.com/" version="1.0">
+    Example Toolkit
+  </generator>
   <entry>
-    <title>Use Developer Portal Internally</title>
-    <link rel="alternate" href="http://dev.fyicenter.com/1000702_Use_Developer_Portal_Internally.html"/>
-    <id>http://dev.fyicenter.com/1000702_Use_Developer_Portal_Internally.html
-</id>
-    <updated>2017-09-20T13:29:08+02:00</updated>
-    <summary type="html">&lt;img align='left' width='64' height='64' 
-src='http://dev.fyicenter.com/Azure-API/_icon_Azure-API.png' /&gt;How to 
-use the Developer Portal internally by you as the publisher? Normally, 
-the Developer Portal of an Azure API Management Service is used by 
-client developers. But as a publisher, you can also use the Developer 
-Portal to test API operations internally. You can follow this tutorial 
-to access the ...  - Rank: 120; Updated: 2017-09-20 13:29:06 -&gt; &lt;a 
-href='http://dev.fyicenter.com/1000702_Use_Developer_Portal_Internally.ht
-ml'&gt;Source&lt;/a&gt;</summary>
+    <title>Atom draft-07 snapshot</title>
+    <link rel="alternate" type="text/html"
+     href="http://example.org/2005/04/02/atom"/>
+    <link rel="enclosure" type="audio/mpeg" length="1337"
+     href="http://example.org/audio/ph34r_my_podcast.mp3"/>
+    <id>tag:example.org,2003:3.2397</id>
+    <updated>2005-07-31T12:29:29Z</updated>
+    <published>2003-12-13T08:29:29-04:00</published>
     <author>
-      <name>FYIcenter.com</name>
+      <name>Mark Pilgrim</name>
+      <uri>http://example.org/</uri>
+      <email>f8dy@example.com</email>
     </author>
-    <category term="Microsoft"/>
+    <contributor>
+      <name>Sam Ruby</name>
+    </contributor>
+    <contributor>
+      <name>Joe Gregorio</name>
+    </contributor>
+    <content type="xhtml" xml:lang="en"
+     xml:base="http://diveintomark.org/">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+        <p><i>[Update: The Atom draft is finished.]</i></p>
+      </div>
+    </content>
   </entry>
-  <entry>
-    <title>Using Azure API Management Developer Portal</title>
-    <link rel="alternate" href="http://dev.fyicenter.com/1000701_Using_Azure_API_Management_Developer_Portal.html"/>
-    <id>http://dev.fyicenter.com/1000701_Using_Azure_API_Management_Developer
-_Portal.html</id>
-    <updated>2017-09-20T13:29:07+02:00</updated>
-    <summary type="html">&lt;img align='left' width='64' height='64' 
-src='http://dev.fyicenter.com/Azure-API/_icon_Azure-API.png' /&gt;Where to 
-find tutorials on Using Azure API Management Developer Portal? Here is 
-a list of tutorials to answer many frequently asked questions compiled 
-by FYIcenter.com team on Using Azure API Management Developer Portal: 
-Use Developer Portal Internally What Can I See on Developer Portal What 
-I You T...  - Rank: 120; Updated: 2017-09-20 13:29:06 -&gt; &lt;a 
-href='http://dev.fyicenter.com/1000701_Using_Azure_API_Management_Develop
-er_Portal.html'&gt;Source&lt;/a&gt;</summary>
-    <author>
-      <name>FYIcenter.com</name>
-    </author>
-    <category term="Microsoft"/>
-  </entry>
-  <entry>
-    <title>Add API to API Products</title>
-    <link rel="alternate" href="http://dev.fyicenter.com/1000700_Add_API_to_API_Products.html"/>
-    <id>http://dev.fyicenter.com/1000700_Add_API_to_API_Products.html</id>
-    <updated>2017-09-20T13:29:06+02:00</updated>
-    <summary type="html">&lt;img align='left' width='64' height='64' 
-src='http://dev.fyicenter.com/Azure-API/_icon_Azure-API.png' /&gt;How to 
-add an API to an API product for internal testing on the Publisher 
-Portal of an Azure API Management Service? You can follow this tutorial 
-to add an API to an API product on the Publisher Portal of an Azure API 
-Management Service. 1. Click API from the left menu on the Publisher 
-Portal. You s...  - Rank: 119; Updated: 2017-09-20 13:29:06 -&gt; &lt;a 
-href='http://dev.fyicenter.com/1000700_Add_API_to_API_Products.html'&gt;Sour
-ce&lt;/a&gt;</summary>
-    <author>
-      <name>FYIcenter.com</name>
-    </author>
-    <category term="Microsoft"/>
-  </entry>
-</feed>`
+</feed>`;
 
-export const sampleAtomFeedLinks = ['http://dev.fyicenter.com/atom_xml.php', 
-'http://dev.fyicenter.com/1000702_Use_Developer_Portal_Internally.html',
-'http://dev.fyicenter.com/1000701_Using_Azure_API_Management_Developer_Portal.html',
-'http://dev.fyicenter.com/1000700_Add_API_to_API_Products.html'
-]
+export const sampleAtomFeedLinks = [
+  'http://example.org/',
+  'http://example.org/feed.atom',
+  'http://example.org/2005/04/02/atom',
+  'http://example.org/audio/ph34r_my_podcast.mp3'
+];
 
 // Following format stated in https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap#text
 export const sampleTxtSitemap = `https://www.example.com/file1.html
 https://www.example.com/file2.html
-https://www.example.com/file3.html`
+https://www.example.com/file3.html`;
 
-export const sampleTxtSitemapLinks = ['https://www.example.com/file1.html',
-'https://www.example.com/file2.html',
-'https://www.example.com/file3.html']
+export const sampleTxtSitemapLinks = [
+  'https://www.example.com/file1.html',
+  'https://www.example.com/file2.html',
+  'https://www.example.com/file3.html',
+];
 
 export const sampleNonStandardXmlSitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <contents>
   <url>https://www.example.com/file1.html</url>
   <link href='https://www.example.com/file2.html' />
   <link>https://www.example.com/file3.html</link>
-</contents>`
+</contents>`;
 
-export const sampleNonStandardXmlSitemapLinks = ['https://www.example.com/file1.html',
-'https://www.example.com/file2.html',
-'https://www.example.com/file3.html']
+export const sampleNonStandardXmlSitemapLinks = [
+  'https://www.example.com/file1.html',
+  'https://www.example.com/file2.html',
+  'https://www.example.com/file3.html',
+];
+
+export const sampleRssSitemap2 = `<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title>Example Feed</title>
+  <link href="http://example.org/"/>
+  <updated>2003-12-13T18:30:02Z</updated>
+  <author>
+    <name>John Doe</name>
+  </author>
+  <id>urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6</id>
+
+  <entry>
+    <title>Atom-Powered Robots Run Amok</title>
+    <link href="http://example.org/2003/12/13/atom03"/>
+    <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+    <updated>2003-12-13T18:30:02Z</updated>
+    <summary>Some text.</summary>
+  </entry>
+
+</feed>
+`;

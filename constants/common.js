@@ -123,20 +123,8 @@ const checkUrlConnectivity = async url => {
   return res;
 };
 
-const checkXmlSitemapType = (content) => {
-  if ('urlset' in content || 'sitemapindex' in content) {
-    return constants.xmlSitemapTypes.xml;
-  } else if ('rss' in content) {
-    return constants.xmlSitemapTypes.rss;
-  } else if ('feed' in content) {
-    return constants.xmlSitemapTypes.atom;
-  } else {
-    return constants.xmlSitemapTypes.unknown;
-  }
-}
-
 export const isSitemapContent = async content => {
-  const { status: isValid, parsedContent } = await isValidXML(content);
+  const { status: isValid } = await isValidXML(content);
 
   if (!isValid) {
     const regexForHtml = new RegExp('<(?:!doctype html|html|head|body)+?>', 'gmi');
@@ -152,19 +140,6 @@ export const isSitemapContent = async content => {
     return false;
   }
 
-  switch (checkXmlSitemapType(parsedContent)) {
-    case constants.xmlSitemapTypes.xml:
-      silentLogger.info(`This is a XML sitemap format sitemap.`);
-      break;
-    case constants.xmlSitemapTypes.rss:
-      silentLogger.info(`This is a RSS format sitemap.`);
-      break;
-    case constants.xmlSitemapTypes.atom:
-      silentLogger.info(`This is a atom format sitemap.`);
-      break;
-    default:
-      silentLogger.info(`This is an unrecognised XML sitemap format.`);
-  }
   return true;
 };
 
@@ -213,44 +188,98 @@ export const prepareData = (scanType, argv) => {
   return data;
 };
 
-export const getLinksFromSitemap = async (url) => {
-  const { data } = await axios.get(url);
-  const { status: isXML, parsedContent } = await isValidXML(data);
+const checkFeedType = async content => {
+  const formData = new URLSearchParams();
+  formData.append('rawdata', content);
 
-  if (!isXML) {
+  const { data } = await axios.post('https://validator.w3.org/feed/check.cgi', formData, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+
+  const $ = cheerio.load(data);
+  const result = $('h2').first();
+
+  // Not a valid RSS or Atom sitemap
+  if (result.text() === 'Sorry') {
+    return constants.xmlSitemapTypes.unknown;
+  }
+
+  const feedTypeMessage = result.next();
+
+  if (feedTypeMessage.text().includes('RSS')) {
+    return constants.xmlSitemapTypes.rss;
+  } else {
+    return constants.xmlSitemapTypes.atom;
+  }
+};
+
+export const getLinksFromSitemap = async url => {
+  const { data } = await axios.get(url);
+  const $ = cheerio.load(data, { xml: true });
+
+  // This case is when the document is not an XML format document
+  if ($(':root').length === 0) {
     return crawlee.extractUrls({ string: data });
   }
 
   const urls = [];
   const addedUrls = new Set();
-  const $ = cheerio.load(data, { xml: true });
 
-  const addUrl = (url) => {
+  const addUrl = url => {
     if (!addedUrls.has(url)) {
       addedUrls.add(url);
       urls.push(url);
     }
+  };
+
+  // Root element
+  const root = $(':root')[0];
+
+  const xmlns = root.attribs?.xmlns;
+  const xmlFormatNamespace = 'http://www.sitemaps.org/schemas/sitemap/0.9';
+
+  let sitemapType;
+
+  if (root.name === 'urlset' && xmlns === xmlFormatNamespace) {
+    sitemapType = constants.xmlSitemapTypes.xml;
+  } else if (root.name === 'sitemapindex' && xmlns === xmlFormatNamespace) {
+    sitemapType = constants.xmlSitemapTypes.xmlIndex;
+  } else {
+    sitemapType = await checkFeedType(data);
   }
 
-  switch (checkXmlSitemapType(parsedContent)) {
+  switch (sitemapType) {
     case constants.xmlSitemapTypes.xml:
-      $('loc').each(function() {
+      silentLogger.info(`This is a XML format sitemap.`);
+      $('loc').each(function () {
         addUrl($(this).text());
-      })
+      });
+      break;
+    case constants.xmlSitemapTypes.xmlIndex:
+      silentLogger.info(`This is a XML format sitemap index.`);
+      $('loc').each(async function () {
+        const urlsFromChild = await getLinksFromSitemap($(this).text());
+        for (let url in urlsFromChild) {
+          addUrl(url);
+        }
+      });
       break;
     case constants.xmlSitemapTypes.rss:
-      $('link').each(function() {
+      silentLogger.info(`This is a RSS format sitemap.`);
+      $('link').each(function () {
         addUrl($(this).text());
-      })
+      });
       break;
     case constants.xmlSitemapTypes.atom:
-      $('link').each(function() {
+      silentLogger.info(`This is a Atom format sitemap.`);
+      $('link').each(function () {
         addUrl($(this).prop('href'));
-      })
+      });
       break;
     default:
+      silentLogger.info(`This is an unrecognised XML sitemap format.`);
       return crawlee.extractUrls({ string: data });
   }
 
   return urls;
-}
+};
