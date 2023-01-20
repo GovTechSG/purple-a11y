@@ -213,20 +213,19 @@ const checkFeedType = async content => {
   }
 };
 
-export const getLinksFromSitemap = async url => {
+export const getLinksFromSitemap = async (url, maxLinksCount) => {
   const { data } = await axios.get(url);
   const $ = cheerio.load(data, { xml: true });
 
   // This case is when the document is not an XML format document
   if ($(':root').length === 0) {
-    return crawlee.extractUrls({ string: data });
+    return crawlee.extractUrls({ string: data }).slice(0, maxLinksCount);
   }
 
   const urls = [];
   const addedUrls = new Set();
-
   const addUrl = url => {
-    if (!addedUrls.has(url)) {
+    if (urls.length < maxLinksCount && !addedUrls.has(url)) {
       addedUrls.add(url);
       urls.push(url);
     }
@@ -249,19 +248,19 @@ export const getLinksFromSitemap = async url => {
   }
 
   switch (sitemapType) {
+    case constants.xmlSitemapTypes.xmlIndex:
+      silentLogger.info(`This is a XML format sitemap index.`);
+      for (const childSitemapUrl of $('loc')) {
+        if (urls.length < maxLinksCount) {
+          const urlsFromChildSitemap = await getLinksFromSitemap($(childSitemapUrl).text(), maxLinksCount);
+          urlsFromChildSitemap.forEach(url => addUrl(url));
+        }
+      }
+      break;
     case constants.xmlSitemapTypes.xml:
       silentLogger.info(`This is a XML format sitemap.`);
       $('loc').each(function () {
         addUrl($(this).text());
-      });
-      break;
-    case constants.xmlSitemapTypes.xmlIndex:
-      silentLogger.info(`This is a XML format sitemap index.`);
-      $('loc').each(async function () {
-        const urlsFromChild = await getLinksFromSitemap($(this).text());
-        for (let url in urlsFromChild) {
-          addUrl(url);
-        }
       });
       break;
     case constants.xmlSitemapTypes.rss:
@@ -278,7 +277,7 @@ export const getLinksFromSitemap = async url => {
       break;
     default:
       silentLogger.info(`This is an unrecognised XML sitemap format.`);
-      return crawlee.extractUrls({ string: data });
+      return crawlee.extractUrls({ string: data }).slice(maxLinksCount);
   }
 
   return urls;
