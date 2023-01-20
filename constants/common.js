@@ -8,8 +8,14 @@ import crawlee from 'crawlee';
 import { parseString } from 'xml2js';
 import constants from './constants.js';
 import { consoleLogger, silentLogger } from '../logs.js';
+import * as https from "https";
 
 const document = new JSDOM('').window;
+
+const httpsAgent = new https.Agent({
+  // Run in environments with custom certificates
+  rejectUnauthorized: false,
+});
 
 export const messageOptions = {
   border: false,
@@ -91,6 +97,7 @@ const sanitizeUrlInput = url => {
 };
 
 const checkUrlConnectivity = async url => {
+
   const res = {};
 
   const data = sanitizeUrlInput(url);
@@ -98,7 +105,7 @@ const checkUrlConnectivity = async url => {
   if (data.isValid) {
     // Validate the connectivity of URL if the string format is url format
     await axios
-      .get(data.url, { timeout: 15000 })
+      .get(data.url, { httpsAgent, timeout: 15000 })
       .then(async response => {
         const redirectUrl = response.request.res.responseUrl;
         res.status = response.status;
@@ -165,19 +172,26 @@ export const prepareData = (scanType, argv) => {
   if (isEmptyObject(argv)) {
     throw Error('No inputs should be provided');
   }
+  const { scanner, url, deviceChosen, customDevice, viewportWidth } = argv;
 
   let data;
   if (scanType === constants.scannerTypes.sitemap || scanType === constants.scannerTypes.website) {
     data = {
-      type: argv.scanner,
-      url: argv.url,
+      type: scanner,
+      url,
+      deviceChosen,
+      customDevice,
+      viewportWidth,
     };
   }
 
   if (scanType === constants.scannerTypes.login) {
     data = {
       type: argv.scanner,
-      url: argv.url,
+      url,
+      deviceChosen,
+      customDevice,
+      viewportWidth,
       loginID: argv.username,
       loginPW: argv.userPassword,
       idSelector: argv.usernameField,

@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-undef */
-import {jest} from '@jest/globals'
+import { jest } from '@jest/globals';
 import printMessage from 'print-message';
 import fs from 'fs-extra';
 import path from 'path';

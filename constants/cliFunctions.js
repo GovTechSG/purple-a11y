@@ -22,6 +22,18 @@ export const cliOptions = {
     type: 'string',
     demandOption: true,
   },
+  d: {
+    alias: 'customDevice',
+    describe: 'Device you want to scan',
+    type: 'string',
+    demandOption: false,
+  },
+  w: {
+    alias: 'viewportWidth',
+    describe: 'Viewport width (in pixels) you want to scan',
+    type: 'number',
+    demandOption: false,
+  },
   o: {
     alias: 'zip',
     describe: 'Zip filename to save results',
@@ -49,4 +61,3 @@ export const configureReportSetting = isEnabled => {
     process.env.REPORT_BREAKDOWN = 0;
   }
 };
-

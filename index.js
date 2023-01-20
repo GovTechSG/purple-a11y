@@ -3,10 +3,10 @@
 /* eslint-disable no-param-reassign */
 import printMessage from 'print-message';
 import inquirer from 'inquirer';
-import { cleanUp, setHeadlessMode} from './utils.js';
+import { cleanUp, setHeadlessMode } from './utils.js';
 import { prepareData, messageOptions } from './constants/common.js';
-import { questions } from './constants/questions.js';
-import { combineRun } from './combine.js';
+import questions from './constants/questions.js';
+import combineRun from './combine.js';
 import constants from './constants/constants.js';
 
 // Delete dataset and request queues
@@ -25,6 +25,7 @@ printMessage(
 );
 
 let data = {};
+let screenToScan = 'Desktop';
 
 inquirer.prompt(questions).then(async answers => {
   if (!answers.isHeadless) {
@@ -43,10 +44,21 @@ inquirer.prompt(questions).then(async answers => {
   const curMinute = today.getMinutes() < 10 ? '0' + today.getMinutes() : today.getMinutes();
   const domain = new URL(answers.url).hostname;
 
-  data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}`.replace(
-    /[- )(]/g,
-    '',
-  );
+  if (answers.deviceChosen === 'Mobile') {
+    screenToScan = 'Mobile';
+  } else if (answers.deviceChosen === 'Custom') {
+    if (answers.customDevice === 'Specify viewport') {
+      screenToScan = 'Mobile';
+    } else {
+      screenToScan = answers.customDevice;
+    }
+  }
+
+  data.randomToken =
+    `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${screenToScan}`.replace(
+      /[- )(]/g,
+      '',
+    );
 
   printMessage(['Scanning website...'], messageOptions);
   await combineRun(data);
