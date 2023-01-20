@@ -3,6 +3,7 @@
 /* eslint-disable no-param-reassign */
 import fs from 'fs-extra';
 import _yargs from 'yargs';
+import { exec } from 'child_process';
 import { hideBin } from 'yargs/helpers';
 import printMessage from 'print-message';
 import {
@@ -11,6 +12,7 @@ import {
   zipResults,
   setHeadlessMode,
   setThresholdLimits,
+  getVersion,
 } from './utils.js';
 
 import { checkUrl, prepareData, isSelectorValid, isInputValid } from './constants/common.js';
@@ -122,7 +124,20 @@ const scanInit = async argvs => {
       data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_CustomWidth_${argvs.viewportWidth}px`;
     }
 
-    printMessage(['Scanning website...'], messageOptions);
+    exec('git branch --show-current', (err, stdout) => {
+      if (err) {
+        console.log('ERROR');
+        console.log(err);
+      } else {
+        const appVersion = getVersion();
+        const branchName = stdout.trim();
+
+        printMessage(
+          [`Version: ${appVersion}-${branchName}`, 'Scanning website...'],
+          messageOptions,
+        );
+      }
+    });
     await combineRun(data);
   } else {
     printMessage(
