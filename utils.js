@@ -9,6 +9,13 @@ import crypto from 'crypto';
 
 import constants from './constants/constants.js';
 
+export const getVersion = () => {
+  const loadJSON = path => JSON.parse(fs.readFileSync(new URL(path, import.meta.url)));
+  const appVersion = loadJSON('./package.json').version;
+
+  return appVersion;
+};
+
 export const getHostnameFromRegex = url => {
   const matches = url.match(/^https?:\/\/([^/?#]+)(?:[/?#]|$)/i);
 
@@ -54,7 +61,10 @@ export const createAndUpdateFolders = async (scanDetails, randomToken) => {
 
   await fs.ensureDir(`${storagePath}/reports`);
   await fs.writeFile(`${storagePath}/details.json`, JSON.stringify(scanDetails, 0, 2));
-  await fs.copy(`${constants.a11yDataStoragePath}/${randomToken}`, `${storagePath}/${constants.allIssueFileName}`);
+  await fs.copy(
+    `${constants.a11yDataStoragePath}/${randomToken}`,
+    `${storagePath}/${constants.allIssueFileName}`,
+  );
 
   // update logs
   await fs.ensureDir(logPath);
