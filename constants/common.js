@@ -266,7 +266,7 @@ export const getLinksFromSitemap = async (url, maxLinksCount) => {
       silentLogger.info(`This is a XML format sitemap index.`);
       for (const childSitemapUrl of $('loc')) {
         if (urls.length < maxLinksCount) {
-          const urlsFromChildSitemap = await getLinksFromSitemap($(childSitemapUrl).text(), maxLinksCount);
+          const urlsFromChildSitemap = await getLinksFromSitemap($(childSitemapUrl).text(), maxLinksCount - url.length);
           urlsFromChildSitemap.forEach(url => addUrl(url));
         }
       }

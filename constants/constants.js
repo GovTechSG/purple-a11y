@@ -176,6 +176,7 @@ export default {
   impactOrder,
   devices,
   launchOptionsArgs: launchOptionsArgs,
+  xmlSitemapTypes
 }
 
 export const rootPath = __dirname;
