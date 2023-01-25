@@ -21,32 +21,10 @@ export const getCurrentDate = () => {
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 };
 
-export const validateUrl = url => {
-  const invalidURLends = [
-    '.gif',
-    '.jpg',
-    '.jpeg',
-    '.png',
-    '.pdf',
-    '.doc',
-    '.css',
-    '.svg',
-    '.js',
-    '.ts',
-    '.xml',
-    '.csv',
-    '.tgz',
-    '.zip',
-    '.xls',
-    '.ppt',
-    '.ico',
-    '.woff',
-  ];
-  return !invalidURLends.some(urlEnd => url.includes(urlEnd));
-};
-
-export const checkIsXml = url => {
-  return url.includes('.xml');
+export const isWhitelistedContentType = (contentType) => {
+  const whitelist = ['text/html'];
+  // return whitelist.filter(type => contentType.trim().startsWith(type)).length === 1;
+  return true;
 }
 
 export const getStoragePath = randomToken =>

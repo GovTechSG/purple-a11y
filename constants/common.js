@@ -8,7 +8,8 @@ import crawlee from 'crawlee';
 import { parseString } from 'xml2js';
 import constants from './constants.js';
 import { consoleLogger, silentLogger } from '../logs.js';
-import * as https from "https";
+import * as https from 'https';
+import { isWhitelistedContentType } from '../utils.js';
 
 const document = new JSDOM('').window;
 
@@ -97,7 +98,6 @@ const sanitizeUrlInput = url => {
 };
 
 const checkUrlConnectivity = async url => {
-
   const res = {};
 
   const data = sanitizeUrlInput(url);
@@ -228,71 +228,113 @@ const checkFeedType = async content => {
 };
 
 export const getLinksFromSitemap = async (url, maxLinksCount) => {
-  const { data } = await axios.get(url);
-  const $ = cheerio.load(data, { xml: true });
+  const validUrls = new Set(); // for HTML documents
+  const invalidUrls = new Set(); // for non-HTML documents
 
-  // This case is when the document is not an XML format document
-  if ($(':root').length === 0) {
-    return crawlee.extractUrls({ string: data }).slice(0, maxLinksCount);
-  }
+  const isLimitReached = () => {
+    return validUrls.size + invalidUrls.size >= maxLinksCount;
+  };
 
-  const urls = [];
-  const addedUrls = new Set();
-  const addUrl = url => {
-    if (urls.length < maxLinksCount && !addedUrls.has(url)) {
-      addedUrls.add(url);
-      urls.push(url);
+  const addUrl = async url => {
+    try {
+      const { headers } = await axios.head(url);
+      const urlContentType = headers.getContentType();
+
+      if (isWhitelistedContentType(urlContentType)) {
+        validUrls.add(url);
+      } else {
+        invalidUrls.add(url);
+      }
+    } catch (error) {
+      invalidUrls.add(url);
+      silentLogger.error('Failed to get URL content type: ', error);
     }
   };
 
-  // Root element
-  const root = $(':root')[0];
-
-  const xmlns = root.attribs?.xmlns;
-  const xmlFormatNamespace = 'http://www.sitemaps.org/schemas/sitemap/0.9';
-
-  let sitemapType;
-
-  if (root.name === 'urlset' && xmlns === xmlFormatNamespace) {
-    sitemapType = constants.xmlSitemapTypes.xml;
-  } else if (root.name === 'sitemapindex' && xmlns === xmlFormatNamespace) {
-    sitemapType = constants.xmlSitemapTypes.xmlIndex;
-  } else {
-    sitemapType = await checkFeedType(data);
-  }
-
-  switch (sitemapType) {
-    case constants.xmlSitemapTypes.xmlIndex:
-      silentLogger.info(`This is a XML format sitemap index.`);
-      for (const childSitemapUrl of $('loc')) {
-        if (urls.length < maxLinksCount) {
-          const urlsFromChildSitemap = await getLinksFromSitemap($(childSitemapUrl).text(), maxLinksCount - url.length);
-          urlsFromChildSitemap.forEach(url => addUrl(url));
-        }
+  const processXmlSitemap = async ($, sitemapType, selector) => {
+    for (const urlElement of $(selector)) {
+      if (isLimitReached()) {
+        return;
       }
-      break;
-    case constants.xmlSitemapTypes.xml:
-      silentLogger.info(`This is a XML format sitemap.`);
-      $('loc').each(function () {
-        addUrl($(this).text());
-      });
-      break;
-    case constants.xmlSitemapTypes.rss:
-      silentLogger.info(`This is a RSS format sitemap.`);
-      $('link').each(function () {
-        addUrl($(this).text());
-      });
-      break;
-    case constants.xmlSitemapTypes.atom:
-      silentLogger.info(`This is a Atom format sitemap.`);
-      $('link').each(function () {
-        addUrl($(this).prop('href'));
-      });
-      break;
-    default:
-      silentLogger.info(`This is an unrecognised XML sitemap format.`);
-      return crawlee.extractUrls({ string: data }).slice(maxLinksCount);
-  }
+      let url;
+      if (sitemapType === constants.xmlSitemapTypes.atom) {
+        url = $(urlElement).prop('href');
+      } else {
+        url = $(urlElement).text();
+      }
+      await addUrl(url);
+    }
+  };
 
-  return urls;
+  const processNonStandardSitemap = async data => {
+    const urls = crawlee.extractUrls({ string: data }).slice(0, maxLinksCount);
+    for (const url of urls) {
+      if (isLimitReached()) {
+        return;
+      }
+      await addUrl(url);
+    }
+  };
+
+  const fetchUrls = async url => {
+    const { data } = await axios.get(url);
+    const $ = cheerio.load(data, { xml: true });
+
+    // This case is when the document is not an XML format document
+    if ($(':root').length === 0) {
+      await processNonStandardSitemap(data);
+      return;
+    }
+
+    // Root element
+    const root = $(':root')[0];
+
+    const xmlns = root.attribs?.xmlns;
+    const xmlFormatNamespace = 'http://www.sitemaps.org/schemas/sitemap/0.9';
+
+    let sitemapType;
+
+    if (root.name === 'urlset' && xmlns === xmlFormatNamespace) {
+      sitemapType = constants.xmlSitemapTypes.xml;
+    } else if (root.name === 'sitemapindex' && xmlns === xmlFormatNamespace) {
+      sitemapType = constants.xmlSitemapTypes.xmlIndex;
+    } else {
+      sitemapType = await checkFeedType(data);
+    }
+
+    switch (sitemapType) {
+      case constants.xmlSitemapTypes.xmlIndex:
+        silentLogger.info(`This is a XML format sitemap index.`);
+        for (const childSitemapUrl of $('loc')) {
+          if (isLimitReached()) {
+            break;
+          }
+          await fetchUrls($(childSitemapUrl).text());
+        }
+        break;
+      case constants.xmlSitemapTypes.xml:
+        silentLogger.info(`This is a XML format sitemap.`);
+        await processXmlSitemap($, sitemapType, 'loc');
+        break;
+      case constants.xmlSitemapTypes.rss:
+        silentLogger.info(`This is a RSS format sitemap.`);
+        await processXmlSitemap($, sitemapType, 'link');
+        break;
+      case constants.xmlSitemapTypes.atom:
+        silentLogger.info(`This is a Atom format sitemap.`);
+        await processXmlSitemap($, sitemapType, 'link');
+        break;
+      default:
+        silentLogger.info(`This is an unrecognised XML sitemap format.`);
+        await processNonStandardSitemap(data);
+        break;
+    }
+  };
+
+  await fetchUrls(url);
+  return {
+    validUrls: Array.from(validUrls),
+    invalidUrls: Array.from(invalidUrls),
+    numberOfLinks: validUrls.size + invalidUrls.size,
+  };
 };

@@ -8,7 +8,6 @@ import {
   failedRequestHandler,
 } from './commonCrawlerFunc.js';
 
-import { validateUrl } from '../utils.js';
 import constants from '../constants/constants.js';
 import { getLinksFromSitemap, messageOptions } from '../constants/common.js';
 
@@ -19,8 +18,9 @@ const crawlSitemap = async (sitemapUrl, randomToken, host, viewportSettings) => 
   const maxConcurrency = constants.maxConcurrency;
   
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
+  const { validUrls, invalidUrls } = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl);
   const requestList = new crawlee.RequestList({
-    sources: await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl)
+    sources: validUrls
   });
   await requestList.initialize();  
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
@@ -53,16 +53,10 @@ const crawlSitemap = async (sitemapUrl, randomToken, host, viewportSettings) => 
       } else if (deviceChosen === 'Mobile') {
         await page.setViewport({ width: 360, height: 640, isMobile: true });
       }
-
       const currentUrl = request.url;
-      if (validateUrl(currentUrl)) {
-        const results = await runAxeScript(page, host);
-        await dataset.pushData(results);
-        urlsCrawled.scanned.push(currentUrl);
-      } 
-      else {
-        urlsCrawled.invalid.push(currentUrl);
-      }
+      const results = await runAxeScript(page, host);
+      await dataset.pushData(results);
+      urlsCrawled.scanned.push(currentUrl);
     },
     failedRequestHandler,
     maxRequestsPerCrawl,
@@ -71,6 +65,7 @@ const crawlSitemap = async (sitemapUrl, randomToken, host, viewportSettings) => 
 
   await crawler.run();
   await requestList.isFinished();
+  urlsCrawled.invalid.push(...invalidUrls);
   return urlsCrawled;
 };
 
