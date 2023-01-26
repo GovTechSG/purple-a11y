@@ -13,7 +13,15 @@ import {
   setThresholdLimits,
 } from './utils.js';
 
-import { checkUrl, prepareData, isSelectorValid, isInputValid } from './constants/common.js';
+import {
+  checkUrl,
+  prepareData,
+  isSelectorValid,
+  isInputValid,
+  isValidHttpUrl,
+  isFileSitemap,
+  sanitizeUrlInput,
+} from './constants/common.js';
 
 import { cliOptions, messageOptions, configureReportSetting } from './constants/cliFunctions.js';
 
@@ -105,26 +113,26 @@ const scanInit = async argvs => {
   setThresholdLimits(argvs.warn);
 
   // Validate the URL
-  const res = await checkUrl(argvs.scanner, argvs.url);
-  if (res.status === 200) {
-    // To take the final url from the validation
-    argvs.url = res.url;
+  let data, domain;
 
-    const data = prepareData(argvs.scanner, argvs);
-    const domain = new URL(argvs.url).hostname;
-
-    if (!argvs.customDevice && !argvs.viewportWidth) {
-      argvs.customDevice = 'Desktop';
-      data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
-    } else if (argvs.customDevice) {
-      data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
-    } else if (!argvs.customDevice) {
-      data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_CustomWidth_${argvs.viewportWidth}px`;
+  const validateUrl = async () => {
+    if (isValidHttpUrl(argvs.url)) {
+      const res = await checkUrl(argvs.scanner, argvs.url);
+      if (res.status === 200) {
+        // To take the final url from the validation
+        argvs.finalUrl = res.url;
+        return true;
+      }
+    } else if (argvs.scanner === constants.scannerTypes.sitemap && isFileSitemap(argvs.url)) {
+      argvs.isLocalSitemap = true;
+      return true;
     }
+    return false;
+  };
 
-    printMessage(['Scanning website...'], messageOptions);
-    await combineRun(data);
-  } else {
+  const isValidUrl = await validateUrl();
+
+  if (!isValidUrl) {
     printMessage(
       [`Invalid ${argvs.scanner} page. Please provide a URL to start the ${argvs.scanner} scan.`],
       messageOptions,
@@ -132,7 +140,20 @@ const scanInit = async argvs => {
     process.exit(1);
   }
 
-  const domain = new URL(argvs.url).hostname;
+  data = prepareData(argvs.scanner, argvs);
+  domain = argvs.isLocalSitemap ? 'custom' : new URL(argvs.url).hostname;
+
+  if (!argvs.customDevice && !argvs.viewportWidth) {
+    argvs.customDevice = 'Desktop';
+    data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
+  } else if (argvs.customDevice) {
+    data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
+  } else if (!argvs.customDevice) {
+    data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_CustomWidth_${argvs.viewportWidth}px`;
+  }
+
+  printMessage(['Scanning website...'], messageOptions);
+  await combineRun(data);
 
   return `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
 };

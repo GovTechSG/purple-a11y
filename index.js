@@ -42,7 +42,7 @@ inquirer.prompt(questions).then(async answers => {
   const dd = String(today.getDate()).padStart(2, '0');
   const curHour = today.getHours() < 10 ? '0' + today.getHours() : today.getHours();
   const curMinute = today.getMinutes() < 10 ? '0' + today.getMinutes() : today.getMinutes();
-  const domain = new URL(answers.url).hostname;
+  const domain = answers.isLocalSitemap ? 'custom' : new URL(answers.url).hostname;
 
   if (answers.deviceChosen === 'Mobile') {
     screenToScan = 'Mobile';

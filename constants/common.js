@@ -6,6 +6,7 @@ import { JSDOM } from 'jsdom';
 import * as cheerio from 'cheerio';
 import crawlee from 'crawlee';
 import { parseString } from 'xml2js';
+import fs from 'fs';
 import constants from './constants.js';
 import { consoleLogger, silentLogger } from '../logs.js';
 import * as https from 'https';
@@ -59,12 +60,25 @@ export const isValidXML = async content => {
   return { status, parsedContent };
 };
 
+export const isValidHttpUrl = input => {
+  const regexForUrl = new RegExp('^(http|https):/{2}.*$', 'gmi');
+  return input.match(regexForUrl) !== null;
+};
+
+export const isFileSitemap = filePath => {
+  if (!fs.existsSync(filePath)) {
+    return false;
+  }
+  const file = fs.readFileSync(filePath, 'utf8');
+  return isSitemapContent(file);
+};
+
 export const getUrlMessage = scanner => {
   switch (scanner) {
     case constants.scannerTypes.website:
       return 'Please enter URL of website: ';
     case constants.scannerTypes.sitemap:
-      return 'Please enter URL to sitemap: ';
+      return 'Please enter URL or file path to sitemap, or drag and drop a sitemap file here: ';
 
     default:
       return 'Invalid option';
@@ -83,7 +97,7 @@ export const isInputValid = inputString => {
   return false;
 };
 
-const sanitizeUrlInput = url => {
+export const sanitizeUrlInput = url => {
   // Sanitize that there is no blacklist characters
   const sanitizeUrl = validator.blacklist(url, blackListCharacters);
   const data = {};
@@ -130,12 +144,11 @@ const checkUrlConnectivity = async url => {
   return res;
 };
 
-export const isSitemapContent = async content => {
+const isSitemapContent = async content => {
   const { status: isValid } = await isValidXML(content);
-
   if (!isValid) {
     const regexForHtml = new RegExp('<(?:!doctype html|html|head|body)+?>', 'gmi');
-    const regexForUrl = new RegExp('^(http|https):/{2}.*$', 'gmi');
+    const regexForUrl = new RegExp('^.*(http|https):/{2}.*$', 'gmi');
     // Check that the page is not a HTML page but still contains website links
     if (!String(content).match(regexForHtml) && String(content).match(regexForUrl)) {
       silentLogger.info(
@@ -172,16 +185,18 @@ export const prepareData = (scanType, argv) => {
   if (isEmptyObject(argv)) {
     throw Error('No inputs should be provided');
   }
-  const { scanner, url, deviceChosen, customDevice, viewportWidth } = argv;
+  const { scanner, url, deviceChosen, customDevice, viewportWidth, isLocalSitemap, finalUrl } =
+    argv;
 
   let data;
   if (scanType === constants.scannerTypes.sitemap || scanType === constants.scannerTypes.website) {
     data = {
       type: scanner,
-      url,
+      url: isLocalSitemap ? url : finalUrl,
       deviceChosen,
       customDevice,
       viewportWidth,
+      isLocalSitemap,
     };
   }
 
@@ -247,7 +262,7 @@ export const getLinksFromSitemap = async (url, maxLinksCount) => {
       }
     } catch (error) {
       invalidUrls.add(url);
-      silentLogger.error('Failed to get URL content type: ', error);
+      silentLogger.error('Failed to resolve URL: ', error);
     }
   };
 
@@ -277,7 +292,12 @@ export const getLinksFromSitemap = async (url, maxLinksCount) => {
   };
 
   const fetchUrls = async url => {
-    const { data } = await axios.get(url);
+    let data;
+    if (isValidHttpUrl(url)) {
+      data = await (await axios.get(url)).data;
+    } else {
+      data = fs.readFileSync(url, 'utf8');
+    }
     const $ = cheerio.load(data, { xml: true });
 
     // This case is when the document is not an XML format document
@@ -309,7 +329,7 @@ export const getLinksFromSitemap = async (url, maxLinksCount) => {
           if (isLimitReached()) {
             break;
           }
-          await fetchUrls($(childSitemapUrl).text());
+          await fetchUrls($(childSitemapUrl, false).text());
         }
         break;
       case constants.xmlSitemapTypes.xml:

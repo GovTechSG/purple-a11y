@@ -17,9 +17,11 @@ const combineRun = async details => {
   const envDetails = { ...details };
 
   // eslint-disable-next-line prettier/prettier
-  const { type, url, randomToken, deviceChosen, customDevice, viewportWidth } = envDetails;
+  const { type, url, randomToken, deviceChosen, customDevice, viewportWidth, isLocalSitemap } =
+    envDetails;
 
-  const host = getHostnameFromRegex(url);
+  const host =
+    type === constants.scannerTypes.sitemap && isLocalSitemap ? '' : getHostnameFromRegex(url);
 
   const scanDetails = {
     startTime: new Date().getTime(),
