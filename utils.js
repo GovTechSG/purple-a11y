@@ -48,7 +48,6 @@ export const createAndUpdateResultsFolders = async (randomToken) => {
   const storagePath = getStoragePath(randomToken);
   await fs.ensureDir(`${storagePath}/reports`);
   await fs.copy(`${constants.a11yDataStoragePath}/${randomToken}`, `${storagePath}/${constants.allIssueFileName}`);
-  await fs.mkdir(`${storagePath}/${constants.allIssueFileName}`);
 };
 
 export const cleanUp = async (pathToDelete, setDefaultFolders = false) => {
