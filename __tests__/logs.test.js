@@ -1,6 +1,7 @@
 /* eslint-disable no-undef */
-const winston = require('winston');
-const { logFormat } = require('../logs');
+import {jest} from '@jest/globals'
+import winston from 'winston';
+import { logFormat } from '../logs.js';
 
 describe('test log format', () => {
   afterEach(() => {

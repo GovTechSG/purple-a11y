@@ -1,15 +1,15 @@
-exports.messageOptions = {
+export const messageOptions = {
   border: false,
   marginTop: 2,
   marginBottom: 2,
 };
 
-exports.alertMessageOptions = {
+export const alertMessageOptions = {
   border: true,
   borderColor: 'red',
 };
 
-exports.cliOptions = {
+export const cliOptions = {
   c: {
     alias: 'scanner',
     describe: 'Type of crawler, 1) sitemap or 2) website',
@@ -21,6 +21,18 @@ exports.cliOptions = {
     describe: 'Website URL you want to scan',
     type: 'string',
     demandOption: true,
+  },
+  d: {
+    alias: 'customDevice',
+    describe: 'Device you want to scan',
+    type: 'string',
+    demandOption: false,
+  },
+  w: {
+    alias: 'viewportWidth',
+    describe: 'Viewport width (in pixels) you want to scan',
+    type: 'number',
+    demandOption: false,
   },
   o: {
     alias: 'zip',
@@ -42,11 +54,10 @@ exports.cliOptions = {
   },
 };
 
-exports.configureReportSetting = isEnabled => {
+export const configureReportSetting = isEnabled => {
   if (isEnabled) {
     process.env.REPORT_BREAKDOWN = 1;
   } else {
     process.env.REPORT_BREAKDOWN = 0;
   }
 };
-

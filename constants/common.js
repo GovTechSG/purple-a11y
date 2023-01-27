@@ -1,15 +1,21 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-use-before-define */
-const validator = require('validator');
-const axios = require('axios');
-const { JSDOM } = require('jsdom');
+import validator from 'validator';
+import axios from 'axios';
+import { JSDOM } from 'jsdom';
+import { parseString } from 'xml2js';
+import constants from './constants.js';
+import { consoleLogger, silentLogger } from '../logs.js';
+import * as https from "https";
 
-const { document } = new JSDOM('').window;
-const { parseString } = require('xml2js');
-const { scannerTypes } = require('./constants');
-const { consoleLogger, silentLogger } = require('../logs');
+const document = new JSDOM('').window;
 
-exports.messageOptions = {
+const httpsAgent = new https.Agent({
+  // Run in environments with custom certificates
+  rejectUnauthorized: false,
+});
+
+export const messageOptions = {
   border: false,
   marginTop: 2,
   marginBottom: 2,
@@ -22,7 +28,7 @@ const urlOptions = {
 };
 
 const queryCheck = s => document.createDocumentFragment().querySelector(s);
-exports.isSelectorValid = selector => {
+export const isSelectorValid = selector => {
   try {
     queryCheck(selector);
   } catch (e) {
@@ -50,11 +56,11 @@ const isValidXML = async content => {
   return { status, parsedContent };
 };
 
-exports.getUrlMessage = scanner => {
+export const getUrlMessage = scanner => {
   switch (scanner) {
-    case scannerTypes.website:
+    case constants.scannerTypes.website:
       return 'Please enter URL of website: ';
-    case scannerTypes.sitemap:
+    case constants.scannerTypes.sitemap:
       return 'Please enter URL to sitemap: ';
 
     default:
@@ -62,7 +68,7 @@ exports.getUrlMessage = scanner => {
   }
 };
 
-exports.isInputValid = inputString => {
+export const isInputValid = inputString => {
   if (!validator.isEmpty(inputString)) {
     const removeBlackListCharacters = validator.escape(inputString);
 
@@ -89,6 +95,7 @@ const sanitizeUrlInput = url => {
 };
 
 const checkUrlConnectivity = async url => {
+
   const res = {};
 
   const data = sanitizeUrlInput(url);
@@ -96,7 +103,7 @@ const checkUrlConnectivity = async url => {
   if (data.isValid) {
     // Validate the connectivity of URL if the string format is url format
     await axios
-      .get(data.url, { timeout: 15000 })
+      .get(data.url, { httpsAgent, timeout: 15000 })
       .then(async response => {
         const redirectUrl = response.request.res.responseUrl;
         res.status = response.status;
@@ -149,11 +156,11 @@ const isSitemapContent = async content => {
   return true;
 };
 
-exports.checkUrl = async (scanner, url) => {
+export const checkUrl = async (scanner, url) => {
   const res = await checkUrlConnectivity(url);
 
   if (res.status === 200) {
-    if (scanner === scannerTypes.sitemap) {
+    if (scanner === constants.scannerTypes.sitemap) {
       const isSitemap = await isSitemapContent(res.content);
 
       if (!isSitemap) {
@@ -167,23 +174,30 @@ exports.checkUrl = async (scanner, url) => {
 
 const isEmptyObject = obj => !Object.keys(obj).length;
 
-exports.prepareData = (scanType, argv) => {
+export const prepareData = (scanType, argv) => {
   if (isEmptyObject(argv)) {
     throw Error('No inputs should be provided');
   }
+  const { scanner, url, deviceChosen, customDevice, viewportWidth } = argv;
 
   let data;
-  if (scanType === scannerTypes.sitemap || scanType === scannerTypes.website) {
+  if (scanType === constants.scannerTypes.sitemap || scanType === constants.scannerTypes.website) {
     data = {
-      type: argv.scanner,
-      url: argv.url,
+      type: scanner,
+      url,
+      deviceChosen,
+      customDevice,
+      viewportWidth,
     };
   }
 
-  if (scanType === scannerTypes.login) {
+  if (scanType === constants.scannerTypes.login) {
     data = {
       type: argv.scanner,
-      url: argv.url,
+      url,
+      deviceChosen,
+      customDevice,
+      viewportWidth,
       loginID: argv.username,
       loginPW: argv.userPassword,
       idSelector: argv.usernameField,

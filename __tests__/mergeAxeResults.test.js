@@ -1,11 +1,12 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable no-undef */
-const printMessage = require('print-message');
-const fs = require('fs-extra');
-const path = require('path');
-const Mustache = require('mustache');
+import { jest } from '@jest/globals';
+import printMessage from 'print-message';
+import fs from 'fs-extra';
+import path from 'path';
+import Mustache from 'mustache';
 
-const privateFuncs = require('../mergeAxeResults');
+import privateFuncs from '../mergeAxeResults.js';
 
 const issueCountMap = privateFuncs.__get__('issueCountMap');
 const thresholdLimitCheck = privateFuncs.__get__('thresholdLimitCheck');
