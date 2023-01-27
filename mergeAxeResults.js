@@ -225,13 +225,15 @@ const thresholdLimitCheck = async (warnLevel, allIssues, totalUniqueIssues) => {
 
   const messages = [
     [
-      `Total Issue Count: ${issueCounts.get('total')}`,
+      `Total Issues: ${issueCounts.get('total')}`,
+      `Total Unique Issues: ${totalUniqueIssues}`,
+    ],
+    [
       `Issue Breakdown`,
       `Critical: ${issueCounts.get('critical')}`,
       `Serious: ${issueCounts.get('serious')}`,
       `Moderate: ${issueCounts.get('moderate')}`,
       `Minor: ${issueCounts.get('minor')}`,
-      `Unique: ${totalUniqueIssues}`,
     ],
   ];
 
