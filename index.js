@@ -48,7 +48,7 @@ inquirer.prompt(questions).then(async answers => {
     screenToScan = 'Mobile';
   } else if (answers.deviceChosen === 'Custom') {
     if (answers.customDevice === 'Specify viewport') {
-      screenToScan = 'Mobile';
+      screenToScan = `CustomWidth_${answers.viewportWidth}px`;
     } else {
       screenToScan = answers.customDevice;
     }
@@ -61,5 +61,6 @@ inquirer.prompt(questions).then(async answers => {
     );
 
   printMessage(['Scanning website...'], messageOptions);
-  await combineRun(data);
+
+  await combineRun(data, screenToScan);
 });
