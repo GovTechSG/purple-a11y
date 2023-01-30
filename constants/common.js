@@ -217,31 +217,6 @@ export const prepareData = (scanType, argv) => {
   return data;
 };
 
-const checkFeedType = async content => {
-  const formData = new URLSearchParams();
-  formData.append('rawdata', content);
-
-  const { data } = await axios.post('https://validator.w3.org/feed/check.cgi', formData, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-  });
-
-  const $ = cheerio.load(data);
-  const result = $('h2').first();
-
-  // Not a valid RSS or Atom sitemap
-  if (result.text() === 'Sorry') {
-    return constants.xmlSitemapTypes.unknown;
-  }
-
-  const feedTypeMessage = result.next();
-
-  if (feedTypeMessage.text().includes('RSS')) {
-    return constants.xmlSitemapTypes.rss;
-  } else {
-    return constants.xmlSitemapTypes.atom;
-  }
-};
-
 export const getLinksFromSitemap = async (url, maxLinksCount) => {
   const validUrls = new Set(); // for HTML documents
   const invalidUrls = new Set(); // for non-HTML documents
@@ -318,8 +293,12 @@ export const getLinksFromSitemap = async (url, maxLinksCount) => {
       sitemapType = constants.xmlSitemapTypes.xml;
     } else if (root.name === 'sitemapindex' && xmlns === xmlFormatNamespace) {
       sitemapType = constants.xmlSitemapTypes.xmlIndex;
+    } else if (root.name === 'rss') {
+      sitemapType = constants.xmlSitemapTypes.rss;
+    } else if (root.name === 'feed') {
+      sitemapType = constants.xmlSitemapTypes.atom;
     } else {
-      sitemapType = await checkFeedType(data);
+      sitemapType = constants.xmlSitemapTypes.unknown;
     }
 
     switch (sitemapType) {
