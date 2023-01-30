@@ -123,16 +123,16 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
       const data = prepareData(argvs.scanner, argvs);
       const domain = new URL(argvs.url).hostname;
 
-    let deviceToScan;
-    if (!argvs.customDevice && !argvs.viewportWidth) {
-      argvs.customDevice = 'Desktop';
-      data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
-    } else if (argvs.customDevice) {
-      deviceToScan = argvs.customDevice.replaceAll('_', ' ');
-      data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
-    } else if (!argvs.customDevice) {
-      data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_CustomWidth_${argvs.viewportWidth}px`;
-    }
+      let deviceToScan;
+      if (!argvs.customDevice && !argvs.viewportWidth) {
+        argvs.customDevice = 'Desktop';
+        data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
+      } else if (argvs.customDevice) {
+        deviceToScan = argvs.customDevice.replaceAll('_', ' ');
+        data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
+      } else if (!argvs.customDevice) {
+        data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_CustomWidth_${argvs.viewportWidth}px`;
+      }
 
       exec('git branch --show-current', (err, stdout) => {
         if (err) {
