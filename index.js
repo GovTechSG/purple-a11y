@@ -4,7 +4,7 @@
 import printMessage from 'print-message';
 import inquirer from 'inquirer';
 import { exec } from 'child_process';
-import { getVersion, getBranch } from './utils.js';
+import { getVersion } from './utils.js';
 import { cleanUp, setHeadlessMode } from './utils.js';
 import { prepareData, messageOptions } from './constants/common.js';
 import questions from './constants/questions.js';
