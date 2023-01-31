@@ -5,6 +5,8 @@ import fs from 'fs-extra';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const maxRequestsPerCrawl = 100;
+
 // for crawlers
 export const axeScript = 'node_modules/axe-core/axe.min.js';
 
@@ -169,7 +171,7 @@ export default {
   a11yDataStoragePath: `${a11yStorage}/datasets`,
   allIssueFileName: 'all_issues',
   cliZipFileName: 'a11y-scan-results.zip',
-  maxRequestsPerCrawl: 100,
+  maxRequestsPerCrawl,
   maxConcurrency: 5,
   scannerTypes,
   urlsCrawledObj,

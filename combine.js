@@ -17,7 +17,7 @@ const combineRun = async details => {
   const envDetails = { ...details };
 
   // eslint-disable-next-line prettier/prettier
-  const { type, url, randomToken, deviceChosen, customDevice, viewportWidth, isLocalSitemap } =
+  const { type, url, randomToken, deviceChosen, customDevice, viewportWidth, maxRequestsPerCrawl, isLocalSitemap } =
     envDetails;
 
   const host =
@@ -38,11 +38,11 @@ const combineRun = async details => {
   let urlsCrawled;
   switch (type) {
     case constants.scannerTypes.sitemap:
-      urlsCrawled = await crawlSitemap(url, randomToken, host, viewportSettings);
+      urlsCrawled = await crawlSitemap(url, randomToken, host, viewportSettings, maxRequestsPerCrawl);
       break;
 
     case constants.scannerTypes.website:
-      urlsCrawled = await crawlDomain(url, randomToken, host, viewportSettings);
+      urlsCrawled = await crawlDomain(url, randomToken, host, viewportSettings, maxRequestsPerCrawl);
       break;
 
     default:

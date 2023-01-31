@@ -185,7 +185,7 @@ export const prepareData = (scanType, argv) => {
   if (isEmptyObject(argv)) {
     throw Error('No inputs should be provided');
   }
-  const { scanner, url, deviceChosen, customDevice, viewportWidth, isLocalSitemap, finalUrl } =
+  const { scanner, url, deviceChosen, customDevice, viewportWidth, maxpages, isLocalSitemap, finalUrl } =
     argv;
 
   let data;
@@ -196,6 +196,7 @@ export const prepareData = (scanType, argv) => {
       deviceChosen,
       customDevice,
       viewportWidth,
+      maxRequestsPerCrawl: maxpages || constants.maxRequestsPerCrawl,
       isLocalSitemap,
     };
   }

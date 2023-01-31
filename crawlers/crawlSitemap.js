@@ -11,10 +11,9 @@ import {
 import constants from '../constants/constants.js';
 import { getLinksFromSitemap, messageOptions } from '../constants/common.js';
 
-const crawlSitemap = async (sitemapUrl, randomToken, host, viewportSettings) => {
+const crawlSitemap = async (sitemapUrl, randomToken, host, viewportSettings, maxRequestsPerCrawl) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { deviceChosen, customDevice, viewportWidth } = viewportSettings;
-  const maxRequestsPerCrawl = constants.maxRequestsPerCrawl;
   const maxConcurrency = constants.maxConcurrency;
   
   printMessage(['Fetching URLs. This might take some time...'], { border: false });

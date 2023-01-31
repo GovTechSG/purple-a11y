@@ -95,6 +95,13 @@ const options = yargs
     }
     return option;
   })
+  .coerce('p', option => {
+    if (!Number.isInteger(option) || Number(option) <= 0) {
+      printMessage([`Invalid maximum number of pages. Please provide a positive integer.`], messageOptions);
+      process.exit(1);
+    }
+    return option;
+  })
   .conflicts('d', 'w')
   .epilogue('').argv;
 

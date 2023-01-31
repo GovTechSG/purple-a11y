@@ -8,9 +8,9 @@ import {
 } from './commonCrawlerFunc.js';
 import constants from '../constants/constants.js';
 
-const crawlDomain = async (url, randomToken, host, viewportSettings) => {
+const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequestsPerCrawl) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
-  const { maxRequestsPerCrawl, maxConcurrency } = constants;
+  const { maxConcurrency } = constants;
   const { deviceChosen, customDevice, viewportWidth } = viewportSettings;
 
   const { dataset, requestQueue } = await createCrawleeSubFolders(randomToken);
