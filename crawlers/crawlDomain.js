@@ -31,12 +31,12 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
   const crawler = new crawlee.PuppeteerCrawler({
     launchContext: {
       launchOptions: {
-          args: constants.launchOptionsArgs,
-      }
+        args: constants.launchOptionsArgs,
+      },
     },
     requestQueue,
     preNavigationHooks,
-    requestHandler: async ({page, request, enqueueLinks }) => {
+    requestHandler: async ({ page, request, enqueueLinks }) => {
       if (deviceChosen === 'Custom') {
         if (device) {
           await page.emulate(device);
@@ -54,7 +54,7 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
           isMobile: true,
         });
       }
-      
+
       const currentUrl = request.url;
       const location = await page.evaluate('location');
 
@@ -71,7 +71,6 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
       } else {
         urlsCrawled.outOfDomain.push(currentUrl);
       }
-      
     },
     failedRequestHandler,
     maxRequestsPerCrawl,

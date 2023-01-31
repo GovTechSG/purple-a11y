@@ -150,17 +150,19 @@ const scanInit = async argvs => {
   data = prepareData(argvs.scanner, argvs);
   domain = argvs.isLocalSitemap ? 'custom' : new URL(argvs.url).hostname;
 
+  let deviceToScan;
   if (!argvs.customDevice && !argvs.viewportWidth) {
     argvs.customDevice = 'Desktop';
     data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
   } else if (argvs.customDevice) {
+    deviceToScan = argvs.customDevice.replaceAll('_', ' ');
     data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
   } else if (!argvs.customDevice) {
     data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_CustomWidth_${argvs.viewportWidth}px`;
   }
 
   printMessage(['Scanning website...'], messageOptions);
-  await combineRun(data);
+  await combineRun(data, deviceToScan);
 
   return `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
 };
