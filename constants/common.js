@@ -218,28 +218,11 @@ export const prepareData = (scanType, argv) => {
   return data;
 };
 
-export const getLinksFromSitemap = async (url, maxLinksCount) => {
-  const validUrls = new Set(); // for HTML documents
-  const invalidUrls = new Set(); // for non-HTML documents
+export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
+  const urls = new Set(); // for HTML documents
 
   const isLimitReached = () => {
-    return validUrls.size + invalidUrls.size >= maxLinksCount;
-  };
-
-  const addUrl = async url => {
-    try {
-      const { headers } = await axios.head(url);
-      const urlContentType = headers.getContentType();
-
-      if (isWhitelistedContentType(urlContentType)) {
-        validUrls.add(url);
-      } else {
-        invalidUrls.add(url);
-      }
-    } catch (error) {
-      invalidUrls.add(url);
-      silentLogger.error('Failed to resolve URL: ', error);
-    }
+    return urls.size >= maxLinksCount;
   };
 
   const processXmlSitemap = async ($, sitemapType, selector) => {
@@ -253,17 +236,7 @@ export const getLinksFromSitemap = async (url, maxLinksCount) => {
       } else {
         url = $(urlElement).text();
       }
-      await addUrl(url);
-    }
-  };
-
-  const processNonStandardSitemap = async data => {
-    const urls = crawlee.extractUrls({ string: data }).slice(0, maxLinksCount);
-    for (const url of urls) {
-      if (isLimitReached()) {
-        return;
-      }
-      await addUrl(url);
+      urls.add(url);
     }
   };
 
@@ -278,8 +251,7 @@ export const getLinksFromSitemap = async (url, maxLinksCount) => {
 
     // This case is when the document is not an XML format document
     if ($(':root').length === 0) {
-      await processNonStandardSitemap(data);
-      return;
+      return crawlee.extractUrls({ string: data }).slice(0, maxLinksCount);;
     }
 
     // Root element
@@ -326,15 +298,10 @@ export const getLinksFromSitemap = async (url, maxLinksCount) => {
         break;
       default:
         silentLogger.info(`This is an unrecognised XML sitemap format.`);
-        await processNonStandardSitemap(data);
-        break;
+        return crawlee.extractUrls({ string: data }).slice(0, maxLinksCount);
     }
   };
 
-  await fetchUrls(url);
-  return {
-    validUrls: Array.from(validUrls),
-    invalidUrls: Array.from(invalidUrls),
-    numberOfLinks: validUrls.size + invalidUrls.size,
-  };
+  await fetchUrls(sitemapUrl);
+  return Array.from(urls);
 };

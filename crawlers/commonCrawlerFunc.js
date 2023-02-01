@@ -3,6 +3,7 @@
 import crawlee from 'crawlee';
 import axe from 'axe-core';
 import { axeScript } from '../constants/constants.js';
+import { isWhitelistedContentType } from '../utils.js';
 
 const filterAxeResults = (results, host) => {
   const { violations, url } = results;
@@ -53,7 +54,7 @@ export const createCrawleeSubFolders = async randomToken => {
 export const preNavigationHooks = [
   async (_crawlingContext, gotoOptions) => {
     gotoOptions = { waitUntil: 'networkidle2', timeout: 30000 };
-  },
+  }
 ];
 
 export const failedRequestHandler = async ({ request }) => {

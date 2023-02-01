@@ -10,18 +10,24 @@ import {
 
 import constants from '../constants/constants.js';
 import { getLinksFromSitemap, messageOptions } from '../constants/common.js';
+import { isWhitelistedContentType } from '../utils.js';
 
-const crawlSitemap = async (sitemapUrl, randomToken, host, viewportSettings, maxRequestsPerCrawl) => {
+const crawlSitemap = async (
+  sitemapUrl,
+  randomToken,
+  host,
+  viewportSettings,
+  maxRequestsPerCrawl,
+) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { deviceChosen, customDevice, viewportWidth } = viewportSettings;
   const maxConcurrency = constants.maxConcurrency;
-  
+
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
-  const { validUrls, invalidUrls } = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl);
   const requestList = new crawlee.RequestList({
-    sources: validUrls
+    sources: await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl),
   });
-  await requestList.initialize();  
+  await requestList.initialize();
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
 
   const { dataset } = await createCrawleeSubFolders(randomToken);
@@ -37,12 +43,12 @@ const crawlSitemap = async (sitemapUrl, randomToken, host, viewportSettings, max
   const crawler = new crawlee.PuppeteerCrawler({
     launchContext: {
       launchOptions: {
-          args: constants.launchOptionsArgs,
-      }
+        args: constants.launchOptionsArgs,
+      },
     },
     requestList,
     preNavigationHooks,
-    requestHandler: async ({ page, request }) => {
+    requestHandler: async ({ page, request, response }) => {
       if (deviceChosen === 'Custom') {
         if (device) {
           await page.emulate(device);
@@ -52,19 +58,27 @@ const crawlSitemap = async (sitemapUrl, randomToken, host, viewportSettings, max
       } else if (deviceChosen === 'Mobile') {
         await page.setViewport({ width: 360, height: 640, isMobile: true });
       }
+
       const currentUrl = request.url;
-      const results = await runAxeScript(page, host);
-      await dataset.pushData(results);
-      urlsCrawled.scanned.push(currentUrl);
+      const contentType = response.headers()['content-type'];
+      const status = response.status();
+
+      if (status === 200 && isWhitelistedContentType(contentType)) {
+        const results = await runAxeScript(page, host);
+        await dataset.pushData(results);
+        urlsCrawled.scanned.push(currentUrl);
+      } else {
+        urlsCrawled.invalid.push(currentUrl);
+      }
     },
     failedRequestHandler,
     maxRequestsPerCrawl,
     maxConcurrency,
+    maxRequestRetries: 1,
   });
 
   await crawler.run();
   await requestList.isFinished();
-  urlsCrawled.invalid.push(...invalidUrls);
   return urlsCrawled;
 };
 
