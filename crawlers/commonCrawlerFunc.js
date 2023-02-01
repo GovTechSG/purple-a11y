@@ -3,7 +3,6 @@
 import crawlee from 'crawlee';
 import axe from 'axe-core';
 import { axeScript } from '../constants/constants.js';
-import { isWhitelistedContentType } from '../utils.js';
 
 const filterAxeResults = (results, host) => {
   const { violations, url } = results;
