@@ -73,8 +73,7 @@ const crawlSitemap = async (
     },
     failedRequestHandler,
     maxRequestsPerCrawl,
-    maxConcurrency,
-    maxRequestRetries: 1,
+    maxConcurrency
   });
 
   await crawler.run();
