@@ -1,0 +1,21 @@
+variables:
+  # A11Y_SCAN_URL: https://www.example.com
+  A11Y_SCAN_URL: "https://example.com"
+  # A11Y_SCAN_TYPE: [choices: "sitemap", "website"]
+  A11Y_SCAN_TYPE: "website"
+  # A11Y_SCAN_ARTIFACT_NAME: "a11y-scan-example.com"
+  A11Y_SCAN_ARTIFACT_NAME: "a11y-scan-results.zip"
+  
+a11y-scan:
+  stage: test
+  image:
+    # Specify Docker image here
+    name: $DOCKER_IMAGE
+    entrypoint: [ "/bin/bash", "-lc" ] 
+  script:
+    - cd /app
+    - node cli.js -c "$A11Y_SCAN_TYPE" -o "$CI_PROJECT_DIR/$A11Y_SCAN_ARTIFACT_NAME" -u "$A11Y_SCAN_URL" || true
+  artifacts:
+    name: "$CI_JOB_NAME"
+    paths:
+      - $A11Y_SCAN_ARTIFACT_NAME
