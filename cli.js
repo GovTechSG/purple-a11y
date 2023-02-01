@@ -13,22 +13,13 @@ import {
   setThresholdLimits,
 } from './utils.js';
 
-import { 
-  checkUrl, 
-  prepareData, 
-  isSelectorValid, 
-  isInputValid 
-} from './constants/common.js';
+import { checkUrl, prepareData, isSelectorValid, isInputValid } from './constants/common.js';
 
-import { 
-  cliOptions, 
-  messageOptions, 
-  configureReportSetting
-} from './constants/cliFunctions.js';
+import { cliOptions, messageOptions, configureReportSetting } from './constants/cliFunctions.js';
 
 import constants from './constants/constants.js';
 import { consoleLogger } from './logs.js';
-import { combineRun } from './combine.js';
+import combineRun from './combine.js';
 
 setHeadlessMode(true);
 
@@ -37,12 +28,16 @@ cleanUp('.a11y_storage');
 const yargs = _yargs(hideBin(process.argv));
 
 const options = yargs
-  .usage('Usage: node cli.js -c <crawler> -u <url> OPTIONS')
+  .usage('Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS')
   .strictOptions(true)
   .options(cliOptions)
   .example([
-    [`To scan sitemap of website:', 'node cli.js -c [ 1 | ${constants.scannerTypes.sitemap} ] -u <url_link>`],
-    [`To scan a website', 'node cli.js -c [ 2 | ${constants.scannerTypes.website} ] -u <url_link>`]
+    [
+      `To scan sitemap of website:', 'node cli.js -c [ 1 | ${constants.scannerTypes.sitemap} ] -d <device> -u <url_link> -w <viewportWidth>`,
+    ],
+    [
+      `To scan a website', 'node cli.js -c [ 2 | ${constants.scannerTypes.website} ] -d <device> -u <url_link> -w <viewportWidth>`,
+    ],
   ])
   .coerce('c', option => {
     if (typeof option === 'number') {
@@ -68,6 +63,31 @@ const options = yargs
 
     return option;
   })
+  .coerce('d', option => {
+    const deviceString = constants.devices.includes(option);
+    if (option && !deviceString) {
+      printMessage(
+        [`Invalid device. Please provide an existing device to start the scan.`],
+        messageOptions,
+      );
+      process.exit(1);
+    }
+    return option;
+  })
+  .coerce('w', option => {
+    if (Number.isNaN(option)) {
+      printMessage([`Invalid viewport width. Please provide a number. `], messageOptions);
+      process.exit(1);
+    } else if (option < 320 || option > 1080) {
+      printMessage(
+        ['Invalid viewport width! Please provide a viewport width between 320-1080 pixels.'],
+        messageOptions,
+      );
+      process.exit(1);
+    }
+    return option;
+  })
+  .conflicts('d', 'w')
   .epilogue('').argv;
 
 const scanInit = async argvs => {
@@ -93,10 +113,20 @@ const scanInit = async argvs => {
     const data = prepareData(argvs.scanner, argvs);
     const domain = new URL(argvs.url).hostname;
 
-    data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}`;
+    let deviceToScan;
+    if (!argvs.customDevice && !argvs.viewportWidth) {
+      argvs.customDevice = 'Desktop';
+      data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
+    } else if (argvs.customDevice) {
+      deviceToScan = argvs.customDevice.replaceAll('_', ' ');
+      data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
+    } else if (!argvs.customDevice) {
+      data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_CustomWidth_${argvs.viewportWidth}px`;
+    }
 
     printMessage(['Scanning website...'], messageOptions);
-    await combineRun(data);
+
+    await combineRun(data, deviceToScan);
   } else {
     printMessage(
       [`Invalid ${argvs.scanner} page. Please provide a URL to start the ${argvs.scanner} scan.`],
@@ -106,7 +136,8 @@ const scanInit = async argvs => {
   }
 
   const domain = new URL(argvs.url).hostname;
-  return `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}`;
+
+  return `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
 };
 
 scanInit(options).then(async storagePath => {
