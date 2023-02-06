@@ -9,6 +9,13 @@ import crypto from 'crypto';
 
 import constants from './constants/constants.js';
 
+export const getVersion = () => {
+  const loadJSON = path => JSON.parse(fs.readFileSync(new URL(path, import.meta.url)));
+  const appVersion = loadJSON('./package.json').version;
+
+  return appVersion;
+};
+
 export const getHostnameFromRegex = url => {
   const matches = url.match(/^https?:\/\/([^/?#]+)(?:[/?#]|$)/i);
 
@@ -21,10 +28,10 @@ export const getCurrentDate = () => {
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 };
 
-export const isWhitelistedContentType = (contentType) => {
+export const isWhitelistedContentType = contentType => {
   const whitelist = ['text/html'];
   return whitelist.filter(type => contentType.trim().startsWith(type)).length === 1;
-}
+};
 
 export const getStoragePath = randomToken =>
   `results/${randomToken}_${constants.urlsCrawledObj.scanned.length}pages`;
@@ -42,12 +49,15 @@ export const createDetailsAndLogs = async (scanDetails, randomToken) => {
       await fs.copy('errors.txt', `${logPath}/${randomToken}.txt`);
     }
   });
-}
+};
 
-export const createAndUpdateResultsFolders = async (randomToken) => {
+export const createAndUpdateResultsFolders = async randomToken => {
   const storagePath = getStoragePath(randomToken);
   await fs.ensureDir(`${storagePath}/reports`);
-  await fs.copy(`${constants.a11yDataStoragePath}/${randomToken}`, `${storagePath}/${constants.allIssueFileName}`);
+  await fs.copy(
+    `${constants.a11yDataStoragePath}/${randomToken}`,
+    `${storagePath}/${constants.allIssueFileName}`,
+  );
 };
 
 export const cleanUp = async (pathToDelete, setDefaultFolders = false) => {
