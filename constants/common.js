@@ -240,6 +240,11 @@ export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
     }
   };
 
+  const processNonStandardSitemap = (data) => {
+    const urlsFromData = crawlee.extractUrls({ string: data }).slice(0, maxLinksCount);
+    urlsFromData.forEach(url => urls.add(url));
+  }
+
   const fetchUrls = async url => {
     let data;
     if (isValidHttpUrl(url)) {
@@ -251,7 +256,8 @@ export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
 
     // This case is when the document is not an XML format document
     if ($(':root').length === 0) {
-      return crawlee.extractUrls({ string: data }).slice(0, maxLinksCount);;
+      processNonStandardSitemap(data);
+      return;
     }
 
     // Root element
@@ -298,7 +304,7 @@ export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
         break;
       default:
         silentLogger.info(`This is an unrecognised XML sitemap format.`);
-        return crawlee.extractUrls({ string: data }).slice(0, maxLinksCount);
+        processNonStandardSitemap(data);
     }
   };
 
