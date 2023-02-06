@@ -53,7 +53,6 @@ export const isValidXML = async content => {
       parsedContent = result;
     }
     if (err) {
-      silentLogger.error('Failed to parse sitemap xml', err);
       status = false;
     }
   });
