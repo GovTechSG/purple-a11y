@@ -17,8 +17,16 @@ const combineRun = async (details, deviceToScan) => {
   const envDetails = { ...details };
 
   // eslint-disable-next-line prettier/prettier
-  const { type, url, randomToken, deviceChosen, customDevice, viewportWidth, maxRequestsPerCrawl, isLocalSitemap } =
-    envDetails;
+  const {
+    type,
+    url,
+    randomToken,
+    deviceChosen,
+    customDevice,
+    viewportWidth,
+    maxRequestsPerCrawl,
+    isLocalSitemap,
+  } = envDetails;
 
   const host =
     type === constants.scannerTypes.sitemap && isLocalSitemap ? '' : getHostnameFromRegex(url);
@@ -38,11 +46,23 @@ const combineRun = async (details, deviceToScan) => {
   let urlsCrawled;
   switch (type) {
     case constants.scannerTypes.sitemap:
-      urlsCrawled = await crawlSitemap(url, randomToken, host, viewportSettings, maxRequestsPerCrawl);
+      urlsCrawled = await crawlSitemap(
+        url,
+        randomToken,
+        host,
+        viewportSettings,
+        maxRequestsPerCrawl,
+      );
       break;
 
     case constants.scannerTypes.website:
-      urlsCrawled = await crawlDomain(url, randomToken, host, viewportSettings, maxRequestsPerCrawl);
+      urlsCrawled = await crawlDomain(
+        url,
+        randomToken,
+        host,
+        viewportSettings,
+        maxRequestsPerCrawl,
+      );
       break;
 
     default:
