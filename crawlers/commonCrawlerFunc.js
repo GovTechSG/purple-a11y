@@ -6,7 +6,7 @@ import { axeScript } from '../constants/constants.js';
 
 const filterAxeResults = (results, host) => {
   const { violations, url } = results;
-  const page = url.split(host)[1];
+  const page = host === '' || url.split(host).length !== 2 ? url : url.split(host)[1];
 
   const errors = violations.map(violation => {
     const { id, nodes, help, impact, helpUrl } = violation;
@@ -53,7 +53,7 @@ export const createCrawleeSubFolders = async randomToken => {
 export const preNavigationHooks = [
   async (_crawlingContext, gotoOptions) => {
     gotoOptions = { waitUntil: 'networkidle2', timeout: 30000 };
-  }
+  },
 ];
 
 export const failedRequestHandler = async ({ request }) => {
