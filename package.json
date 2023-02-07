@@ -6,6 +6,7 @@
   "dependencies": {
     "axe-core": "^4.6.2",
     "axios": "^1.2.2",
+    "cheerio": "^1.0.0-rc.12",
     "crawlee": "^3.1.4",
     "fs-extra": "^11.1.0",
     "inquirer": "^9.1.4",
@@ -28,7 +29,8 @@
     "prettier": "^2.8.2"
   },
   "overrides": {
-    "node-fetch": "^3.3.0"
+    "node-fetch": "^3.3.0",
+    "json5": "^2.2.3"
   },
   "scripts": {
     "test": "node --experimental-vm-modules ./node_modules/.bin/jest"

@@ -1,5 +1,6 @@
 import crawlee from 'crawlee';
 import { KnownDevices } from 'puppeteer';
+import printMessage from 'print-message';
 import {
   createCrawleeSubFolders,
   preNavigationHooks,
@@ -7,22 +8,29 @@ import {
   failedRequestHandler,
 } from './commonCrawlerFunc.js';
 
-import { validateUrl } from '../utils.js';
 import constants from '../constants/constants.js';
+import { getLinksFromSitemap, messageOptions } from '../constants/common.js';
+import { isWhitelistedContentType } from '../utils.js';
 
-const crawlSitemap = async (sitemapUrl, randomToken, host, viewportSettings) => {
+const crawlSitemap = async (
+  sitemapUrl,
+  randomToken,
+  host,
+  viewportSettings,
+  maxRequestsPerCrawl,
+) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { deviceChosen, customDevice, viewportWidth } = viewportSettings;
-  const maxRequestsPerCrawl = constants.maxRequestsPerCrawl;
   const maxConcurrency = constants.maxConcurrency;
 
+  printMessage(['Fetching URLs. This might take some time...'], { border: false });
   const requestList = new crawlee.RequestList({
-    sources: [{ requestsFromUrl: sitemapUrl }],
+    sources: await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl),
   });
-
   await requestList.initialize();
+  printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
 
-  const { dataset, requestQueue } = await createCrawleeSubFolders(randomToken);
+  const { dataset } = await createCrawleeSubFolders(randomToken);
   let device;
 
   if (deviceChosen === 'Custom' && customDevice !== 'Specify viewport') {
@@ -35,25 +43,31 @@ const crawlSitemap = async (sitemapUrl, randomToken, host, viewportSettings) => 
   const crawler = new crawlee.PuppeteerCrawler({
     launchContext: {
       launchOptions: {
-          args: constants.launchOptionsArgs,
-      }
+        args: constants.launchOptionsArgs,
+      },
     },
     requestList,
-    requestQueue,
     preNavigationHooks,
-    requestHandler: async ({ page, request }) => {
+    requestHandler: async ({ page, request, response }) => {
       if (deviceChosen === 'Custom') {
         if (device) {
           await page.emulate(device);
         } else {
-          await page.setViewport({ width: Number(viewportWidth), height: 640, isMobile: true });
+          await page.setViewport({
+            width: Number(viewportWidth),
+            height: page.viewport().height,
+            isMobile: true,
+          });
         }
       } else if (deviceChosen === 'Mobile') {
-        await page.setViewport({ width: 360, height: 640, isMobile: true });
+        await page.setViewport({ width: 360, height: page.viewport().height, isMobile: true });
       }
 
       const currentUrl = request.url;
-      if (validateUrl(currentUrl)) {
+      const contentType = response.headers()['content-type'];
+      const status = response.status();
+
+      if (status === 200 && isWhitelistedContentType(contentType)) {
         const results = await runAxeScript(page, host);
         await dataset.pushData(results);
         urlsCrawled.scanned.push(currentUrl);

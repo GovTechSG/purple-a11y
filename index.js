@@ -45,15 +45,15 @@ exec('git branch --show-current', (err, stdout) => {
         setHeadlessMode(true);
       }
 
-      data = prepareData(answers.scanner, answers);
-
       const today = new Date();
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
       const curHour = today.getHours() < 10 ? '0' + today.getHours() : today.getHours();
       const curMinute = today.getMinutes() < 10 ? '0' + today.getMinutes() : today.getMinutes();
-      const domain = new URL(answers.url).hostname;
+      const domain = answers.isLocalSitemap ? 'custom' : new URL(answers.url).hostname;
+
+      data = prepareData(answers.scanner, answers);
 
       if (answers.deviceChosen === 'Mobile') {
         screenToScan = 'Mobile';

@@ -1,4 +1,4 @@
-import { checkUrl, getUrlMessage } from './common.js';
+import { checkUrl, getUrlMessage, isFileSitemap, isValidHttpUrl, sanitizeUrlInput } from './common.js';
 import constants from './constants.js';
 
 // const isLoginScan = (answers) => {
@@ -61,18 +61,26 @@ const questions = [
       }
 
       // Return the data required to evaluate
-      const res = await checkUrl(answers.scanner, url);
+      if (isValidHttpUrl(url)) {
+        const res = await checkUrl(answers.scanner, url);
 
-      if (res.status === 200) {
-        answers.url = res.url;
+        if (res.status === 200) {
+          answers.finalUrl = res.url;
+          return true;
+        }
+      } else if (answers.scanner === constants.scannerTypes.sitemap && isFileSitemap(url)) {
+        answers.isLocalSitemap = true;
         return true;
       }
 
       if (answers.scanner === constants.scannerTypes.sitemap) {
-        return 'Invalid sitemap format. Please provide a URL with a valid sitemap.';
+        return 'Invalid sitemap format. Please provide a URL or file path with a valid sitemap.';
       }
       return 'Cannot resolve URL. Please provide a valid URL.';
     },
+    filter: (input) => {
+      return sanitizeUrlInput(input.trim()).url
+    }
   },
 ];
 
