@@ -40,6 +40,12 @@ export const cliOptions = {
     type: 'string',
     demandOption: false,
   },
+  p: {
+    alias: 'maxpages',
+    describe: 'Maximum number of pages to scan (default: 100)',
+    type: 'number',
+    demandOption: false,
+  },
   reportbreakdown: {
     describe: 'Will break down the main report according to impact',
     type: 'boolean',

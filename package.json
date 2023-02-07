@@ -1,11 +1,12 @@
 {
   "name": "purple-hats",
   "main": "index.js",
-  "version": "1.0.0",
+  "version": "0.0.5",
   "type": "module",
   "dependencies": {
     "axe-core": "^4.6.2",
     "axios": "^1.2.2",
+    "cheerio": "^1.0.0-rc.12",
     "crawlee": "^3.1.4",
     "fs-extra": "^11.1.0",
     "inquirer": "^9.1.4",

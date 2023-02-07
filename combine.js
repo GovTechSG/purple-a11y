@@ -1,8 +1,14 @@
+import printMessage from 'print-message';
+
 import crawlSitemap from './crawlers/crawlSitemap.js';
 import crawlDomain from './crawlers/crawlDomain.js';
 
 import { generateArtifacts } from './mergeAxeResults.js';
-import { getHostnameFromRegex, createAndUpdateFolders } from './utils.js';
+import {
+  getHostnameFromRegex,
+  createAndUpdateResultsFolders,
+  createDetailsAndLogs,
+} from './utils.js';
 import constants from './constants/constants.js';
 
 process.env.CRAWLEE_STORAGE_DIR = constants.a11yStorage;
@@ -11,9 +17,19 @@ const combineRun = async (details, deviceToScan) => {
   const envDetails = { ...details };
 
   // eslint-disable-next-line prettier/prettier
-  const { type, url, randomToken, deviceChosen, customDevice, viewportWidth} = envDetails;
+  const {
+    type,
+    url,
+    randomToken,
+    deviceChosen,
+    customDevice,
+    viewportWidth,
+    maxRequestsPerCrawl,
+    isLocalSitemap,
+  } = envDetails;
 
-  const host = getHostnameFromRegex(url);
+  const host =
+    type === constants.scannerTypes.sitemap && isLocalSitemap ? '' : getHostnameFromRegex(url);
 
   const scanDetails = {
     startTime: new Date().getTime(),
@@ -30,11 +46,23 @@ const combineRun = async (details, deviceToScan) => {
   let urlsCrawled;
   switch (type) {
     case constants.scannerTypes.sitemap:
-      urlsCrawled = await crawlSitemap(url, randomToken, host, viewportSettings);
+      urlsCrawled = await crawlSitemap(
+        url,
+        randomToken,
+        host,
+        viewportSettings,
+        maxRequestsPerCrawl,
+      );
       break;
 
     case constants.scannerTypes.website:
-      urlsCrawled = await crawlDomain(url, randomToken, host, viewportSettings);
+      urlsCrawled = await crawlDomain(
+        url,
+        randomToken,
+        host,
+        viewportSettings,
+        maxRequestsPerCrawl,
+      );
       break;
 
     default:
@@ -43,8 +71,14 @@ const combineRun = async (details, deviceToScan) => {
 
   scanDetails.endTime = new Date().getTime();
   scanDetails.urlsCrawled = urlsCrawled;
-  await createAndUpdateFolders(scanDetails, randomToken);
-  await generateArtifacts(randomToken, deviceToScan);
+  await createDetailsAndLogs(scanDetails, randomToken);
+
+  if (scanDetails.urlsCrawled.scanned.length > 0) {
+    await createAndUpdateResultsFolders(randomToken);
+    await generateArtifacts(randomToken, deviceToScan);
+  } else {
+    printMessage([`No pages were scanned.`], constants.alertMessageOoptions);
+  }
 };
 
 export default combineRun;

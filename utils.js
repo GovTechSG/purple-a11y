@@ -9,6 +9,13 @@ import crypto from 'crypto';
 
 import constants from './constants/constants.js';
 
+export const getVersion = () => {
+  const loadJSON = path => JSON.parse(fs.readFileSync(new URL(path, import.meta.url)));
+  const appVersion = loadJSON('./package.json').version;
+
+  return appVersion;
+};
+
 export const getHostnameFromRegex = url => {
   const matches = url.match(/^https?:\/\/([^/?#]+)(?:[/?#]|$)/i);
 
@@ -21,40 +28,19 @@ export const getCurrentDate = () => {
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 };
 
-export const validateUrl = url => {
-  const invalidURLends = [
-    '.gif',
-    '.jpg',
-    '.jpeg',
-    '.png',
-    '.pdf',
-    '.doc',
-    '.css',
-    '.svg',
-    '.js',
-    '.ts',
-    '.xml',
-    '.csv',
-    '.tgz',
-    '.zip',
-    '.xls',
-    '.ppt',
-    '.ico',
-    '.woff',
-  ];
-  return !invalidURLends.some(urlEnd => url.includes(urlEnd));
+export const isWhitelistedContentType = contentType => {
+  const whitelist = ['text/html'];
+  return whitelist.filter(type => contentType.trim().startsWith(type)).length === 1;
 };
 
 export const getStoragePath = randomToken =>
   `results/${randomToken}_${constants.urlsCrawledObj.scanned.length}pages`;
 
-export const createAndUpdateFolders = async (scanDetails, randomToken) => {
+export const createDetailsAndLogs = async (scanDetails, randomToken) => {
   const storagePath = getStoragePath(randomToken);
   const logPath = `logs/${randomToken}`;
-
-  await fs.ensureDir(`${storagePath}/reports`);
+  await fs.ensureDir(storagePath);
   await fs.writeFile(`${storagePath}/details.json`, JSON.stringify(scanDetails, 0, 2));
-  await fs.copy(`${constants.a11yDataStoragePath}/${randomToken}`, `${storagePath}/${constants.allIssueFileName}`);
 
   // update logs
   await fs.ensureDir(logPath);
@@ -63,6 +49,15 @@ export const createAndUpdateFolders = async (scanDetails, randomToken) => {
       await fs.copy('errors.txt', `${logPath}/${randomToken}.txt`);
     }
   });
+};
+
+export const createAndUpdateResultsFolders = async randomToken => {
+  const storagePath = getStoragePath(randomToken);
+  await fs.ensureDir(`${storagePath}/reports`);
+  await fs.copy(
+    `${constants.a11yDataStoragePath}/${randomToken}`,
+    `${storagePath}/${constants.allIssueFileName}`,
+  );
 };
 
 export const cleanUp = async (pathToDelete, setDefaultFolders = false) => {

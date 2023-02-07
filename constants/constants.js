@@ -5,6 +5,8 @@ import fs from 'fs-extra';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const maxRequestsPerCrawl = 100;
+
 // for crawlers
 export const axeScript = 'node_modules/axe-core/axe.min.js';
 
@@ -156,18 +158,27 @@ export const impactOrder = {
   critical: 3,
 };
 
+const xmlSitemapTypes = {
+  xml: 0,
+  xmlIndex: 1,
+  rss: 2,
+  atom: 3,
+  unknown: 4
+}
+
 export default {
   a11yStorage,
   a11yDataStoragePath: `${a11yStorage}/datasets`,
   allIssueFileName: 'all_issues',
   cliZipFileName: 'a11y-scan-results.zip',
-  maxRequestsPerCrawl: 100,
+  maxRequestsPerCrawl,
   maxConcurrency: 5,
   scannerTypes,
   urlsCrawledObj,
   impactOrder,
   devices,
   launchOptionsArgs: launchOptionsArgs,
+  xmlSitemapTypes
 }
 
 export const rootPath = __dirname;
