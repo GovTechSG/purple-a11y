@@ -53,10 +53,14 @@ const crawlSitemap = async (
         if (device) {
           await page.emulate(device);
         } else {
-          await page.setViewport({ width: Number(viewportWidth), height: 640, isMobile: true });
+          await page.setViewport({
+            width: Number(viewportWidth),
+            height: page.viewport().height,
+            isMobile: true,
+          });
         }
       } else if (deviceChosen === 'Mobile') {
-        await page.setViewport({ width: 360, height: 640, isMobile: true });
+        await page.setViewport({ width: 360, height: page.viewport().height, isMobile: true });
       }
 
       const currentUrl = request.url;
@@ -73,7 +77,7 @@ const crawlSitemap = async (
     },
     failedRequestHandler,
     maxRequestsPerCrawl,
-    maxConcurrency
+    maxConcurrency,
   });
 
   await crawler.run();
