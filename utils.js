@@ -1,5 +1,6 @@
-import { execFile } from 'child_process';
+import { exec, execFile } from 'child_process';
 import path from 'path';
+import os from 'os';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -97,13 +98,25 @@ export const zipResults = async (zipName, resultsPath) => {
     fs.unlink(zipName);
   }
 
-  // To zip up files recursively )-r) in the results folder path
-  // Will only zip up the content of the results folder path with (-j) i.e. junk the path
-  const command = '/usr/bin/zip';
-  const args = ['-r', '-j', zipName, resultsPath];
-  execFile(command, args, err => {
-    if (err) {
-      throw err;
-    }
-  });
+  if (os.platform() === 'win32') {
+    exec(
+      `Get-ChildItem -Path ${resultsPath}\\*.* -Recurse | Compress-Archive -DestinationPath ${zipName}`,
+      { shell: 'powershell.exe' },
+      err => {
+        if (err) {
+          throw err;
+        }
+      },
+    );
+  } else {
+    // To zip up files recursively )-r) in the results folder path
+    // Will only zip up the content of the results folder path with (-j) i.e. junk the path
+    const command = '/usr/bin/zip';
+    const args = ['-r', '-j', zipName, resultsPath];
+    execFile(command, args, err => {
+      if (err) {
+        throw err;
+      }
+    });
+  }
 };
