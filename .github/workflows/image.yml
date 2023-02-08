@@ -18,7 +18,7 @@ jobs:
 
       - name: Download git from github.com
         run: |
-          curl -o "./PortableGit.7z.exe" "https://github.com/git-for-windows/git/releases/download/v2.39.1.windows.1/PortableGit-2.39.1-32-bit.7z.exe"
+          curl -o ".\PortableGit.7z.exe" "https://github.com/git-for-windows/git/releases/download/v2.39.1.windows.1/PortableGit-2.39.1-64-bit.7z.exe"
           .\PortableGit.7z.exe -o ".\git" -y
           rm .\PortableGit.7z.exe
 
