@@ -16,6 +16,9 @@ $env:Path = "$path_to_hats\node_modules\.bin;./node_modules/.bin;$env:Path";
 echo "INFO: Set path to npm-global for this session"
 $env:Path = "$path_to_hats\npm-global;$path_to_hats\npm-global\bin;$env:Path";
 
+echo "INFO: Set path to git for this session"
+$env:Path = "$env:Path;$path_to_hats\git\bin";
+
 echo "INFO: Set path to purple-hats for this session"
 $env:Path = "$path_to_hats\purple-hats;$env:Path"
  
