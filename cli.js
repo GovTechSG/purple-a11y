@@ -5,29 +5,13 @@ import fs from 'fs-extra';
 import _yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import printMessage from 'print-message';
-import {
-  cleanUp,
-  getStoragePath,
-  zipResults,
-  setHeadlessMode,
-  setThresholdLimits,
-  getVersion,
-} from './utils.js';
-import { exec } from 'child_process';
-import {
-  checkUrl,
-  prepareData,
-  isSelectorValid,
-  isInputValid,
-  isValidHttpUrl,
-  isFileSitemap,
-  sanitizeUrlInput,
-} from './constants/common.js';
+import { cleanUp, zipResults, setHeadlessMode, setThresholdLimits, getVersion } from './utils.js';
+import { exec, execSync } from 'child_process';
+import { checkUrl, prepareData, isValidHttpUrl, isFileSitemap } from './constants/common.js';
 
 import { cliOptions, messageOptions, configureReportSetting } from './constants/cliFunctions.js';
 
 import constants from './constants/constants.js';
-import { consoleLogger } from './logs.js';
 import combineRun from './combine.js';
 
 setHeadlessMode(true);
@@ -56,14 +40,6 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
         `To scan a website', 'node cli.js -c [ 2 | ${constants.scannerTypes.website} ] -d <device> -u <url_link> -w <viewportWidth>`,
       ],
     ])
-    // .coerce('v', option => {
-    //   exec('git branch --show-current', (err, stdout) => {
-    //     const appVersion = getVersion();
-    //     const branchName = stdout.trim();
-    //     option = `Version no`;
-    //     return option;
-    //   });
-    // })
     .coerce('c', option => {
       if (typeof option === 'number') {
         // Will also allow integer choices
@@ -181,20 +157,15 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
       data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_CustomWidth_${argvs.viewportWidth}px`;
     }
 
-    exec('git branch --show-current', (err, stdout) => {
-      if (err) {
-        console.log(err);
-      } else {
-        const appVersion = getVersion();
-        const branchName = stdout.trim();
-        printMessage(
-          [`Version: ${appVersion}-${branchName}`, 'Scanning website...'],
-          messageOptions,
-        );
-      }
-    });
+    const appVersion = getVersion();
+    let branchName = '';
+    try {
+      branchName = execSync('git branch --show-current');
+    } catch (err) {
+      console.log(err);
+    }
 
-    printMessage(['Scanning website...'], messageOptions);
+    printMessage([`Version: ${appVersion}-${branchName}`, 'Scanning website...'], messageOptions);
     await combineRun(data, deviceToScan);
     return `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
   };
