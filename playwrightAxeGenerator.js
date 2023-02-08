@@ -6,8 +6,7 @@ import readline from 'readline';
 
 const playwrightAxeGenerator = async (domain, randomToken, answers) => {
   const { isHeadless, deviceChosen, customDevice, customWidth } = answers;
-  const block1 = 
-    `import { chromium, devices, webkit } from "playwright";
+  const block1 = `import { chromium, devices, webkit } from "playwright";
 import { createCrawleeSubFolders, runAxeScript } from "./crawlers/commonCrawlerFunc.js";
 import { generateArtifacts } from './mergeAxeResults.js';
 import { createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
@@ -42,7 +41,23 @@ const runAxeScan = async (page) => {
   let tmpDir;
   const appPrefix = 'purple-hats';
 
+
   try {
+    // if (fs.existsSync('exclusions.txt')) {
+    //     // const file = fs.readFileSync(filePath, 'utf8');
+    //     // const fileStream = fs.createReadStream(`exclusions.txt`);
+
+    //     // const rl = readline.createInterface({
+    //     // input: fileStream,
+    //     // crlfDelay: Infinity,
+    //     // });
+
+    //     // for await (const line of rl) {
+    //     // }
+    //     const whitelistedDomains = fs.readFileSync('exclusions.txt').toString().split("\n");
+    //     console.log("whitelisted: ", whitelistedDomains)
+    // };
+
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
 
     if (customDevice === 'iPhone 11') {
@@ -70,7 +85,7 @@ const runAxeScan = async (page) => {
       crlfDelay: Infinity,
     });
 
-    const generatedScript = './generatedScript.js';
+    const generatedScript = `./generatedScript-${randomToken}.js`;
 
     const appendToGeneratedScript = data => {
       fs.appendFileSync(generatedScript, `${data}\n`);
@@ -96,9 +111,10 @@ const runAxeScan = async (page) => {
         const lastIndex = line.lastIndexOf('.');
         const locator = line.substring(0, lastIndex);
         appendToGeneratedScript(
-        ` (${locator}.count()>1)? [console.log('Please re-click the intended DOM element'), page.setDefaultTimeout(0)]:
+          ` (${locator}.count()>1)? [console.log('Please re-click the intended DOM element'), page.setDefaultTimeout(0)]:
           ${line}
-        `);
+        `,
+        );
         continue;
       }
       if (line.trim() === `const page = await context.newPage();`) {
@@ -127,11 +143,13 @@ const runAxeScan = async (page) => {
         }
         continue;
       }
-      if (line.trim().includes(`/common/login?spcptracking`)){
-        appendToGeneratedScript(`await page.goto('https://iam.hdb.gov.sg/common/login', { waitUntil: 'networkidle' });`)
+      if (line.trim().includes(`/common/login?spcptracking`)) {
+        appendToGeneratedScript(
+          `await page.goto('https://iam.hdb.gov.sg/common/login', { waitUntil: 'networkidle' });`,
+        );
         continue;
       }
-      if (line.trim().includes(`spauthsuccess?code=`)){
+      if (line.trim().includes(`spauthsuccess?code=`)) {
         continue;
       }
       if (line.trim().startsWith(`await page.goto(`)) {
@@ -139,15 +157,39 @@ const runAxeScan = async (page) => {
           firstGoToUrl = true;
           appendToGeneratedScript(line);
         } else {
-          appendToGeneratedScript(
+            appendToGeneratedScript(
             line.replace('goto', 'waitForURL').replace(')', ', {timeout: 60000})'),
-          );
+            );
+
+            if (fs.existsSync('exclusions.txt')) {
+                const whitelistedDomains = fs.readFileSync('exclusions.txt').toString().split("\n");
+        
+                let isWhitelisted = whitelistedDomains.filter(function(pattern){
+                    return new RegExp(pattern).test(line)
+                })
+
+                if (isWhitelisted.length > 0){
+                    continue;
+                }
+            };
         }
         appendToGeneratedScript(` await runAxeScan(page);`);
         continue;
       }
       if (line.trim().startsWith(`await page.waitForURL(`)) {
         appendToGeneratedScript(line);
+
+        if (fs.existsSync('exclusions.txt')) {
+            const whitelistedDomains = fs.readFileSync('exclusions.txt').toString().split("\n");
+    
+            let isWhitelisted = whitelistedDomains.filter(function(pattern){
+                return new RegExp(pattern).test(line)
+            })
+
+            if (isWhitelisted.length > 0){
+                continue;
+            }
+        };
         appendToGeneratedScript(` await runAxeScan(page);`);
         continue;
       }
@@ -174,7 +216,7 @@ const runAxeScan = async (page) => {
     }
   }
 
-    // fs.unlinkSync(generatedScript);
+  // fs.unlinkSync(generatedScript);
 };
 
 export default playwrightAxeGenerator;

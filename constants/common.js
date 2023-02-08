@@ -10,7 +10,6 @@ import fs from 'fs';
 import constants from './constants.js';
 import { consoleLogger, silentLogger } from '../logs.js';
 import * as https from 'https';
-import { isWhitelistedContentType } from '../utils.js';
 
 const document = new JSDOM('').window;
 
