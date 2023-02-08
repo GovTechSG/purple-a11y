@@ -11,7 +11,11 @@ const questions = [
     type: 'list',
     name: 'scanner',
     message: 'What would you like to scan today?',
-    choices: [constants.scannerTypes.sitemap, constants.scannerTypes.website],
+    choices: [
+      constants.scannerTypes.sitemap,
+      constants.scannerTypes.website,
+      constants.scannerTypes.customFlow,
+    ],
   },
   {
     type: 'confirm',

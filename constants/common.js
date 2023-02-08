@@ -75,6 +75,7 @@ export const isFileSitemap = filePath => {
 export const getUrlMessage = scanner => {
   switch (scanner) {
     case constants.scannerTypes.website:
+    case constants.scannerTypes.customFlow:
       return 'Please enter URL of website: ';
     case constants.scannerTypes.sitemap:
       return 'Please enter URL or file path to sitemap, or drag and drop a sitemap file here: ';
@@ -200,18 +201,13 @@ export const prepareData = (scanType, argv) => {
     };
   }
 
-  if (scanType === constants.scannerTypes.login) {
+  if (scanType === constants.scannerTypes.customFlow) {
     data = {
-      type: argv.scanner,
+      type: scanner,
       url,
       deviceChosen,
       customDevice,
       viewportWidth,
-      loginID: argv.username,
-      loginPW: argv.userPassword,
-      idSelector: argv.usernameField,
-      pwSelector: argv.passwordField,
-      submitSelector: argv.submitBtnField,
     };
   }
   return data;
