@@ -100,7 +100,7 @@ export const zipResults = async (zipName, resultsPath) => {
 
   if (os.platform() === 'win32') {
     exec(
-      `Get-ChildItem -Path ${resultsPath}\\*.* -Recurse | Compress-Archive -DestinationPath ${zipName}`,
+      `Get-ChildItem -Path "${resultsPath}\\*.*" -Recurse | Compress-Archive -DestinationPath "${zipName}"`,
       { shell: 'powershell.exe' },
       err => {
         if (err) {
