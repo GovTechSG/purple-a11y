@@ -25,7 +25,9 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
+          fetch-depth: 2
           path: purple-hats
+      - run: git checkout HEAD^
 
       - name: Copy scripts to parent directory
         run: |
@@ -62,8 +64,10 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
+          fetch-depth: 2
           path: purple-hats
-
+      - run: git checkout HEAD^
+      
       - name: Install Node Modules for Mac0S
         run: |
           if [[ $(uname -m) == 'arm64' ]]; then
