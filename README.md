@@ -134,6 +134,34 @@ If the website URL provided is invalid, an error message will be prompted for yo
 
 Choose `Mobile` for a default mobile screen size scan and `Custom` to choose a device or specify viewport width options.
 
+### Custom flow (Preview)
+
+Custom flow allows you to record a series of actions in the browser and re-play them and Purple hats will trigger the accessibility scan at each step.  This is useful to scan websites that require user and form input.  The recorded script will be stored as `generatedScript*.js`.
+
+1. Start by choosing the `Custom flow` in the menu selection.
+```shell
+% node index
+┌────────────────────────────────────────────────────────────┐
+│ Welcome to HATS Accessibility Testing Tool!                │
+│ We recommend using Chrome browser for the best experience. │
+│                                                            │
+│ Version: 0.0.5-gt-master                                   │
+└────────────────────────────────────────────────────────────┘
+? What would you like to scan today? (Use arrow keys)
+  sitemap 
+  website 
+❯ custom flow 
+  ```
+2. Specify the URL of the starting page you wish to scan
+3. A Chrome and Playwright Inspector window will appear.  Navigate through the pages you would like to conduct an accessibility scan.
+4. Close the Chrome window.  Purple HATS will then proceed to re-run your recorded actions and scan each page for accessibility.
+
+Other options:
+- You can specify sites to exclude from accessibility scan (e.g. login page) by adding the domain to `exclusions.txt`.
+- You can re-run your accessibility scan by running `node generatedScript-PHScan_...js` file that is generated.
+
+*Caution*: During the custom flow, sensitive information such as username and passwords might be stored in `generatedScript*.js` as part of the recording.
+
 ### CLI Mode
 
 CLI mode is designed to be run in continuous integration (CI) environment. Run `node cli.js` for a set of command-line parameters available. Please note CLI mode is only supported on Mac/Linux at this moment.
