@@ -16,6 +16,12 @@ jobs:
           mkdir nodejs-win && tar -xzf nodejs-win.zip -C nodejs-win --strip-components=1 
           rm ./nodejs-win.zip
 
+      - name: Download git from github.com
+        run: |
+          curl -L -o ".\PortableGit.7z.exe" "https://github.com/git-for-windows/git/releases/download/v2.39.1.windows.1/PortableGit-2.39.1-64-bit.7z.exe"
+          .\PortableGit.7z.exe -o ".\git" -y | Out-Null
+          rm .\PortableGit.7z.exe
+
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
