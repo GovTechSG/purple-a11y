@@ -26,7 +26,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: purple-hats
-      - run: git init
 
       - name: Copy scripts to parent directory
         run: |
@@ -39,6 +38,10 @@ jobs:
         run: powershell.exe -NoProfile -ExecutionPolicy Bypass "& ${{github.workspace}}\hats_shell_ps.ps1" "cd ${{github.workspace}}\purple-hats;npm i fsevents@latest -f --save-optional"     
         working-directory:  ${{github.workspace}}
 
+      - name: Unhide .git folder (Windows)
+        shell: pwsh
+        run: attrib -s -h ${{github.workspace}}/purple-hats/.git
+        
       - name: Zip entire Purple Hats folder (Windows)
         shell: pwsh
         run: Compress-Archive -Path ${{github.workspace}}/* -DestinationPath purple-hats-portable-windows.zip
@@ -64,7 +67,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: purple-hats
-      - run: git init
       
       - name: Install Node Modules for Mac0S
         run: |
