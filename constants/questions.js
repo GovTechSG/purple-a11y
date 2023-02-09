@@ -1,4 +1,10 @@
-import { checkUrl, getUrlMessage, isFileSitemap, isValidHttpUrl, sanitizeUrlInput } from './common.js';
+import {
+  checkUrl,
+  getUrlMessage,
+  isFileSitemap,
+  isValidHttpUrl,
+  sanitizeUrlInput,
+} from './common.js';
 import constants from './constants.js';
 
 // const isLoginScan = (answers) => {
@@ -11,7 +17,11 @@ const questions = [
     type: 'list',
     name: 'scanner',
     message: 'What would you like to scan today?',
-    choices: [constants.scannerTypes.sitemap, constants.scannerTypes.website],
+    choices: [
+      constants.scannerTypes.sitemap,
+      constants.scannerTypes.website,
+      constants.scannerTypes.customFlow,
+    ],
   },
   {
     type: 'confirm',
@@ -78,9 +88,9 @@ const questions = [
       }
       return 'Cannot resolve URL. Please provide a valid URL.';
     },
-    filter: (input) => {
-      return sanitizeUrlInput(input.trim()).url
-    }
+    filter: input => {
+      return sanitizeUrlInput(input.trim()).url;
+    },
   },
 ];
 
