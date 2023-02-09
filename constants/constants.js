@@ -11,13 +11,14 @@ const maxRequestsPerCrawl = 100;
 export const axeScript = 'node_modules/axe-core/axe.min.js';
 
 const urlsCrawledObj = {
+  toScan: [],
   scanned: [],
   invalid: [],
   outOfDomain: [],
 };
 
 const scannerTypes = {
-  login: 'login',
+  customFlow: 'custom flow',
   sitemap: 'sitemap',
   website: 'website',
 };
