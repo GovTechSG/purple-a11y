@@ -59,8 +59,9 @@ You can interact via your arrow keys.
 │ We recommend using Chrome browser for the best experience. │
 └────────────────────────────────────────────────────────────┘
 ? What would you like to scan today?
-❯ Sitemap
-  Website
+❯ sitemap
+  website
+  custom flow 
 ```
 
 ### Headless Mode
@@ -124,6 +125,10 @@ If the website URL provided is invalid, an error message will be prompted for yo
 ### Customised Mobile Device Scan
 
 ```
+┌────────────────────────────────────────────────────────────┐
+│ Welcome to HATS Accessibility Testing Tool!                │
+│ We recommend using Chrome browser for the best experience. │
+└────────────────────────────────────────────────────────────┘
 ? What would you like to scan today? website
 ? Do you want purple-hats to run in the background? No
 ? Which screen size would you like to scan? (Use arrow keys) 
@@ -144,8 +149,6 @@ Custom flow allows you to record a series of actions in the browser and re-play 
 ┌────────────────────────────────────────────────────────────┐
 │ Welcome to HATS Accessibility Testing Tool!                │
 │ We recommend using Chrome browser for the best experience. │
-│                                                            │
-│ Version: 0.0.5-gt-master                                   │
 └────────────────────────────────────────────────────────────┘
 ? What would you like to scan today? (Use arrow keys)
   sitemap 
@@ -160,7 +163,17 @@ Other options:
 - You can specify sites to exclude from accessibility scan (e.g. login page) by adding the domain to `exclusions.txt`.
 - You can re-run your accessibility scan by running `node generatedScript-PHScan_...js` file that is generated.
 
-*Caution*: During the custom flow, sensitive information such as username and passwords might be stored in `generatedScript*.js` as part of the recording.
+**Caution**: During the custom flow, sensitive information such as username and passwords might be stored in `generatedScript*.js` as part of the recording.
+
+#### Known Issues
+If the custom flow fails to start, remove and re-install Playwright:
+1. On Windows, delete the folder `%USERPROFILE%\AppData\Local\ms-playwright` where `%USERPROFILE%` is typically located at `C:\Users\<username>`.
+2. On MacOS, delete the folder `~/Library/Caches/ms-playwright` where `~` refers to `/Users/<username>`.
+3. Within PowerShell (Windows) or Terminal (MacOS) app, run the following two commands to re-install Playwright:
+```Shell
+npm remove playwright
+npm install playwright@1.27.1
+```
 
 ### CLI Mode
 
