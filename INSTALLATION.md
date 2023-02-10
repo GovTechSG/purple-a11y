@@ -84,4 +84,7 @@ node index
 <img width="349" alt="hats_shell waiting for user to either scan sitemap or website" src="https://user-images.githubusercontent.com/2021525/208459110-e44feaa9-6d97-4796-a597-9d38d1f80ce5.png">
 
  * Follow the steps at [Features](https://github.com/GovTechSG/purple-hats#features) for more information on how to run a scan.
+ 
+ * If you are running on an Apple Silicon Mac, you may be prompted to install [Rosetta 2](https://support.apple.com/en-sg/HT211861).  Click "Install" and try running Purple hats again.
+ <img width="480" alt="Rosetta 2 alert prompt" src="https://support.apple.com/library/content/dam/edam/applecare/images/en_US/macos/Big-Sur/macos-big-sur-software-update-rosetta-alert.jpg">
 </details>
