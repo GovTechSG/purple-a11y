@@ -22,6 +22,9 @@ $env:Path = "$env:Path;$path_to_hats\git\bin";
 echo "INFO: Set path to purple-hats for this session"
 $env:Path = "$path_to_hats\purple-hats;$env:Path"
  
+echo "INFO: Set path to Playwright cache for this session"
+$env:PLAYWRIGHT_BROWSERS_PATH = "$path_to_hats\ms-playwright"
+ 
 echo ""
 $allArgs = $PsBoundParameters.Values + $args + ""
 
