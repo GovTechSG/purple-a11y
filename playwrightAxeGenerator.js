@@ -45,7 +45,7 @@ const runAxeScan = async (page) => {
   try {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
 
-    if (customDevice === 'iPhone 11') {
+    if (customDevice === 'iPhone 11' || deviceChosen === 'Mobile') {
       execSync(
         `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain} --device='iPhone 11'`,
       );
@@ -153,7 +153,11 @@ const runAxeScan = async (page) => {
                     return new RegExp(pattern).test(line)
                 })
 
-                if (isWhitelisted.length > 0){
+                let noMatch = Object.keys(isWhitelisted).every(function(key){
+                  return isWhitelisted[key].length === 0
+                })
+
+                if (!noMatch){
                     continue;
                 }
             };
