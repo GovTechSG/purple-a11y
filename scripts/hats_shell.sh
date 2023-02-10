@@ -33,15 +33,16 @@ fi
 export PATH_TO_BETTER_SQLITE3="./purple-hats/node_modules/better-sqlite3-with-prebuilds/build/Release"
 echo "path to better_sqlite3: $PATH_TO_BETTER_SQLITE3"
 
-declare -a exec=($PATH_TO_BETTER_SQLITE3/better_sqlite3.node $PATH_TO_NODE/node)
+declare -a exec=($PATH_TO_BETTER_SQLITE3/better_sqlite3.node $PATH_TO_NODE/node "$(find ms-playwright -name Chromium.app)")
 
 for p in ${exec[@]} ; do
-    xattr -d com.apple.quarantine $p
+    xattr -d com.apple.quarantine $p &>/dev/null
 done
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
     export PUPPETEER_SKIP_DOWNLOAD='true'
     export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD='true'
     export PUPPETEER_EXECUTABLE_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+    export PLAYWRIGHT_BROWSERS_PATH="$PATH_TO_HATS/ms-playwright"
     echo "using chrome instead of puppeteer"
 fi
