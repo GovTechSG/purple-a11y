@@ -7,6 +7,7 @@ Purple HATS is a customisable, automated accessibility testing tool that allows 
 1. [Crawlee](https://crawlee.dev/)
 2. [Axe-core](https://github.com/dequelabs/axe-core)
 3. [Node.js](https://Node.js.org/en/)
+4. [Playwright](https://playwright.dev/)
 
 ## Prerequisites and Installations
 
@@ -166,13 +167,12 @@ Other options:
 **Caution**: During the custom flow, sensitive information such as username and passwords might be stored in `generatedScript*.js` as part of the recording.
 
 #### Known Issues
-If the custom flow fails to start, remove and re-install Playwright:
+If the custom flow fails to start, you might be runnning multiple versions of Playwright. Re-install Playwright:
 1. On Windows, delete the folder `%USERPROFILE%\AppData\Local\ms-playwright` where `%USERPROFILE%` is typically located at `C:\Users\<username>`.
 2. On MacOS, delete the folder `~/Library/Caches/ms-playwright` where `~` refers to `/Users/<username>`.
 3. Within PowerShell (Windows) or Terminal (MacOS) app, run the following two commands to re-install Playwright:
 ```Shell
-npm remove playwright
-npm install playwright@1.27.1
+npx playwright@1.27.1 install
 ```
 
 ### CLI Mode
