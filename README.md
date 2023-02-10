@@ -161,7 +161,10 @@ Custom flow allows you to record a series of actions in the browser and re-play 
 4. Close the Chrome window.  Purple HATS will then proceed to re-run your recorded actions and scan each page for accessibility.
 
 Other options:
-- You can specify sites to exclude from accessibility scan (e.g. login page) by adding the domain to `exclusions.txt`.
+- You can specify sites to exclude from accessibility scan (e.g. login page) by adding a pattern of the domain to `exclusions.txt`. An example of `exclusions.txt`:
+```
+\.*singpass.gov.sg\.*
+```
 - You can re-run your accessibility scan by running `node generatedScript-PHScan_...js` file that is generated.
 
 **Caution**: During the custom flow, sensitive information such as username and passwords might be stored in `generatedScript*.js` as part of the recording.
