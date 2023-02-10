@@ -175,8 +175,12 @@ const runAxeScan = async (page) => {
                 return new RegExp(pattern).test(line)
             })
 
-            if (isWhitelisted.length > 0){
-                continue;
+            let noMatch = Object.keys(isWhitelisted).every(function(key){
+                return isWhitelisted[key].length === 0
+            })
+
+            if (!noMatch){
+              continue;
             }
         };
         appendToGeneratedScript(` await runAxeScan(page);`);
