@@ -77,6 +77,8 @@ jobs:
             export PATH_TO_NODE="${{github.workspace}}/nodejs-mac-x64/bin"
             export PATH="$PATH_TO_NODE:$PATH"
           fi
+          
+          export PLAYWRIGHT_BROWSERS_PATH="${{github.workspace}}/ms-playwright"
           npm ci 
         working-directory: purple-hats
 
