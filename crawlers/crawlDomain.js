@@ -36,7 +36,7 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
     },
     requestQueue,
     preNavigationHooks,
-    requestHandler: async ({ page, request, enqueueLinks }) => {
+    requestHandler: async ({ page, request, enqueueLinksByClickingElements, enqueueLinks }) => {
       if (deviceChosen === 'Custom') {
         if (device) {
           await page.emulate(device);
@@ -63,11 +63,21 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
         await dataset.pushData(results);
         urlsCrawled.scanned.push(currentUrl);
 
+        await enqueueLinksByClickingElements({
+          // set selector matches non-anchor elements, click where element 
+          // NOT <a> or [type="submit"] or [type="reset"]
+          // IS role='link' or onclick or button.*link
+          selector: ':not(a, [type="submit"], [type="reset"]):is([role="link"], [onclick], button.*link)',
+          requestQueue,
+        });
+
         await enqueueLinks({
+          // set selector matches non-anchor elements, queue hyperlink contained in <a>
           selector: 'a',
           strategy: 'same-domain',
           requestQueue,
         });
+        
       } else {
         urlsCrawled.outOfDomain.push(currentUrl);
       }

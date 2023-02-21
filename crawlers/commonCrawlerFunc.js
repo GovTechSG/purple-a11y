@@ -52,7 +52,7 @@ export const createCrawleeSubFolders = async randomToken => {
 
 export const preNavigationHooks = [
   async (_crawlingContext, gotoOptions) => {
-    gotoOptions = { waitUntil: 'networkidle2', timeout: 30000 };
+    gotoOptions = { waitUntil: "domcontentloaded", timeout: 30000 };
   },
 ];
 
