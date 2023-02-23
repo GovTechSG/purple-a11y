@@ -58,6 +58,16 @@ export const isValidXML = async content => {
   return { status, parsedContent };
 };
 
+export const isSkippedUrl = (page, whitelistedDomains) => {
+  const isWhitelisted = whitelistedDomains.filter(pattern => new RegExp(pattern).test(page.url()));
+
+  const noMatch = Object.keys(isWhitelisted).every(key => {
+    return isWhitelisted[key].length === 0;
+  });
+
+  return !noMatch;
+};
+
 export const isValidHttpUrl = input => {
   const regexForUrl = new RegExp('^(http|https):/{2}.*$', 'gmi');
   return input.match(regexForUrl) !== null;

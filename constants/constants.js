@@ -7,6 +7,9 @@ const __dirname = path.dirname(__filename);
 
 const maxRequestsPerCrawl = 100;
 
+export const intermediateScreenshotsPath = './screenshots'
+export const destinationPath = (storagePath) => `${storagePath}/screenshots`;
+
 // for crawlers
 export const axeScript = 'node_modules/axe-core/axe.min.js';
 
