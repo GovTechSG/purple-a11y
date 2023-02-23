@@ -252,10 +252,10 @@ export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
     }
   };
 
-  const processNonStandardSitemap = data => {
+  const processNonStandardSitemap = (data) => {
     const urlsFromData = crawlee.extractUrls({ string: data }).slice(0, maxLinksCount);
     urlsFromData.forEach(url => urls.add(url));
-  };
+  }
 
   const fetchUrls = async url => {
     let data;
