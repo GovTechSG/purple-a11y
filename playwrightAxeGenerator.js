@@ -9,13 +9,14 @@ const playwrightAxeGenerator = async (domain, randomToken, answers) => {
   const block1 = `import { chromium, devices, webkit } from 'playwright';
   import { createCrawleeSubFolders, runAxeScript } from './crawlers/commonCrawlerFunc.js';
   import { generateArtifacts } from './mergeAxeResults.js';
-  import { createAndUpdateResultsFolders, createDetailsAndLogs, getStoragePath } from './utils.js';
-  import constants, { intermediateScreenshotsPath } from './constants/constants.js';
+  import { createAndUpdateResultsFolders, createDetailsAndLogs, createScreenshotsFolder } from './utils.js';
+  import constants, { intermediateScreenshotsPath, getExecutablePath } from './constants/constants.js';
   import fs from 'fs';
   import { isSkippedUrl } from './constants/common.js';
   import { spawnSync } from 'child_process';
 
 process.env.CRAWLEE_STORAGE_DIR = constants.a11yStorage;
+const compareExe = getExecutablePath('ImageMagick*/bin',"compare")[0];
 
 const scanDetails = {
     startTime: new Date().getTime(),
@@ -34,7 +35,7 @@ var index = 1;
 var urlImageDictionary = {};
 let pageUrl;
 
-const checkForAxeScan = async page => {
+const checkIfScanRequired = async page => {
     const imgPath = './screenshots/PHScan-screenshot' + index.toString() + '.png';
 
   index += 1;
@@ -110,23 +111,24 @@ const checkForAxeScan = async page => {
 
   if (!urlImageDictionary[pageUrl]) {
     urlImageDictionary[pageUrl] = [imgPath];
+    return true;
   } else {
     try {
-        var img2 = imgPath;
-        var img2Canny = img2.replace(/.[^/.]+$/, '') + '-canny.png';
-        spawnSync('convert', [img2, '-canny', '0x1+10%+30%', img2Canny]);
+        var currImg = imgPath;
+        var currImgCanny = currImg.replace(/.[^/.]+$/, '') + '-canny.png';
+        spawnSync('convert', [currImg, '-canny', '0x1+10%+30%', currImgCanny]);
   
-        for (const img of urlImageDictionary[pageUrl]) {
-          var img1Canny = img.replace(/.[^/.]+$/, '') + '-canny.png';
+        for (const prevImg of urlImageDictionary[pageUrl]) {
+          var prevImgCanny = prevImg.replace(/.[^/.]+$/, '') + '-canny.png';
   
-          spawnSync('convert', [img, '-canny', '0x1+10%+30%', img1Canny]);
+          spawnSync('convert', [prevImg, '-canny', '0x1+10%+30%', prevImgCanny]);
   
-          const nccOutput = spawnSync('compare', ['-metric', 'NCC', img1Canny, img2Canny, 'null:']);
+          const nccOutput = spawnSync(compareExe, ['-metric', 'NCC', prevImgCanny, currImgCanny, 'null:']);
   
           const output = parseFloat(nccOutput.stderr.toString().trim());
   
           if (output > 0.5) {
-            fs.unlink(img2, err => {
+            fs.unlink(currImg, err => {
               if (err) throw err;
             });
   
@@ -137,12 +139,8 @@ const checkForAxeScan = async page => {
         }
   
         if (!isSimilarPage) {
-        const host = new URL(pageUrl).hostname;
-        const result = await runAxeScript(page, host);
-        await dataset.pushData(result);
-        urlsCrawled.scanned.push(pageUrl);
-  
-        urlImageDictionary[pageUrl].push(img2)
+        urlImageDictionary[pageUrl].push(currImg)
+        return true;
         } 
 
     } catch (error) {
@@ -150,20 +148,25 @@ const checkForAxeScan = async page => {
     }
   }
 
+};
+
+const runAxeScan = async page => {
   const host = new URL(pageUrl).hostname;
   const result = await runAxeScript(page, host);
   await dataset.pushData(result);
   urlsCrawled.scanned.push(pageUrl);
-};
+}
 
 
-const runAxeScan = async page => {
+const processPage = async page => {
   if (whitelistedDomains && isSkippedUrl(page, whitelistedDomains)) {
     return;
   }
-
   await page.waitForLoadState();  
-  await checkForAxeScan(page);
+
+  if (await checkIfScanRequired(page)) {
+    await runAxeScan(page);
+  };
 };`
 
   const block2 = `  return urlsCrawled;
@@ -248,7 +251,7 @@ const runAxeScan = async page => {
         appendToGeneratedScript(
           ` (${locator}.count()>1)? [console.log('Please re-click the intended DOM element'), page.setDefaultTimeout(0)]:
           ${line}
-          await runAxeScan(page);
+          await processPage(page);
         `,
         );
         continue;
@@ -314,7 +317,7 @@ const runAxeScan = async page => {
           }
         }
 
-        appendToGeneratedScript(` await runAxeScan(page);`);
+        appendToGeneratedScript(` await processPage(page);`);
         continue;
       }
       if (line.trim().startsWith(`await page.waitForURL(`)) {
@@ -336,7 +339,7 @@ const runAxeScan = async page => {
           }
         }
 
-        appendToGeneratedScript(` await runAxeScan(page);`);
+        appendToGeneratedScript(` await processPage(page);`);
         continue;
       }
       if (line.trim() === `await browser.close();`) {

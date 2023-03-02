@@ -258,38 +258,6 @@ export const generateArtifacts = async (randomToken, deviceToScan) => {
   let allIssues = [];
   const allFiles = await extractFileNames(directory);
 
-  if (fs.existsSync(intermediateScreenshotsPath)) {
-    fs.readdir(intermediateScreenshotsPath, (err, files) => {
-      if (err) {
-        console.log('Screenshots were not moved successfully: ' + err.message);
-      }
-
-      fs.mkdir(destinationPath(storagePath), err => {
-        console.log('Screenshots folder was not created successfully: ' + err.message);
-      });
-
-      files.forEach(file => {
-        fs.rename(
-          `${intermediateScreenshotsPath}/${file}`,
-          `${destinationPath(storagePath)}/${file}`,
-          err => {
-            if (err) {
-              console.log('Screenshots were not moved successfully: ' + err.message);
-            } else {
-              console.log(`Moved ${file} to ${destinationPath(storagePath)}`);
-            }
-          },
-        );
-      });
-
-      fs.rmdir(intermediateScreenshotsPath, err => {
-        if (err) {
-          console.log(err);
-        }
-      });
-    });
-  }
-
   await Promise.all(
     allFiles.map(async file => {
       const rPath = `${directory}/${file}`;

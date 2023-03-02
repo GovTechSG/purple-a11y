@@ -2,6 +2,7 @@ import { exec, execFile } from 'child_process';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
+import { intermediateScreenshotsPath, destinationPath } from './constants/constants.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -60,6 +61,43 @@ export const createAndUpdateResultsFolders = async randomToken => {
     `${storagePath}/${constants.allIssueFileName}`,
   );
 };
+
+export const createScreenshotsFolder = randomToken => {
+  const storagePath = getStoragePath(randomToken);
+  if (fs.existsSync(intermediateScreenshotsPath)) {
+    fs.readdir(intermediateScreenshotsPath, (err, files) => {
+      if (err) {
+        console.log('Screenshots were not moved successfully: ' + err.message);
+      }
+
+      fs.mkdir(destinationPath(storagePath), err => {
+        if (err) {
+          console.log('Screenshots folder was not created successfully: ' + err.message);
+        }
+      });
+
+      files.forEach(file => {
+        fs.rename(
+          `${intermediateScreenshotsPath}/${file}`,
+          `${destinationPath(storagePath)}/${file}`,
+          err => {
+            if (err) {
+              console.log('Screenshots were not moved successfully: ' + err.message);
+            } else {
+              console.log(`Moved ${file} to ${destinationPath(storagePath)}`);
+            }
+          },
+        );
+      });
+
+      fs.rmdir(intermediateScreenshotsPath, err => {
+        if (err) {
+          console.log(err);
+        }
+      });
+    });
+  }
+}
 
 export const cleanUp = async (pathToDelete, setDefaultFolders = false) => {
   await fs.pathExists(pathToDelete).then(exists => {
