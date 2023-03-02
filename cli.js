@@ -180,7 +180,7 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
       .ensureDir(storagePath)
       .then(async () => {
         await zipResults(constants.cliZipFileName, storagePath);
-        const messageToDisplay = [`Report of this run is at ${constants.cliZipFileName}`];
+        const messageToDisplay = [`Report of this run is at ${constants.cliZipFileName}`, `Results directory is at ${storagePath}`];
 
         if (process.env.REPORT_BREAKDOWN === '1') {
           messageToDisplay.push(
