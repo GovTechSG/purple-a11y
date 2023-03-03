@@ -189,6 +189,7 @@ const processPage = async page => {
             scanDetails.urlsCrawled = urlsCrawled;
             await createDetailsAndLogs(scanDetails, '${randomToken}');
             await createAndUpdateResultsFolders('${randomToken}');
+            createScreenshotsFolder('${randomToken}');
             await generateArtifacts('${randomToken}', 'Automated Scan');
         });`;
 

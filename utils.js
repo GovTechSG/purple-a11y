@@ -70,23 +70,18 @@ export const createScreenshotsFolder = randomToken => {
         console.log('Screenshots were not moved successfully: ' + err.message);
       }
 
-      fs.mkdir(destinationPath(storagePath), err => {
-        if (err) {
-          console.log('Screenshots folder was not created successfully: ' + err.message);
-        }
-      });
+      if (!fs.existsSync(destinationPath(storagePath))) {
+        fs.mkdirSync(destinationPath(storagePath), err => {
+          if (err) {
+            console.log('Screenshots folder was not created successfully: ' + err.message);
+          }
+        });
+      }
 
       files.forEach(file => {
-        fs.rename(
+        fs.renameSync(
           `${intermediateScreenshotsPath}/${file}`,
           `${destinationPath(storagePath)}/${file}`,
-          err => {
-            if (err) {
-              console.log('Screenshots were not moved successfully: ' + err.message);
-            } else {
-              console.log(`Moved ${file} to ${destinationPath(storagePath)}`);
-            }
-          },
         );
       });
 
@@ -97,7 +92,7 @@ export const createScreenshotsFolder = randomToken => {
       });
     });
   }
-}
+};
 
 export const cleanUp = async (pathToDelete, setDefaultFolders = false) => {
   await fs.pathExists(pathToDelete).then(exists => {
