@@ -16,7 +16,7 @@ const playwrightAxeGenerator = async (domain, randomToken, answers) => {
   import { spawnSync } from 'child_process';
 
 process.env.CRAWLEE_STORAGE_DIR = constants.a11yStorage;
-const compareExe = getExecutablePath('ImageMagick*/bin',"compare")[0];
+const compareExe = getExecutablePath('ImageMagick*/bin',"compare");
 
 const scanDetails = {
     startTime: new Date().getTime(),

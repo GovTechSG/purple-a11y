@@ -2,6 +2,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs-extra';
 import { globSync } from 'glob';
+import which from 'which';
+import os from 'os';
+import { spawnSync } from 'child_process'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,8 +14,21 @@ const maxRequestsPerCrawl = 100;
 export const intermediateScreenshotsPath = './screenshots'
 export const destinationPath = (storagePath) => `${storagePath}/screenshots`;
 
+export const removeQuarantineFlag = function (filePath) {
+  if (os.platform() === "darwin") {
+      spawnSync('xattr', ['-d', 'com.apple.quarantine', filePath]);
+  }
+}
+
 export const getExecutablePath = function (dir, file) {
-  return globSync("**/" + dir + "/"+ file, {absolute: true, recursive: true, nodir: true});
+  let execPaths = globSync("**/" + dir + "/"+ file, {absolute: true, recursive: true, nodir: true});
+
+  if (execPaths.length === 0) {
+      return which.sync(file, { nothrow: true });
+  } else {
+      removeQuarantineFlag(execPaths[0]);
+      return execPaths[0];
+  }
 };
 
 // for crawlers
