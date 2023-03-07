@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import _yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import printMessage from 'print-message';
-import { cleanUp, zipResults, setHeadlessMode, setThresholdLimits, getVersion } from './utils.js';
+import { cleanUp, zipResults, setHeadlessMode, setThresholdLimits, getVersion, getStoragePath } from './utils.js';
 import { exec, execSync } from 'child_process';
 import { checkUrl, prepareData, isValidHttpUrl, isFileSitemap } from './constants/common.js';
 
@@ -167,23 +167,20 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
 
     printMessage([`Version: ${appVersion}-${branchName}`, 'Scanning website...'], messageOptions);
     await combineRun(data, deviceToScan);
-    return `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
+    return getStoragePath(data.randomToken);
   };
 
   scanInit(options).then(async storagePath => {
-    // Path to scan result
-    storagePath = fs.readdirSync('results').filter(fn => fn.startsWith(storagePath));
-
     // Take option if set
     if (typeof options.zip === 'string') {
       constants.cliZipFileName = options.zip;
     }
 
     await fs
-      .ensureDir(`results/${storagePath[0]}`)
+      .ensureDir(storagePath)
       .then(async () => {
-        await zipResults(constants.cliZipFileName, `results/${storagePath[0]}`);
-        const messageToDisplay = [`Report of this run is at ${constants.cliZipFileName}`];
+        await zipResults(constants.cliZipFileName, storagePath);
+        const messageToDisplay = [`Report of this run is at ${constants.cliZipFileName}`, `Results directory is at ${storagePath}`];
 
         if (process.env.REPORT_BREAKDOWN === '1') {
           messageToDisplay.push(
