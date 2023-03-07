@@ -3,6 +3,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import readline from 'readline';
+import constants from './constants/constants.js';
 
 const playwrightAxeGenerator = async (domain, randomToken, answers) => {
   const { isHeadless, deviceChosen, customDevice, customWidth } = answers;
@@ -199,21 +200,24 @@ const processPage = async page => {
   try {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
 
+    let codegenCmd = `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain}`
+    let extraCodegenOpts = `--block-service-workers --ignore-https-errors`
+
     if (customDevice === 'iPhone 11' || deviceChosen === 'Mobile') {
       execSync(
-        `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain} --device='iPhone 11' --block-service-workers --ignore-https-errors`,
+        `${codegenCmd} --device='iPhone 11' ${extraCodegenOpts}`,
       );
     } else if (customDevice === 'Samsung Galaxy S9+') {
       execSync(
-        `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain} --device='Galaxy S9+' --block-service-workers --ignore-https-errors`,
+        `${codegenCmd} --device='Galaxy S9+' ${extraCodegenOpts}`,
       );
     } else if (customDevice === 'Specify viewport') {
       execSync(
-        `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain} --viewport-size=${viewportWidth},720 --block-service-workers --ignore-https-errors`,
+        `${codegenCmd} --viewport-size=${viewportWidth},720 ${extraCodegenOpts}`,
       );
     } else {
       execSync(
-        `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain} --block-service-workers --ignore-https-errors`,
+        `${codegenCmd} ${extraCodegenOpts}`,
       );
     }
 
