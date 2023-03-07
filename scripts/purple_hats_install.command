@@ -27,6 +27,11 @@ if [ -f "ImageMagick-*.tar.gz" ]; then
   rm ImageMagick-*.tar.gz
 fi
 
+echo "Setting File Permissions for ImageMagick Binaries"
+find ./bin/Image*/bin -exec xattr -d com.apple.quarantine {} \;&>/dev/null
+
+
+
 
 
 

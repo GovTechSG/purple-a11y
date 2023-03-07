@@ -39,6 +39,8 @@ for p in ${exec[@]} ; do
     xattr -d com.apple.quarantine $p &>/dev/null
 done
 
+find ./purple-hats/bin/Image*/bin -exec xattr -d com.apple.quarantine {} \;&>/dev/null
+
 if [[ "$OSTYPE" == "darwin"* ]]; then
     export PUPPETEER_SKIP_DOWNLOAD='true'
     export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD='true'
