@@ -13,3 +13,4 @@ coverage/
 **/errors.txt
 generatedScript*.js
 exclusions.txt
+bin/
