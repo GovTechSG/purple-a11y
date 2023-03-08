@@ -13,11 +13,15 @@ const playwrightAxeGenerator = async (domain, randomToken, answers) => {
   import { createAndUpdateResultsFolders, createDetailsAndLogs, createScreenshotsFolder } from './utils.js';
   import constants, { intermediateScreenshotsPath, getExecutablePath } from './constants/constants.js';
   import fs from 'fs';
+  import path from 'path';
   import { isSkippedUrl } from './constants/common.js';
   import { spawnSync } from 'child_process';
 
 process.env.CRAWLEE_STORAGE_DIR = constants.a11yStorage;
-const compareExe = getExecutablePath('ImageMagick*/bin',"compare");
+const compareExe = getExecutablePath('**/ImageMagick*/bin','compare');
+const ImageMagickPath = path.resolve(compareExe, '../../');
+process.env.MAGICK_HOME = ImageMagickPath;
+process.env.DYLD_LIBRARY_PATH = ImageMagickPath + '/lib/';
 
 const scanDetails = {
     startTime: new Date().getTime(),

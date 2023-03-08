@@ -21,10 +21,10 @@ export const removeQuarantineFlag = function (filePath) {
 }
 
 export const getExecutablePath = function (dir, file) {
-  let execPaths = globSync("**/" + dir + "/"+ file, {absolute: true, recursive: true, nodir: true});
+  let execPaths = globSync(dir + "/"+ file, {absolute: true, recursive: true, nodir: true });
 
   if (execPaths.length === 0) {
-      return which.sync(file, { nothrow: true });
+      return fs.realpathSync(which.sync(file, { nothrow: true }));
   } else {
       removeQuarantineFlag(execPaths[0]);
       return execPaths[0];
