@@ -17,13 +17,13 @@ echo "INFO: Set path to npm-global for this session"
 $env:Path = "$path_to_hats\npm-global;$path_to_hats\npm-global\bin;$env:Path";
 
 echo "INFO: Set path to git for this session"
-$env:Path = "$env:Path;$path_to_hats\git\bin";
+$env:Path = "$path_to_hats\git\bin;$env:Path";
 
 echo "INFO: Set path to Playwright cache for this session"
 $env:PLAYWRIGHT_BROWSERS_PATH = "$path_to_hats\ms-playwright"
 
 echo "INFO: Set path to ImageMagick for this session"
-$env:Path = "$path_to_hats\ImageMagick\bin"
+$env:Path = "$path_to_hats\ImageMagick\bin;$env:Path"
 
 if (Test-Path purple-hats) {
    echo "INFO: Set path to purple-hats for this session"
