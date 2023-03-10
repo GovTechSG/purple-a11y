@@ -30,13 +30,25 @@ if (-Not (Test-Path ImageMagick\bin)) {
 # Install Node dependencies
 if (Test-Path purple-hats) {
     Write-Output "Installing node dependencies"
-    & ".\hats_shell_ps.ps1" "cd purple-hats;npm i fsevents@latest -f --save-optional"     
+    & ".\hats_shell_ps.ps1" "cd purple-hats;npm i fsevents@latest -f --save-optional"
+
+    if (Test-Path purple-hats\.git) {
+        Write-Output "Unhide .git folder"
+        attrib -s -h purple-hats\.git
+    }
+
 } else {
     Write-Output "Trying to search for package.json instead"
 
     if (Test-Path package.json) {
         Write-Output "Installing node dependencies"
         & ".\hats_shell_ps.ps1" "npm i fsevents@latest -f --save-optional"   
+    
+        if (Test-Path .git) {
+            Write-Output "Unhide .git folder"
+            attrib -s -h .git
+        }
+
     } else {
         Write-Output "Could not find purple-hats"
     }
