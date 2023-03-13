@@ -4,21 +4,50 @@ import os from 'os';
 import path from 'path';
 import readline from 'readline';
 import constants from './constants/constants.js';
+import safe from 'safe-regex';
+import { consoleLogger, silentLogger } from './logs.js';
 
 const playwrightAxeGenerator = async (domain, randomToken, answers) => {
+
+  const blacklistedPatternsFilename = 'exclusions.txt';
+  let blacklistedPatterns = null;
+
+  if (fs.existsSync(blacklistedPatternsFilename)) {
+    blacklistedPatterns = fs.readFileSync(blacklistedPatternsFilename).toString().split('\n');
+
+    let unsafe = blacklistedPatterns.filter(function (pattern) {
+      return !safe(pattern);
+    });
+    
+    if (unsafe.length > 0 ) {
+        consoleLogger.error("Unsafe expressions detected: '"+ unsafe +"' Please revise " + blacklistedPatternsFilename);
+        silentLogger.error("Unsafe expressions detected: '"+ unsafe +"' Please revise " + blacklistedPatternsFilename);
+        process.exit(1);
+    };
+  }
+
   const { isHeadless, deviceChosen, customDevice, customWidth } = answers;
   const block1 = `import { chromium, devices, webkit } from 'playwright';
   import { createCrawleeSubFolders, runAxeScript } from './crawlers/commonCrawlerFunc.js';
   import { generateArtifacts } from './mergeAxeResults.js';
   import { createAndUpdateResultsFolders, createDetailsAndLogs, createScreenshotsFolder } from './utils.js';
-  import constants, { intermediateScreenshotsPath, getExecutablePath } from './constants/constants.js';
+  import constants, { intermediateScreenshotsPath, getExecutablePath, removeQuarantineFlag } from './constants/constants.js';
   import fs from 'fs';
   import path from 'path';
   import { isSkippedUrl } from './constants/common.js';
   import { spawnSync } from 'child_process';
+  import safe from 'safe-regex';
+
+  const blacklistedPatternsFilename = 'exclusions.txt';
 
 process.env.CRAWLEE_STORAGE_DIR = constants.a11yStorage;
 const compareExe = getExecutablePath('**/ImageMagick*/bin','compare');
+
+if (!compareExe) {
+  throw new Error("Could not find ImageMagick compare.  Please ensure ImageMagick is installed.");
+} 
+
+removeQuarantineFlag('**/ImageMagick*/lib/*.dylib');
 const ImageMagickPath = path.resolve(compareExe, '../../');
 process.env.MAGICK_HOME = ImageMagickPath;
 process.env.DYLD_LIBRARY_PATH = ImageMagickPath + '/lib/';
@@ -34,7 +63,21 @@ const { dataset } = await createCrawleeSubFolders(
   '${randomToken}',
 );
 
-var whitelistedDomains = fs.existsSync('exclusions.txt')? fs.readFileSync('exclusions.txt').toString().split('\\n') : undefined;
+let blacklistedPatterns = null;
+
+if (fs.existsSync(blacklistedPatternsFilename)) {
+  blacklistedPatterns = fs.readFileSync(blacklistedPatternsFilename).toString().split('\\n');
+
+  let unsafe = blacklistedPatterns.filter(function (pattern) {
+    return !safe(pattern);
+  });
+  
+  if (unsafe.length > 0 ) {
+    consoleLogger.error("Unsafe expressions detected: '"+ unsafe +"' Please revise " + blacklistedPatternsFilename);
+    silentLogger.error("Unsafe expressions detected: '"+ unsafe +"' Please revise " + blacklistedPatternsFilename);
+    process.exit(1);
+  }
+}
 
 var index = 1;
 var urlImageDictionary = {};
@@ -164,7 +207,7 @@ const runAxeScan = async page => {
 
 
 const processPage = async page => {
-  if (whitelistedDomains && isSkippedUrl(page, whitelistedDomains)) {
+  if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
     return;
   }
   await page.waitForLoadState();  
@@ -310,15 +353,14 @@ const processPage = async page => {
           );
         }
 
-        if (fs.existsSync('exclusions.txt')) {
-          const whitelistedDomains = fs.readFileSync('exclusions.txt').toString().split('\n');
+        if (blacklistedPatterns) {
 
-          let isWhitelisted = whitelistedDomains.filter(function (pattern) {
+          let isBlacklisted = blacklistedPatterns.filter(function (pattern) {
             return new RegExp(pattern).test(line);
           });
 
-          let noMatch = Object.keys(isWhitelisted).every(function (key) {
-            return isWhitelisted[key].length === 0;
+          let noMatch = Object.keys(isBlacklisted).every(function (key) {
+            return isBlacklisted[key].length === 0;
           });
 
           if (!noMatch) {
@@ -333,14 +375,14 @@ const processPage = async page => {
         appendToGeneratedScript(line);
 
         if (fs.existsSync('exclusions.txt')) {
-          const whitelistedDomains = fs.readFileSync('exclusions.txt').toString().split('\n');
+          const blacklistedPatterns = fs.readFileSync('exclusions.txt').toString().split('\n');
 
-          let isWhitelisted = whitelistedDomains.filter(function (pattern) {
+          let isBlacklisted = blacklistedPatterns.filter(function (pattern) {
             return new RegExp(pattern).test(line);
           });
 
-          let noMatch = Object.keys(isWhitelisted).every(function (key) {
-            return isWhitelisted[key].length === 0;
+          let noMatch = Object.keys(isBlacklisted).every(function (key) {
+            return isBlacklisted[key].length === 0;
           });
 
           if (!noMatch) {

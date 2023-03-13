@@ -14,9 +14,12 @@ const maxRequestsPerCrawl = 100;
 export const intermediateScreenshotsPath = './screenshots'
 export const destinationPath = (storagePath) => `${storagePath}/screenshots`;
 
-export const removeQuarantineFlag = function (filePath) {
+export const removeQuarantineFlag = function (searchPath) {
   if (os.platform() === "darwin") {
-      spawnSync('xattr', ['-d', 'com.apple.quarantine', filePath]);
+    let execPaths = globSync(searchPath, {absolute: true, recursive: true, nodir: true });
+    if (execPaths.length > 0) {
+      execPaths.forEach(filePath => spawnSync('xattr', ['-d', 'com.apple.quarantine', filePath]));
+    }
   }
 }
 
@@ -24,7 +27,13 @@ export const getExecutablePath = function (dir, file) {
   let execPaths = globSync(dir + "/"+ file, {absolute: true, recursive: true, nodir: true });
 
   if (execPaths.length === 0) {
-      return fs.realpathSync(which.sync(file, { nothrow: true }));
+      let execInPATH = which.sync(file, { nothrow: true });
+      
+      if (execInPATH) {
+        return fs.realpathSync(execInPATH);
+      } 
+      return null;
+      
   } else {
       removeQuarantineFlag(execPaths[0]);
       return execPaths[0];
