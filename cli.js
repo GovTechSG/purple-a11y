@@ -66,7 +66,7 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     })
     .coerce('d', option => {
       const deviceString = constants.devices.includes(option);
-      if (option && !deviceString) {
+      if (!deviceString) {
         printMessage(
           [`Invalid device. Please provide an existing device to start the scan.`],
           messageOptions,
@@ -76,7 +76,7 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
       return option;
     })
     .coerce('w', option => {
-      if (Number.isNaN(option)) {
+      if (!option || Number.isNaN(option)) {
         printMessage([`Invalid viewport width. Please provide a number. `], messageOptions);
         process.exit(1);
       } else if (option < 320 || option > 1080) {
