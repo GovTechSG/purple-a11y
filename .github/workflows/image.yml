@@ -10,18 +10,6 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Download node.js version from nodejs.org
-        run: |
-          curl -o ./nodejs-win.zip --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-win-x64.zip      
-          mkdir nodejs-win && tar -xzf nodejs-win.zip -C nodejs-win --strip-components=1 
-          rm ./nodejs-win.zip
-
-      - name: Download git from github.com
-        run: |
-          curl -L -o ".\PortableGit.7z.exe" "https://github.com/git-for-windows/git/releases/download/v2.39.1.windows.1/PortableGit-2.39.1-64-bit.7z.exe"
-          .\PortableGit.7z.exe -o ".\git" -y | Out-Null
-          rm .\PortableGit.7z.exe
-
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
@@ -33,15 +21,11 @@ jobs:
           cp ${{github.workspace}}/purple-hats/scripts/*.cmd ${{github.workspace}}      
           rd -r ${{github.workspace}}/purple-hats/scripts
 
-      - name: Run hats_shell._ps.ps1 before installing node modules
+      - name: Install Purple hats dependencies for Windows
         shell: pwsh
-        run: powershell.exe -NoProfile -ExecutionPolicy Bypass "& ${{github.workspace}}\hats_shell_ps.ps1" "cd ${{github.workspace}}\purple-hats;npm i fsevents@latest -f --save-optional"     
+        run: powershell.exe -NoProfile -ExecutionPolicy Bypass "& ${{github.workspace}}\install_purple_dependencies.ps1"     
         working-directory:  ${{github.workspace}}
 
-      - name: Unhide .git folder (Windows)
-        shell: pwsh
-        run: attrib -s -h ${{github.workspace}}/purple-hats/.git
-        
       - name: Zip entire Purple Hats folder (Windows)
         shell: pwsh
         run: Compress-Archive -Path ${{github.workspace}}/* -DestinationPath purple-hats-portable-windows.zip
