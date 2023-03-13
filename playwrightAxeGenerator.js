@@ -3,16 +3,54 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import readline from 'readline';
+import constants from './constants/constants.js';
+import safe from 'safe-regex';
+import { consoleLogger, silentLogger } from './logs.js';
 
 const playwrightAxeGenerator = async (domain, randomToken, answers) => {
+
+  const blacklistedPatternsFilename = 'exclusions.txt';
+  let blacklistedPatterns = null;
+
+  if (fs.existsSync(blacklistedPatternsFilename)) {
+    blacklistedPatterns = fs.readFileSync(blacklistedPatternsFilename).toString().split('\n');
+
+    let unsafe = blacklistedPatterns.filter(function (pattern) {
+      return !safe(pattern);
+    });
+    
+    if (unsafe.length > 0 ) {
+        consoleLogger.error("Unsafe expressions detected: '"+ unsafe +"' Please revise " + blacklistedPatternsFilename);
+        silentLogger.error("Unsafe expressions detected: '"+ unsafe +"' Please revise " + blacklistedPatternsFilename);
+        process.exit(1);
+    };
+  }
+
   const { isHeadless, deviceChosen, customDevice, customWidth } = answers;
-  const block1 = `import { chromium, devices, webkit } from "playwright";
-import { createCrawleeSubFolders, runAxeScript } from "./crawlers/commonCrawlerFunc.js";
-import { generateArtifacts } from './mergeAxeResults.js';
-import { createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
-import constants from "./constants/constants.js";
+  const block1 = `import { chromium, devices, webkit } from 'playwright';
+  import { createCrawleeSubFolders, runAxeScript } from './crawlers/commonCrawlerFunc.js';
+  import { generateArtifacts } from './mergeAxeResults.js';
+  import { createAndUpdateResultsFolders, createDetailsAndLogs, createScreenshotsFolder } from './utils.js';
+  import constants, { intermediateScreenshotsPath, getExecutablePath, removeQuarantineFlag } from './constants/constants.js';
+  import fs from 'fs';
+  import path from 'path';
+  import { isSkippedUrl } from './constants/common.js';
+  import { spawnSync } from 'child_process';
+  import safe from 'safe-regex';
+
+  const blacklistedPatternsFilename = 'exclusions.txt';
 
 process.env.CRAWLEE_STORAGE_DIR = constants.a11yStorage;
+const compareExe = getExecutablePath('**/ImageMagick*/bin','compare');
+
+if (!compareExe) {
+  throw new Error("Could not find ImageMagick compare.  Please ensure ImageMagick is installed.");
+} 
+
+removeQuarantineFlag('**/ImageMagick*/lib/*.dylib');
+const ImageMagickPath = path.resolve(compareExe, '../../');
+process.env.MAGICK_HOME = ImageMagickPath;
+process.env.DYLD_LIBRARY_PATH = ImageMagickPath + '/lib/';
 
 const scanDetails = {
     startTime: new Date().getTime(),
@@ -21,45 +59,212 @@ const scanDetails = {
 };
     
 const urlsCrawled = { ...constants.urlsCrawledObj };
-const { dataset } = await createCrawleeSubFolders('${randomToken}');
-const runAxeScan = async (page) => {
-  const host = new URL(page.url()).hostname;
+const { dataset } = await createCrawleeSubFolders(
+  '${randomToken}',
+);
+
+let blacklistedPatterns = null;
+
+if (fs.existsSync(blacklistedPatternsFilename)) {
+  blacklistedPatterns = fs.readFileSync(blacklistedPatternsFilename).toString().split('\\n');
+
+  let unsafe = blacklistedPatterns.filter(function (pattern) {
+    return !safe(pattern);
+  });
+  
+  if (unsafe.length > 0 ) {
+    consoleLogger.error("Unsafe expressions detected: '"+ unsafe +"' Please revise " + blacklistedPatternsFilename);
+    silentLogger.error("Unsafe expressions detected: '"+ unsafe +"' Please revise " + blacklistedPatternsFilename);
+    process.exit(1);
+  }
+}
+
+var index = 1;
+var urlImageDictionary = {};
+let pageUrl;
+
+const checkIfScanRequired = async page => {
+    const imgPath = './screenshots/PHScan-screenshot' + index.toString() + '.png';
+
+  index += 1;
+
+  const fullPageSize = await page.evaluate(() => {
+    return {
+      width: Math.max(
+        document.body.scrollWidth,
+        document.documentElement.scrollWidth,
+        document.body.offsetWidth,
+        document.documentElement.offsetWidth,
+        document.body.clientWidth,
+        document.documentElement.clientWidth,
+      ),
+      height: Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight,
+        document.body.offsetHeight,
+        document.documentElement.offsetHeight,
+        document.body.clientHeight,
+        document.documentElement.clientHeight,
+      ),
+    };
+  });
+
+  const originalSize = page.viewportSize();
+  await page.setViewportSize(fullPageSize);
+  const usesInfiniteScroll = async () => {
+    const prevHeight = await page.evaluate(() => document.body.scrollHeight);
+
+    await page.evaluate(() => {
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+
+    const isLoadMoreContent = async () => {
+      return new Promise((resolve) => {
+        setTimeout(async () => {
+          await page.waitForLoadState();
+
+          const result = await page.evaluate((prevHeight) => {
+              const currentHeight = document.body.scrollHeight;
+              return (currentHeight > prevHeight);
+          }, prevHeight);
+
+          resolve(result);
+        }, 3000);
+      });
+    }
+
+    const result = await isLoadMoreContent();
+    return result;
+  };
+
+  if (await usesInfiniteScroll()){
+    pageUrl = page.url();
+    await page.screenshot({
+      path: imgPath,
+      clip: {
+        x: 0,
+        y: 0,
+        width: fullPageSize.width,
+        height: 5400
+      },
+      fullPage: true,
+    });
+  } else {
+    pageUrl = page.url();
+    await page.screenshot({ path: imgPath, fullPage: true });
+  }
+  await page.setViewportSize(originalSize);
+
+  var isSimilarPage = false;
+
+  if (!urlImageDictionary[pageUrl]) {
+    urlImageDictionary[pageUrl] = [imgPath];
+    return true;
+  } else {
+    try {
+        var currImg = imgPath;
+        var currImgCanny = currImg.replace(/.[^/.]+$/, '') + '-canny.png';
+        spawnSync('convert', [currImg, '-canny', '0x1+10%+30%', currImgCanny]);
+  
+        for (const prevImg of urlImageDictionary[pageUrl]) {
+          var prevImgCanny = prevImg.replace(/.[^/.]+$/, '') + '-canny.png';
+  
+          spawnSync('convert', [prevImg, '-canny', '0x1+10%+30%', prevImgCanny]);
+  
+          const nccOutput = spawnSync(compareExe, ['-metric', 'NCC', prevImgCanny, currImgCanny, 'null:']);
+  
+          const output = parseFloat(nccOutput.stderr.toString().trim());
+  
+          if (output > 0.5) {
+            fs.unlink(currImg, err => {
+              if (err) throw err;
+            });
+  
+            isSimilarPage = true;
+  
+            break;
+          }
+        }
+  
+        if (!isSimilarPage) {
+        urlImageDictionary[pageUrl].push(currImg)
+        return true;
+        } 
+
+    } catch (error) {
+      console.error('error: ', error);
+    }
+  }
+
+};
+
+const runAxeScan = async page => {
+  const host = new URL(pageUrl).hostname;
   const result = await runAxeScript(page, host);
   await dataset.pushData(result);
-  urlsCrawled.scanned.push(page.url());
-}`;
+  urlsCrawled.scanned.push(pageUrl);
+}
+
+
+const processPage = async page => {
+  if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
+    return;
+  }
+  await page.waitForLoadState();  
+
+  if (await checkIfScanRequired(page)) {
+    await runAxeScan(page);
+  };
+};`
 
   const block2 = `  return urlsCrawled;
         })().then(async (urlsCrawled) => {
+            fs.readdir(intermediateScreenshotsPath, (err, files) => {
+                if (err) {
+                  console.error(\`Error reading directory: \${err}\`);
+                  return;
+                }
+                const filteredFiles = files.filter(file => file.includes('canny'));
+            
+                filteredFiles.forEach(file => {
+                  fs.unlink(\`./screenshots/\${file}\`,  err => {
+                    if (err) throw err;
+                  });
+                });
+              });
+
             scanDetails.endTime = new Date().getTime();
             scanDetails.urlsCrawled = urlsCrawled;
             await createDetailsAndLogs(scanDetails, '${randomToken}');
             await createAndUpdateResultsFolders('${randomToken}');
+            createScreenshotsFolder('${randomToken}');
             await generateArtifacts('${randomToken}', 'Automated Scan');
         });`;
 
   let tmpDir;
   const appPrefix = 'purple-hats';
 
-
   try {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
 
+    let codegenCmd = `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain}`
+    let extraCodegenOpts = `--block-service-workers --ignore-https-errors`
+
     if (customDevice === 'iPhone 11' || deviceChosen === 'Mobile') {
       execSync(
-        `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain} --device='iPhone 11'`,
+        `${codegenCmd} --device='iPhone 11' ${extraCodegenOpts}`,
       );
     } else if (customDevice === 'Samsung Galaxy S9+') {
       execSync(
-        `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain} --device='Galaxy S9+'`,
+        `${codegenCmd} --device='Galaxy S9+' ${extraCodegenOpts}`,
       );
     } else if (customDevice === 'Specify viewport') {
       execSync(
-        `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain} --viewport-size=${viewportWidth},720`,
+        `${codegenCmd} --viewport-size=${viewportWidth},720 ${extraCodegenOpts}`,
       );
     } else {
       execSync(
-        `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain}`,
+        `${codegenCmd} ${extraCodegenOpts}`,
       );
     }
 
@@ -91,13 +296,14 @@ const runAxeScan = async (page) => {
         appendToGeneratedScript(`headless: true`);
         continue;
       }
-      //check if more than 1 element located
-      if (line.trim().includes('getBy')) {
+
+      if (line.trim().includes('getBy') || line.trim().includes('click()')) {
         const lastIndex = line.lastIndexOf('.');
         const locator = line.substring(0, lastIndex);
         appendToGeneratedScript(
           ` (${locator}.count()>1)? [console.log('Please re-click the intended DOM element'), page.setDefaultTimeout(0)]:
           ${line}
+          await processPage(page);
         `,
         );
         continue;
@@ -142,48 +348,49 @@ const runAxeScan = async (page) => {
           firstGoToUrl = true;
           appendToGeneratedScript(line);
         } else {
-            appendToGeneratedScript(
-            line.replace('goto', 'waitForURL').replace(')', ', {timeout: 60000})'),
-            );
-
-            if (fs.existsSync('exclusions.txt')) {
-                const whitelistedDomains = fs.readFileSync('exclusions.txt').toString().split("\n");
-        
-                let isWhitelisted = whitelistedDomains.filter(function(pattern){
-                    return new RegExp(pattern).test(line)
-                })
-
-                let noMatch = Object.keys(isWhitelisted).every(function(key){
-                  return isWhitelisted[key].length === 0
-                })
-
-                if (!noMatch){
-                    continue;
-                }
-            };
+          appendToGeneratedScript(
+            line.replace('goto', 'waitForURL').replace(')', `,{timeout: 60000})`),
+          );
         }
-        appendToGeneratedScript(` await runAxeScan(page);`);
+
+        if (blacklistedPatterns) {
+
+          let isBlacklisted = blacklistedPatterns.filter(function (pattern) {
+            return new RegExp(pattern).test(line);
+          });
+
+          let noMatch = Object.keys(isBlacklisted).every(function (key) {
+            return isBlacklisted[key].length === 0;
+          });
+
+          if (!noMatch) {
+            continue;
+          }
+        }
+
+        appendToGeneratedScript(` await processPage(page);`);
         continue;
       }
       if (line.trim().startsWith(`await page.waitForURL(`)) {
         appendToGeneratedScript(line);
 
         if (fs.existsSync('exclusions.txt')) {
-            const whitelistedDomains = fs.readFileSync('exclusions.txt').toString().split("\n");
-    
-            let isWhitelisted = whitelistedDomains.filter(function(pattern){
-                return new RegExp(pattern).test(line)
-            })
+          const blacklistedPatterns = fs.readFileSync('exclusions.txt').toString().split('\n');
 
-            let noMatch = Object.keys(isWhitelisted).every(function(key){
-                return isWhitelisted[key].length === 0
-            })
+          let isBlacklisted = blacklistedPatterns.filter(function (pattern) {
+            return new RegExp(pattern).test(line);
+          });
 
-            if (!noMatch){
-              continue;
-            }
-        };
-        appendToGeneratedScript(` await runAxeScan(page);`);
+          let noMatch = Object.keys(isBlacklisted).every(function (key) {
+            return isBlacklisted[key].length === 0;
+          });
+
+          if (!noMatch) {
+            continue;
+          }
+        }
+
+        appendToGeneratedScript(` await processPage(page);`);
         continue;
       }
       if (line.trim() === `await browser.close();`) {

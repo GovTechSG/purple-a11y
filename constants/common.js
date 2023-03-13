@@ -10,6 +10,7 @@ import fs from 'fs';
 import constants from './constants.js';
 import { consoleLogger, silentLogger } from '../logs.js';
 import * as https from 'https';
+import safe from 'safe-regex';
 
 const document = new JSDOM('').window;
 
@@ -56,6 +57,22 @@ export const isValidXML = async content => {
     }
   });
   return { status, parsedContent };
+};
+
+export const isSkippedUrl = (page, whitelistedDomains) => {
+  
+  const isWhitelisted = whitelistedDomains.filter(pattern => {
+    if (pattern) {
+      return new RegExp(pattern).test(page.url())
+    }
+    return false;
+  });
+
+  const noMatch = Object.keys(isWhitelisted).every(key => {
+    return isWhitelisted[key].length === 0;
+  });
+
+  return !noMatch;
 };
 
 export const isValidHttpUrl = input => {
@@ -242,10 +259,10 @@ export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
     }
   };
 
-  const processNonStandardSitemap = data => {
+  const processNonStandardSitemap = (data) => {
     const urlsFromData = crawlee.extractUrls({ string: data }).slice(0, maxLinksCount);
     urlsFromData.forEach(url => urls.add(url));
-  };
+  }
 
   const fetchUrls = async url => {
     let data;

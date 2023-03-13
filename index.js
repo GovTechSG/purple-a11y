@@ -87,7 +87,7 @@ exec('git branch --show-current', (err, stdout) => {
     printMessage(['Scanning website...'], messageOptions);
 
     if (answers.scanner === 'custom flow') {
-      playwrightAxeGenerator(domain, data.randomToken, answers);
+      playwrightAxeGenerator(answers.url, data.randomToken, answers);
     } else {
       await combineRun(data, screenToScan);
     }

@@ -12,3 +12,5 @@ coverage/
 .cache-require-paths.json
 **/errors.txt
 generatedScript*.js
+exclusions.txt
+bin/

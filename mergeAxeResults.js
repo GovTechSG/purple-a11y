@@ -5,7 +5,7 @@ import printMessage from 'print-message';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Mustache from 'mustache';
-import constants from './constants/constants.js';
+import constants, { intermediateScreenshotsPath, destinationPath } from './constants/constants.js';
 import { getCurrentTime, getStoragePath } from './utils.js';
 import { consoleLogger, silentLogger } from './logs.js';
 
@@ -89,7 +89,7 @@ const writeHTML = async (allissues, storagePath, deviceToScan, htmlFilename = 'r
   };
 
   let deviceIconHtml;
-  switch (deviceUsed){
+  switch (deviceUsed) {
     case 'Desktop':
       deviceIconHtml = `<svg viewBox="0 0 100 100" aria-hidden="true">
       <path d="M80.24 19.76H19.76C16.9736 19.76 14.72 22.0208 14.72 24.8072V65.1776C14.72 67.964 16.9736 70.2248 19.76 70.2248H42.44V75.1928H37.4C36.0104 75.1928 34.88 76.3232 34.88 77.7128C34.88 79.1096 36.0104 80.2328 37.4 80.2328H62.6C63.9896 80.2328 65.12 79.1024 65.12 77.7128C65.12 76.316 63.9896 75.1928 62.6 75.1928H57.56V70.2248H80.24C83.0264 70.2248 85.28 67.964 85.28 65.1776V24.8072C85.28 22.0208 83.0264 19.76 80.24 19.76ZM80.24 63.68C80.24 64.5512 79.5344 65.2568 78.6632 65.2568H21.3368C20.4656 65.2568 19.76 64.5512 19.76 63.68V26.4632C19.76 25.592 20.4656 24.8864 21.3368 24.8864H78.6704C79.5416 24.8864 80.2472 25.592 80.2472 26.4632L80.24 63.68Z">
@@ -107,7 +107,7 @@ const writeHTML = async (allissues, storagePath, deviceToScan, htmlFilename = 'r
       </svg>`;
       break;
     default:
-      deviceUsed = deviceToScan.replaceAll("_", " ");
+      deviceUsed = deviceToScan.replaceAll('_', ' ');
       deviceIconHtml = `<svg viewBox="0 0 100 100" aria-hidden="true">
       <path fill-rule="evenodd" clip-rule="evenodd" d="M36.6667 17C33.353 17 30.6667 19.6456 30.6667 22.9091V76.0909C30.6667 79.3544 33.353 82 36.6667 82H61.6667C64.9805 82 67.6667 79.3544 67.6667 76.0909V22.9091C67.6667 19.6456 64.9805 17 61.6667 17H36.6667ZM63.6667 24.8788H34.6667V72.1515H63.6667V24.8788ZM43.6667 20.447C43.6667 20.175 43.8906 19.9545 44.1667 19.9545H55.1667C55.4429 19.9545 55.6667 20.175 55.6667 20.447C55.6667 20.7189 55.4429 20.9394 55.1667 20.9394H44.1667C43.8906 20.9394 43.6667 20.7189 43.6667 20.447ZM49.6667 80.0303C51.3236 80.0303 52.6667 78.7075 52.6667 77.0758C52.6667 75.444 51.3236 74.1212 49.6667 74.1212C48.0099 74.1212 46.6667 75.444 46.6667 77.0758C46.6667 78.7075 48.0099 80.0303 49.6667 80.0303Z">
       </svg>`;
@@ -224,10 +224,7 @@ const thresholdLimitCheck = async (warnLevel, allIssues, totalUniqueIssues) => {
   const issueCounts = issueCountMap(allIssues);
 
   const messages = [
-    [
-      `Total Issues: ${issueCounts.get('total')}`,
-      `Total Unique Issues: ${totalUniqueIssues}`,
-    ],
+    [`Total Issues: ${issueCounts.get('total')}`, `Total Unique Issues: ${totalUniqueIssues}`],
     [
       `Issue Breakdown`,
       `Critical: ${issueCounts.get('critical')}`,
