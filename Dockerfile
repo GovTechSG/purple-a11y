@@ -1,7 +1,7 @@
 FROM node:lts-alpine
 
 # Installation of packages for purple-hats and chromium
-RUN apk add --no-cache g++ make python3 chromium zip bash git
+RUN apk add --no-cache g++ make python3 chromium zip bash git imagemagick
 
 WORKDIR /app
 
