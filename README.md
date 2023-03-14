@@ -8,6 +8,7 @@ Purple HATS is a customisable, automated accessibility testing tool that allows 
 2. [Axe-core](https://github.com/dequelabs/axe-core)
 3. [Node.js](https://Node.js.org/en/)
 4. [Playwright](https://playwright.dev/)
+5. [ImageMagick](https://github.com/ImageMagick/ImageMagick)
 
 ## Prerequisites and Installations
 
