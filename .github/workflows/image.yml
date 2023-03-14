@@ -35,6 +35,13 @@ jobs:
           name: purple-hats-portable-windows
           path: ./purple-hats-portable-windows.zip
 
+      - name: Release Windows artifact
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            purple-hats-portable-windows.zip
+            
   mac-install-purple:
     runs-on: macos-latest  
 
@@ -66,15 +73,18 @@ jobs:
 
       - name: Zip entire Purple folder (Mac)
         run: |
-          if [[ $(uname -m) == 'arm64' ]]
-          then        
-            zip purple-hats-portable-mac-arm64.zip -y -r ./ --exclude 'hats_shell_ps.ps1' 'hats_shell.cmd'
-          else
-            zip purple-hats-portable-mac-x64.zip -y -r ./ --exclude 'hats_shell_ps.ps1' 'hats_shell.cmd'
-          fi
+          zip purple-hats-portable-mac.zip -y -r ./
       
       - name: Upload Mac artifact
         uses: actions/upload-artifact@v3
         with:
           name: purple-hats-portable-mac
-          path: ./purple-hats-portable-mac-*.zip
+          path: ./purple-hats-portable-mac.zip
+          
+        
+      - name: Release Mac artifact
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            purple-hats-portable-windows.zip
