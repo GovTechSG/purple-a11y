@@ -8,18 +8,18 @@ if [ ${PWD##*/} = "scripts" ]; then
   cd ..
 fi
 
-if [[ $(uname -m) == 'arm64' ]]; then
-    export ROSETTA2_STATUS_RESULT=$(/usr/bin/pgrep -q oahd && echo true || echo false)
-    if ! $ROSETTA2_STATUS_RESULT; then   
-        echo "Installing Rosetta 2 dependency"
-        /usr/sbin/softwareupdate --install-rosetta
-    fi
-fi
-
 if ! command -v python3 &> /dev/null
 then
     echo "Installing Xcode CLI Tools"
     xcode-select --install
+fi
+
+if [[ $(uname -m) == 'arm64' ]]; then
+    export ROSETTA2_STATUS_RESULT=$(/usr/bin/pgrep -q oahd && echo true || echo false)
+    if ! $ROSETTA2_STATUS_RESULT; then   
+        echo "Installing Rosetta 2 dependency"
+        /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+    fi
 fi
 
 echo "INFO: Setting path to node for this session"
