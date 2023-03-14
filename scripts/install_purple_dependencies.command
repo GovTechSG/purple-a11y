@@ -41,16 +41,16 @@ if [ -d "/Applications/Cloudflare WARP.app" ]; then
   export NODE_EXTRA_CA_CERTS="/tmp/Cloudflare_CA.pem"
 fi
 
-echo "Installing Node dependencies to $PWD"
-
 if ! [ -f package.json ] && [ -d purple-hats ]; then
   cd purple-hats
 fi
 
 if [ -d "node_modules" ]; then
+  echo "Deleting node_modules before installation"
   rm -rf node_modules 
 fi
 
+echo "Installing Node dependencies to $PWD"
 npm ci
 
 
