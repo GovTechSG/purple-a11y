@@ -51,11 +51,6 @@ jobs:
         with:
           path: purple-hats
       
-      - name: Install Purple dependencies for MacOS
-        run: |
-          ./scripts/install_purple_dependencies.command
-        working-directory: purple-hats
-
       - name: Grant execute permissions for user
         run: chmod ugo+rwx ./scripts/*.command ./scripts/*.sh
         working-directory: purple-hats
@@ -63,6 +58,10 @@ jobs:
       - name: Copy scripts to parent directory
         run: |
           cp ./purple-hats/scripts/{*.command,*.sh}  ${{ github.workspace }}
+
+      - name: Install Purple dependencies for MacOS
+        run: |
+          ./install_purple_dependencies.command
 
       - name: Zip entire Purple folder (Mac)
         run: |
