@@ -38,7 +38,7 @@ if (-Not (Test-Path ImageMagick\bin\compare.exe)) {
 # Install Node dependencies
 if (Test-Path purple-hats) {
     Write-Output "Installing node dependencies"
-    & ".\hats_shell_ps.ps1" "cd purple-hats;npm i fsevents@latest -f --save-optional"
+    & ".\hats_shell_ps.ps1" "cd purple-hats;npm ci"
 
     if (Test-Path purple-hats\.git) {
         Write-Output "Unhide .git folder"
@@ -50,7 +50,7 @@ if (Test-Path purple-hats) {
 
     if (Test-Path package.json) {
         Write-Output "Installing node dependencies"
-        & ".\hats_shell_ps.ps1" "npm i fsevents@latest -f --save-optional"   
+        & ".\hats_shell_ps.ps1" "npm ci"   
     
         if (Test-Path .git) {
             Write-Output "Unhide .git folder"
