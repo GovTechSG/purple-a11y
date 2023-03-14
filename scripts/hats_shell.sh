@@ -4,47 +4,51 @@ echo "hats Shell - Created By younglim - NO WARRANTY PROVIDED"
 echo "================================================================"
 echo ""
 
-if ! command -v python3 &> /dev/null
-then
-    xcode-select --install
-    echo "installed python3 and xcode"
+if [ ${PWD##*/} = "scripts" ]; then
+  cd ..
 fi
 
-export CURRENT_PATH="$(pwd)"
-echo "INFO: Stored current working directory at $CURRENT_PATH"
+if [[ $(uname -m) == 'arm64' ]]; then
+    export ROSETTA2_STATUS_RESULT=$(/usr/bin/pgrep -q oahd && echo true || echo false)
+    if ! $ROSETTA2_STATUS_RESULT; then   
+        echo "Installing Rosetta 2 dependency"
+        /usr/sbin/softwareupdate --install-rosetta
+    fi
+fi
 
-export PATH_TO_HATS="$(dirname "$0")"
-cd "$PATH_TO_HATS"
-echo "INFO: Set path to hats $(pwd)"
+if ! command -v python3 &> /dev/null
+then
+    echo "Installing Xcode CLI Tools"
+    xcode-select --install
+fi
 
-echo "INFO: Set path to node for this session"
+echo "INFO: Setting path to node for this session"
 if [[ $(uname -m) == 'arm64' ]]; then
     export PATH_TO_NODE="$(pwd)/nodejs-mac-arm64/bin"
-    export PATH="$PATH_TO_NODE:$PATH"
-   
-    echo "path to node: $PATH_TO_NODE"
+    export PATH="$PATH_TO_NODE:$PATH" 
 else
     export PATH_TO_NODE="$(pwd)/nodejs-mac-x64/bin"
     export PATH="$PATH_TO_NODE:$PATH"
-   
-    echo "path to node: $PATH_TO_NODE"
 fi
 
-export PATH_TO_BETTER_SQLITE3="./purple-hats/node_modules/better-sqlite3-with-prebuilds/build/Release"
-echo "path to better_sqlite3: $PATH_TO_BETTER_SQLITE3"
+echo "INFO: Path to node: $PATH_TO_NODE"
 
-declare -a exec=($PATH_TO_BETTER_SQLITE3/better_sqlite3.node $PATH_TO_NODE/node "$(find ms-playwright -name Chromium.app)")
+echo "INFO: Removing com.apple.quarantine attributes for required binaries to run"
+find ./**/ImageMagick*/bin -exec xattr -d com.apple.quarantine {} \;&>/dev/null
+find ./**/ImageMagick*/lib/*.dylib -exec xattr -d com.apple.quarantine {} \;&>/dev/null
+find ./**/ms-playwright/**/** -maxdepth 0 -name "*.app" -exec xattr -d com.apple.quarantine {} \;&>/dev/null
+xattr -d com.apple.quarantine $PATH_TO_NODE/node &>/dev/null
 
-for p in ${exec[@]} ; do
-    xattr -d com.apple.quarantine $p &>/dev/null
-done
+export PUPPETEER_SKIP_DOWNLOAD='true'
+export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD='true'
 
-find ./purple-hats/bin/Image*/bin -exec xattr -d com.apple.quarantine {} \;&>/dev/null
-
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    export PUPPETEER_SKIP_DOWNLOAD='true'
-    export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD='true'
-    export PUPPETEER_EXECUTABLE_PATH='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-    export PLAYWRIGHT_BROWSERS_PATH="$PATH_TO_HATS/ms-playwright"
-    echo "using chrome instead of puppeteer"
+if [ -f "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" ]; then
+    echo "INFO: Using Google Chrome instead of Puppeteer's downloaded browser for web crawls"
+    export PUPPETEER_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+else
+    echo "INFO: Using Playwright Chromium instead of Puppeteer's downloaded browser for web crawls"
+    export PUPPETEER_EXECUTABLE_PATH="$(find $PWD/**/ms-playwright/**/** -maxdepth 0 -name 'Chromium.app')"
 fi
+
+export PLAYWRIGHT_BROWSERS_PATH="$PWD/ms-playwright"
+

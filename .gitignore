@@ -14,3 +14,6 @@ coverage/
 generatedScript*.js
 exclusions.txt
 bin/
+ImageMagick-*
+nodejs-*
+ms-playwright/
