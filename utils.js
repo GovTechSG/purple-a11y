@@ -1,4 +1,4 @@
-import { exec, execFile } from 'child_process';
+import { exec, execFile, execSync } from 'child_process';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
@@ -10,11 +10,25 @@ import fs from 'fs-extra';
 import crypto from 'crypto';
 
 import constants from './constants/constants.js';
+import { silentLogger } from './logs.js';
 
 export const getVersion = () => {
   const loadJSON = path => JSON.parse(fs.readFileSync(new URL(path, import.meta.url)));
-  const appVersion = loadJSON('./package.json').version;
+  const versionNum = loadJSON('./package.json').version;
 
+  let branchName;
+
+  try {
+    branchName = execSync('git branch --show-current', { stdio: 'pipe' }).toString().trim();
+  } catch (error) {
+    silentLogger.warn(`Unable to fetch branch name: ${error.stderr.toString()}`);
+  }
+
+  let appVersion = versionNum;
+
+  if (branchName) {
+    appVersion += `-${branchName}`;
+  }
   return appVersion;
 };
 
