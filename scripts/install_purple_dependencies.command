@@ -43,6 +43,10 @@ fi
 
 echo "Installing Node dependencies to $PWD"
 
+if ! [ -f package.json ] && [ -d purple-hats ]; then
+  cd purple-hats
+fi
+
 if [ -d "node_modules" ]; then
   rm -rf node_modules 
 fi
