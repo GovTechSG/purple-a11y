@@ -31,6 +31,15 @@ else
     export PATH="$PATH_TO_NODE:$PATH"
 fi
 
+if $(ls ImageMagick-*/bin/compare 1> /dev/null 2>&1) && [ -d purple-hats ]; then
+	echo "INFO: Set symbolic link to ImageMagick"
+	ln -sf "$(ls -d $PWD/ImageMagick-*)" "purple-hats/$(ls -d ImageMagick-*)"
+
+    echo "INFO: Set path to ImageMagick"
+    export PATH="$(ls -d $PWD/ImageMagick-*/bin):$PATH"
+
+fi
+
 echo "INFO: Path to node: $PATH_TO_NODE"
 
 echo "INFO: Removing com.apple.quarantine attributes for required binaries to run"

@@ -20,9 +20,10 @@ const playwrightAxeGenerator = async (domain, randomToken, answers) => {
     });
     
     if (unsafe.length > 0 ) {
-        consoleLogger.error("Unsafe expressions detected: '"+ unsafe +"' Please revise " + blacklistedPatternsFilename);
-        silentLogger.error("Unsafe expressions detected: '"+ unsafe +"' Please revise " + blacklistedPatternsFilename);
-        process.exit(1);
+      let unsafeExpressionsError = "Unsafe expressions detected: '"+ unsafe +"' Please revise " + blacklistedPatternsFilename;
+      consoleLogger.error(unsafeExpressionsError);
+      silentLogger.error(unsafeExpressionsError);
+      process.exit(1);
     };
   }
 
@@ -37,6 +38,7 @@ const playwrightAxeGenerator = async (domain, randomToken, answers) => {
   import { isSkippedUrl } from './constants/common.js';
   import { spawnSync } from 'child_process';
   import safe from 'safe-regex';
+  import { consoleLogger, silentLogger } from './logs.js';
 
   const blacklistedPatternsFilename = 'exclusions.txt';
 
@@ -44,7 +46,10 @@ process.env.CRAWLEE_STORAGE_DIR = constants.a11yStorage;
 const compareExe = getExecutablePath('**/ImageMagick*/bin','compare');
 
 if (!compareExe) {
-  throw new Error("Could not find ImageMagick compare.  Please ensure ImageMagick is installed.");
+  let ImagMagickNotFoundError = "Could not find ImageMagick compare.  Please ensure ImageMagick is installed at current directory.";
+  consoleLogger.error(ImagMagickNotFoundError);
+  silentLogger.error(ImagMagickNotFoundError);
+  process.exit(1);
 } 
 
 removeQuarantineFlag('**/ImageMagick*/lib/*.dylib');
@@ -73,10 +78,11 @@ if (fs.existsSync(blacklistedPatternsFilename)) {
   });
   
   if (unsafe.length > 0 ) {
-    consoleLogger.error("Unsafe expressions detected: '"+ unsafe +"' Please revise " + blacklistedPatternsFilename);
-    silentLogger.error("Unsafe expressions detected: '"+ unsafe +"' Please revise " + blacklistedPatternsFilename);
+    let unsafeExpressionsError = "Unsafe expressions detected: '"+ unsafe +"' Please revise " + blacklistedPatternsFilename;
+    consoleLogger.error(unsafeExpressionsError);
+    silentLogger.error(unsafeExpressionsError);
     process.exit(1);
-  }
+  };
 }
 
 var index = 1;
