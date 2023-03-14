@@ -46,13 +46,6 @@ jobs:
     runs-on: macos-latest  
 
     steps:
-      - name: Download node.js version from nodejs.org
-        run: |         
-          curl -o ./nodejs-mac-arm64.tar.gz --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-darwin-arm64.tar.gz      
-          mkdir nodejs-mac-arm64 && tar -xzf nodejs-mac-arm64.tar.gz -C nodejs-mac-arm64 --strip-components=1 && rm ./nodejs-mac-arm64.tar.gz
-          curl -o ./nodejs-mac-x64.tar.gz --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-darwin-x64.tar.gz     
-          mkdir nodejs-mac-x64 && tar -xzf nodejs-mac-x64.tar.gz -C nodejs-mac-x64 --strip-components=1 && rm ./nodejs-mac-x64.tar.gz
-
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
@@ -81,7 +74,6 @@ jobs:
           name: purple-hats-portable-mac
           path: ./purple-hats-portable-mac.zip
           
-        
       - name: Release Mac artifact
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
