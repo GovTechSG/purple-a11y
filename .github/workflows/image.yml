@@ -65,7 +65,7 @@ jobs:
         run: |
           cp ./purple-hats/scripts/{*.command,hats_shell.sh,*.command}  ${{ github.workspace }}
 
-      - name: Zip entire Purple Hats folder (Mac)
+      - name: Zip entire Purple folder (Mac)
         run: |
           if [[ $(uname -m) == 'arm64' ]]
           then        
