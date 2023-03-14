@@ -1,5 +1,13 @@
+# If currently within script, go one directory up
+if ((Split-Path -Path $pwd -Leaf) -eq "scripts") {
+	cd ..
+}
+
+$ProgressPreferences = 'SilentlyContinue'
+$ErrorActionPreference = 'Stop'
+
 # Install Git binaries
-if (-Not (Test-Path git)) {
+if (-Not (Test-Path git\git-cmd.exe)) {
     Write-Output "Downloading Git"
     Invoke-WebRequest -o ".\PortableGit.7z.exe" "https://github.com/git-for-windows/git/releases/download/v2.39.1.windows.1/PortableGit-2.39.1-64-bit.7z.exe"
 
@@ -9,7 +17,7 @@ if (-Not (Test-Path git)) {
 }
 
 # Install NodeJS binaries
-if (-Not (Test-Path nodejs-win)) {
+if (-Not (Test-Path nodejs-win\node.exe)) {
     Write-Output "Downloading Node"
     Invoke-WebRequest -o ./nodejs-win.zip "https://nodejs.org/dist/v18.12.1/node-v18.12.1-win-x64.zip"     
     
@@ -20,9 +28,9 @@ if (-Not (Test-Path nodejs-win)) {
 }
 
 # Install Image<agick
-if (-Not (Test-Path ImageMagick\bin)) {
+if (-Not (Test-Path ImageMagick\bin\compare.exe)) {
     Write-Output "Downloading ImageMagick (Mirror)"
-    Invoke-WebRequest -o ./ImageMagick-win.zip "https://mirror.checkdomain.de/imagemagick/binaries/ImageMagick-6.9.12-77-portable-Q16-HDRI-x64.zip"
+    Invoke-WebRequest -o ./ImageMagick-win.zip "https://mirror.checkdomain.de/imagemagick/binaries/ImageMagick-7.1.1-3-portable-Q16-x64.zip"
     Expand-Archive .\ImageMagick-win.zip -DestinationPath ImageMagick\bin
     Remove-Item -Force .\ImageMagick-win.zip
 }

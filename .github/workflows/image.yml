@@ -6,7 +6,7 @@ on:
     types: [published, created, edited]
 
 jobs:
-  windows-install-node:
+  windows-install-purple:
     runs-on: windows-latest
 
     steps:
@@ -19,14 +19,13 @@ jobs:
         run: |
           cp ${{github.workspace}}/purple-hats/scripts/*.ps1 ${{github.workspace}}
           cp ${{github.workspace}}/purple-hats/scripts/*.cmd ${{github.workspace}}      
-          rd -r ${{github.workspace}}/purple-hats/scripts
-
-      - name: Install Purple hats dependencies for Windows
+    
+      - name: Install Purple dependencies for Windows
         shell: pwsh
         run: powershell.exe -NoProfile -ExecutionPolicy Bypass "& ${{github.workspace}}\install_purple_dependencies.ps1"     
         working-directory:  ${{github.workspace}}
 
-      - name: Zip entire Purple Hats folder (Windows)
+      - name: Zip entire Purple folder (Windows)
         shell: pwsh
         run: Compress-Archive -Path ${{github.workspace}}/* -DestinationPath purple-hats-portable-windows.zip
 
@@ -36,7 +35,7 @@ jobs:
           name: purple-hats-portable-windows
           path: ./purple-hats-portable-windows.zip
 
-  mac-security-prompt-install-node:
+  mac-install-purple:
     runs-on: macos-latest  
 
     steps:
@@ -52,30 +51,20 @@ jobs:
         with:
           path: purple-hats
       
-      - name: Install Node Modules for Mac0S
+      - name: Install Purple dependencies for MacOS
         run: |
-          if [[ $(uname -m) == 'arm64' ]]; then
-            export PATH_TO_NODE="${{github.workspace}}/nodejs-mac-arm64/bin"
-            export PATH="$PATH_TO_NODE:$PATH"
-          else
-            export PATH_TO_NODE="${{github.workspace}}/nodejs-mac-x64/bin"
-            export PATH="$PATH_TO_NODE:$PATH"
-          fi
-          
-          export PLAYWRIGHT_BROWSERS_PATH="${{github.workspace}}/ms-playwright"
-          npm ci 
+          ./scripts/install_purple_dependencies.command
         working-directory: purple-hats
 
       - name: Grant execute permissions for user
-        run: chmod ugo+rwx ./scripts/hats_shell.command ./scripts/hats_shell.sh ./scripts/purple_hats_install.command
+        run: chmod ugo+rwx ./scripts/*.command ./scripts/*.sh
         working-directory: purple-hats
 
       - name: Copy scripts to parent directory
         run: |
-          cp ./purple-hats/scripts/{hats_shell.command,hats_shell.sh,purple_hats_install.command}  ${{ github.workspace }}
-          rm -rf ./purple-hats/scripts
-      
-      - name: Zip entire Purple Hats folder (Mac)
+          cp ./purple-hats/scripts/{*.command,*.sh}  ${{ github.workspace }}
+
+      - name: Zip entire Purple folder (Mac)
         run: |
           if [[ $(uname -m) == 'arm64' ]]
           then        
