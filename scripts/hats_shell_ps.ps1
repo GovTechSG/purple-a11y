@@ -1,3 +1,8 @@
+# If currently within script, go one directory up
+if ((Split-Path -Path $pwd -Leaf) -eq "scripts") {
+	cd ..
+}
+
 # Set current path
 $current_path = (Get-Item -Path ".\" -Verbose).FullName
 
