@@ -87,4 +87,4 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            purple-hats-portable-windows.zip
+            purple-hats-portable-mac.zip
