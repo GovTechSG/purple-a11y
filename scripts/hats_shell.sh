@@ -10,12 +10,6 @@ if [ $CURR_FOLDERNAME = "scripts" ]; then
   CURR_FOLDERNAME=$(basename $PWD)
 fi
 
-if ! command -v python3 &> /dev/null
-then
-    echo "Installing Xcode CLI Tools"
-    xcode-select --install
-fi
-
 if [[ $(uname -m) == 'arm64' ]]; then
     export ROSETTA2_STATUS_RESULT=$(/usr/bin/pgrep -q oahd && echo true || echo false)
     if ! $ROSETTA2_STATUS_RESULT; then   
