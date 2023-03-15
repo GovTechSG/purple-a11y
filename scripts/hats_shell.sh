@@ -4,8 +4,10 @@ echo "hats Shell - Created By younglim - NO WARRANTY PROVIDED"
 echo "================================================================"
 echo ""
 
-if [ ${PWD##*/} = "scripts" ]; then
+CURR_FOLDERNAME=$(basename $PWD)
+if [ $CURR_FOLDERNAME = "scripts" ]; then
   cd ..
+  CURR_FOLDERNAME=$(basename $PWD)
 fi
 
 if ! command -v python3 &> /dev/null
