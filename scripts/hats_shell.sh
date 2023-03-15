@@ -35,10 +35,17 @@ fi
 
 if $(ls ImageMagick-*/bin/compare 1> /dev/null 2>&1) && [ -d purple-hats ]; then
 	echo "INFO: Set symbolic link to ImageMagick"
-	ln -sf "$(ls -d $PWD/ImageMagick-*)" "purple-hats/$(ls -d ImageMagick-*)"
+   
+    if find ./purple-hats -name "ImageMagick*" -maxdepth 1 -type l -ls &> /dev/null; then
+        unlink ./purple-hats/ImageMagick* &>/dev/null
+    fi
 
-    echo "INFO: Set path to ImageMagick"
-    export PATH="$(ls -d $PWD/ImageMagick-*/bin):$PATH"
+    export IMAGEMAGICK_FOLDERNAME=$(ls -d ImageMagick-*)
+    export PATH_TO_IMAGEMAGICK="$PWD/$IMAGEMAGICK_FOLDERNAME"
+    ln -sf "$PATH_TO_IMAGEMAGICK" "./purple-hats/$IMAGEMAGICK_FOLDERNAME"
+
+    echo "INFO: Set path to ImageMagick binaries"
+    export PATH="$PATH_TO_IMAGEMAGICK/bin:$PATH"
 
 fi
 
