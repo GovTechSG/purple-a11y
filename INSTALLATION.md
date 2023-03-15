@@ -47,12 +47,6 @@ node index
 #### Recommended Pre-requisites
 * If you are using Mac, ensure you have the following software installed:
   * [Google Chrome](https://www.google.com/chrome)
-  * [Python 3](https://www.python.org/downloads/)
-  * Either XCode CLI tools or [XCode](https://apps.apple.com/us/app/xcode/id497799835?mt=12) 
-  * Tip: Install XCode CLI tools: 
-    * Open `Terminal` app.
-    * Type in the command: `xcode-select --install` and press Enter.
-    * You will then be prompted to accept the installation. Accept the installation and wait for it to complete before proceeding with the next steps.
 
 #### Download Portable Copy
  * Download and extract [purple-hats-portable-mac.zip](https://github.com/GovTechSG/purple-hats/releases/latest/download/purple-hats-portable-mac.zip) version.
