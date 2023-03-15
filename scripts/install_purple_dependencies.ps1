@@ -6,16 +6,6 @@ if ((Split-Path -Path $pwd -Leaf) -eq "scripts") {
 $ProgressPreferences = 'SilentlyContinue'
 $ErrorActionPreference = 'Stop'
 
-# Install Git binaries
-if (-Not (Test-Path git\git-cmd.exe)) {
-    Write-Output "Downloading Git"
-    Invoke-WebRequest -o ".\PortableGit.7z.exe" "https://github.com/git-for-windows/git/releases/download/v2.39.1.windows.1/PortableGit-2.39.1-64-bit.7z.exe"
-
-    Write-Output "Unzip Git"
-    .\PortableGit.7z.exe -o ".\git" -y | Out-Null
-    Remove-Item -Force .\PortableGit.7z.exe
-}
-
 # Install NodeJS binaries
 if (-Not (Test-Path nodejs-win\node.exe)) {
     Write-Output "Downloading Node"
