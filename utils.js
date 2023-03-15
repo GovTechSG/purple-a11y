@@ -16,20 +16,7 @@ export const getVersion = () => {
   const loadJSON = path => JSON.parse(fs.readFileSync(new URL(path, import.meta.url)));
   const versionNum = loadJSON('./package.json').version;
 
-  let branchName;
-
-  try {
-    branchName = execSync('git branch --show-current', { stdio: 'pipe' }).toString().trim();
-  } catch (error) {
-    silentLogger.warn(`Unable to fetch branch name: ${error.stderr.toString()}`);
-  }
-
-  let appVersion = versionNum;
-
-  if (branchName) {
-    appVersion += `-${branchName}`;
-  }
-  return appVersion;
+  return versionNum;
 };
 
 export const getHostnameFromRegex = url => {
