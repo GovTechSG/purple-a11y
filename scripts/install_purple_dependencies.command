@@ -2,8 +2,10 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
-if [ ${PWD##*/} = "scripts" ]; then
+CURR_FOLDERNAME=$(basename $PWD)
+if [ $CURR_FOLDERNAME = "scripts" ]; then
   cd ..
+  CURR_FOLDERNAME=$(basename $PWD)
 fi
 
 if ! [ -f nodejs-mac-arm64/bin/node ]; then
