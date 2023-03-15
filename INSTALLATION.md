@@ -54,7 +54,7 @@ node index
  
 #### Run Purple hats
  * Navigate to the folder `purple-hats-mac`, usually located at your Downloads folder. 
- * Press and hold [⌘ Command] key on your keyboard, and simultaneously right-click `hats_shell.command`. Then Click “Open” in the context menu.
+ * Right-click `hats_shell.command`. Then Click “Open” in the context menu.
  * A prompt as follows will appear like below. Click "Open". You only have to do this step once. 
  <img width="164" alt="MacOS prompt for unidentified developer" src="https://user-images.githubusercontent.com/2021525/208457749-3a0a573d-5a6d-4905-b11e-c957d2073979.png">
 
