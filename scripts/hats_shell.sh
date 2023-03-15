@@ -4,14 +4,10 @@ echo "hats Shell - Created By younglim - NO WARRANTY PROVIDED"
 echo "================================================================"
 echo ""
 
-if [ ${PWD##*/} = "scripts" ]; then
+CURR_FOLDERNAME=$(basename $PWD)
+if [ $CURR_FOLDERNAME = "scripts" ]; then
   cd ..
-fi
-
-if ! command -v python3 &> /dev/null
-then
-    echo "Installing Xcode CLI Tools"
-    xcode-select --install
+  CURR_FOLDERNAME=$(basename $PWD)
 fi
 
 if [[ $(uname -m) == 'arm64' ]]; then
@@ -33,20 +29,24 @@ fi
 
 if $(ls ImageMagick-*/bin/compare 1> /dev/null 2>&1) && [ -d purple-hats ]; then
 	echo "INFO: Set symbolic link to ImageMagick"
-	ln -sf "$(ls -d $PWD/ImageMagick-*)" "purple-hats/$(ls -d ImageMagick-*)"
+   
+    if find ./purple-hats -name "ImageMagick*" -maxdepth 1 -type l -ls &> /dev/null; then
+        unlink ./purple-hats/ImageMagick* &>/dev/null
+    fi
 
-    echo "INFO: Set path to ImageMagick"
-    export PATH="$(ls -d $PWD/ImageMagick-*/bin):$PATH"
+    export IMAGEMAGICK_FOLDERNAME=$(ls -d ImageMagick-*)
+    export PATH_TO_IMAGEMAGICK="$PWD/$IMAGEMAGICK_FOLDERNAME"
+    ln -sf "$PATH_TO_IMAGEMAGICK" "./purple-hats/$IMAGEMAGICK_FOLDERNAME"
+
+    echo "INFO: Set path to ImageMagick binaries"
+    export PATH="$PATH_TO_IMAGEMAGICK/bin:$PATH"
 
 fi
 
 echo "INFO: Path to node: $PATH_TO_NODE"
 
 echo "INFO: Removing com.apple.quarantine attributes for required binaries to run"
-find ./**/ImageMagick*/bin -exec xattr -d com.apple.quarantine {} \;&>/dev/null
-find ./**/ImageMagick*/lib/*.dylib -exec xattr -d com.apple.quarantine {} \;&>/dev/null
-find ./**/ms-playwright/**/** -maxdepth 1 -name "*.app" -exec xattr -d com.apple.quarantine {} \;&>/dev/null
-xattr -d com.apple.quarantine $PATH_TO_NODE/node &>/dev/null
+xattr -rd com.apple.quarantine . &>/dev/null
 
 export PUPPETEER_SKIP_DOWNLOAD='true'
 export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD='true'
