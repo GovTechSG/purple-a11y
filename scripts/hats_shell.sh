@@ -43,10 +43,7 @@ fi
 echo "INFO: Path to node: $PATH_TO_NODE"
 
 echo "INFO: Removing com.apple.quarantine attributes for required binaries to run"
-find ./**/ImageMagick*/bin -exec xattr -d com.apple.quarantine {} \;&>/dev/null
-find ./**/ImageMagick*/lib/*.dylib -exec xattr -d com.apple.quarantine {} \;&>/dev/null
-find ./**/ms-playwright/**/** -maxdepth 1 -name "*.app" -exec xattr -d com.apple.quarantine {} \;&>/dev/null
-xattr -d com.apple.quarantine $PATH_TO_NODE/node &>/dev/null
+xattr -rd com.apple.quarantine . &>/dev/null
 
 export PUPPETEER_SKIP_DOWNLOAD='true'
 export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD='true'
