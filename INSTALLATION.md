@@ -20,11 +20,28 @@ Purple hats is a customisable, automated accessibility testing tool that allows 
 
 #### Run Purple hats
  * Navigate to the folder containing purple-hats-portable. 
- * Double-click `hats-shell.cmd` (Windows Command Script file).
- * A Windows Command Prompt  similar to the one below will appear and prepare your system to run Purple hats
-<img width="425" alt="Command Prompt with hats_shell open" src="https://user-images.githubusercontent.com/2021525/208461886-b71a330b-ac62-48bd-b6c5-154b989c8c78.png">
+ * Double-click `hats_shell.cmd` (Windows Command Script file).
+  <img width="480" alt="Screenshot of Windows Explorer with hats_shell.cmd selected" src="https://user-images.githubusercontent.com/2021525/225506018-9f7a6684-ac14-4a69-a4f2-4d1a67a068c4.png">
 
-* Type the following commands to navigate to purple-hats and run a scan
+ * A Windows Command Prompt window should open with contents as illustrated below. `hats_shell` will autmatically prepare your system to run Purple hats. 
+```
+hats Shell - Created By younglim - NO WARRANTY PROVIDED
+================================================================
+
+INFO: Stored current working directory at C:\Users\a11y\Downloads\purple-hats-portable-windows
+INFO: Set path to node for this session
+INFO: Set path to node_modules for this session
+INFO: Set path to npm-global for this session
+INFO: Set path to Playwright cache for this session
+INFO: Set path to ImageMagick for this session
+INFO: Set path to purple-hats for this session
+
+
+PS C:\Users\username\Downloads\purple-hats-portable-windows>
+```
+ 
+
+ * Type in the following commands into the window.  The following commands will navigate your Terminal window to the `purple-hats` sub-directory and initiate a scan
 ```
 cd purple-hats
 node index
@@ -32,9 +49,21 @@ node index
  * If a Windows Firewall prompt appears, click "Allow access"
 <img width="261" alt="Windows Firewall prompt for Allow access" src="https://user-images.githubusercontent.com/2021525/208462360-ae9e1e3d-beca-4b78-af40-4126719432f0.png">
 
- * You will then be greeted with the following screen to run a scan.
-<img width="386" alt="hats_shell waiting for user to either scan sitemap or website" src="https://user-images.githubusercontent.com/2021525/208462641-84822386-1f26-49e8-8e92-a2107a67978b.png">
-
+ * You should then see your Windows Command Prompt window updated with the following contents
+```
+PS C:\Users\username\Downloads\purple-hats-portable-windows> cd purple-hats
+PS C:\Users\username\Downloads\purple-hats-portable-windows\purple-hats> node index
+┌────────────────────────────────────────────────────────────┐
+│ Welcome to HATS Accessibility Testing Tool!                │
+│ We recommend using Chrome browser for the best experience. │
+│                                                            │
+│ Version: ░░░░░░                                            │
+└────────────────────────────────────────────────────────────┘
+? What would you like to scan today? (Use arrow keys)
+> sitemap
+  website
+  custom flow
+```
 
  * Follow the steps at [Features](https://github.com/GovTechSG/purple-hats#features) for more information on how to run a scan.
  
@@ -54,24 +83,53 @@ node index
  
 #### Run Purple hats
  * Navigate to the folder `purple-hats-mac`, usually located at your Downloads folder. 
- * Right-click `hats_shell.command`. Then Click “Open” in the context menu.
- * A prompt as follows will appear like below. Click "Open". You only have to do this step once. 
- <img width="164" alt="MacOS prompt for unidentified developer" src="https://user-images.githubusercontent.com/2021525/208457749-3a0a573d-5a6d-4905-b11e-c957d2073979.png">
+ * Right-click `hats_shell.command`. Then click `Open` in the context menu.
+  <img width="480" alt="Screenshot of right-click hats_shell.command and Open" src="https://user-images.githubusercontent.com/2021525/225501586-2df8ba37-f58a-4d1f-b28c-e06865fec2b0.png">
 
- * A Terminal window similar to the one below with `hats_shell` will open and prepare your system to run Purple hats.  
- <img width="349" alt="Terminal window open with hats_shell" src="https://user-images.githubusercontent.com/2021525/208458169-e1ccf383-b0a3-44f0-ac0e-761d5812cefa.png">
+ * A prompt as follows will appear like below. Click `Open`. 
+ <img width="240" alt="MacOS prompt for unidentified developer" src="https://user-images.githubusercontent.com/2021525/208457749-3a0a573d-5a6d-4905-b11e-c957d2073979.png">
 
- * Type in the following command to navigate to purple hats sub-directory and run a scan
+ * A Terminal window should open with contents as illustrated below. `hats_shell` will autmatically prepare your system to run Purple hats.  
+```
+Last login: Thu Mar 16 10:48:05 on ttys002
+/Users/username/Downloads/purple-hats-portable-mac/hats_shell.command ; exit;
+username@hostname ~ % /Users/username/Downloads/purple-hats-portable-mac/hats_shell.command ; exit;
+hats Shell - Created By younglim - NO WARRANTY PROVIDED
+================================================================
+
+INFO: Setting path to node for this session
+INFO: Set symbolic link to ImageMagick
+INFO: Set path to ImageMagick binaries
+INFO: Path to node: /Users/username/Downloads/purple-hats-portable-mac/nodejs-mac-arm64/bin
+INFO: Removing com.apple.quarantine attributes for required binaries to run
+INFO: Using Google Chrome instead of Puppeteer's downloaded browser for web crawls
+username@hostname purple-hats-portable-mac % 
+```
+  
+ * Type in the following commands into the window.  The following commands will navigate your Terminal window to the `purple-hats` sub-directory and initiate a scan
  ``` 
 cd purple-hats
 node index
 ```
 
- * You will then be greeted with the following screen to run a scan
-<img width="349" alt="hats_shell waiting for user to either scan sitemap or website" src="https://user-images.githubusercontent.com/2021525/208459110-e44feaa9-6d97-4796-a597-9d38d1f80ce5.png">
+ * You should then see your Terminal window updated with the following contents
+```
+username@hostname purple-hats-portable-mac % cd purple-hats 
+username@hostname purple-hats % node index
+┌────────────────────────────────────────────────────────────┐
+│ Welcome to HATS Accessibility Testing Tool!                │
+│ We recommend using Chrome browser for the best experience. │
+│                                                            │
+│ Version: ░░░░░░                                            │
+└────────────────────────────────────────────────────────────┘
+? What would you like to scan today? (Use arrow keys)
+❯ sitemap 
+  website 
+  custom flow 
+```
 
  * Follow the steps at [Features](https://github.com/GovTechSG/purple-hats#features) for more information on how to run a scan.
  
  * If you are running on an Apple Silicon Mac, you may be prompted to install [Rosetta 2](https://support.apple.com/en-sg/HT211861).  Click "Install" and try running Purple hats again.
- <img width="480" alt="Rosetta 2 alert prompt" src="https://support.apple.com/library/content/dam/edam/applecare/images/en_US/macos/Big-Sur/macos-big-sur-software-update-rosetta-alert.jpg">
+ <img width="360" alt="Rosetta 2 alert prompt" src="https://support.apple.com/library/content/dam/edam/applecare/images/en_US/macos/Big-Sur/macos-big-sur-software-update-rosetta-alert.jpg">
 </details>
