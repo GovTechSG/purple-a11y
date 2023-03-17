@@ -41,7 +41,7 @@ PS C:\Users\username\Downloads\purple-hats-portable-windows>
 ```
  
 
- * Type in the following commands into the window.  The following commands will navigate your Terminal window to the `purple-hats` sub-directory and initiate a scan
+ * Type in the following commands into the window.  The following commands will navigate your Command Prompt window to the `purple-hats` sub-directory and initiate a scan
 ```
 cd purple-hats
 node index
@@ -73,10 +73,6 @@ PS C:\Users\username\Downloads\purple-hats-portable-windows\purple-hats> node in
 <details>
   <summary>Click here for MacOS setup instructions</summary>
 
-#### Recommended Pre-requisites
-* If you are using Mac, ensure you have the following software installed:
-  * [Google Chrome](https://www.google.com/chrome)
-
 #### Download Portable Copy
  * Download and extract [purple-hats-portable-mac.zip](https://github.com/GovTechSG/purple-hats/releases/latest/download/purple-hats-portable-mac.zip) version.
  * Tip: To extract files in Mac, double-click on `purple-hats-portable-mac.zip` file, usually located at your Downloads folder. A new folder with the name `purple-hats-mac` will appear in Finder.
@@ -98,11 +94,11 @@ hats Shell - Created By younglim - NO WARRANTY PROVIDED
 ================================================================
 
 INFO: Setting path to node for this session
+INFO: Set path to node_modules for this session
+INFO: Set path to Playwright cache for this session
 INFO: Set symbolic link to ImageMagick
 INFO: Set path to ImageMagick binaries
-INFO: Path to node: /Users/username/Downloads/purple-hats-portable-mac/nodejs-mac-arm64/bin
 INFO: Removing com.apple.quarantine attributes for required binaries to run
-INFO: Using Google Chrome instead of Puppeteer's downloaded browser for web crawls
 username@hostname purple-hats-portable-mac % 
 ```
   

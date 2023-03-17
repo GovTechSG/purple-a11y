@@ -15,7 +15,6 @@
     "mustache": "^4.2.0",
     "playwright": "^1.30.0",
     "print-message": "^3.0.1",
-    "puppeteer": "^19.5.2",
     "safe-regex": "^2.1.1",
     "validator": "^13.7.0",
     "which": "^3.0.0",
