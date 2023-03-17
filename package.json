@@ -1,7 +1,7 @@
 {
   "name": "purple-hats",
   "main": "index.js",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "type": "module",
   "dependencies": {
     "axe-core": "^4.6.2",
