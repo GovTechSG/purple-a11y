@@ -1,5 +1,5 @@
 import crawlee from 'crawlee';
-import { KnownDevices } from 'puppeteer';
+import { devices } from 'playwright';
 import printMessage from 'print-message';
 import {
   createCrawleeSubFolders,
@@ -21,7 +21,7 @@ const crawlSitemap = async (
 ) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { deviceChosen, customDevice, viewportWidth } = viewportSettings;
-  const maxConcurrency = constants.maxConcurrency;
+  const { maxConcurrency } = constants;
 
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
   const requestList = new crawlee.RequestList({
@@ -31,38 +31,51 @@ const crawlSitemap = async (
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
 
   const { dataset } = await createCrawleeSubFolders(randomToken);
+  
   let device;
-
-  if (deviceChosen === 'Custom' && customDevice !== 'Specify viewport') {
-    if (customDevice === 'Samsung Galaxy S9+') {
-      device = KnownDevices['Galaxy S9+'];
-    } else if (customDevice === 'iPhone 11') {
-      device = KnownDevices['iPhone 11'];
-    }
+  if (customDevice === 'Samsung Galaxy S9+') {
+    device = devices['Galaxy S9+'];
+  } else if (customDevice === 'iPhone 11') {
+    device = devices['iPhone 11'];
+  } else if (customDevice) {
+    device = devices[customDevice.replace('_', / /g)];
   }
-  const crawler = new crawlee.PuppeteerCrawler({
+
+  const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
       launchOptions: {
         args: constants.launchOptionsArgs,
       },
     },
+    browserPoolOptions: {
+      useFingerprints: false,
+      preLaunchHooks: [async (pageId, launchContext) => {
+        
+        launchContext.launchOptions = {
+          ...launchContext.launchOptions,
+          bypassCSP: true,
+          ignoreHTTPSErrors: true,
+        };
+
+        if (deviceChosen === 'Custom') {
+          if (device) {
+            launchContext.launchOptions.viewport = device.viewport;
+            launchContext.launchOptions.userAgent = device.userAgent; 
+            launchContext.launchOptions.isMobile = true;
+          } else {
+            launchContext.launchOptions.viewport= { width: Number(viewportWidth), height: 800 };
+          }
+        } else if (deviceChosen === 'Mobile') {
+          launchContext.launchOptions.viewport = { width: 360, height: 800 };
+          launchContext.launchOptions.isMobile = true;
+        }
+
+      }],
+    },
     requestList,
     preNavigationHooks,
     requestHandler: async ({ page, request, response }) => {
-      if (deviceChosen === 'Custom') {
-        if (device) {
-          await page.emulate(device);
-        } else {
-          await page.setViewport({
-            width: Number(viewportWidth),
-            height: page.viewport().height,
-            isMobile: true,
-          });
-        }
-      } else if (deviceChosen === 'Mobile') {
-        await page.setViewport({ width: 360, height: page.viewport().height, isMobile: true });
-      }
-
+      
       const currentUrl = request.url;
       const contentType = response.headers()['content-type'];
       const status = response.status();
