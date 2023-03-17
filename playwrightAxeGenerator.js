@@ -258,15 +258,15 @@ const processPage = async page => {
 
     if (customDevice === 'iPhone 11' || deviceChosen === 'Mobile') {
       execSync(
-        `${codegenCmd} --device='iPhone 11' ${extraCodegenOpts}`,
+        `${codegenCmd} --device="iPhone 11" ${extraCodegenOpts}`,
       );
     } else if (customDevice === 'Samsung Galaxy S9+') {
       execSync(
-        `${codegenCmd} --device='Galaxy S9+' ${extraCodegenOpts}`,
+        `${codegenCmd} --device="Galaxy S9+" ${extraCodegenOpts}`,
       );
     } else if (customDevice === 'Specify viewport') {
       execSync(
-        `${codegenCmd} --viewport-size=${viewportWidth},720 ${extraCodegenOpts}`,
+        `${codegenCmd} --viewport-size=${answers.viewportWidth},720 ${extraCodegenOpts}`,
       );
     } else {
       execSync(

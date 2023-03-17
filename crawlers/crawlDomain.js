@@ -54,7 +54,7 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
             launchContext.launchOptions.viewport= { width: Number(viewportWidth), height: 800 };
           }
         } else if (deviceChosen === 'Mobile') {
-          launchContext.launchOptions.viewport = { width: 360, height: 800 };
+          launchContext.launchOptions.viewport = { width: 360, height: 720 };
           launchContext.launchOptions.isMobile = true;
         }
 
