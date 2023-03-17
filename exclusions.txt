@@ -1,0 +1,1 @@
+\.*singpass.gov.sg\.*

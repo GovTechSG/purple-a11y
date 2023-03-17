@@ -27,6 +27,16 @@ else
     export PATH="$PATH_TO_NODE:$PATH"
 fi
 
+echo "INFO: Set path to node_modules for this session"
+if find ./purple-hats -name "node_modules" -maxdepth 1 -type l -ls &> /dev/null; then
+    export PATH="$PWD/purple-hats/node_modules/.bin:$PATH"
+else
+    export PATH="$PWD/node_modules/.bin:$PATH"
+fi
+
+echo "INFO: Set path to Playwright cache for this session"
+export PLAYWRIGHT_BROWSERS_PATH="$PWD/ms-playwright"
+
 if $(ls ImageMagick-*/bin/compare 1> /dev/null 2>&1) && [ -d purple-hats ]; then
 	echo "INFO: Set symbolic link to ImageMagick"
    
@@ -43,21 +53,5 @@ if $(ls ImageMagick-*/bin/compare 1> /dev/null 2>&1) && [ -d purple-hats ]; then
 
 fi
 
-echo "INFO: Path to node: $PATH_TO_NODE"
-
 echo "INFO: Removing com.apple.quarantine attributes for required binaries to run"
 xattr -rd com.apple.quarantine . &>/dev/null
-
-export PUPPETEER_SKIP_DOWNLOAD='true'
-export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD='true'
-
-if [ -f "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" ]; then
-    echo "INFO: Using Google Chrome instead of Puppeteer's downloaded browser for web crawls"
-    export PUPPETEER_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-else
-    echo "INFO: Using Playwright Chromium instead of Puppeteer's downloaded browser for web crawls"
-    export PUPPETEER_EXECUTABLE_PATH="$(find $PWD/**/ms-playwright/**/** -maxdepth 0 -name 'Chromium.app')"
-fi
-
-export PLAYWRIGHT_BROWSERS_PATH="$PWD/ms-playwright"
-
