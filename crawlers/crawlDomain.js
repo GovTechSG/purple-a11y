@@ -1,5 +1,6 @@
 import crawlee from 'crawlee';
-import { KnownDevices } from 'puppeteer';
+import { devices } from 'playwright';
+
 import {
   createCrawleeSubFolders,
   preNavigationHooks,
@@ -7,6 +8,7 @@ import {
   failedRequestHandler,
 } from './commonCrawlerFunc.js';
 import constants from '../constants/constants.js';
+
 
 const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequestsPerCrawl) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
@@ -17,43 +19,50 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
 
   await requestQueue.addRequest({ url });
 
-  let device;
-
   // customDevice check for website scan
+  let device;
   if (customDevice === 'Samsung Galaxy S9+') {
-    device = KnownDevices['Galaxy S9+'];
+    device = devices['Galaxy S9+'];
   } else if (customDevice === 'iPhone 11') {
-    device = KnownDevices['iPhone 11'];
+    device = devices['iPhone 11'];
   } else if (customDevice) {
-    device = KnownDevices[customDevice.replace('_', / /g)];
+    device = devices[customDevice.replace('_', / /g)];
   }
 
-  const crawler = new crawlee.PuppeteerCrawler({
+  const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
       launchOptions: {
         args: constants.launchOptionsArgs,
       },
     },
+    browserPoolOptions: {
+      useFingerprints: false,
+      preLaunchHooks: [async (pageId, launchContext) => {
+        
+        launchContext.launchOptions = {
+          ...launchContext.launchOptions,
+          bypassCSP: true,
+          ignoreHTTPSErrors: true,
+        };
+
+        if (deviceChosen === 'Custom') {
+          if (device) {
+            launchContext.launchOptions.viewport = device.viewport;
+            launchContext.launchOptions.userAgent = device.userAgent; 
+            launchContext.launchOptions.isMobile = true;
+          } else {
+            launchContext.launchOptions.viewport= { width: Number(viewportWidth), height: 800 };
+          }
+        } else if (deviceChosen === 'Mobile') {
+          launchContext.launchOptions.viewport = { width: 360, height: 800 };
+          launchContext.launchOptions.isMobile = true;
+        }
+
+      }],
+    },
     requestQueue,
     preNavigationHooks,
-    requestHandler: async ({ page, request, enqueueLinksByClickingElements, enqueueLinks }) => {
-      if (deviceChosen === 'Custom') {
-        if (device) {
-          await page.emulate(device);
-        } else {
-          await page.setViewport({
-            width: Number(viewportWidth),
-            height: page.viewport().height,
-            isMobile: true,
-          });
-        }
-      } else if (deviceChosen === 'Mobile') {
-        await page.setViewport({
-          width: 360,
-          height: page.viewport().height,
-          isMobile: true,
-        });
-      }
+    requestHandler: async ({ page, request, enqueueLinks, enqueueLinksByClickingElements }) => {
 
       const currentUrl = request.url;
       const location = await page.evaluate('location');
@@ -63,22 +72,22 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
         await dataset.pushData(results);
         urlsCrawled.scanned.push(currentUrl);
 
-        await enqueueLinksByClickingElements({
-          // set selector matches non-anchor elements, click where element
-          // NOT <a> or [type="submit"] or [type="reset"]
-          // IS role='link' or onclick or button.*link
-          // enqueue new page URL
-          selector: ':not(a, [type="submit"], [type="reset"]):is([role="link"], [onclick], button.*link)',
-          requestQueue,
-        });
-
         await enqueueLinks({
-          // set selector matches anchor elements, and enqueue hyperlink contained in <a>
-          selector: 'a',
+          // set selector matches anchor elements with href but not contains # or starting with mailto:
+          selector:'a:not(a[href*="#"],a[href^="mailto:"])',
           strategy: 'same-domain',
           requestQueue,
         });
-        
+
+        await enqueueLinksByClickingElements({
+          // set selector matches
+          // NOT <a>
+          // IS role='link' or onclick
+          // enqueue new page URL
+          selector: ':not(a):is(*[role="link"], *[onclick])',
+          requestQueue,
+        });
+
       } else {
         urlsCrawled.outOfDomain.push(currentUrl);
       }
