@@ -267,7 +267,13 @@ export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
   const fetchUrls = async url => {
     let data;
     if (isValidHttpUrl(url)) {
-      data = await (await axios.get(url)).data;
+      const instance = axios.create({
+        httpsAgent: new https.Agent({  
+          rejectUnauthorized: false
+        })
+      });
+      
+      data = await (await instance.get(url)).data;
     } else {
       data = fs.readFileSync(url, 'utf8');
     }
