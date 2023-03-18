@@ -33,12 +33,16 @@ const crawlSitemap = async (
   const { dataset } = await createCrawleeSubFolders(randomToken);
   
   let device;
-  if (customDevice === 'Samsung Galaxy S9+') {
-    device = devices['Galaxy S9+'];
-  } else if (customDevice === 'iPhone 11') {
+  if (deviceChosen === 'Mobile' || customDevice === 'iPhone 11') {
     device = devices['iPhone 11'];
+  } else if (customDevice === 'Samsung Galaxy S9+') {
+    device = devices['Galaxy S9+'];
+  } else if (customDevice === "Specify viewport") {
+    device = { viewport: { width: Number(viewportWidth), height: 720 }};
   } else if (customDevice) {
     device = devices[customDevice.replace('_', / /g)];
+  } else {
+    device = {};
   }
 
   const crawler = new crawlee.PlaywrightCrawler({
@@ -55,20 +59,8 @@ const crawlSitemap = async (
           ...launchContext.launchOptions,
           bypassCSP: true,
           ignoreHTTPSErrors: true,
+          ...device,
         };
-
-        if (deviceChosen === 'Custom') {
-          if (device) {
-            launchContext.launchOptions.viewport = device.viewport;
-            launchContext.launchOptions.userAgent = device.userAgent; 
-            launchContext.launchOptions.isMobile = true;
-          } else {
-            launchContext.launchOptions.viewport= { width: Number(viewportWidth), height: 800 };
-          }
-        } else if (deviceChosen === 'Mobile') {
-          launchContext.launchOptions.viewport = { width: 360, height: 720 };
-          launchContext.launchOptions.isMobile = true;
-        }
 
       }],
     },

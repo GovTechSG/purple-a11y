@@ -21,12 +21,16 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
 
   // customDevice check for website scan
   let device;
-  if (customDevice === 'Samsung Galaxy S9+') {
-    device = devices['Galaxy S9+'];
-  } else if (customDevice === 'iPhone 11') {
+  if (deviceChosen === 'Mobile' || customDevice === 'iPhone 11') {
     device = devices['iPhone 11'];
+  } else if (customDevice === 'Samsung Galaxy S9+') {
+    device = devices['Galaxy S9+'];
+  } else if (customDevice === "Specify viewport") {
+    device = { viewport: { width: Number(viewportWidth), height: 720 }};
   } else if (customDevice) {
     device = devices[customDevice.replace('_', / /g)];
+  } else {
+    device = {};
   }
 
   const crawler = new crawlee.PlaywrightCrawler({
@@ -43,21 +47,9 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
           ...launchContext.launchOptions,
           bypassCSP: true,
           ignoreHTTPSErrors: true,
+          ...device,
         };
-
-        if (deviceChosen === 'Custom') {
-          if (device) {
-            launchContext.launchOptions.viewport = device.viewport;
-            launchContext.launchOptions.userAgent = device.userAgent; 
-            launchContext.launchOptions.isMobile = true;
-          } else {
-            launchContext.launchOptions.viewport= { width: Number(viewportWidth), height: 800 };
-          }
-        } else if (deviceChosen === 'Mobile') {
-          launchContext.launchOptions.viewport = { width: 360, height: 720 };
-          launchContext.launchOptions.isMobile = true;
-        }
-
+        
       }],
     },
     requestQueue,
@@ -77,15 +69,24 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
           selector:'a:not(a[href*="#"],a[href^="mailto:"])',
           strategy: 'same-domain',
           requestQueue,
+          transformRequestFunction(req) {
+            // ignore all links ending with `.pdf`
+            req.url  = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/igm, "");
+            return req;
+          },
         });
 
         await enqueueLinksByClickingElements({
           // set selector matches
           // NOT <a>
-          // IS role='link' or onclick
+          // IS role='link' or button onclick
           // enqueue new page URL
-          selector: ':not(a):is(*[role="link"], *[onclick])',
-          requestQueue,
+          selector: ':not(a):is(*[role="link"], button[onclick])',
+          transformRequestFunction(req) {
+            // ignore all links ending with `.pdf`
+            req.url  = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/igm, "");
+            return req;
+          },
         });
 
       } else {
