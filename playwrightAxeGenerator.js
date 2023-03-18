@@ -39,7 +39,7 @@ const playwrightAxeGenerator = async (domain, randomToken, answers) => {
   import { spawnSync } from 'child_process';
   import safe from 'safe-regex';
   import { consoleLogger, silentLogger } from './logs.js';
-
+  import { cleanUp } from './utils.js';
   const blacklistedPatternsFilename = 'exclusions.txt';
 
 process.env.CRAWLEE_STORAGE_DIR = constants.a11yStorage;
@@ -213,13 +213,14 @@ const runAxeScan = async page => {
 
 
 const processPage = async page => {
-  if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
-    return;
-  }
   await page.waitForLoadState();  
 
   if (await checkIfScanRequired(page)) {
-    await runAxeScan(page);
+    if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
+      return;
+    } else {
+      await runAxeScan(page);
+    }
   };
 };`
 
@@ -245,6 +246,7 @@ const processPage = async page => {
             await createAndUpdateResultsFolders('${randomToken}');
             createScreenshotsFolder('${randomToken}');
             await generateArtifacts('${randomToken}', 'Automated Scan');
+            cleanUp(constants.a11yStorage);
         });`;
 
   let tmpDir;
@@ -254,7 +256,7 @@ const processPage = async page => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
 
     let codegenCmd = `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain}`
-    let extraCodegenOpts = `--block-service-workers --ignore-https-errors`
+    let extraCodegenOpts = `--browser chromium --block-service-workers --ignore-https-errors`
 
     if (customDevice === 'iPhone 11' || deviceChosen === 'Mobile') {
       execSync(
@@ -300,6 +302,10 @@ const processPage = async page => {
       }
       if (line.trim() === `headless: false` && isHeadless) {
         appendToGeneratedScript(`headless: true`);
+        continue;
+      }
+      if (line.trim() === `const browser = await webkit.launch({`) {
+        appendToGeneratedScript(`const browser = await chromium.launch({`);
         continue;
       }
 
@@ -413,7 +419,7 @@ const processPage = async page => {
   } finally {
     try {
       if (tmpDir) {
-        fs.rmSync(tmpDir, { recursive: true });
+        fs.rm(tmpDir, { recursive: true, force: true });
       }
     } catch (e) {
       console.error(
