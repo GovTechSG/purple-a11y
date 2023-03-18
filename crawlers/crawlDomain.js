@@ -49,8 +49,7 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
           ignoreHTTPSErrors: true,
           ...device,
         };
-
-        console.log(launchContext.launchOptions);
+        
       }],
     },
     requestQueue,
