@@ -419,7 +419,7 @@ const processPage = async page => {
   } finally {
     try {
       if (tmpDir) {
-        fs.rm(tmpDir, { recursive: true, force: true });
+        fs.rmSync(tmpDir, { recursive: true });
       }
     } catch (e) {
       console.error(
