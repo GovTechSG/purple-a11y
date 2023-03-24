@@ -17,15 +17,11 @@ const questions = [
     type: 'list',
     name: 'scanner',
     message: 'What would you like to scan today?',
-    choices: [
-      constants.scannerTypes.sitemap,
-      constants.scannerTypes.website,
-      constants.scannerTypes.customFlow,
-    ],
+    choices: Object.values(constants.scannerTypes),
   },
   {
     type: 'confirm',
-    name: 'isHeadless',
+    name: 'headless',
     message: 'Do you want purple-hats to run in the background?',
     choices: ['Yes', 'No'],
   },

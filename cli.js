@@ -17,10 +17,7 @@ import { checkUrl, prepareData, isValidHttpUrl, isFileSitemap } from './constant
 import { cliOptions, messageOptions, configureReportSetting } from './constants/cliFunctions.js';
 import constants from './constants/constants.js';
 import combineRun from './combine.js';
-
-setHeadlessMode(true);
-
-cleanUp('.a11y_storage');
+import playwrightAxeGenerator from './playwrightAxeGenerator.js';
 
 const appVersion = getVersion();
 const yargs = _yargs(hideBin(process.argv));
@@ -40,26 +37,25 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     [
       `To scan a website', 'node cli.js -c [ 2 | ${constants.scannerTypes.website} ] -d <device> -u <url_link> -w <viewportWidth>`,
     ],
+    [
+      `To start a custom flow scan', 'node cli.js -c [ 3 | ${constants.scannerTypes.custom} ] -d <device> -u <url_link> -w <viewportWidth>`,
+    ],
   ])
   .coerce('c', option => {
+    const { choices } = cliOptions.c;
     if (typeof option === 'number') {
       // Will also allow integer choices
-      switch (option) {
-        case 1:
-          option = constants.scannerTypes.sitemap;
-          break;
-        case 2:
-          option = constants.scannerTypes.website;
-          break;
-        default:
-          printMessage(
-            [
-              'Invalid option',
-              `Please choose to enter numbers (1,2) or keywords (${constants.scannerTypes.sitemap}, ${constants.scannerTypes.website}).`,
-            ],
-            messageOptions,
-          );
-          process.exit(1);
+      if (Number.isInteger(option) && option > 0 && option <= choices.length) {
+        option = choices[option - 1];
+      } else {
+        printMessage(
+          [
+            'Invalid option',
+            `Please enter an integer (1 to ${choices.length}) or keywords (${choices.join(', ')}).`,
+          ],
+          messageOptions,
+        );
+        process.exit(1);
       }
     }
 
@@ -99,25 +95,24 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     }
     return option;
   })
+  .check(argvs => {
+    if (argvs.scanner === 'custom' && argvs.maxpages) {
+      throw new Error('-p or --maxpages is only available in website and sitemap scans');
+    }
+    return true;
+  })
   .conflicts('d', 'w')
   .epilogue('').argv;
 
 const scanInit = async argvs => {
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const dd = String(today.getDate()).padStart(2, '0');
-  const curHour = today.getHours() < 10 ? '0' + today.getHours() : today.getHours();
-  const curMinute = today.getMinutes() < 10 ? '0' + today.getMinutes() : today.getMinutes();
+  argvs.scanner = constants.scannerTypes[argvs.scanner];
+  argvs.headless = argvs.headless === 'yes';
 
   // Set the parameters required to indicate whether to break down report
   configureReportSetting(argvs.reportbreakdown);
 
   // Set the parameters required to indicate threshold limits
   setThresholdLimits(argvs.warn);
-
-  // Validate the URL
-  let data, domain;
 
   const validateUrl = async () => {
     if (isValidHttpUrl(argvs.url)) {
@@ -138,32 +133,52 @@ const scanInit = async argvs => {
 
   if (!isValidUrl) {
     printMessage(
-      [`Invalid ${argvs.scanner} page. Please provide a URL to start the ${argvs.scanner} scan.`],
+      [
+        `Invalid URL provided. Either it does not exist or it cannot be used for a ${argvs.scanner} scan.`,
+      ],
       messageOptions,
     );
     process.exit(1);
   }
 
-  data = prepareData(argvs.scanner, argvs);
-  domain = argvs.isLocalSitemap ? 'custom' : new URL(argvs.url).hostname;
+  const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
 
-  let deviceToScan;
-  if (!argvs.customDevice && !argvs.viewportWidth) {
-    argvs.customDevice = 'Desktop';
-    data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
-  } else if (argvs.customDevice) {
-    deviceToScan = argvs.customDevice.replaceAll('_', ' ');
-    data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_${argvs.customDevice}`;
-  } else if (!argvs.customDevice) {
-    data.randomToken = `PHScan_${domain}_${yyyy}${mm}${dd}_${curHour}${curMinute}_CustomWidth_${argvs.viewportWidth}px`;
+  const domain = argvs.isLocalSitemap ? 'custom' : new URL(argvs.url).hostname;
+
+  const data = prepareData(argvs);
+
+  setHeadlessMode(data.isHeadless);
+
+  let screenToScan;
+  
+  if (argvs.customDevice) {
+    screenToScan = argvs.customDevice;
+  } else {
+    screenToScan = `CustomWidth_${argvs.viewportWidth}px`;
   }
 
-  printMessage([`Purple HATS version: ${appVersion}`, 'Scanning website...'], messageOptions);
-  await combineRun(data, deviceToScan);
+  data.randomToken = `PHScan_${domain}_${date}_${time}_${argvs.scanner.replaceAll(' ', '_')}_${screenToScan}`;
+
+  printMessage([`Purple HATS version: ${appVersion}`, 'Starting scan...'], messageOptions);
+  
+  if (argvs.scanner === constants.scannerTypes.custom) {
+    try {
+      await playwrightAxeGenerator(argvs.url, data);
+    } catch (error) {
+      printMessage([`An error has occurred when running the custom flow scan. Please see above and errors.txt for more details.`]);
+      process.exit(2);
+    }
+  } else {
+    await combineRun(data, screenToScan.replaceAll('_', ' '));
+  }
+
   return getStoragePath(data.randomToken);
 };
 
 scanInit(options).then(async storagePath => {
+  // Delete dataset and request queues
+  cleanUp(constants.a11yStorage);
+
   // Take option if set
   if (typeof options.zip === 'string') {
     constants.cliZipFileName = options.zip;
