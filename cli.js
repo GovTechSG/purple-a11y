@@ -151,7 +151,9 @@ const scanInit = async argvs => {
 
   let screenToScan;
   
-  if (argvs.customDevice) {
+  if (!argvs.customDevice && !argvs.viewportWidth) {
+    screenToScan = 'Desktop'
+  } else if (argvs.customDevice) {
     screenToScan = argvs.customDevice;
   } else {
     screenToScan = `CustomWidth_${argvs.viewportWidth}px`;

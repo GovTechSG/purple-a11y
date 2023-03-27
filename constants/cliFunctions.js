@@ -28,7 +28,6 @@ export const cliOptions = {
     alias: 'customDevice',
     describe: 'Device you want to scan',
     type: 'string',
-    default: 'Desktop',
     demandOption: false,
   },
   w: {
