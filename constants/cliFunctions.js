@@ -1,3 +1,5 @@
+import constants from "./constants.js";
+
 export const messageOptions = {
   border: false,
   marginTop: 2,
@@ -12,8 +14,8 @@ export const alertMessageOptions = {
 export const cliOptions = {
   c: {
     alias: 'scanner',
-    describe: 'Type of crawler, 1) sitemap or 2) website',
-    choices: ['sitemap', 'website'],
+    describe: 'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow',
+    choices: Object.keys(constants.scannerTypes),
     demandOption: true,
   },
   u: {
@@ -42,8 +44,18 @@ export const cliOptions = {
   },
   p: {
     alias: 'maxpages',
-    describe: 'Maximum number of pages to scan (default: 100)',
+    describe:
+      'Maximum number of pages to scan (default: 100). Only available in website and sitemap scans',
     type: 'number',
+    demandOption: false,
+  },
+  h: {
+    alias: 'headless',
+    describe: 'Whether to run the scan in headless mode. Defaults to yes.',
+    type: 'string',
+    choices: ['yes', 'no'],
+    requiresArg: true,
+    default: 'yes',
     demandOption: false,
   },
   reportbreakdown: {

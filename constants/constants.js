@@ -51,9 +51,9 @@ const urlsCrawledObj = {
 };
 
 const scannerTypes = {
-  customFlow: 'custom flow',
-  sitemap: 'sitemap',
-  website: 'website',
+  sitemap: 'Sitemap',
+  website: 'Website',
+  custom: 'Custom',
 };
 
 

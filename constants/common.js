@@ -91,7 +91,7 @@ export const isFileSitemap = filePath => {
 export const getUrlMessage = scanner => {
   switch (scanner) {
     case constants.scannerTypes.website:
-    case constants.scannerTypes.customFlow:
+    case constants.scannerTypes.custom:
       return 'Please enter URL of website: ';
     case constants.scannerTypes.sitemap:
       return 'Please enter URL or file path to sitemap, or drag and drop a sitemap file here: ';
@@ -197,12 +197,13 @@ export const checkUrl = async (scanner, url) => {
 
 const isEmptyObject = obj => !Object.keys(obj).length;
 
-export const prepareData = (scanType, argv) => {
+export const prepareData = (argv) => {
   if (isEmptyObject(argv)) {
     throw Error('No inputs should be provided');
   }
   const {
     scanner,
+    headless,
     url,
     deviceChosen,
     customDevice,
@@ -212,29 +213,16 @@ export const prepareData = (scanType, argv) => {
     finalUrl,
   } = argv;
 
-  let data;
-  if (scanType === constants.scannerTypes.sitemap || scanType === constants.scannerTypes.website) {
-    data = {
+  return {
       type: scanner,
       url: isLocalSitemap ? url : finalUrl,
+      isHeadless: headless,
       deviceChosen,
       customDevice,
       viewportWidth,
       maxRequestsPerCrawl: maxpages || constants.maxRequestsPerCrawl,
       isLocalSitemap,
     };
-  }
-
-  if (scanType === constants.scannerTypes.customFlow) {
-    data = {
-      type: scanner,
-      url,
-      deviceChosen,
-      customDevice,
-      viewportWidth,
-    };
-  }
-  return data;
 };
 
 export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {

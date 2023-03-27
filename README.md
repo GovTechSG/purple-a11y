@@ -184,150 +184,154 @@ npx playwright@1.27.1 install
 CLI mode is designed to be run in continuous integration (CI) environment. Run `node cli.js` for a set of command-line parameters available. Please note CLI mode is only supported on Mac/Linux at this moment.
 
 ```shell
-Usage: node cli.js -c <crawler> -u <url> -d <device> -w <viewport width> OPTIONS
+Usage: node cli.js -c <crawler> -d <device> -w <viewp
+ort> -u <url> OPTIONS
 
 Options:
       --help             Show help                                     [boolean]
-      --version          Show version number                           [boolean]
-  -c, --scanner          Type of crawler, 1) sitemap or 2) website
-                                      [required] [choices: "sitemap", "website"]
+  -c, --scanner          Type of scan, 1) sitemap, 2) website crawl, 3) custom f
+                         low[required] [choices: "sitemap", "website", "custom"]
   -u, --url              Website URL you want to scan        [string] [required]
-  -d, --customDevice     Device you want to scan                        [string]
+  -d, --customDevice     Device you want to scan   [string] [default: "Desktop"]
   -w, --viewportWidth    Viewport width (in pixels) you want to scan    [number]
   -o, --zip              Zip filename to save results                   [string]
+  -p, --maxpages         Maximum number of pages to scan (default: 100). Only av
+                         ailable in website and sitemap scans           [number]
+  -h, --headless         Whether to run the scan in headless mode. Defaults to y
+                         es.    [string] [choices: "yes", "no"] [default: "yes"]
       --reportbreakdown  Will break down the main report according to impact
                                                       [boolean] [default: false]
       --warn             Track for issues of target impact level
-         [choices: "critical", "serious", "moderate", "minor", "none"] [default:
-                                                                         "none"]
+  [choices: "critical", "serious", "moderate", "minor", "none"] [default: "none"
+                                                                               ]
 
 Examples:
-  To scan sitemap of website:', 'node cli.js -c [ 1 | sitemap ] -d <device> -u <url_link>
-  To scan a website', 'node cli.js -c [ 2 | website ] -d <device> -u <url_link>
-
-Missing required arguments: c, u
+  To scan sitemap of website:', 'node cli.js -c [ 1 | Sitemap ] -d <device> -u
+   <url_link> -w <viewportWidth>
+  To scan a website', 'node cli.js -c [ 2 | Website ] -d <device> -u <url_link
+  > -w <viewportWidth>
+  To start a custom flow scan', 'node cli.js -c [ 3 | Custom ] -d <device> -u
+  <url_link> -w <viewportWidth>
 ```
 
 ### Mobile Device Options
 <details>
   <summary>Click here for list of device options supported</summary>
 
-- 'Desktop'
-- 'Blackberry_PlayBook'
-- 'Blackberry_PlayBook_landscape'
-- 'BlackBerry_Z30'
-- 'BlackBerry_Z30_landscape'
-- 'Galaxy_Note_3'
-- 'Galaxy_Note_3_landscape'
-- 'Galaxy_Note_II'
-- 'Galaxy_Note_II_landscape'
-- 'Galaxy_S_III'
-- 'Galaxy_S_III_landscape'
-- 'Galaxy_S5'
-- 'Galaxy_S5_landscape'
-- 'Galaxy_S8'
-- 'Galaxy_S8_landscape'
-- 'Galaxy_S9+'
-- 'Galaxy_S9+_landscape'
-- 'Galaxy_Tab_S4'
-- 'Galaxy_Tab_S4_landscape'
-- 'iPad'
-- 'iPad_landscape'
-- 'iPad_(gen_6)'
-- 'iPad_(gen_6)_landscape'
-- 'iPad_(gen_7)'
-- 'iPad_(gen_7)_landscape'
-- 'iPad_Mini'
-- 'iPad_Mini_landscape'
-- 'iPad_Pro'
-- 'iPad_Pro_landscape'
-- 'iPad_Pro_11'
-- 'iPad_Pro_11_landscape'
-- 'iPhone 4'
-- 'iPhone_4_landscape'
-- 'iPhone_5'
-- 'iPhone_5_landscape'
-- 'iPhone_6'
-- 'iPhone_6_landscape'
-- 'iPhone_6_Plus'
-- 'iPhone_6_Plus_landscape'
-- 'iPhone_7'
-- 'iPhone_7_landscape'
-- 'iPhone_7_Plus'
-- 'iPhone_7_Plus_landscape'
-- 'iPhone_8'
-- 'iPhone_8_landscape'
-- 'iPhone_8_Plus'
-- 'iPhone_8_Plus_landscape'
-- 'iPhone_SE'
-- 'iPhone_SE_landscape'
-- 'iPhone_X'
-- 'iPhone_X_landscape'
-- 'iPhone_XR'
-- 'iPhone_XR_landscape'
-- 'iPhone_11'
-- 'iPhone_11_landscape'
-- 'iPhone_11_Pro'
-- 'iPhone_11_Pro_landscape'
-- 'iPhone_11_Pro_Max'
-- 'iPhone_11_Pro_Max_landscape'
-- 'iPhone_12'
-- 'iPhone_12_landscape'
-- 'iPhone_12_Pro'
-- 'iPhone_12_Pro_landscape'
-- 'iPhone_12_Pro_Max'
-- 'iPhone_12_Pro_Max_landscape'
-- 'iPhone_12_Mini'
-- 'iPhone_12_Mini_landscape'
-- 'iPhone_13'
-- 'iPhone_13_landscape'
-- 'iPhone_13_Pro'
-- 'iPhone_13_Pro_landscape'
-- 'iPhone_13_Pro_Max'
-- 'iPhone_13_Pro_Max_landscape'
-- 'iPhone_13_Mini'
-- 'iPhone_13_Mini_landscape'
-- 'JioPhone_2'
-- 'JioPhone_2_landscape'
-- 'Kindle_Fire_HDX'
-- 'Kindle_Fire_HDX_landscape'
-- 'LG_Optimus_L70'
-- 'LG_Optimus_L70_landscape'
-- 'Microsoft_Lumia_550'
-- 'Microsoft_Lumia_950'
-- 'Microsoft_Lumia_950_landscape'
-- 'Nexus_10'
-- 'Nexus_10_landscape'
-- 'Nexus_4'
-- 'Nexus_4_landscape'
-- 'Nexus_5'
-- 'Nexus_5_landscape'
-- 'Nexus_5X'
-- 'Nexus_5X_landscape'
-- 'Nexus_6'
-- 'Nexus_6_landscape'
-- 'Nexus_6P'
-- 'Nexus_6P_landscape'
-- 'Nexus_7'
-- 'Nexus_7_landscape'
-- 'Nokia_Lumia_520'
-- 'Nokia_Lumia_520_landscape'
-- 'Nokia_N9'
-- 'Nokia_N9_landscape'
-- 'Pixel_2'
-- 'Pixel_2_landscape'
-- 'Pixel_2_XL'
-- 'Pixel_2_XL_landscape'
-- 'Pixel_3'
-- 'Pixel_3_landscape'
-- 'Pixel_4'
-- 'Pixel_4_landscape'
-- 'Pixel_4a_(5G)'
-- 'Pixel_4a_(5G)_landscape'
-- 'Pixel_5'
-- 'Pixel_5_landscape'
-- 'Moto_G4'
-- 'Moto_G4_landscape'
+- "Desktop"
+- "Blackberry PlayBook"
+- "Blackberry PlayBook landscape"
+- "BlackBerry Z30"
+- "BlackBerry Z30 landscape"
+- "Galaxy Note 3"
+- "Galaxy Note 3 landscape"
+- "Galaxy Note II"
+- "Galaxy Note II landscape"
+- "Galaxy S III"
+- "Galaxy S III landscape"
+- "Galaxy S5"
+- "Galaxy S5 landscape"
+- "Galaxy S8"
+- "Galaxy S8 landscape"
+- "Galaxy S9+"
+- "Galaxy S9+ landscape"
+- "Galaxy Tab S4"
+- "Galaxy Tab S4 landscape"
+- "iPad (gen 6)"
+- "iPad (gen 6) landscape"
+- "iPad (gen 7)"
+- "iPad (gen 7) landscape"
+- "iPad Mini"
+- "iPad Mini landscape"
+- "iPad Pro 11"
+- "iPad Pro 11 landscape"
+- "iPhone 6"
+- "iPhone 6 landscape"
+- "iPhone 6 Plus"
+- "iPhone 6 Plus landscape"
+- "iPhone 7"
+- "iPhone 7 landscape"
+- "iPhone 7 Plus"
+- "iPhone 7 Plus landscape"
+- "iPhone 8"
+- "iPhone 8 landscape"
+- "iPhone 8 Plus"
+- "iPhone 8 Plus landscape"
+- "iPhone SE"
+- "iPhone SE landscape"
+- "iPhone X"
+- "iPhone X landscape"
+- "iPhone XR"
+- "iPhone XR landscape"
+- "iPhone 11"
+- "iPhone 11 landscape"
+- "iPhone 11 Pro"
+- "iPhone 11 Pro landscape"
+- "iPhone 11 Pro Max"
+- "iPhone 11 Pro Max landscape"
+- "iPhone 12"
+- "iPhone 12 landscape"
+- "iPhone 12 Pro"
+- "iPhone 12 Pro landscape"
+- "iPhone 12 Pro Max"
+- "iPhone 12 Pro Max landscape"
+- "iPhone 12 Mini"
+- "iPhone 12 Mini landscape"
+- "iPhone 13"
+- "iPhone 13 landscape"
+- "iPhone 13 Pro"
+- "iPhone 13 Pro landscape"
+- "iPhone 13 Pro Max"
+- "iPhone 13 Pro Max landscape"
+- "iPhone 13 Mini"
+- "iPhone 13 Mini landscape"
+- "Kindle Fire HDX"
+- "Kindle Fire HDX landscape"
+- "LG Optimus L70"
+- "LG Optimus L70 landscape"
+- "Microsoft Lumia 550"
+- "Microsoft Lumia 550 landscape"
+- "Microsoft Lumia 950"
+- "Microsoft Lumia 950 landscape"
+- "Nexus 10"
+- "Nexus 10 landscape"
+- "Nexus 4"
+- "Nexus 4 landscape"
+- "Nexus 5"
+- "Nexus 5 landscape"
+- "Nexus 5X"
+- "Nexus 5X landscape"
+- "Nexus 6"
+- "Nexus 6 landscape"
+- "Nexus 6P"
+- "Nexus 6P landscape"
+- "Nexus 7"
+- "Nexus 7 landscape"
+- "Nokia Lumia 520"
+- "Nokia Lumia 520 landscape"
+- "Nokia N9"
+- "Nokia N9 landscape"
+- "Pixel 2"
+- "Pixel 2 landscape"
+- "Pixel 2 XL"
+- "Pixel 2 XL landscape"
+- "Pixel 3"
+- "Pixel 3 landscape"
+- "Pixel 4"
+- "Pixel 4 landscape"
+- "Pixel 4a (5G)"
+- "Pixel 4a (5G) landscape"
+- "Pixel 5"
+- "Pixel 5 landscape"
+- "Moto G4"
+- "Moto G4 landscape"
+- "Desktop Chrome HiDPI"
+- "Desktop Edge HiDPI"
+- "Desktop Firefox HiDPI"
+- "Desktop Safari"
+- "Desktop Chrome"
+- "Desktop Edge"
+- "Desktop Firefox"
 </details>
 
 If the device name contains ```(``` and ```)```, wrap the device name in single quotes when entered into the CLI.

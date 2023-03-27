@@ -3,11 +3,10 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import readline from 'readline';
-import constants from './constants/constants.js';
 import safe from 'safe-regex';
 import { consoleLogger, silentLogger } from './logs.js';
 
-const playwrightAxeGenerator = async (domain, randomToken, answers) => {
+const playwrightAxeGenerator = async (domain, data) => {
 
   const blacklistedPatternsFilename = 'exclusions.txt';
   let blacklistedPatterns = null;
@@ -27,7 +26,7 @@ const playwrightAxeGenerator = async (domain, randomToken, answers) => {
     };
   }
 
-  const { isHeadless, deviceChosen, customDevice, customWidth } = answers;
+  const { isHeadless, randomToken, deviceChosen, customDevice, viewportWidth } = data;
   const block1 = `import { chromium, devices, webkit } from 'playwright';
   import { createCrawleeSubFolders, runAxeScript } from './crawlers/commonCrawlerFunc.js';
   import { generateArtifacts } from './mergeAxeResults.js';
@@ -39,7 +38,6 @@ const playwrightAxeGenerator = async (domain, randomToken, answers) => {
   import { spawnSync } from 'child_process';
   import safe from 'safe-regex';
   import { consoleLogger, silentLogger } from './logs.js';
-  import { cleanUp } from './utils.js';
   const blacklistedPatternsFilename = 'exclusions.txt';
 
 process.env.CRAWLEE_STORAGE_DIR = constants.a11yStorage;
@@ -246,7 +244,6 @@ const processPage = async page => {
             await createAndUpdateResultsFolders('${randomToken}');
             createScreenshotsFolder('${randomToken}');
             await generateArtifacts('${randomToken}', 'Automated Scan');
-            cleanUp(constants.a11yStorage);
         });`;
 
   let tmpDir;
@@ -257,23 +254,34 @@ const processPage = async page => {
 
     let codegenCmd = `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain}`
     let extraCodegenOpts = `--browser chromium --block-service-workers --ignore-https-errors`
+    let codegenResult;
 
-    if (customDevice === 'iPhone 11' || deviceChosen === 'Mobile') {
-      execSync(
+    if (customDevice === 'Specify viewport') {
+      codegenResult = execSync(
+        `${codegenCmd} --viewport-size=${viewportWidth},720 ${extraCodegenOpts}`,
+      );
+    } else if (!customDevice || customDevice === 'Desktop' || deviceChosen === 'Desktop') {
+      codegenResult = execSync(
+        `${codegenCmd} ${extraCodegenOpts}`,
+      );
+    } else if (deviceChosen === 'Mobile') {
+      codegenResult = execSync(
         `${codegenCmd} --device="iPhone 11" ${extraCodegenOpts}`,
       );
     } else if (customDevice === 'Samsung Galaxy S9+') {
-      execSync(
+      codegenResult = execSync(
         `${codegenCmd} --device="Galaxy S9+" ${extraCodegenOpts}`,
       );
-    } else if (customDevice === 'Specify viewport') {
-      execSync(
-        `${codegenCmd} --viewport-size=${answers.viewportWidth},720 ${extraCodegenOpts}`,
+    } else if (customDevice) {
+      codegenResult = execSync(
+        `${codegenCmd} --device="${customDevice}" ${extraCodegenOpts}`,
       );
     } else {
-      execSync(
-        `${codegenCmd} ${extraCodegenOpts}`,
-      );
+      console.error(`Error: Unable to parse device requested for scan. Please check the input parameters.`);
+    }
+
+    if (codegenResult.toString()) {
+      console.error("Error running Codegen: " + codegenResult.toString());
     }
 
     const fileStream = fs.createReadStream(`${tmpDir}/intermediateScript.js`);
@@ -308,7 +316,10 @@ const processPage = async page => {
         appendToGeneratedScript(`const browser = await chromium.launch({`);
         continue;
       }
-
+      if (line.trim() === `(async () => {`) {
+        appendToGeneratedScript(`await (async () => {`);
+        continue;
+      }
       if (line.trim().includes('getBy') || line.trim().includes('click()')) {
         const lastIndex = line.lastIndexOf('.');
         const locator = line.substring(0, lastIndex);
@@ -331,12 +342,12 @@ const processPage = async page => {
                       isMobile: true,
                     });`,
           );
-        } else if (customWidth) {
+        } else if (viewportWidth) {
           appendToGeneratedScript(line);
           appendToGeneratedScript(
             `const pageHeight = page.viewportSize().height
             await page.setViewportSize({
-            width: ${customWidth},
+            width: ${viewportWidth},
             height: pageHeight,
             isMobile: true,
           });`,
@@ -413,9 +424,10 @@ const processPage = async page => {
       appendToGeneratedScript(line);
     }
 
-    import(generatedScript);
+    await import(generatedScript);
   } catch (e) {
     console.error(`Error: ${e}`);
+    throw e;
   } finally {
     try {
       if (tmpDir) {
