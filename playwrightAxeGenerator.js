@@ -298,6 +298,7 @@ const processPage = async page => {
     };
 
     let firstGoToUrl = false;
+    let lastGoToUrl;
 
     for await (let line of rl) {
       if (
@@ -374,26 +375,29 @@ const processPage = async page => {
           const regexURL = /(?<=goto\(\')(.*?)(?=\'\))/;
           const foundURL = line.match(regexURL)[0];
           const withoutParamsURL = foundURL.split("?")[0];
-          appendToGeneratedScript(` await page.waitForURL('${withoutParamsURL}**',{timeout: 60000})`);
+          lastGoToUrl = withoutParamsURL;
         }
 
-        if (blacklistedPatterns) {
-
-          let isBlacklisted = blacklistedPatterns.filter(function (pattern) {
-            return new RegExp(pattern).test(line);
-          });
-
-          let noMatch = Object.keys(isBlacklisted).every(function (key) {
-            return isBlacklisted[key].length === 0;
-          });
-
-          if (!noMatch) {
-            continue;
-          }
-        }
-
-        appendToGeneratedScript(` await processPage(page);`);
         continue;
+      } else if (lastGoToUrl) {
+          if (blacklistedPatterns) {
+
+            let isBlacklisted = blacklistedPatterns.filter(function (pattern) {
+              return new RegExp(pattern).test(lastGoToUrl);
+            });
+
+            let noMatch = Object.keys(isBlacklisted).every(function (key) {
+              return isBlacklisted[key].length === 0;
+            });
+
+            if (!noMatch) {
+              lastGoToUrl = null;
+              continue;
+            }
+          }
+
+          appendToGeneratedScript(` await page.waitForURL('${lastGoToUrl}**',{timeout: 60000})`);
+          lastGoToUrl = null;
       }
       
       if (line.trim().startsWith(`await page.waitForURL(`)) {
@@ -424,6 +428,10 @@ const processPage = async page => {
         break;
       }
       appendToGeneratedScript(line);
+    }
+
+    if (lastGoToUrl) {
+      appendToGeneratedScript(` await page.waitForURL('${lastGoToUrl}**',{timeout: 60000})`);
     }
 
     await import(generatedScript);
