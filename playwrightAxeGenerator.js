@@ -211,7 +211,7 @@ const runAxeScan = async page => {
 
 
 const processPage = async page => {
-  await page.waitForLoadState();  
+  await page.waitForSelector('body');
 
   if (await checkIfScanRequired(page)) {
     if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
@@ -253,7 +253,7 @@ const processPage = async page => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
 
     let codegenCmd = `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain}`
-    let extraCodegenOpts = `--browser chromium --block-service-workers --ignore-https-errors`
+    let extraCodegenOpts = `--browser chromium --ignore-https-errors`
     let codegenResult;
 
     if (customDevice === 'Specify viewport') {
@@ -371,9 +371,10 @@ const processPage = async page => {
           firstGoToUrl = true;
           appendToGeneratedScript(line);
         } else {
-          appendToGeneratedScript(
-            line.replace('goto', 'waitForURL').replace(')', `,{timeout: 60000})`),
-          );
+          const regexURL = /(?<=goto\(\')(.*?)(?=\'\))/;
+          const foundURL = line.match(regexURL)[0];
+          const withoutParamsURL = foundURL.split("?")[0];
+          appendToGeneratedScript(` await page.waitForURL('${withoutParamsURL}**',{timeout: 60000})`);
         }
 
         if (blacklistedPatterns) {
@@ -394,6 +395,7 @@ const processPage = async page => {
         appendToGeneratedScript(` await processPage(page);`);
         continue;
       }
+      
       if (line.trim().startsWith(`await page.waitForURL(`)) {
         appendToGeneratedScript(line);
 
