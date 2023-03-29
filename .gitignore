@@ -11,7 +11,7 @@ test*.js
 coverage/
 .cache-require-paths.json
 **/errors.txt
-generatedScript*.js
+custom_flow_scripts/
 exclusions.txt
 bin/
 ImageMagick-*
