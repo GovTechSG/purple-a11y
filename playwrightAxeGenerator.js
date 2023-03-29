@@ -7,6 +7,7 @@ import safe from 'safe-regex';
 import { consoleLogger, silentLogger } from './logs.js';
 
 const playwrightAxeGenerator = async (domain, data) => {
+
   const blacklistedPatternsFilename = 'exclusions.txt';
   let blacklistedPatterns = null;
 
@@ -16,17 +17,13 @@ const playwrightAxeGenerator = async (domain, data) => {
     let unsafe = blacklistedPatterns.filter(function (pattern) {
       return !safe(pattern);
     });
-
-    if (unsafe.length > 0) {
-      let unsafeExpressionsError =
-        "Unsafe expressions detected: '" +
-        unsafe +
-        "' Please revise " +
-        blacklistedPatternsFilename;
+    
+    if (unsafe.length > 0 ) {
+      let unsafeExpressionsError = "Unsafe expressions detected: '"+ unsafe +"' Please revise " + blacklistedPatternsFilename;
       consoleLogger.error(unsafeExpressionsError);
       silentLogger.error(unsafeExpressionsError);
       process.exit(1);
-    }
+    };
   }
 
   const { isHeadless, randomToken, deviceChosen, customDevice, viewportWidth } = data;
@@ -78,12 +75,16 @@ if (fs.existsSync(blacklistedPatternsFilename)) {
     return !safe(pattern);
   });
   
-  if (unsafe.length > 0 ) {
-    let unsafeExpressionsError = "Unsafe expressions detected: '"+ unsafe +"' Please revise " + blacklistedPatternsFilename;
+  if (unsafe.length > 0) {
+    let unsafeExpressionsError =
+      "Unsafe expressions detected: '" +
+      unsafe +
+      "' Please revise " +
+      blacklistedPatternsFilename;
     consoleLogger.error(unsafeExpressionsError);
     silentLogger.error(unsafeExpressionsError);
     process.exit(1);
-  };
+  }
 }
 
 var index = 1;
@@ -202,7 +203,6 @@ const checkIfScanRequired = async page => {
       console.error('error: ', error);
     }
   }
-
 };
 
 const runAxeScan = async page => {
@@ -214,7 +214,7 @@ const runAxeScan = async page => {
 
 
 const processPage = async page => {
-  await page.waitForSelector('body');
+  await page.waitForLoadState();  
 
   if (await checkIfScanRequired(page)) {
     if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
@@ -254,6 +254,8 @@ const processPage = async page => {
 
   const generatedScript = `./generatedScript-${randomToken}.js`;
 
+  console.log(` Launching browser. Navigate and record custom steps for ${domain} in the new browser.\n Close the browser when you are done recording.`);
+
   try {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
 
@@ -280,7 +282,9 @@ const processPage = async page => {
     }
 
     if (codegenResult.toString()) {
-      console.error('Error running Codegen: ' + codegenResult.toString());
+      console.error(
+        `Error running Codegen: ${codegenResult.toString()}`,
+      );
     }
 
     const fileStream = fs.createReadStream(`${tmpDir}/intermediateScript.js`);
@@ -318,17 +322,6 @@ const processPage = async page => {
         appendToGeneratedScript(`await (async () => {`);
         continue;
       }
-      if (line.trim().includes('getBy') || line.trim().includes('click()')) {
-        const lastIndex = line.lastIndexOf('.');
-        const locator = line.substring(0, lastIndex);
-        appendToGeneratedScript(
-          ` (${locator}.count()>1)? [console.log('Please re-click the intended DOM element'), page.setDefaultTimeout(0)]:
-          ${line}
-          await processPage(page);
-        `,
-        );
-        continue;
-      }
       if (line.trim() === `const page = await context.newPage();`) {
         if (deviceChosen === 'Mobile') {
           appendToGeneratedScript(line);
@@ -355,6 +348,42 @@ const processPage = async page => {
         }
         continue;
       }
+
+      if (line.trim().startsWith(`await page.goto(`)) {
+        if (!firstGoToUrl) {
+          firstGoToUrl = true;
+          appendToGeneratedScript(line);
+          continue;
+        } else {
+          const regexURL = /(?<=goto\(\')(.*?)(?=\'\))/;
+          const foundURL = line.match(regexURL)[0];
+          const withoutParamsURL = foundURL.split('?')[0];
+          lastGoToUrl = withoutParamsURL;
+          continue;
+        }
+      } else if (lastGoToUrl) {
+        appendToGeneratedScript(`
+          await page.waitForURL('${lastGoToUrl}**',{timeout: 60000});
+          await processPage(page);
+        `,
+        );
+
+        lastGoToUrl = null;
+
+      }
+
+      if (line.trim().includes('getBy') || line.trim().includes('click()')) {
+        const lastIndex = line.lastIndexOf('.');
+        const locator = line.substring(0, lastIndex);
+        appendToGeneratedScript(
+          ` (${locator}.count()>1)? [console.log('Please re-click the intended DOM element'), page.setDefaultTimeout(0)]:
+          ${line}
+          await processPage(page);
+        `,
+        );
+        continue;
+      }
+      
       if (line.trim().includes(`/common/login?spcptracking`)) {
         appendToGeneratedScript(
           `await page.goto('https://iam.hdb.gov.sg/common/login', { waitUntil: 'networkidle' });`,
@@ -364,73 +393,20 @@ const processPage = async page => {
       if (line.trim().includes(`spauthsuccess?code=`)) {
         continue;
       }
-      if (line.trim().startsWith(`await page.goto(`)) {
-        if (!firstGoToUrl) {
-          firstGoToUrl = true;
-          appendToGeneratedScript(line);
-        } else {
-          const regexURL = /(?<=goto\(\')(.*?)(?=\'\))/;
-          const foundURL = line.match(regexURL)[0];
-          const withoutParamsURL = foundURL.split('?')[0];
-          lastGoToUrl = withoutParamsURL;
-        }
-
-        continue;
-      } else if (lastGoToUrl) {
-        if (blacklistedPatterns) {
-          let isBlacklisted = blacklistedPatterns.filter(function (pattern) {
-            return new RegExp(pattern).test(lastGoToUrl);
-          });
-
-          let noMatch = Object.keys(isBlacklisted).every(function (key) {
-            return isBlacklisted[key].length === 0;
-          });
-
-          if (!noMatch) {
-            lastGoToUrl = null;
-            continue;
-          }
-        }
-
-        appendToGeneratedScript(` await page.waitForURL('${lastGoToUrl}**',{timeout: 60000})`);
-        lastGoToUrl = null;
-      }
-
-      if (line.trim().startsWith(`await page.waitForURL(`)) {
-        appendToGeneratedScript(line);
-
-        if (fs.existsSync('exclusions.txt')) {
-          const blacklistedPatterns = fs.readFileSync('exclusions.txt').toString().split('\n');
-
-          let isBlacklisted = blacklistedPatterns.filter(function (pattern) {
-            return new RegExp(pattern).test(line);
-          });
-
-          let noMatch = Object.keys(isBlacklisted).every(function (key) {
-            return isBlacklisted[key].length === 0;
-          });
-
-          if (!noMatch) {
-            continue;
-          }
-        }
-
-        appendToGeneratedScript(` await processPage(page);`);
-        continue;
-      }
+      
       if (line.trim() === `await browser.close();`) {
         appendToGeneratedScript(line);
         appendToGeneratedScript(block2);
         break;
       }
+
       appendToGeneratedScript(line);
     }
 
-    if (lastGoToUrl) {
-      appendToGeneratedScript(` await page.waitForURL('${lastGoToUrl}**',{timeout: 60000})`);
-    }
+    console.log(` Browser closed. Replaying steps and running accessibility scan...\n`);
 
     await import(generatedScript);
+
   } catch (e) {
     console.error(`Error: ${e}`);
     throw e;
@@ -444,11 +420,11 @@ const processPage = async page => {
         `An error has occurred while removing the temp folder at ${tmpDir}. Please remove it manually. Error: ${e}`,
       );
     }
-    if (!fs.existsSync('./custom_flow_scripts')) {
-      fs.mkdirSync('./custom_flow_scripts');
-    }
-    fs.renameSync(`./${generatedScript}`, `./custom_flow_scripts/${generatedScript}`);
+
+    console.log(`\n You may re-run the recorded steps by executing:\n\tnode ${generatedScript} \n`);
+
   }
+
 };
 
 export default playwrightAxeGenerator;
