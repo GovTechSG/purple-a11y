@@ -214,7 +214,7 @@ const runAxeScan = async page => {
 
 
 const processPage = async page => {
-  await page.waitForLoadState();  
+  await page.waitForLoadState('networkidle'); 
 
   if (await checkIfScanRequired(page)) {
     if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
@@ -300,6 +300,7 @@ const processPage = async page => {
 
     let firstGoToUrl = false;
     let lastGoToUrl;
+    let nextStepNeedsProcessPage = false;
 
     for await (let line of rl) {
       if (
@@ -352,7 +353,11 @@ const processPage = async page => {
       if (line.trim().startsWith(`await page.goto(`)) {
         if (!firstGoToUrl) {
           firstGoToUrl = true;
-          appendToGeneratedScript(line);
+          appendToGeneratedScript(
+            `${line}
+             await processPage(page);
+            `
+          ,);
           continue;
         } else {
           const regexURL = /(?<=goto\(\')(.*?)(?=\'\))/;
@@ -370,6 +375,9 @@ const processPage = async page => {
 
         lastGoToUrl = null;
 
+      } else if (nextStepNeedsProcessPage) {
+        appendToGeneratedScript(`await processPage(page);`);
+        nextStepNeedsProcessPage = false;
       }
 
       if (line.trim().includes('getBy') || line.trim().includes('click()')) {
@@ -378,10 +386,13 @@ const processPage = async page => {
         appendToGeneratedScript(
           ` (${locator}.count()>1)? [console.log('Please re-click the intended DOM element'), page.setDefaultTimeout(0)]:
           ${line}
-          await processPage(page);
         `,
         );
+
+        nextStepNeedsProcessPage = true;
         continue;
+      } else {
+        nextStepNeedsProcessPage = false;
       }
       
       if (line.trim().includes(`/common/login?spcptracking`)) {
