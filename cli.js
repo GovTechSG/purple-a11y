@@ -160,7 +160,7 @@ const scanInit = async argvs => {
     screenToScan = `CustomWidth_${argvs.viewportWidth}px`;
   }
 
-  data.randomToken = `PHScan_${domain}_${date}_${time}_${argvs.scanner.replaceAll(' ', '_')}_${screenToScan}`;
+  data.randomToken = `PHScan_${domain}_${date}_${time}_${argvs.scanner.replaceAll(' ', '_')}_${screenToScan.replaceAll(' ', '_')}`;
 
   printMessage([`Purple HATS version: ${appVersion}`, 'Starting scan...'], messageOptions);
   
@@ -172,7 +172,7 @@ const scanInit = async argvs => {
       process.exit(2);
     }
   } else {
-    await combineRun(data, screenToScan.replaceAll('_', ' '));
+    await combineRun(data, screenToScan);
   }
 
   return getStoragePath(data.randomToken);
