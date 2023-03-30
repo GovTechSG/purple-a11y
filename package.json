@@ -3,6 +3,9 @@
   "main": "index.js",
   "version": "0.0.7",
   "type": "module",
+  "imports": {
+    "#root/*.js": "./*.js"
+  },
   "dependencies": {
     "axe-core": "^4.6.2",
     "axios": "^1.2.2",

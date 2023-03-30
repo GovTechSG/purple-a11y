@@ -28,16 +28,16 @@ const playwrightAxeGenerator = async (domain, data) => {
 
   const { isHeadless, randomToken, deviceChosen, customDevice, viewportWidth } = data;
   const block1 = `import { chromium, devices, webkit } from 'playwright';
-  import { createCrawleeSubFolders, runAxeScript } from './crawlers/commonCrawlerFunc.js';
-  import { generateArtifacts } from './mergeAxeResults.js';
-  import { createAndUpdateResultsFolders, createDetailsAndLogs, createScreenshotsFolder } from './utils.js';
-  import constants, { intermediateScreenshotsPath, getExecutablePath, removeQuarantineFlag } from './constants/constants.js';
+  import { createCrawleeSubFolders, runAxeScript } from '#root/crawlers/commonCrawlerFunc.js';
+  import { generateArtifacts } from '#root/mergeAxeResults.js';
+  import { createAndUpdateResultsFolders, createDetailsAndLogs, createScreenshotsFolder } from '#root/utils.js';
+  import constants, { intermediateScreenshotsPath, getExecutablePath, removeQuarantineFlag } from '#root/constants/constants.js';
   import fs from 'fs';
   import path from 'path';
-  import { isSkippedUrl } from './constants/common.js';
+  import { isSkippedUrl } from '#root/constants/common.js';
   import { spawnSync } from 'child_process';
   import safe from 'safe-regex';
-  import { consoleLogger, silentLogger } from './logs.js';
+  import { consoleLogger, silentLogger } from '#root/logs.js';
   const blacklistedPatternsFilename = 'exclusions.txt';
 
 process.env.CRAWLEE_STORAGE_DIR = constants.a11yStorage;
@@ -252,7 +252,11 @@ const processPage = async page => {
   let tmpDir;
   const appPrefix = 'purple-hats';
 
-  const generatedScript = `./generatedScript-${randomToken}.js`;
+  if (!fs.existsSync('./custom_flow_scripts')) {
+    fs.mkdirSync('./custom_flow_scripts');
+  }
+
+  const generatedScript = `./custom_flow_scripts/generatedScript-${randomToken}.js`;
 
   console.log(` Launching browser. Navigate and record custom steps for ${domain} in the new browser.\n Close the browser when you are done recording.`);
 
