@@ -18,6 +18,7 @@ import { cliOptions, messageOptions, configureReportSetting } from './constants/
 import constants from './constants/constants.js';
 import combineRun from './combine.js';
 import playwrightAxeGenerator from './playwrightAxeGenerator.js';
+import { devices } from 'playwright';
 
 const appVersion = getVersion();
 const yargs = _yargs(hideBin(process.argv));
@@ -62,8 +63,8 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return option;
   })
   .coerce('d', option => {
-    const deviceString = constants.devices.includes(option);
-    if (!deviceString) {
+    const device = devices[option];
+    if (!device) {
       printMessage(
         [`Invalid device. Please provide an existing device to start the scan.`],
         messageOptions,
