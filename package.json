@@ -3,6 +3,9 @@
   "main": "index.js",
   "version": "0.0.7",
   "type": "module",
+  "imports": {
+    "#root/*.js": "./*.js"
+  },
   "dependencies": {
     "axe-core": "^4.6.2",
     "axios": "^1.2.2",
@@ -13,7 +16,7 @@
     "inquirer": "^9.1.4",
     "jsdom": "^21.0.0",
     "mustache": "^4.2.0",
-    "playwright": "^1.30.0",
+    "playwright": "^1.33.0-alpha-mar-29-2023",
     "print-message": "^3.0.1",
     "safe-regex": "^2.1.1",
     "validator": "^13.7.0",

@@ -28,16 +28,16 @@ const playwrightAxeGenerator = async (domain, data) => {
 
   const { isHeadless, randomToken, deviceChosen, customDevice, viewportWidth } = data;
   const block1 = `import { chromium, devices, webkit } from 'playwright';
-  import { createCrawleeSubFolders, runAxeScript } from './crawlers/commonCrawlerFunc.js';
-  import { generateArtifacts } from './mergeAxeResults.js';
-  import { createAndUpdateResultsFolders, createDetailsAndLogs, createScreenshotsFolder } from './utils.js';
-  import constants, { intermediateScreenshotsPath, getExecutablePath, removeQuarantineFlag } from './constants/constants.js';
+  import { createCrawleeSubFolders, runAxeScript } from '#root/crawlers/commonCrawlerFunc.js';
+  import { generateArtifacts } from '#root/mergeAxeResults.js';
+  import { createAndUpdateResultsFolders, createDetailsAndLogs, createScreenshotsFolder } from '#root/utils.js';
+  import constants, { intermediateScreenshotsPath, getExecutablePath, removeQuarantineFlag } from '#root/constants/constants.js';
   import fs from 'fs';
   import path from 'path';
-  import { isSkippedUrl } from './constants/common.js';
+  import { isSkippedUrl } from '#root/constants/common.js';
   import { spawnSync } from 'child_process';
   import safe from 'safe-regex';
-  import { consoleLogger, silentLogger } from './logs.js';
+  import { consoleLogger, silentLogger } from '#root/logs.js';
   const blacklistedPatternsFilename = 'exclusions.txt';
 
 process.env.CRAWLEE_STORAGE_DIR = constants.a11yStorage;
@@ -75,12 +75,16 @@ if (fs.existsSync(blacklistedPatternsFilename)) {
     return !safe(pattern);
   });
   
-  if (unsafe.length > 0 ) {
-    let unsafeExpressionsError = "Unsafe expressions detected: '"+ unsafe +"' Please revise " + blacklistedPatternsFilename;
+  if (unsafe.length > 0) {
+    let unsafeExpressionsError =
+      "Unsafe expressions detected: '" +
+      unsafe +
+      "' Please revise " +
+      blacklistedPatternsFilename;
     consoleLogger.error(unsafeExpressionsError);
     silentLogger.error(unsafeExpressionsError);
     process.exit(1);
-  };
+  }
 }
 
 var index = 1;
@@ -199,7 +203,6 @@ const checkIfScanRequired = async page => {
       console.error('error: ', error);
     }
   }
-
 };
 
 const runAxeScan = async page => {
@@ -211,7 +214,7 @@ const runAxeScan = async page => {
 
 
 const processPage = async page => {
-  await page.waitForLoadState();  
+  await page.waitForLoadState('networkidle'); 
 
   if (await checkIfScanRequired(page)) {
     if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
@@ -220,7 +223,7 @@ const processPage = async page => {
       await runAxeScan(page);
     }
   };
-};`
+};`;
 
   const block2 = `  return urlsCrawled;
         })().then(async (urlsCrawled) => {
@@ -249,11 +252,19 @@ const processPage = async page => {
   let tmpDir;
   const appPrefix = 'purple-hats';
 
+  if (!fs.existsSync('./custom_flow_scripts')) {
+    fs.mkdirSync('./custom_flow_scripts');
+  }
+
+  const generatedScript = `./custom_flow_scripts/generatedScript-${randomToken}.js`;
+
+  console.log(` Launching browser. Navigate and record custom steps for ${domain} in the new browser.\n Close the browser when you are done recording.`);
+
   try {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
 
-    let codegenCmd = `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain}`
-    let extraCodegenOpts = `--browser chromium --block-service-workers --ignore-https-errors`
+    let codegenCmd = `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain}`;
+    let extraCodegenOpts = `--browser chromium --ignore-https-errors`;
     let codegenResult;
 
     if (customDevice === 'Specify viewport') {
@@ -261,27 +272,23 @@ const processPage = async page => {
         `${codegenCmd} --viewport-size=${viewportWidth},720 ${extraCodegenOpts}`,
       );
     } else if (!customDevice || customDevice === 'Desktop' || deviceChosen === 'Desktop') {
-      codegenResult = execSync(
-        `${codegenCmd} ${extraCodegenOpts}`,
-      );
+      codegenResult = execSync(`${codegenCmd} ${extraCodegenOpts}`);
     } else if (deviceChosen === 'Mobile') {
-      codegenResult = execSync(
-        `${codegenCmd} --device="iPhone 11" ${extraCodegenOpts}`,
-      );
+      codegenResult = execSync(`${codegenCmd} --device="iPhone 11" ${extraCodegenOpts}`);
     } else if (customDevice === 'Samsung Galaxy S9+') {
-      codegenResult = execSync(
-        `${codegenCmd} --device="Galaxy S9+" ${extraCodegenOpts}`,
-      );
+      codegenResult = execSync(`${codegenCmd} --device="Galaxy S9+" ${extraCodegenOpts}`);
     } else if (customDevice) {
-      codegenResult = execSync(
-        `${codegenCmd} --device="${customDevice}" ${extraCodegenOpts}`,
-      );
+      codegenResult = execSync(`${codegenCmd} --device="${customDevice}" ${extraCodegenOpts}`);
     } else {
-      console.error(`Error: Unable to parse device requested for scan. Please check the input parameters.`);
+      console.error(
+        `Error: Unable to parse device requested for scan. Please check the input parameters.`,
+      );
     }
 
     if (codegenResult.toString()) {
-      console.error("Error running Codegen: " + codegenResult.toString());
+      console.error(
+        `Error running Codegen: ${codegenResult.toString()}`,
+      );
     }
 
     const fileStream = fs.createReadStream(`${tmpDir}/intermediateScript.js`);
@@ -291,13 +298,13 @@ const processPage = async page => {
       crlfDelay: Infinity,
     });
 
-    const generatedScript = `./generatedScript-${randomToken}.js`;
-
     const appendToGeneratedScript = data => {
       fs.appendFileSync(generatedScript, `${data}\n`);
     };
 
     let firstGoToUrl = false;
+    let lastGoToUrl;
+    let nextStepNeedsProcessPage = false;
 
     for await (let line of rl) {
       if (
@@ -318,17 +325,6 @@ const processPage = async page => {
       }
       if (line.trim() === `(async () => {`) {
         appendToGeneratedScript(`await (async () => {`);
-        continue;
-      }
-      if (line.trim().includes('getBy') || line.trim().includes('click()')) {
-        const lastIndex = line.lastIndexOf('.');
-        const locator = line.substring(0, lastIndex);
-        appendToGeneratedScript(
-          ` (${locator}.count()>1)? [console.log('Please re-click the intended DOM element'), page.setDefaultTimeout(0)]:
-          ${line}
-          await processPage(page);
-        `,
-        );
         continue;
       }
       if (line.trim() === `const page = await context.newPage();`) {
@@ -357,6 +353,52 @@ const processPage = async page => {
         }
         continue;
       }
+
+      if (line.trim().startsWith(`await page.goto(`)) {
+        if (!firstGoToUrl) {
+          firstGoToUrl = true;
+          appendToGeneratedScript(
+            `${line}
+             await processPage(page);
+            `
+          ,);
+          continue;
+        } else {
+          const regexURL = /(?<=goto\(\')(.*?)(?=\'\))/;
+          const foundURL = line.match(regexURL)[0];
+          const withoutParamsURL = foundURL.split('?')[0];
+          lastGoToUrl = withoutParamsURL;
+          continue;
+        }
+      } else if (lastGoToUrl) {
+        appendToGeneratedScript(`
+          await page.waitForURL('${lastGoToUrl}**',{timeout: 60000});
+          await processPage(page);
+        `,
+        );
+
+        lastGoToUrl = null;
+
+      } else if (nextStepNeedsProcessPage) {
+        appendToGeneratedScript(`await processPage(page);`);
+        nextStepNeedsProcessPage = false;
+      }
+
+      if (line.trim().includes('getBy') || line.trim().includes('click()')) {
+        const lastIndex = line.lastIndexOf('.');
+        const locator = line.substring(0, lastIndex);
+        appendToGeneratedScript(
+          ` (${locator}.count()>1)? [console.log('Please re-click the intended DOM element'), page.setDefaultTimeout(0)]:
+          ${line}
+        `,
+        );
+
+        nextStepNeedsProcessPage = true;
+        continue;
+      } else {
+        nextStepNeedsProcessPage = false;
+      }
+      
       if (line.trim().includes(`/common/login?spcptracking`)) {
         appendToGeneratedScript(
           `await page.goto('https://iam.hdb.gov.sg/common/login', { waitUntil: 'networkidle' });`,
@@ -366,65 +408,20 @@ const processPage = async page => {
       if (line.trim().includes(`spauthsuccess?code=`)) {
         continue;
       }
-      if (line.trim().startsWith(`await page.goto(`)) {
-        if (!firstGoToUrl) {
-          firstGoToUrl = true;
-          appendToGeneratedScript(line);
-        } else {
-          appendToGeneratedScript(
-            line.replace('goto', 'waitForURL').replace(')', `,{timeout: 60000})`),
-          );
-        }
-
-        if (blacklistedPatterns) {
-
-          let isBlacklisted = blacklistedPatterns.filter(function (pattern) {
-            return new RegExp(pattern).test(line);
-          });
-
-          let noMatch = Object.keys(isBlacklisted).every(function (key) {
-            return isBlacklisted[key].length === 0;
-          });
-
-          if (!noMatch) {
-            continue;
-          }
-        }
-
-        appendToGeneratedScript(` await processPage(page);`);
-        continue;
-      }
-      if (line.trim().startsWith(`await page.waitForURL(`)) {
-        appendToGeneratedScript(line);
-
-        if (fs.existsSync('exclusions.txt')) {
-          const blacklistedPatterns = fs.readFileSync('exclusions.txt').toString().split('\n');
-
-          let isBlacklisted = blacklistedPatterns.filter(function (pattern) {
-            return new RegExp(pattern).test(line);
-          });
-
-          let noMatch = Object.keys(isBlacklisted).every(function (key) {
-            return isBlacklisted[key].length === 0;
-          });
-
-          if (!noMatch) {
-            continue;
-          }
-        }
-
-        appendToGeneratedScript(` await processPage(page);`);
-        continue;
-      }
+      
       if (line.trim() === `await browser.close();`) {
         appendToGeneratedScript(line);
         appendToGeneratedScript(block2);
         break;
       }
+
       appendToGeneratedScript(line);
     }
 
+    console.log(` Browser closed. Replaying steps and running accessibility scan...\n`);
+
     await import(generatedScript);
+
   } catch (e) {
     console.error(`Error: ${e}`);
     throw e;
@@ -438,9 +435,11 @@ const processPage = async page => {
         `An error has occurred while removing the temp folder at ${tmpDir}. Please remove it manually. Error: ${e}`,
       );
     }
+
+    console.log(`\n You may re-run the recorded steps by executing:\n\tnode ${generatedScript} \n`);
+
   }
 
-  // fs.unlinkSync(generatedScript);
 };
 
 export default playwrightAxeGenerator;
