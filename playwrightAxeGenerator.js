@@ -258,7 +258,7 @@ const processPage = async page => {
 
   const generatedScript = `./custom_flow_scripts/generatedScript-${randomToken}.js`;
 
-  console.log(` Launching browser. Navigate and record custom steps for ${domain} in the new browser.\n Close the browser when you are done recording.`);
+  console.log(` A new browser will be launched shortly.\n Navigate and record custom steps for ${domain} in the new browser.\n Close the browser when you are done recording your steps.`);
 
   try {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
@@ -267,14 +267,14 @@ const processPage = async page => {
     let extraCodegenOpts = `--browser chromium --ignore-https-errors`;
     let codegenResult;
 
-    if (customDevice === 'Specify viewport') {
+    if (viewportWidth || customDevice === 'Specify viewport') {
       codegenResult = execSync(
         `${codegenCmd} --viewport-size=${viewportWidth},720 ${extraCodegenOpts}`,
       );
-    } else if (!customDevice || customDevice === 'Desktop' || deviceChosen === 'Desktop') {
-      codegenResult = execSync(`${codegenCmd} ${extraCodegenOpts}`);
     } else if (deviceChosen === 'Mobile') {
       codegenResult = execSync(`${codegenCmd} --device="iPhone 11" ${extraCodegenOpts}`);
+    } else if (!customDevice || customDevice === 'Desktop' || deviceChosen === 'Desktop') {
+      codegenResult = execSync(`${codegenCmd} ${extraCodegenOpts}`);
     } else if (customDevice === 'Samsung Galaxy S9+') {
       codegenResult = execSync(`${codegenCmd} --device="Galaxy S9+" ${extraCodegenOpts}`);
     } else if (customDevice) {
