@@ -16,7 +16,7 @@
     "inquirer": "^9.1.4",
     "jsdom": "^21.0.0",
     "mustache": "^4.2.0",
-    "playwright": "^1.33.0-alpha-mar-29-2023",
+    "playwright": "1.32.1",
     "print-message": "^3.0.1",
     "safe-regex": "^2.1.1",
     "validator": "^13.7.0",
