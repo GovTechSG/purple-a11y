@@ -218,7 +218,13 @@ Examples:
 <details>
   <summary>Click here for list of device options supported</summary>
 
-- "Desktop"
+- "Desktop Chrome HiDPI"
+- "Desktop Edge HiDPI"
+- "Desktop Firefox HiDPI"
+- "Desktop Safari"
+- "Desktop Chrome"
+- "Desktop Edge"
+- "Desktop Firefox"
 - "Blackberry PlayBook"
 - "Blackberry PlayBook landscape"
 - "BlackBerry Z30"
@@ -325,13 +331,6 @@ Examples:
 - "Pixel 5 landscape"
 - "Moto G4"
 - "Moto G4 landscape"
-- "Desktop Chrome HiDPI"
-- "Desktop Edge HiDPI"
-- "Desktop Firefox HiDPI"
-- "Desktop Safari"
-- "Desktop Chrome"
-- "Desktop Edge"
-- "Desktop Firefox"
 </details>
 
 If the device name contains ```(``` and ```)```, wrap the device name in single quotes when entered into the CLI.
