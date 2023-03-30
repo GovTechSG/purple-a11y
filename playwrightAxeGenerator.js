@@ -214,7 +214,7 @@ const runAxeScan = async page => {
 
 
 const processPage = async page => {
-  await page.waitForLoadState('networkidle'); 
+  await page.waitForLoadState('domcontentloaded'); 
 
   if (await checkIfScanRequired(page)) {
     if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
@@ -264,7 +264,7 @@ const processPage = async page => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
 
     let codegenCmd = `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain}`;
-    let extraCodegenOpts = `--browser chromium --ignore-https-errors`;
+    let extraCodegenOpts = `--browser webkit --block-service-workers --ignore-https-errors`;
     let codegenResult;
 
     if (viewportWidth || customDevice === 'Specify viewport') {
@@ -309,6 +309,7 @@ const processPage = async page => {
     for await (let line of rl) {
       if (
         line.trim() === `const { chromium } = require('playwright');` ||
+        line.trim() === `const { webkit } = require('playwright');` ||
         line.trim() === `const { chromium, devices } = require('playwright');` ||
         line.trim() === `const { webkit, devices } = require('playwright');`
       ) {
@@ -354,7 +355,14 @@ const processPage = async page => {
         continue;
       }
 
-      if (line.trim().startsWith(`await page.goto(`)) {
+      let pageObj = "page";
+
+      if (line.trim().startsWith(`await page`)) {
+        const regexPageObj = /(?<=await )(.*?)(?=\.)/;
+        pageObj = line.match(regexPageObj)[0];
+      }
+
+      if (line.trim().includes(`.goto(`)) {
         if (!firstGoToUrl) {
           firstGoToUrl = true;
           appendToGeneratedScript(
@@ -372,7 +380,7 @@ const processPage = async page => {
         }
       } else if (lastGoToUrl) {
         appendToGeneratedScript(`
-          await page.waitForURL('${lastGoToUrl}**',{timeout: 60000});
+          await ${pageObj}.waitForURL('${lastGoToUrl}**',{timeout: 60000});
           await processPage(page);
         `,
         );
@@ -397,16 +405,6 @@ const processPage = async page => {
         continue;
       } else {
         nextStepNeedsProcessPage = false;
-      }
-      
-      if (line.trim().includes(`/common/login?spcptracking`)) {
-        appendToGeneratedScript(
-          `await page.goto('https://iam.hdb.gov.sg/common/login', { waitUntil: 'networkidle' });`,
-        );
-        continue;
-      }
-      if (line.trim().includes(`spauthsuccess?code=`)) {
-        continue;
       }
       
       if (line.trim() === `await browser.close();`) {
