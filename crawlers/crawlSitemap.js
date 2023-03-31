@@ -37,7 +37,7 @@ const crawlSitemap = async (
     device = devices['iPhone 11'];
   } else if (customDevice === 'Samsung Galaxy S9+') {
     device = devices['Galaxy S9+'];
-  } else if (customDevice === "Specify viewport") {
+  } else if (viewportWidth) {
     device = { viewport: { width: Number(viewportWidth), height: 720 }};
   } else if (customDevice) {
     device = devices[customDevice.replace('_', / /g)];
