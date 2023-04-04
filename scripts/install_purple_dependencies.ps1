@@ -19,8 +19,10 @@ if (-Not (Test-Path nodejs-win\node.exe)) {
 
 # Install Image<agick
 if (-Not (Test-Path ImageMagick\bin\compare.exe)) {
-    Write-Output "Downloading ImageMagick (Mirror)"
-    Invoke-WebRequest -o ./ImageMagick-win.zip "https://mirror.checkdomain.de/imagemagick/binaries/ImageMagick-7.1.1-5-portable-Q16-arm64.zip"
+    $r=iwr https://imagemagick.org/archive/binaries/ -UseBasicParsing
+    $f=$r.Links.href -match "7.*-portable-Q16-x64.zip$"
+    Write-Output "Downloading ImageMagick from https://imagemagick.org/archive/binaries/$f"
+    Invoke-WebRequest -o ./ImageMagick-win.zip "https://imagemagick.org/archive/binaries/$f"
     Expand-Archive .\ImageMagick-win.zip -DestinationPath ImageMagick\bin
     Remove-Item -Force .\ImageMagick-win.zip
 }
