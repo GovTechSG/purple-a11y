@@ -55,3 +55,5 @@ fi
 
 echo "INFO: Removing com.apple.quarantine attributes for required binaries to run"
 xattr -rd com.apple.quarantine . &>/dev/null
+
+$@
