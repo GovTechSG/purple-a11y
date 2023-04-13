@@ -4,7 +4,7 @@ echo "hats Shell - Created By younglim - NO WARRANTY PROVIDED"
 echo "================================================================"
 echo ""
 
-CURR_FOLDERNAME=$(basename $PWD)
+CURR_FOLDERNAME=$(basename "$PWD")
 if [ $CURR_FOLDERNAME = "scripts" ]; then
   cd ..
   CURR_FOLDERNAME=$(basename $PWD)
