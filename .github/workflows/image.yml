@@ -3,7 +3,7 @@ name: Push installation image
 on: 
   workflow_dispatch:
   release:
-    types: [published, created, edited]
+    types: [published]
 
 jobs:
   windows-install-purple:
