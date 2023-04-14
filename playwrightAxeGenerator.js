@@ -4,6 +4,7 @@ import os from 'os';
 import path from 'path';
 import readline from 'readline';
 import safe from 'safe-regex';
+import { devices } from 'playwright';
 import { consoleLogger, silentLogger } from './logs.js';
 
 const playwrightAxeGenerator = async (domain, data) => {
@@ -26,7 +27,7 @@ const playwrightAxeGenerator = async (domain, data) => {
     };
   }
 
-  const { isHeadless, randomToken, deviceChosen, customDevice, viewportWidth } = data;
+  let { isHeadless, randomToken, deviceChosen, customDevice, viewportWidth } = data;
   const block1 = `import { chromium, devices, webkit } from 'playwright';
   import { createCrawleeSubFolders, runAxeScript } from '#root/crawlers/commonCrawlerFunc.js';
   import { generateArtifacts } from '#root/mergeAxeResults.js';
@@ -263,22 +264,29 @@ const processPage = async page => {
   try {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
 
-    let bigSur = false;
     let browser = "webkit";
+    let userAgentOpts = null;
     
+    // Compatibility workaround for macOS Big Sur
     if (os.platform() ==='darwin' && os.release().startsWith("20.")) {
       console.log(" ⚠️  Running custom scans is not fully supported on macOS Big Sur. Please upgrade to Monterey (12.0 and above) for a more reliable experience.");
       browser = "chromium";
-      bigSur = "true";
+
+      if (deviceChosen === 'Mobile') {
+        customDevice = "iPhone 11";
+      }
+
+      if (customDevice) {
+        viewportWidth = devices[customDevice].viewport.width;
+        userAgentOpts = `--user-agent \"${devices[customDevice].userAgent}\"`;
+      }
     }
 
     let codegenCmd = `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain}`;
-    let extraCodegenOpts = `--browser ${browser} --block-service-workers --ignore-https-errors`;
+    let extraCodegenOpts = `${userAgentOpts} --browser ${browser} --block-service-workers --ignore-https-errors`;
     let codegenResult;
 
-    if (bigSur) {
-      codegenResult = execSync(`${codegenCmd} ${extraCodegenOpts}`);
-    } else if (viewportWidth || customDevice === 'Specify viewport') {
+    if (viewportWidth || customDevice === 'Specify viewport') {
       codegenResult = execSync(
         `${codegenCmd} --viewport-size=${viewportWidth},720 ${extraCodegenOpts}`,
       );
