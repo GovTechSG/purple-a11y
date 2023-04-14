@@ -1,7 +1,7 @@
 {
   "name": "purple-hats",
   "main": "index.js",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "type": "module",
   "imports": {
     "#root/*.js": "./*.js"
@@ -22,7 +22,7 @@
     "validator": "^13.7.0",
     "which": "^3.0.0",
     "winston": "^3.8.2",
-    "xml2js": "^0.4.23",
+    "xml2js": "^0.5.0",
     "yargs": "^17.6.2"
   },
   "devDependencies": {
@@ -36,7 +36,8 @@
   },
   "overrides": {
     "node-fetch": "^3.3.0",
-    "json5": "^2.2.3"
+    "json5": "^2.2.3",
+    "ansi-regex": "^6.0.1"
   },
   "scripts": {
     "test": "node --experimental-vm-modules ./node_modules/.bin/jest"

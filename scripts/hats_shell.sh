@@ -4,7 +4,7 @@ echo "hats Shell - Created By younglim - NO WARRANTY PROVIDED"
 echo "================================================================"
 echo ""
 
-CURR_FOLDERNAME=$(basename $PWD)
+CURR_FOLDERNAME=$(basename "$PWD")
 if [ $CURR_FOLDERNAME = "scripts" ]; then
   cd ..
   CURR_FOLDERNAME=$(basename $PWD)
@@ -55,3 +55,5 @@ fi
 
 echo "INFO: Removing com.apple.quarantine attributes for required binaries to run"
 xattr -rd com.apple.quarantine . &>/dev/null
+
+$@
