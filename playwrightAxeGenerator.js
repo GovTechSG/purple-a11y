@@ -267,9 +267,8 @@ const processPage = async page => {
     let browser = "webkit";
     let userAgentOpts = null;
     
-    // Compatibility workaround for macOS Big Sur
-    if (os.platform() ==='darwin' && os.release().startsWith("20.")) {
-      console.log(" ⚠️  Running custom scans is not fully supported on macOS Big Sur. Please upgrade to Monterey (12.0 and above) for a more reliable experience.");
+    // Performance workaround for macOS Big Sur and Windows to force Chromium browser instead of Webkit
+    if ((os.platform() ==='darwin' && os.release().startsWith("20.")) || os.platform() ==='win32' ) {
       browser = "chromium";
 
       if (deviceChosen === 'Mobile') {
