@@ -8,9 +8,8 @@ import crawlee from 'crawlee';
 import { parseString } from 'xml2js';
 import fs from 'fs';
 import constants from './constants.js';
-import { consoleLogger, silentLogger } from '../logs.js';
+import { silentLogger } from '../logs.js';
 import * as https from 'https';
-import safe from 'safe-regex';
 
 const document = new JSDOM('').window;
 
@@ -60,10 +59,9 @@ export const isValidXML = async content => {
 };
 
 export const isSkippedUrl = (page, whitelistedDomains) => {
-  
   const isWhitelisted = whitelistedDomains.filter(pattern => {
     if (pattern) {
-      return new RegExp(pattern).test(page.url())
+      return new RegExp(pattern).test(page.url());
     }
     return false;
   });
@@ -73,11 +71,6 @@ export const isSkippedUrl = (page, whitelistedDomains) => {
   });
 
   return !noMatch;
-};
-
-export const isValidHttpUrl = input => {
-  const regexForUrl = new RegExp('^(http|https):/{2}.*$', 'gmi');
-  return input.match(regexForUrl) !== null;
 };
 
 export const isFileSitemap = filePath => {
@@ -138,7 +131,7 @@ const checkUrlConnectivity = async url => {
       .get(data.url, { httpsAgent, timeout: 15000 })
       .then(async response => {
         const redirectUrl = response.request.res.responseUrl;
-        res.status = response.status;
+        res.status = constants.urlCheckStatuses.success.code;
 
         if (redirectUrl != null) {
           res.url = redirectUrl;
@@ -149,12 +142,21 @@ const checkUrlConnectivity = async url => {
         res.content = response.data;
       })
       .catch(error => {
-        consoleLogger.info('Provided URL cannot be accessed. Please verify connectivity.');
+        if (error.response) {
+          // enters here if server responds with a status other than 2xx
+          res.status = constants.urlCheckStatuses.errorStatusReceived.code;
+          res.serverResponse = error.response.status
+        } else if (error.request) {
+          // enters here if URL cannot be accessed
+          res.status = constants.urlCheckStatuses.cannotBeResolved.code;
+        } else {
+          res.status = constants.urlCheckStatuses.systemError.code;
+        }
         silentLogger.error(error);
-        res.status = 400;
       });
   } else {
-    res.status = 400;
+    // enters here if input is not a URL or not using http/https protocols
+    res.status = constants.urlCheckStatuses.invalidUrl.code;
   }
 
   return res;
@@ -182,13 +184,14 @@ const isSitemapContent = async content => {
 export const checkUrl = async (scanner, url) => {
   const res = await checkUrlConnectivity(url);
 
-  if (res.status === 200) {
-    if (scanner === constants.scannerTypes.sitemap) {
-      const isSitemap = await isSitemapContent(res.content);
+  if (
+    res.status === constants.urlCheckStatuses.success.code &&
+    scanner === constants.scannerTypes.sitemap
+  ) {
+    const isSitemap = await isSitemapContent(res.content);
 
-      if (!isSitemap) {
-        res.status = 400;
-      }
+    if (!isSitemap) {
+      res.status = constants.urlCheckStatuses.notASitemap.code;
     }
   }
 
@@ -197,7 +200,7 @@ export const checkUrl = async (scanner, url) => {
 
 const isEmptyObject = obj => !Object.keys(obj).length;
 
-export const prepareData = (argv) => {
+export const prepareData = argv => {
   if (isEmptyObject(argv)) {
     throw Error('No inputs should be provided');
   }
@@ -214,15 +217,15 @@ export const prepareData = (argv) => {
   } = argv;
 
   return {
-      type: scanner,
-      url: isLocalSitemap ? url : finalUrl,
-      isHeadless: headless,
-      deviceChosen,
-      customDevice,
-      viewportWidth,
-      maxRequestsPerCrawl: maxpages || constants.maxRequestsPerCrawl,
-      isLocalSitemap,
-    };
+    type: scanner,
+    url: isLocalSitemap ? url : finalUrl,
+    isHeadless: headless,
+    deviceChosen,
+    customDevice,
+    viewportWidth,
+    maxRequestsPerCrawl: maxpages || constants.maxRequestsPerCrawl,
+    isLocalSitemap,
+  };
 };
 
 export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
@@ -247,20 +250,20 @@ export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
     }
   };
 
-  const processNonStandardSitemap = (data) => {
+  const processNonStandardSitemap = data => {
     const urlsFromData = crawlee.extractUrls({ string: data }).slice(0, maxLinksCount);
     urlsFromData.forEach(url => urls.add(url));
-  }
+  };
 
   const fetchUrls = async url => {
     let data;
-    if (isValidHttpUrl(url)) {
+    if (validator.isURL(url, urlOptions)) {
       const instance = axios.create({
-        httpsAgent: new https.Agent({  
-          rejectUnauthorized: false
-        })
+        httpsAgent: new https.Agent({
+          rejectUnauthorized: false,
+        }),
       });
-      
+
       data = await (await instance.get(url)).data;
     } else {
       data = fs.readFileSync(url, 'utf8');

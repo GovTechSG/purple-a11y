@@ -13,12 +13,13 @@ import {
   getVersion,
   getStoragePath,
 } from './utils.js';
-import { checkUrl, prepareData, isValidHttpUrl, isFileSitemap } from './constants/common.js';
+import { checkUrl, prepareData, isFileSitemap } from './constants/common.js';
 import { cliOptions, messageOptions, configureReportSetting } from './constants/cliFunctions.js';
 import constants from './constants/constants.js';
 import combineRun from './combine.js';
 import playwrightAxeGenerator from './playwrightAxeGenerator.js';
 import { devices } from 'playwright';
+import { silentLogger } from './logs.js';
 
 const appVersion = getVersion();
 const yargs = _yargs(hideBin(process.argv));
@@ -115,31 +116,42 @@ const scanInit = async argvs => {
   // Set the parameters required to indicate threshold limits
   setThresholdLimits(argvs.warn);
 
-  const validateUrl = async () => {
-    if (isValidHttpUrl(argvs.url)) {
-      const res = await checkUrl(argvs.scanner, argvs.url);
-      if (res.status === 200) {
-        // To take the final url from the validation
-        argvs.finalUrl = res.url;
-        return true;
+  const res = await checkUrl(argvs.scanner, argvs.url);
+  const statuses = constants.urlCheckStatuses;
+  switch (res.status) {
+    case statuses.success.code:
+      argvs.finalUrl = res.url;
+      break;
+    case statuses.cannotBeResolved.code:
+      printMessage([statuses.cannotBeResolved.message], messageOptions);
+      process.exit(res.status);
+    case statuses.errorStatusReceived.code:
+      printMessage(
+        [`${statuses.errorStatusReceived.message}${res.serverResponse}.`],
+        messageOptions,
+      );
+      process.exit(res.status);
+    case statuses.systemError.code:
+      printMessage([statuses.systemError.message], messageOptions);
+      process.exit(res.status);
+    case statuses.invalidUrl.code:
+      if (argvs.scanner !== constants.scannerTypes.sitemap) {
+        printMessage([statuses.invalidUrl.message], messageOptions);
+        process.exit(res.status);
       }
-    } else if (argvs.scanner === constants.scannerTypes.sitemap && isFileSitemap(argvs.url)) {
-      argvs.isLocalSitemap = true;
-      return true;
-    }
-    return false;
-  };
 
-  const isValidUrl = await validateUrl();
-
-  if (!isValidUrl) {
-    printMessage(
-      [
-        `Invalid URL provided. Either it does not exist or it cannot be used for a ${argvs.scanner} scan.`,
-      ],
-      messageOptions,
-    );
-    process.exit(1);
+      /* if sitemap scan is selected, treat this URL as a filepath
+        isFileSitemap will tell whether the filepath exists, and if it does, whether the
+        file is a sitemap */
+      if (isFileSitemap(argvs.url)) {
+        argvs.isLocalSitemap = true;
+        break;
+      } else {
+        res.status = statuses.notASitemap.code;
+      }
+    case statuses.notASitemap.code:
+      printMessage([statuses.notASitemap.message], messageOptions);
+      process.exit(res.status);
   }
 
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
@@ -151,24 +163,30 @@ const scanInit = async argvs => {
   setHeadlessMode(data.isHeadless);
 
   let screenToScan;
-  
+
   if (!argvs.customDevice && !argvs.viewportWidth) {
-    screenToScan = 'Desktop'
+    screenToScan = 'Desktop';
   } else if (argvs.customDevice) {
     screenToScan = argvs.customDevice;
   } else {
     screenToScan = `CustomWidth_${argvs.viewportWidth}px`;
   }
 
-  data.randomToken = `PHScan_${domain}_${date}_${time}_${argvs.scanner.replaceAll(' ', '_')}_${screenToScan.replaceAll(' ', '_')}`;
+  data.randomToken = `PHScan_${domain}_${date}_${time}_${argvs.scanner.replaceAll(
+    ' ',
+    '_',
+  )}_${screenToScan.replaceAll(' ', '_')}`;
 
   printMessage([`Purple HATS version: ${appVersion}`, 'Starting scan...'], messageOptions);
-  
+
   if (argvs.scanner === constants.scannerTypes.custom) {
     try {
       await playwrightAxeGenerator(argvs.url, data);
     } catch (error) {
-      printMessage([`An error has occurred when running the custom flow scan. Please see above and errors.txt for more details.`]);
+      silentLogger.error(error);
+      printMessage([
+        `An error has occurred when running the custom flow scan. Please see above and errors.txt for more details.`,
+      ]);
       process.exit(2);
     }
   } else {
