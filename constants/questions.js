@@ -2,7 +2,6 @@ import {
   checkUrl,
   getUrlMessage,
   isFileSitemap,
-  isValidHttpUrl,
   sanitizeUrlInput,
 } from './common.js';
 import constants from './constants.js';

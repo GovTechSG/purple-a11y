@@ -8,9 +8,8 @@ import crawlee from 'crawlee';
 import { parseString } from 'xml2js';
 import fs from 'fs';
 import constants from './constants.js';
-import { consoleLogger, silentLogger } from '../logs.js';
+import { silentLogger } from '../logs.js';
 import * as https from 'https';
-import safe from 'safe-regex';
 
 const document = new JSDOM('').window;
 
@@ -258,7 +257,7 @@ export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
 
   const fetchUrls = async url => {
     let data;
-    if (isValidHttpUrl(url)) {
+    if (validator.isURL(url, urlOptions)) {
       const instance = axios.create({
         httpsAgent: new https.Agent({
           rejectUnauthorized: false,

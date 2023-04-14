@@ -13,7 +13,7 @@ import {
   getVersion,
   getStoragePath,
 } from './utils.js';
-import { checkUrl, prepareData, isValidHttpUrl, isFileSitemap } from './constants/common.js';
+import { checkUrl, prepareData, isFileSitemap } from './constants/common.js';
 import { cliOptions, messageOptions, configureReportSetting } from './constants/cliFunctions.js';
 import constants from './constants/constants.js';
 import combineRun from './combine.js';
