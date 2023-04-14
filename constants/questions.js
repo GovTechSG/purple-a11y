@@ -66,24 +66,40 @@ const questions = [
         process.exit(1);
       }
 
-      // Return the data required to evaluate
-      if (isValidHttpUrl(url)) {
-        const res = await checkUrl(answers.scanner, url);
+      const res = await checkUrl(answers.scanner, url);
+      const statuses = constants.urlCheckStatuses;
 
-        if (res.status === 200) {
+      switch (res.status) {
+        case statuses.success.code:
           answers.finalUrl = res.url;
           return true;
-        }
-      } else if (answers.scanner === constants.scannerTypes.sitemap && isFileSitemap(url)) {
-        answers.isLocalSitemap = true;
-        return true;
-      }
+        case statuses.cannotBeResolved.code:
+          return statuses.cannotBeResolved.message;
+        case statuses.errorStatusReceived.code:
+          return `${statuses.errorStatusReceived.message}${res.serverResponse}.`;
 
-      if (answers.scanner === constants.scannerTypes.sitemap) {
-        return 'Invalid sitemap format. Please provide a URL or file path with a valid sitemap.';
+        case statuses.systemError.code:
+          return statuses.systemError.message;
+
+        case statuses.invalidUrl.code:
+          if (answers.scanner !== constants.scannerTypes.sitemap) {
+            return statuses.invalidUrl.message;
+          }
+
+          /* if sitemap scan is selected, treat this URL as a filepath
+            isFileSitemap will tell whether the filepath exists, and if it does, whether the
+            file is a sitemap */
+          if (isFileSitemap(answers.url)) {
+            answers.isLocalSitemap = true;
+            return true;
+          } else {
+            res.status = statuses.notASitemap.code;
+          }
+        case statuses.notASitemap.code:
+          return statuses.notASitemap.message;
       }
-      return 'Cannot resolve URL. Please provide a valid URL.';
     },
+
     filter: input => {
       return sanitizeUrlInput(input.trim()).url;
     },
