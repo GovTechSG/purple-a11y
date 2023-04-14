@@ -19,6 +19,7 @@ import constants from './constants/constants.js';
 import combineRun from './combine.js';
 import playwrightAxeGenerator from './playwrightAxeGenerator.js';
 import { devices } from 'playwright';
+import { silentLogger } from './logs.js';
 
 const appVersion = getVersion();
 const yargs = _yargs(hideBin(process.argv));
@@ -182,6 +183,7 @@ const scanInit = async argvs => {
     try {
       await playwrightAxeGenerator(argvs.url, data);
     } catch (error) {
+      silentLogger.error(error);
       printMessage([
         `An error has occurred when running the custom flow scan. Please see above and errors.txt for more details.`,
       ]);
