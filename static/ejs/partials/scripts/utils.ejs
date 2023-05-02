@@ -1,0 +1,22 @@
+<%# utility functions %>
+<script>
+  function createElementFromString(htmlString) {
+    const tempContainer = document.createElement('div');
+    tempContainer.innerHTML = htmlString.trim();
+    return tempContainer.firstChild;
+  }
+
+  function getFormattedCategoryTitle(category) {
+    const titles = {
+      mustFix: 'Must Fix',
+      goodToFix: 'Good to Fix',
+      passed: 'Passed',
+    };
+
+    return titles[category];
+  }
+  
+  function htmlEscapeString(string) {
+    return string.replaceAll('<', '&lt;');
+  }
+</script>

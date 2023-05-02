@@ -9,7 +9,6 @@ import {
 } from './commonCrawlerFunc.js';
 import constants from '../constants/constants.js';
 
-
 const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequestsPerCrawl) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { maxConcurrency } = constants;
@@ -26,7 +25,7 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
   } else if (customDevice === 'Samsung Galaxy S9+') {
     device = devices['Galaxy S9+'];
   } else if (viewportWidth) {
-    device = { viewport: { width: Number(viewportWidth), height: 720 }};
+    device = { viewport: { width: Number(viewportWidth), height: 720 } };
   } else if (customDevice) {
     device = devices[customDevice.replace('_', / /g)];
   } else {
@@ -41,21 +40,20 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
     },
     browserPoolOptions: {
       useFingerprints: false,
-      preLaunchHooks: [async (pageId, launchContext) => {
-        
-        launchContext.launchOptions = {
-          ...launchContext.launchOptions,
-          bypassCSP: true,
-          ignoreHTTPSErrors: true,
-          ...device,
-        };
-        
-      }],
+      preLaunchHooks: [
+        async (pageId, launchContext) => {
+          launchContext.launchOptions = {
+            ...launchContext.launchOptions,
+            bypassCSP: true,
+            ignoreHTTPSErrors: true,
+            ...device,
+          };
+        },
+      ],
     },
     requestQueue,
     preNavigationHooks,
     requestHandler: async ({ page, request, enqueueLinks, enqueueLinksByClickingElements }) => {
-
       const currentUrl = request.url;
       const location = await page.evaluate('location');
 
@@ -66,12 +64,12 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
 
         await enqueueLinks({
           // set selector matches anchor elements with href but not contains # or starting with mailto:
-          selector:'a:not(a[href*="#"],a[href^="mailto:"])',
+          selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
           strategy: 'same-domain',
           requestQueue,
           transformRequestFunction(req) {
             // ignore all links ending with `.pdf`
-            req.url  = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/igm, "");
+            req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
             return req;
           },
         });
@@ -84,11 +82,10 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
           selector: ':not(a):is(*[role="link"], button[onclick])',
           transformRequestFunction(req) {
             // ignore all links ending with `.pdf`
-            req.url  = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/igm, "");
+            req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
             return req;
           },
         });
-
       } else {
         urlsCrawled.outOfDomain.push(currentUrl);
       }
