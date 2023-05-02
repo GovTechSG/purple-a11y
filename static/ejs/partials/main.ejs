@@ -1,0 +1,22 @@
+<div class="d-flex flex-grow-1 align-items-stretch">
+  <%- include("components/scanAbout") %>
+  <div class="d-flex flex-column flex-grow-1">
+    <div class="row m-0 py-4 px-3">
+      <div class="col-md-6 pe-md-2"><%- include("components/wcagCompliance") %></div>
+      <div class="col-md-6 ps-md-2 mt-3 mt-md-0"><%- include("components/topFive") %></div>
+    </div>
+    <hr class="my-2 mx-3" />
+    <div class="row m-0 pt-4 px-2">
+      <% Object.keys(items).forEach((category) => { %>
+      <div class="col-md-4 px-2">
+        <%- include("components/categorySelector", { category: category }) %>
+      </div>
+      <% }) %>
+    </div>
+    <div id="categorySummary" class="px-3 py-4 mb-3 flex-grow-1">
+      <%# dynamically generated section from scripts/categorySummary %>
+    </div>
+    <%- include("components/ruleOffcanvas") %>
+    <%- include("footer") %>
+  </div>
+</div>

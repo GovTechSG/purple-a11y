@@ -247,7 +247,7 @@ const processPage = async page => {
             await createDetailsAndLogs(scanDetails, '${randomToken}');
             await createAndUpdateResultsFolders('${randomToken}');
             createScreenshotsFolder('${randomToken}');
-            await generateArtifacts('${randomToken}', 'Automated Scan');
+            await generateArtifacts('${randomToken}', '${domain}','Automated Scan');
         });`;
 
   let tmpDir;
