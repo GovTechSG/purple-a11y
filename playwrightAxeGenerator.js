@@ -247,7 +247,7 @@ const processPage = async page => {
             await createDetailsAndLogs(scanDetails, '${randomToken}');
             await createAndUpdateResultsFolders('${randomToken}');
             createScreenshotsFolder('${randomToken}');
-            await generateArtifacts('${randomToken}', '${domain}','Automated Scan');
+            await generateArtifacts('${randomToken}', '${domain}', 'Customized', '${viewportWidth ? `CustomWidth_${viewportWidth}px` : customDevice ? customDevice : deviceChosen ? deviceChosen : 'Desktop' }');
         });`;
 
   let tmpDir;
