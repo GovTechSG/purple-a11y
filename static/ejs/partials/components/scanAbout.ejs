@@ -34,7 +34,7 @@
         fill="#CED4DA"
       />
     </svg>
-    <a aria-label="URL Scanned" href="<%= urlScanned %>" target="_blank"><%= urlScanned %></a>
+    <a aria-label="URL scanned" href="<%= urlScanned %>" target="_blank"><%= urlScanned %></a>
   </div>
   <div>
     <% if (viewport.startsWith('Desktop')) { %>
@@ -140,11 +140,15 @@
   </div>
   <hr class="mt-3 mb-4" />
   <iframe
-    id="a11yBanner"
+    id="a11y-online-banner"
     title="GovTech Accessibility Enabling Team information banner"
     class="h-auto w-100"
     src="https://govtechsg.github.io/purple-banner-embeds/"
-    onerror="$(this).replaceWith('<p>You need to be online to view this content.</p>');"
     scrolling="no"
   ></iframe>
+  <script>
+    if (!navigator.onLine) {
+      document.getElementById('a11y-online-banner').style.display = 'none';
+    }
+  </script>
 </div>
