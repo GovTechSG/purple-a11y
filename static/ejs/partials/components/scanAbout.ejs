@@ -84,10 +84,11 @@
       />
     </svg>
     <% } %>
-    <span
-      ><%= viewport.startsWith("CustomWidth") ? `${viewport.split("_")[1]} width` : viewport %> <%=
-      viewport === 'Automated Scan' ? '' : 'viewport' %></span
-    >
+    <span>
+      <%= viewport.startsWith("CustomWidth") ? `${viewport.split("_")[1]} width` : viewport %>
+      viewport
+      <%= scanType === 'Customized' ? '(customized scan)' : '' %>
+    </span>
   </div>
   <div>
     <svg
