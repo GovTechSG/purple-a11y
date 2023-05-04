@@ -240,13 +240,14 @@ const flattenAndSortResults = allIssues => {
   allIssues.wcagViolations = Array.from(allIssues.wcagViolations);
 };
 
-export const generateArtifacts = async (randomToken, urlScanned, viewport) => {
+export const generateArtifacts = async (randomToken, urlScanned, scanType, viewport) => {
   const storagePath = getStoragePath(randomToken);
 
   const directory = `${storagePath}/${constants.allIssueFileName}`;
   const allIssues = {
     startTime: getCurrentTime(),
     urlScanned,
+    scanType,
     viewport,
     totalPagesScanned: 0,
     totalItems: 0,
