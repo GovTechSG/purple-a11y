@@ -34,7 +34,7 @@
         fill="#CED4DA"
       />
     </svg>
-    <a href="<%= urlScanned %>" target="_blank"><%= urlScanned %></a>
+    <a aria-label="URL Scanned" href="<%= urlScanned %>" target="_blank"><%= urlScanned %></a>
   </div>
   <div>
     <% if (viewport.startsWith('Desktop')) { %>
@@ -84,10 +84,11 @@
       />
     </svg>
     <% } %>
-    <span
-      ><%= viewport.startsWith("CustomWidth") ? `${viewport.split("_")[1]} width` : viewport %>
-      <%= viewport === 'Automated Scan' ? '' : 'viewport' %></span
->
+    <span>
+      <%= viewport.startsWith("CustomWidth") ? `${viewport.split("_")[1]} width` : viewport %>
+      viewport
+      <%= scanType === 'Customized' ? '(customized scan)' : '' %>
+    </span>
   </div>
   <div>
     <svg
