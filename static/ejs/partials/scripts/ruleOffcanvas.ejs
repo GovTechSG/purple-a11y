@@ -82,12 +82,17 @@ category summary is clicked %>
       expandedRuleCollapseButton.classList.add('collapsed');
     }
 
+    expandedRuleDescription.style.minHeight = '';
+
     if (expandedRuleDescription.offsetHeight === expandedRuleDescription.scrollHeight) {
       expandedRuleCollapseButton.style.display = 'none';
       expandedRuleDescription.ariaExpanded = 'true';
     } else {
+      expandedRuleDescription.classList.add('collapse');
+
       expandedRuleCollapseButton.style.display = 'block';
       expandedRuleDescription.ariaExpanded = 'false';
+      expandedRuleDescription.style.minHeight = '3rem'; // Prevents bootstrap collapse from going to 0px
     }
 
     const availableFixCategories = [];
