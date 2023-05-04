@@ -67,6 +67,30 @@ category summary is clicked %>
     `),
     );
 
+    let expandedRuleDescription = document.getElementById('expandedRuleDescription');
+    let expandedRuleCollapseButton = document.getElementById('expandedRuleCollapseButton');
+
+    if (expandedRuleDescription.classList.contains('show')) {
+      expandedRuleDescription.classList.remove('show');
+    }
+
+    if (expandedRuleDescription.ariaExpanded === 'true') {
+      expandedRuleDescription.ariaExpanded = 'false';
+    }
+
+    if (expandedRuleCollapseButton.classList.contains('collapsed') !== true) {
+      expandedRuleCollapseButton.classList.add('collapsed');
+    }
+
+    if (expandedRuleDescription.offsetHeight === expandedRuleDescription.scrollHeight) {
+      expandedRuleCollapseButton.style.display = 'none';
+      expandedRuleDescription.ariaExpanded = 'true';
+    } else {
+      expandedRuleCollapseButton.style.display = 'block';
+      expandedRuleDescription.ariaExpanded = 'false';
+    }
+
+
     const availableFixCategories = [];
     const categorySelectors = [];
 

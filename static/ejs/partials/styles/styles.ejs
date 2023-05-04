@@ -473,9 +473,55 @@
     font-weight: bold;
     line-height: 2rem;
   }
-  #expandedRuleDescription {
+  #expandedRuleDescription.collapse:not(.show) {
     margin-top: 2rem;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
   }
+
+  #expandedRuleDescription.collapse:not(.show) p {
+    display: inline;
+  }
+
+  #expandedRuleDescription.collapse:not(.show) ul{
+    display: inline-block;
+  } 
+
+  #expandedRuleDescription.collapse:not(.show) li {
+    display: inline-table;
+  }
+
+  #expandedRuleDescription p {
+    display: block;
+  }
+
+  #expandedRuleDescription ul {
+    display: block;
+  }
+
+  #expandedRuleDescription li {
+    display: list-item;
+  }
+
+  /* #expandedRuleDescription.collapsing {
+    height: 3rem;
+  } */
+
+  #expandedRuleCollapseButton {
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  #expandedRuleCollapseButton.collapsed::after {
+    content: 'Read More';
+  }
+
+  #expandedRuleCollapseButton:not(.collapsed)::after {
+    content: 'Show Less';
+  }
+
   #expandedRuleHelpUrl {
     display: block;
     margin-bottom: 1rem;
