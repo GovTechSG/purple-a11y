@@ -85,9 +85,9 @@
     </svg>
     <% } %>
     <span
-      ><%= viewport.startsWith("CustomWidth") ? `${viewport.split("_")[1]} width` : viewport %>
-      <%= viewport === 'Automated Scan' ? '' : 'viewport' %></span
->
+      ><%= viewport.startsWith("CustomWidth") ? `${viewport.split("_")[1]} width` : viewport %> <%=
+      viewport === 'Automated Scan' ? '' : 'viewport' %></span
+    >
   </div>
   <div>
     <svg
@@ -139,11 +139,15 @@
   </div>
   <hr class="mt-3 mb-4" />
   <iframe
-    id="a11yBanner"
+    id="a11y-online-banner"
     title="GovTech Accessibility Enabling Team information banner"
     class="h-auto w-100"
     src="https://govtechsg.github.io/purple-banner-embeds/"
-    onerror="$(this).replaceWith('<p>You need to be online to view this content.</p>');"
     scrolling="no"
   ></iframe>
+  <script>
+    if (!navigator.onLine) {
+      document.getElementById('a11y-online-banner').style.display = 'none';
+    }
+  </script>
 </div>
