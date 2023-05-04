@@ -8,7 +8,6 @@ import { devices } from 'playwright';
 import { consoleLogger, silentLogger } from './logs.js';
 
 const playwrightAxeGenerator = async (domain, data) => {
-
   const blacklistedPatternsFilename = 'exclusions.txt';
   let blacklistedPatterns = null;
 
@@ -18,13 +17,17 @@ const playwrightAxeGenerator = async (domain, data) => {
     let unsafe = blacklistedPatterns.filter(function (pattern) {
       return !safe(pattern);
     });
-    
-    if (unsafe.length > 0 ) {
-      let unsafeExpressionsError = "Unsafe expressions detected: '"+ unsafe +"' Please revise " + blacklistedPatternsFilename;
+
+    if (unsafe.length > 0) {
+      let unsafeExpressionsError =
+        "Unsafe expressions detected: '" +
+        unsafe +
+        "' Please revise " +
+        blacklistedPatternsFilename;
       consoleLogger.error(unsafeExpressionsError);
       silentLogger.error(unsafeExpressionsError);
       process.exit(1);
-    };
+    }
   }
 
   let { isHeadless, randomToken, deviceChosen, customDevice, viewportWidth } = data;
@@ -247,7 +250,15 @@ const processPage = async page => {
             await createDetailsAndLogs(scanDetails, '${randomToken}');
             await createAndUpdateResultsFolders('${randomToken}');
             createScreenshotsFolder('${randomToken}');
-            await generateArtifacts('${randomToken}', '${domain}','Automated Scan');
+            await generateArtifacts('${randomToken}', '${domain}', 'Customized', '${
+    viewportWidth
+      ? `CustomWidth_${viewportWidth}px`
+      : customDevice
+      ? customDevice
+      : deviceChosen
+      ? deviceChosen
+      : 'Desktop'
+  }');
         });`;
 
   let tmpDir;
@@ -259,20 +270,25 @@ const processPage = async page => {
 
   const generatedScript = `./custom_flow_scripts/generatedScript-${randomToken}.js`;
 
-  console.log(` ℹ️  A new browser will be launched shortly.\n Navigate and record custom steps for ${domain} in the new browser.\n Close the browser when you are done recording your steps.`);
+  console.log(
+    ` ℹ️  A new browser will be launched shortly.\n Navigate and record custom steps for ${domain} in the new browser.\n Close the browser when you are done recording your steps.`,
+  );
 
   try {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
 
-    let browser = "webkit";
+    let browser = 'webkit';
     let userAgentOpts = null;
-    
+
     // Performance workaround for macOS Big Sur and Windows to force Chromium browser instead of Webkit
-    if ((os.platform() ==='darwin' && os.release().startsWith("20.")) || os.platform() ==='win32' ) {
-      browser = "chromium";
+    if (
+      (os.platform() === 'darwin' && os.release().startsWith('20.')) ||
+      os.platform() === 'win32'
+    ) {
+      browser = 'chromium';
 
       if (deviceChosen === 'Mobile') {
-        customDevice = "iPhone 11";
+        customDevice = 'iPhone 11';
       }
 
       if (customDevice) {
@@ -304,9 +320,7 @@ const processPage = async page => {
     }
 
     if (codegenResult.toString()) {
-      console.error(
-        `Error running Codegen: ${codegenResult.toString()}`,
-      );
+      console.error(`Error running Codegen: ${codegenResult.toString()}`);
     }
 
     const fileStream = fs.createReadStream(`${tmpDir}/intermediateScript.js`);
@@ -373,7 +387,7 @@ const processPage = async page => {
         continue;
       }
 
-      let pageObj = "page";
+      let pageObj = 'page';
 
       if (line.trim().startsWith(`await page`)) {
         const regexPageObj = /(?<=await )(.*?)(?=\.)/;
@@ -386,8 +400,8 @@ const processPage = async page => {
           appendToGeneratedScript(
             `${line}
              await processPage(page);
-            `
-          ,);
+            `,
+          );
           continue;
         } else {
           const regexURL = /(?<=goto\(\')(.*?)(?=\'\))/;
@@ -400,11 +414,9 @@ const processPage = async page => {
         appendToGeneratedScript(`
           await ${pageObj}.waitForURL('${lastGoToUrl}**',{timeout: 60000});
           await processPage(page);
-        `,
-        );
+        `);
 
         lastGoToUrl = null;
-
       } else if (nextStepNeedsProcessPage) {
         appendToGeneratedScript(`await processPage(page);`);
         nextStepNeedsProcessPage = false;
@@ -424,7 +436,7 @@ const processPage = async page => {
       } else {
         nextStepNeedsProcessPage = false;
       }
-      
+
       if (line.trim() === `await browser.close();`) {
         appendToGeneratedScript(line);
         appendToGeneratedScript(block2);
@@ -437,7 +449,6 @@ const processPage = async page => {
     console.log(` Browser closed. Replaying steps and running accessibility scan...\n`);
 
     await import(generatedScript);
-
   } catch (e) {
     console.error(`Error: ${e}`);
     throw e;
@@ -453,9 +464,7 @@ const processPage = async page => {
     }
 
     console.log(`\n You may re-run the recorded steps by executing:\n\tnode ${generatedScript} \n`);
-
   }
-
 };
 
 export default playwrightAxeGenerator;

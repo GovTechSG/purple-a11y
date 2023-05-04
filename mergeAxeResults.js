@@ -34,8 +34,27 @@ const parseContentToJson = async rPath =>
 const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResults') => {
   const finalResultsInJson = JSON.stringify(allissues, null, 4);
 
+  const passedItemsJson = {};
+
+  allissues.items.passed.rules.forEach(r => {
+    passedItemsJson[r.description] = {
+      totalOccurrencesInScan: r.totalItems,
+      totalPages: r.pagesAffected.length,
+      pages: r.pagesAffected.map(p => ({
+        pageTitle: p.pageTitle,
+        url: p.url,
+        totalOccurrencesInPage: p.items.length,
+        occurrences: p.items,
+      })),
+    };
+  });
+
   try {
     await fs.writeFile(`${storagePath}/reports/${jsonFilename}.json`, finalResultsInJson);
+    await fs.writeFile(
+      `${storagePath}/reports/passed_items.json`,
+      JSON.stringify(passedItemsJson, null, 4),
+    );
   } catch (writeResultsError) {
     consoleLogger.info(
       'An error has occurred when compiling the results into the report, please try again.',
@@ -224,13 +243,14 @@ const flattenAndSortResults = allIssues => {
   allIssues.wcagViolations = Array.from(allIssues.wcagViolations);
 };
 
-export const generateArtifacts = async (randomToken, urlScanned, viewport) => {
+export const generateArtifacts = async (randomToken, urlScanned, scanType, viewport) => {
   const storagePath = getStoragePath(randomToken);
 
   const directory = `${storagePath}/${constants.allIssueFileName}`;
   const allIssues = {
     startTime: getCurrentTime(),
     urlScanned,
+    scanType,
     viewport,
     totalPagesScanned: 0,
     totalItems: 0,
