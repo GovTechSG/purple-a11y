@@ -177,14 +177,18 @@ const writeHTML = async (allIssues, storagePath, htmlFilename = 'report') => {
 // };
 
 const pushResults = async (rPath, allIssues) => {
-  const parsedContent = await parseContentToJson(rPath);
-  const { url, pageTitle } = parsedContent;
+  const pageResults = await parseContentToJson(rPath);
+  const { url, pageTitle } = pageResults;
 
   allIssues.totalPagesScanned += 1;
-  allIssues.topFiveMustFix.push({ url, pageTitle, totalMustFix: parsedContent.mustFix.totalItems });
+
+  const totalIssuesInPage = new Set();
+  Object.keys(pageResults.mustFix.rules).forEach(k => totalIssuesInPage.add(k));
+  Object.keys(pageResults.goodToFix.rules).forEach(k => totalIssuesInPage.add(k));
+  allIssues.topFiveMostIssues.push({ url, pageTitle, totalIssues: totalIssuesInPage.size });
 
   ['mustFix', 'goodToFix', 'passed'].forEach(category => {
-    const { totalItems, rules } = parsedContent[category];
+    const { totalItems, rules } = pageResults[category];
     const currCategoryFromAllIssues = allIssues.items[category];
 
     currCategoryFromAllIssues.totalItems += totalItems;
@@ -237,8 +241,8 @@ const flattenAndSortResults = allIssues => {
       })
       .sort((rule1, rule2) => rule2.totalItems - rule1.totalItems);
   });
-  allIssues.topFiveMustFix.sort((page1, page2) => page2.totalMustFix - page1.totalMustFix);
-  allIssues.topFiveMustFix = allIssues.topFiveMustFix.slice(0, 5);
+  allIssues.topFiveMostIssues.sort((page1, page2) => page2.totalIssues - page1.totalIssues);
+  allIssues.topFiveMostIssues = allIssues.topFiveMostIssues.slice(0, 5);
   // convert the set to an array
   allIssues.wcagViolations = Array.from(allIssues.wcagViolations);
 };
@@ -254,7 +258,7 @@ export const generateArtifacts = async (randomToken, urlScanned, scanType, viewp
     viewport,
     totalPagesScanned: 0,
     totalItems: 0,
-    topFiveMustFix: [],
+    topFiveMostIssues: [],
     wcagViolations: new Set(),
     items: {
       mustFix: { description: itemTypeDescription.mustFix, totalItems: 0, rules: {} },
