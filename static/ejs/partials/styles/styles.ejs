@@ -489,51 +489,7 @@
   }
 
   #expandedRuleDescription {
-    position: relative;
-  }
-
-  #expandedRuleDescription.collapse::after {
-    content: '';
-    position: absolute;
-    z-index: 1;
-    bottom: 0;
-    left: 0;
-    pointer-events: none;
-    background-image: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0),
-      rgba(255, 255, 255, 1) 80%
-    );
-    width: 100%;
-    height: 1rem;
-  }
-
-  #expandedRuleDescription.collapse.show::after {
-    content: none;
-  }
-
-  #expandedRuleDescription.collapse:not(.show) {
     margin-top: 2rem;
-    overflow: hidden;
-    display: block;
-    max-height: 3rem;
-  }
-
-  #expandedRuleCollapseButton {
-    margin-top: 0.5rem;
-    margin-bottom: 1.5rem;
-    border: 0;
-    background: none;
-    color: #0047fa;
-    padding: 0;
-  }
-
-  #expandedRuleCollapseButton.collapsed::after {
-    content: 'Read More';
-  }
-
-  #expandedRuleCollapseButton:not(.collapsed)::after {
-    content: 'Show Less';
   }
 
   #expandedRuleHelpUrl {
