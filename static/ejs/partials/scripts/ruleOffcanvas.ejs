@@ -91,10 +91,10 @@ category summary is clicked %>
         }
         const element = createElementFromString(`
           <button class="category-selector ${category}">
-            <h4 class="d-flex align-items-center category-name">${getFormattedCategoryTitle(
+            <span class="d-flex align-items-center category-name">${getFormattedCategoryTitle(
               category,
-            )}</h4>
-            <span>${ruleInCategory.totalItems} occurrences</span>
+            )}</span>
+            <span class="category-information">${ruleInCategory.totalItems} occurrences</span>
           </button>
         `);
         element.addEventListener('click', event => {

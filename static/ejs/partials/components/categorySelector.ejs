@@ -1,20 +1,28 @@
-<% const formattedCategoryTitles = {
+<% const formattedCategoryTitles = { 
   mustFix: "Must Fix",
   goodToFix: "Good to Fix",
   passed: "Passed"
 } %>
 
 <button
+  aria-label="<%= formattedCategoryTitles[category] %> <% if (category !== 'passed') { %> <%= items[category].rules.length %> issues / <% } %> <%=
+    items[category].totalItems %> occurrences"
+  aria-describedby="tooltipText <%= category %>Description"
   id="<%= category %>Selector"
   class="h-100 category-selector <%= category %>"
   onclick="changeSelectedCategory(event, '<%= category %>')"
+  onfocus="document.getElementById('<%= category %>Description').dispatchEvent(new MouseEvent('mouseover'))"
+  onblur="document.getElementById('<%= category %>Description').dispatchEvent(new MouseEvent('mouseout'))"
+  onmousedown="event.preventDefault()"
 >
   <div class="d-flex align-items-center mb-3">
-    <h2 class="d-flex align-items-center category-name fw-bold d-inline mb-0">
+    <span class="d-flex align-items-center category-name fw-bold d-inline mb-0">
       <%= formattedCategoryTitles[category] %>
-    </h2>
+    </span>
+    <span id="tooltipText" class="d-none">Tooltip:</span>
     <svg
-      tabindex="0"
+      tabindex="-1"
+      id="<%= category %>Description"
       class="ms-2"
       data-bs-toggle="tooltip"
       data-bs-placement="top"
@@ -38,7 +46,7 @@
       </defs>
     </svg>
   </div>
-  <span>
+  <span class="category-information">
     <% if (category !== 'passed') { %> <%= items[category].rules.length %> issues / <% } %> <%=
     items[category].totalItems %> occurrences
   </span>

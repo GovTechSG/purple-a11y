@@ -377,22 +377,20 @@
     display: flex;
     flex-direction: column;
   }
-  .category-selector:focus {
-    outline: none;
-  }
   .category-selector.selected {
     border: 2px solid #0047fa;
     padding: calc(1rem - 1px);
     cursor: default;
   }
-  .category-selector:not(.selected):focus,
   .category-selector:not(.selected):hover {
     cursor: pointer;
     background-color: #f2f6ff;
     border: 1px solid #0047fa;
   }
-  .category-selector h3 {
+  .category-selector .category-name {
+    font-weight: bold;
     font-size: 1.125rem;
+    line-height: 2rem;
   }
   .category-selector .category-name::before {
     height: 1.25rem;
@@ -415,7 +413,7 @@
   .category-selector.passed .category-name::before {
     background-image: var(--passed-icon);
   }
-  .category-selector span {
+  .category-selector .category-information {
     color: #4a6168;
     text-align: start;
   }
@@ -556,6 +554,10 @@
   #expandedRuleCategorySelectors .category-selector:last-child {
     border-top-right-radius: 0.25rem;
     border-bottom-right-radius: 0.25rem;
+  }
+  #expandedRuleCategorySelectors .category-name {
+    font-size: 1rem;
+    line-height: 1.75rem;
   }
   #expandedRuleCategorySelectors .category-name::before {
     height: 1.125rem;
