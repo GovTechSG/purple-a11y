@@ -5,7 +5,7 @@
 } %>
 
 <button
-  aria-label="<%= formattedCategoryTitles[category] %> <% if (category !== 'passed') { %> <%= items[category].rules.length %> issues / <% } %> <%=
+  aria-label="<%= formattedCategoryTitles[category] %>, <% if (category !== 'passed') { %> <%= items[category].rules.length %> issues / <% } %> <%=
     items[category].totalItems %> occurrences"
   aria-describedby="tooltipText <%= category %>Description"
   id="<%= category %>Selector"
@@ -14,6 +14,7 @@
   onfocus="document.getElementById('<%= category %>Description').dispatchEvent(new MouseEvent('mouseover'))"
   onblur="document.getElementById('<%= category %>Description').dispatchEvent(new MouseEvent('mouseout'))"
   onmousedown="event.preventDefault()"
+  aria-selected="false"
 >
   <div class="d-flex align-items-center mb-3">
     <span class="d-flex align-items-center category-name fw-bold d-inline mb-0">

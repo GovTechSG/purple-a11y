@@ -94,10 +94,10 @@
     padding-left: 0.25rem;
     text-decoration-line: none;
   }
-  /* hr {
-    border-color: #b5c5ca !important;
-    opacity: 1 !important;
-  } */
+  .unbulleted-list {
+    list-style: none;
+    padding-left: 0;
+  }
   #header .card {
     box-shadow: 0 3px 5px 0 #736ccb1a;
   }
@@ -655,6 +655,10 @@
     margin-left: 1rem;
     width: 80%;
     flex-shrink: 0;
+  }
+  .page-item-card-section-content ul {
+    list-style: inside;
+    list-style-position: outside;
   }
   #expandedRuleCategoryContent .accordion-body pre {
     background-color: #f6f8f9;
