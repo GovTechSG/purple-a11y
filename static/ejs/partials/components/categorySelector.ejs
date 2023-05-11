@@ -5,22 +5,19 @@
 } %>
 
 <button
-  aria-label="<%= formattedCategoryTitles[category] %>, <% if (category !== 'passed') { %> <%= items[category].rules.length %> issues / <% } %> <%=
-    items[category].totalItems %> occurrences"
-  aria-describedby="tooltipText <%= category %>Description"
+  aria-labelledby="<%= category %>Title <%= category %>ItemsInformation"
+  aria-describedby="<%= category %>AriaDescription"
   id="<%= category %>Selector"
   class="h-100 category-selector <%= category %>"
   onclick="changeSelectedCategory(event, '<%= category %>')"
   onfocus="document.getElementById('<%= category %>Description').dispatchEvent(new MouseEvent('mouseover'))"
   onblur="document.getElementById('<%= category %>Description').dispatchEvent(new MouseEvent('mouseout'))"
   onmousedown="event.preventDefault()"
-  aria-selected="false"
 >
   <div class="d-flex align-items-center mb-3">
-    <span class="d-flex align-items-center category-name fw-bold d-inline mb-0">
+    <span id="<%= category %>Title" class="d-flex align-items-center category-name fw-bold d-inline mb-0">
       <%= formattedCategoryTitles[category] %>
     </span>
-    <span id="tooltipText" class="d-none">Tooltip:</span>
     <svg
       tabindex="-1"
       id="<%= category %>Description"
@@ -47,8 +44,13 @@
       </defs>
     </svg>
   </div>
-  <span class="category-information">
-    <% if (category !== 'passed') { %> <%= items[category].rules.length %> issues / <% } %> <%=
-    items[category].totalItems %> occurrences
+  <span id="<%= category %>ItemsInformation" class="category-information">
+    <% if (category !== 'passed' && items[category].totalItems !== 0) { %> 
+      <%= items[category].rules.length %> issues / <%= items[category].totalItems %> occurrences
+    <% } else if (category !== 'passed' && items[category].totalItems === 0) { %>
+      0 issues
+    <% } else { %>
+      <%= items[category].totalItems %> occurrences
+    <% } %>
   </span>
 </button>

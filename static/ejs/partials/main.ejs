@@ -17,5 +17,16 @@
       <%# dynamically generated section from scripts/categorySummary %>
     </ul>
     <%- include("components/ruleOffcanvas") %> <%- include("footer") %>
+    <p id="mustFixAriaDescription" class="d-none">
+      Tooltip: Issues that need to be addressed promptly, as they create significant barriers for
+      persons with disabilities and can prevent them from accessing essential content or features.
+    </p>
+    <p id="goodToFixAriaDescription" class="d-none">
+      Tooltip: Issues that could pose certain challenges for persons with disabilities (PWDs), but
+      are unlikely to completely hinder their access to essential content or features.
+    </p>
+    <p id="passedAriaDescription" class="d-none">
+      Tooltip: Occurrences that passed the automated checks.
+    </p>
   </main>
 </div>

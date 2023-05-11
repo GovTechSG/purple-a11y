@@ -44,7 +44,6 @@ category summary is clicked %>
       wcag2a: 'Level A',
       wcag2aa: 'Level AA',
       wcag21aa: 'Level AA',
-      'best-practice': 'Best practice',
     };
 
     document.getElementById('expandedRuleName').innerHTML = htmlEscapeString(
@@ -55,9 +54,11 @@ category summary is clicked %>
     document.getElementById('expandedRuleConformance').replaceChildren(
       createElementFromString(`
       <div class="d-flex align-items-center">
-        <div aria-label="${
-          conformanceLevels[selectedRule.conformance[0]]
-        }" class="conformance-bubble ${selectedRule.conformance[0]}"></div>
+        <div role="group" ${
+          selectedRule.conformance[0] === 'best-practice'
+            ? 'aria-hidden="true"'
+            : `aria-label="${conformanceLevels[selectedRule.conformance[0]]}"`
+        } class="conformance-bubble ${selectedRule.conformance[0]}"></div>
         ${
           selectedRule.conformance[0] === 'best-practice'
             ? `<span>Best practice</span>`
@@ -75,10 +76,8 @@ category summary is clicked %>
       const changeSelected = curCategorySelector => {
         if (selected) {
           selected.classList.remove('selected');
-          selected.setAttribute("aria-selected", "false");
         }
         curCategorySelector.classList.add('selected');
-        curCategorySelector.setAttribute("aria-selected", "true");
         selected = curCategorySelector;
       };
       return changeSelected;
@@ -92,7 +91,9 @@ category summary is clicked %>
           availableFixCategories.push(category);
         }
         const element = createElementFromString(`
-          <button aria-label="${getFormattedCategoryTitle(category)}, ${ruleInCategory.totalItems} occurrences" class="category-selector ${category}" aria-selected="false">
+          <button aria-label="${getFormattedCategoryTitle(category)}, ${
+          ruleInCategory.totalItems
+        } occurrences" class="category-selector ${category}">
             <span class="d-flex align-items-center category-name">${getFormattedCategoryTitle(
               category,
             )}</span>
@@ -108,7 +109,7 @@ category summary is clicked %>
           } else if (category === 'goodToFix' && availableFixCategories.includes('mustFix')) {
             ruleInfoText.innerHTML =
               '<p class="mb-4">There are also occurrences of this issue that falls under "Must Fix”.</p>';
-          } else if (category === 'passed') {
+          } else if (category === 'passed' && availableFixCategories.length > 0) {
             ruleInfoText.innerHTML = `<p class="mb-4">There are also occurrences of this issue that falls under ${availableFixCategories
               .map(c => `"${getFormattedCategoryTitle(c)}"`)
               .join(' and ')}.</p>`;
@@ -151,7 +152,9 @@ category summary is clicked %>
             <div class="accordion-item">
               <div class="accordion-header" id="${accordionId}-title">
                 <button 
-                  aria-label="Page ${index + 1}: ${page.pageTitle}, ${page.items.length} occurrences" class="accordion-button collapsed" 
+                  aria-label="Page ${index + 1}: ${page.pageTitle}, ${
+        page.items.length
+      } occurrences" class="accordion-button collapsed" 
                   type="button" 
                   data-bs-toggle="collapse" 
                   data-bs-target="#${accordionId}-content" 
@@ -164,7 +167,9 @@ category summary is clicked %>
               </div>
               <div id="${accordionId}-content" class="accordion-collapse collapse" aria-labelledby="${accordionId}-title">
                 <div class="accordion-body p-3">
-                  <a aria-label="URL to ${page.pageTitle}" href="${page.url}" target="_blank">${page.url}</a>
+                  <a aria-label="URL to ${page.pageTitle}" href="${page.url}" target="_blank">${
+        page.url
+      }</a>
                   <div class="page-accordion-content-title">
                     <span>${getFormattedCategoryTitle(category)} elements</span>
                     <span class="page-items-count">${page.items.length}</span>
@@ -177,39 +182,41 @@ category summary is clicked %>
       `);
 
       accordionsList.appendChild(accordion);
-      
+
       const accordionBody = accordion.getElementsByClassName('accordion-body')[0];
       const elementCardsList = createElementFromString('<ul class="unbulleted-list"></ul>');
 
       page.items.forEach(item => {
         const itemCard = createElementFromString(`
-          <div class="card mt-3">
-            ${
-              item.needsReview
-                ? `<div class="needsReview">This occurrence might be a false positive that needs to be verified by a human.</div>`
-                : ``
-            }
-            <div class="p-3">
-              <div class="d-flex justify-content-between">
-                <div class="fw-bold">HTML element</div>
-                <pre class="page-item-card-section-content"><code class="language-html">${htmlEscapeString(
-                  item.html,
-                )}</code></pre>
-              </div>
-              <hr />
-              <div class="d-flex justify-content-between">
-                <div class="fw-bold">${item.needsReview ? 'Details' : 'How to fix'}</div>
-                <div class="page-item-card-section-content">
-                  ${generateItemMessageElement(item.needsReview, item.message)}
+          <li>
+            <div class="card mt-3">
+              ${
+                item.needsReview
+                  ? `<div class="needsReview">This occurrence might be a false positive that needs to be verified by a human.</div>`
+                  : ``
+              }
+              <div class="p-3">
+                <div class="d-flex justify-content-between">
+                  <div class="fw-bold">HTML element</div>
+                  <pre class="page-item-card-section-content"><code class="language-html">${htmlEscapeString(
+                    item.html,
+                  )}</code></pre>
+                </div>
+                <hr />
+                <div class="d-flex justify-content-between">
+                  <div class="fw-bold">${item.needsReview ? 'Details' : 'How to fix'}</div>
+                  <div class="page-item-card-section-content">
+                    ${generateItemMessageElement(item.needsReview, item.message)}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          <li>
         `);
 
         elementCardsList.appendChild(itemCard);
       });
-      
+
       accordionBody.appendChild(elementCardsList);
       return accordion;
     });
