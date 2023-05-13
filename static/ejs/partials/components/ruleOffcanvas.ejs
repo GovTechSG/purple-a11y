@@ -7,7 +7,7 @@
 >
   <div class="p-4">
     <div class="offcanvas-header p-0">
-      <h3 class="offcanvas-title" id="expandedRuleName">Offcanvas</h3>
+      <h2 class="offcanvas-title" id="expandedRuleName"></h2>
       <button
         type="button"
         class="btn-close text-reset"
@@ -15,24 +15,14 @@
         aria-label="Close"
       ></button>
     </div>
-    <div class="collapse" id="expandedRuleDescription" aria-expanded="false"></div>
-    <button
-      role="button"
-      id="expandedRuleCollapseButton"
-      class="collapsed"
-      data-bs-toggle="collapse"
-      href="#expandedRuleDescription"
-      aria-expanded="false"
-      data-bs-target="#expandedRuleDescription"
-      aria-controls="expandedRuleDescription"
-    ></button>
+    <div id="expandedRuleDescription"></div>
     <a id="expandedRuleHelpUrl" href="#" target="_blank">Learn more about this issue</a>
-    <h4>Conformance:</h4>
+    <h3 id="conformance-header">Conformance:</h3>
     <div id="expandedRuleConformance"></div>
   </div>
   <div class="offcanvas-body">
     <div id="expandedRuleInfoText"></div>
-    <div id="expandedRuleCategorySelectors"></div>
+    <nav id="expandedRuleCategorySelectors" aria-label="Occurrence category"></nav>
     <div id="expandedRuleCategoryContent" class="mt-4"></div>
   </div>
 </div>

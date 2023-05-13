@@ -1,14 +1,15 @@
 <div id="top-five-card" class="card h-100">
   <div class="card-body">
-    <h2>Top 5 affected pages with the most must fix elements</h2>
-    <% topFiveMustFix.forEach((page, index) => { %>
-      <div class="d-flex justify-content-between">
-        <a href="<%= page.url %>" target="_blank"><%= page.pageTitle %></a>
-        <span aria-label="<%= page.totalMustFix %> must fix items" class="fw-bold ms-2"><%= page.totalMustFix %></span>
-      </div>
-      <% if (index < topFiveMustFix.length - 1) { %>
-        <hr class="my-2"/>
-      <% } %> 
-    <% }) %>
+    <h2>Top 5 affected pages with the most issues</h2>
+    <ul class="unbulleted-list">
+      <% topFiveMostIssues.forEach((page, index) => { %>
+        <% if (page.totalIssues !== 0) { %> 
+          <li class="d-flex justify-content-between">
+            <a href="<%= page.url %>" target="_blank"><%= page.pageTitle %></a>
+            <span aria-label="<%= page.totalIssues %> issues" class="fw-bold ms-2"><%= page.totalIssues %></span>
+          </li>
+        <% } %>
+      <% }) %>
+  </ul>
   </div>
 </div>
