@@ -61,9 +61,6 @@ if (fs.existsSync('/.dockerenv')) {
   launchOptionsArgs = ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage'];
 }
 
-//  _folder_paths
-const a11yStorage = '.a11y_storage';
-
 export const impactOrder = {
   minor: 0,
   moderate: 1,
@@ -79,7 +76,7 @@ const urlCheckStatuses = {
     message:
       'Provided URL cannot be accessed. Please verify your internet connectivity and the correctness of the domain.',
   },
-  errorStatusReceived: {
+  errorStatusReceived: { // unused for now
     code: 13,
     message: 'Provided URL cannot be accessed. Server responded with code ', // append it with the response code received,
   },
@@ -99,8 +96,6 @@ const xmlSitemapTypes = {
 };
 
 export default {
-  a11yStorage,
-  a11yDataStoragePath: `${a11yStorage}/datasets`,
   allIssueFileName: 'all_issues',
   cliZipFileName: 'a11y-scan-results.zip',
   maxRequestsPerCrawl,

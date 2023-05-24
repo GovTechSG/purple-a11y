@@ -2,7 +2,7 @@
 import {jest} from '@jest/globals'
 import {
   setThresholdLimits,
-  getHostnameFromRegex,
+  getHost,
   getCurrentDate,
   validateUrl,
   getStoragePath,
@@ -33,13 +33,16 @@ describe('test setting of threshold warn level', () => {
   });
 });
 
-describe('test getHostnameFromRegex', () => {
+describe('test getHost', () => {
   test('should retrieve the hostnames accordingly', () => {
-    expect(getHostnameFromRegex('https://www.bbc.com/news')).toEqual('www.bbc.com');
-    expect(getHostnameFromRegex('https://www.isomer.gov.sg/')).toEqual('www.isomer.gov.sg');
-    expect(getHostnameFromRegex('https://fontawesome.com/sessions/sign-in')).toEqual(
+    expect(getHost('https://www.bbc.com/news')).toEqual('www.bbc.com');
+    expect(getHost('https://www.isomer.gov.sg/')).toEqual('www.isomer.gov.sg');
+    expect(getHost('https://fontawesome.com/sessions/sign-in')).toEqual(
       'fontawesome.com',
     );
+    // port number will be excluded since it is the default port for HTTPS
+    expect(getHost('https://www.crowdtask.gov.sg:443')).toEqual('www.crowdtask.gov.sg');
+    expect(getHost('http://localhost:5000/about/me')).toEqual('localhost:5000');
   });
 });
 

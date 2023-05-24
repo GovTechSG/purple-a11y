@@ -44,7 +44,7 @@ const playwrightAxeGenerator = async (domain, data) => {
   import { consoleLogger, silentLogger } from '#root/logs.js';
   const blacklistedPatternsFilename = 'exclusions.txt';
 
-process.env.CRAWLEE_STORAGE_DIR = constants.a11yStorage;
+process.env.CRAWLEE_STORAGE_DIR = '${randomToken}';
 const compareExe = getExecutablePath('**/ImageMagick*/bin','compare');
 
 if (!compareExe) {
@@ -291,7 +291,7 @@ const processPage = async page => {
         customDevice = 'iPhone 11';
       }
 
-      if (customDevice) {
+      if (customDevice && !viewportWidth) {
         viewportWidth = devices[customDevice].viewport.width;
         userAgentOpts = `--user-agent \"${devices[customDevice].userAgent}\"`;
       }

@@ -119,12 +119,6 @@ const scanInit = async argvs => {
     case statuses.cannotBeResolved.code:
       printMessage([statuses.cannotBeResolved.message], messageOptions);
       process.exit(res.status);
-    case statuses.errorStatusReceived.code:
-      printMessage(
-        [`${statuses.errorStatusReceived.message}${res.serverResponse}.`],
-        messageOptions,
-      );
-      process.exit(res.status);
     case statuses.systemError.code:
       printMessage([statuses.systemError.message], messageOptions);
       process.exit(res.status);
@@ -187,13 +181,13 @@ const scanInit = async argvs => {
     await combineRun(data, screenToScan);
   }
 
+  // Delete dataset and request queues
+  cleanUp(data.randomToken);
+
   return getStoragePath(data.randomToken);
 };
 
 scanInit(options).then(async storagePath => {
-  // Delete dataset and request queues
-  cleanUp(constants.a11yStorage);
-
   // Take option if set
   if (typeof options.zip === 'string') {
     constants.cliZipFileName = options.zip;
