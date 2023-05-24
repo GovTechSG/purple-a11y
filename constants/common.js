@@ -10,6 +10,7 @@ import fs from 'fs';
 import constants from './constants.js';
 import { silentLogger } from '../logs.js';
 import * as https from 'https';
+import { devices } from 'playwright';
 
 const document = new JSDOM('').window;
 
@@ -127,8 +128,9 @@ const checkUrlConnectivity = async url => {
 
   if (data.isValid) {
     // Validate the connectivity of URL if the string format is url format
+    // User-Agent is modified to emulate a browser to handle cases where some sites ban non browser agents, resulting in a 403 error
     await axios
-      .get(data.url, { httpsAgent, timeout: 15000 })
+      .get(data.url, { headers: { 'User-Agent': devices['Desktop Chrome HiDPI'].userAgent }, httpsAgent, timeout: 15000 })
       .then(async response => {
         const redirectUrl = response.request.res.responseUrl;
         res.status = constants.urlCheckStatuses.success.code;
@@ -144,8 +146,11 @@ const checkUrlConnectivity = async url => {
       .catch(error => {
         if (error.response) {
           // enters here if server responds with a status other than 2xx
-          res.status = constants.urlCheckStatuses.errorStatusReceived.code;
-          res.serverResponse = error.response.status
+          // the scan should still proceed even if error codes are received, so that accessibility scans for error pages can be done too
+          res.status = constants.urlCheckStatuses.success.code;
+          res.url = url;
+          res.content = error.response.data;
+          return res;
         } else if (error.request) {
           // enters here if URL cannot be accessed
           res.status = constants.urlCheckStatuses.cannotBeResolved.code;

@@ -32,6 +32,8 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
     device = {};
   }
 
+  let pagesCrawled = 0;
+
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
       launchOptions: {
@@ -54,6 +56,11 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
     requestQueue,
     preNavigationHooks,
     requestHandler: async ({ page, request, enqueueLinks, enqueueLinksByClickingElements }) => {
+      if (pagesCrawled === maxRequestsPerCrawl) {
+        return;
+      }
+      pagesCrawled++;
+      
       const currentUrl = request.url;
       const location = await page.evaluate('location');
 

@@ -14,7 +14,7 @@ import {
   getStoragePath,
 } from './utils.js';
 import { checkUrl, prepareData, isFileSitemap } from './constants/common.js';
-import { cliOptions, messageOptions, configureReportSetting } from './constants/cliFunctions.js';
+import { cliOptions, messageOptions } from './constants/cliFunctions.js';
 import constants from './constants/constants.js';
 import combineRun from './combine.js';
 import playwrightAxeGenerator from './playwrightAxeGenerator.js';
@@ -110,12 +110,6 @@ const scanInit = async argvs => {
   argvs.scanner = constants.scannerTypes[argvs.scanner];
   argvs.headless = argvs.headless === 'yes';
 
-  // Set the parameters required to indicate whether to break down report
-  configureReportSetting(argvs.reportbreakdown);
-
-  // Set the parameters required to indicate threshold limits
-  setThresholdLimits(argvs.warn);
-
   const res = await checkUrl(argvs.scanner, argvs.url);
   const statuses = constants.urlCheckStatuses;
   switch (res.status) {
@@ -124,12 +118,6 @@ const scanInit = async argvs => {
       break;
     case statuses.cannotBeResolved.code:
       printMessage([statuses.cannotBeResolved.message], messageOptions);
-      process.exit(res.status);
-    case statuses.errorStatusReceived.code:
-      printMessage(
-        [`${statuses.errorStatusReceived.message}${res.serverResponse}.`],
-        messageOptions,
-      );
       process.exit(res.status);
     case statuses.systemError.code:
       printMessage([statuses.systemError.message], messageOptions);
@@ -193,13 +181,13 @@ const scanInit = async argvs => {
     await combineRun(data, screenToScan);
   }
 
+  // Delete dataset and request queues
+  cleanUp(data.randomToken);
+
   return getStoragePath(data.randomToken);
 };
 
 scanInit(options).then(async storagePath => {
-  // Delete dataset and request queues
-  cleanUp(constants.a11yStorage);
-
   // Take option if set
   if (typeof options.zip === 'string') {
     constants.cliZipFileName = options.zip;
