@@ -5,13 +5,11 @@ import crawlDomain from './crawlers/crawlDomain.js';
 
 import { generateArtifacts } from './mergeAxeResults.js';
 import {
-  getHostnameFromRegex,
+  getHost,
   createAndUpdateResultsFolders,
   createDetailsAndLogs,
 } from './utils.js';
 import constants from './constants/constants.js';
-
-process.env.CRAWLEE_STORAGE_DIR = constants.a11yStorage;
 
 const combineRun = async (details, deviceToScan) => {
   const envDetails = { ...details };
@@ -28,8 +26,10 @@ const combineRun = async (details, deviceToScan) => {
     isLocalSitemap,
   } = envDetails;
 
+  process.env.CRAWLEE_STORAGE_DIR = randomToken;
+
   const host =
-    type === constants.scannerTypes.sitemap && isLocalSitemap ? '' : getHostnameFromRegex(url);
+    type === constants.scannerTypes.sitemap && isLocalSitemap ? '' : getHost(url);
 
   const scanDetails = {
     startTime: new Date().getTime(),

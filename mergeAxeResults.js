@@ -70,112 +70,6 @@ const writeHTML = async (allIssues, storagePath, htmlFilename = 'report') => {
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
 };
 
-// const granularReporting = async (randomToken, allIssues) => {
-//   if (allIssues.length > 0) {
-//     const storagePath = getStoragePath(randomToken);
-//     const impactLevels = ['critical', 'serious', 'moderate', 'minor'];
-
-//     let currentImpactLevelIssues;
-//     impactLevels.forEach(async impactLevel => {
-//       currentImpactLevelIssues = allIssues.filter(issue => issue.impact === impactLevel);
-
-//       if (currentImpactLevelIssues.length > 0) {
-//         const writeSeverityResult = writeResults(
-//           currentImpactLevelIssues,
-//           storagePath,
-//           `compiledResults-${impactLevel}`,
-//         );
-//         const writeHTMLSeverityReport = writeHTML(
-//           currentImpactLevelIssues,
-//           storagePath,
-//           `report-${impactLevel}`,
-//         );
-//         await Promise.all([writeSeverityResult, writeHTMLSeverityReport]);
-//       }
-//     });
-
-//     return true;
-//   }
-
-//   return false;
-// };
-
-// const issueCountMap = allIssues => {
-//   const criticalImpact = allIssues.filter(issue => issue.impact === 'critical');
-//   const seriousImpact = allIssues.filter(issue => issue.impact === 'serious');
-//   const moderateImpact = allIssues.filter(issue => issue.impact === 'moderate');
-//   const minorImpact = allIssues.filter(issue => issue.impact === 'minor');
-
-//   const issueCount = new Map();
-//   issueCount.set('critical', criticalImpact.length);
-//   issueCount.set('serious', seriousImpact.length);
-//   issueCount.set('moderate', moderateImpact.length);
-//   issueCount.set('minor', minorImpact.length);
-//   issueCount.set('total', allIssues.length);
-
-//   return issueCount;
-// };
-
-// const thresholdLimitCheck = async (warnLevel, allIssues, totalUniqueIssues) => {
-//   const issueCounts = issueCountMap(allIssues);
-
-//   const messages = [
-//     [`Total Issues: ${issueCounts.get('total')}`, `Total Unique Issues: ${totalUniqueIssues}`],
-//     [
-//       `Issue Breakdown`,
-//       `Critical: ${issueCounts.get('critical')}`,
-//       `Serious: ${issueCounts.get('serious')}`,
-//       `Moderate: ${issueCounts.get('moderate')}`,
-//       `Minor: ${issueCounts.get('minor')}`,
-//     ],
-//   ];
-
-//   const uniqueIssues = [`Unique: ${totalUniqueIssues}`];
-
-//   if (warnLevel !== 'none' && issueCounts.get(warnLevel) > 0) {
-//     messages.push([
-//       `Issues with impact level - ${warnLevel} found in your project. Please review the accessibility issues.`,
-//     ]);
-//     process.exitCode = 1;
-//   }
-
-//   messages.forEach((message, index, array) => {
-//     if (array.length !== 1 && index === array.length - 1) {
-//       printMessage(message, constants.alertMessageOptions);
-//     } else {
-//       printMessage(message);
-//     }
-//   });
-// };
-
-// export const generateArtifacts = async (randomToken, deviceToScan) => {
-//   const storagePath = getStoragePath(randomToken);
-//   const directory = `${storagePath}/${constants.allIssueFileName}`;
-//   let allIssues = [];
-//   const allFiles = await extractFileNames(directory);
-
-//   await Promise.all(
-//     allFiles.map(async file => {
-//       const rPath = `${directory}/${file}`;
-//       const flattenedIssues = await flattenAxeResults(rPath);
-//       allIssues = allIssues.concat(flattenedIssues);
-//     }),
-//   ).catch(flattenIssuesError => {
-//     consoleLogger.info('An error has occurred when flattening the issues, please try again.');
-//     silentLogger.error(flattenIssuesError);
-//   });
-
-//   const totalUniqueIssues = new Set(allIssues.map(issue => issue.description)).size;
-//   if (process.env.REPORT_BREAKDOWN === '1') {
-//     await granularReporting(randomToken, allIssues);
-//   }
-
-//   await thresholdLimitCheck(process.env.WARN_LEVEL, allIssues, totalUniqueIssues);
-
-//   await writeResults(allIssues, storagePath);
-//   await writeHTML(allIssues, storagePath, deviceToScan);
-// };
-
 const pushResults = async (rPath, allIssues) => {
   const pageResults = await parseContentToJson(rPath);
   const { url, pageTitle } = pageResults;
@@ -280,6 +174,14 @@ export const generateArtifacts = async (randomToken, urlScanned, scanType, viewp
   });
 
   flattenAndSortResults(allIssues);
+
+  printMessage([
+    'Scan Summary',
+    '',
+    `Must Fix: ${allIssues.items.mustFix.rules.length} issues / ${allIssues.items.mustFix.totalItems} occurrences`,
+    `Good to Fix: ${allIssues.items.goodToFix.rules.length} issues / ${allIssues.items.goodToFix.totalItems} occurrences`,
+    `Passed: ${allIssues.items.passed.totalItems} occurrences`,
+  ])
 
   await writeResults(allIssues, storagePath);
   await writeHTML(allIssues, storagePath);

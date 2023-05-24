@@ -57,5 +57,5 @@ inquirer.prompt(questions).then(async answers => {
     await combineRun(data, screenToScan);
   }
   // Delete dataset and request queues
-  cleanUp(constants.a11yStorage);
+  cleanUp(data.randomToken);
 });

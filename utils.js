@@ -19,12 +19,7 @@ export const getVersion = () => {
   return versionNum;
 };
 
-export const getHostnameFromRegex = url => {
-  const matches = url.match(/^https?:\/\/([^/?#]+)(?:[/?#]|$)/i);
-
-  // extract hostname (will be null if no match is found)
-  return matches && matches[1];
-};
+export const getHost = url => new URL(url).host
 
 export const getCurrentDate = () => {
   const date = new Date();
@@ -58,7 +53,7 @@ export const createAndUpdateResultsFolders = async randomToken => {
   const storagePath = getStoragePath(randomToken);
   await fs.ensureDir(`${storagePath}/reports`);
   await fs.copy(
-    `${constants.a11yDataStoragePath}/${randomToken}`,
+    `${randomToken}/datasets/${randomToken}`,
     `${storagePath}/${constants.allIssueFileName}`,
   );
 };

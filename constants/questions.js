@@ -74,12 +74,8 @@ const questions = [
           return true;
         case statuses.cannotBeResolved.code:
           return statuses.cannotBeResolved.message;
-        case statuses.errorStatusReceived.code:
-          return `${statuses.errorStatusReceived.message}${res.serverResponse}.`;
-
         case statuses.systemError.code:
           return statuses.systemError.message;
-
         case statuses.invalidUrl.code:
           if (answers.scanner !== constants.scannerTypes.sitemap) {
             return statuses.invalidUrl.message;
