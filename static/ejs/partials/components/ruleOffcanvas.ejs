@@ -1,0 +1,28 @@
+<%# this is a template; content will be populated using js %>
+<div
+  class="offcanvas offcanvas-end"
+  tabindex="-1"
+  id="expandedRule"
+  aria-labelledby="expandedRuleName"
+>
+  <div class="p-4">
+    <div class="offcanvas-header p-0">
+      <h2 class="offcanvas-title" id="expandedRuleName"></h2>
+      <button
+        type="button"
+        class="btn-close text-reset"
+        data-bs-dismiss="offcanvas"
+        aria-label="Close"
+      ></button>
+    </div>
+    <div id="expandedRuleDescription"></div>
+    <a id="expandedRuleHelpUrl" href="#" target="_blank">Learn more about this issue</a>
+    <h3 id="conformance-header">Conformance:</h3>
+    <div id="expandedRuleConformance"></div>
+  </div>
+  <div class="offcanvas-body">
+    <div id="expandedRuleInfoText"></div>
+    <nav id="expandedRuleCategorySelectors" aria-label="Occurrence category"></nav>
+    <div id="expandedRuleCategoryContent" class="mt-4"></div>
+  </div>
+</div>

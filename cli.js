@@ -14,7 +14,7 @@ import {
   getStoragePath,
 } from './utils.js';
 import { checkUrl, prepareData, isFileSitemap } from './constants/common.js';
-import { cliOptions, messageOptions, configureReportSetting } from './constants/cliFunctions.js';
+import { cliOptions, messageOptions } from './constants/cliFunctions.js';
 import constants from './constants/constants.js';
 import combineRun from './combine.js';
 import playwrightAxeGenerator from './playwrightAxeGenerator.js';
@@ -109,12 +109,6 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
 const scanInit = async argvs => {
   argvs.scanner = constants.scannerTypes[argvs.scanner];
   argvs.headless = argvs.headless === 'yes';
-
-  // Set the parameters required to indicate whether to break down report
-  configureReportSetting(argvs.reportbreakdown);
-
-  // Set the parameters required to indicate threshold limits
-  setThresholdLimits(argvs.warn);
 
   const res = await checkUrl(argvs.scanner, argvs.url);
   const statuses = constants.urlCheckStatuses;

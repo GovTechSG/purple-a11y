@@ -6,11 +6,6 @@ export const messageOptions = {
   marginBottom: 2,
 };
 
-export const alertMessageOptions = {
-  border: true,
-  borderColor: 'red',
-};
-
 export const cliOptions = {
   c: {
     alias: 'scanner',
@@ -57,25 +52,5 @@ export const cliOptions = {
     requiresArg: true,
     default: 'yes',
     demandOption: false,
-  },
-  reportbreakdown: {
-    describe: 'Will break down the main report according to impact',
-    type: 'boolean',
-    default: false,
-    demandOption: false,
-  },
-  warn: {
-    describe: 'Track for issues of target impact level',
-    choices: ['critical', 'serious', 'moderate', 'minor', 'none'],
-    default: 'none',
-    demandOption: false,
-  },
-};
-
-export const configureReportSetting = isEnabled => {
-  if (isEnabled) {
-    process.env.REPORT_BREAKDOWN = 1;
-  } else {
-    process.env.REPORT_BREAKDOWN = 0;
   }
 };
