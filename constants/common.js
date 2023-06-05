@@ -10,7 +10,7 @@ import fs from 'fs';
 import constants from './constants.js';
 import { silentLogger } from '../logs.js';
 import * as https from 'https';
-import { devices } from 'playwright';
+import { chromium, devices } from 'playwright';
 
 const document = new JSDOM('').window;
 
@@ -142,6 +142,7 @@ const checkUrlConnectivity = async url => {
         }
 
         res.content = response.data;
+        // console.log(res.content);
       })
       .catch(error => {
         if (error.response) {
@@ -159,6 +160,55 @@ const checkUrlConnectivity = async url => {
         }
         silentLogger.error(error);
       });
+  } else {
+    // enters here if input is not a URL or not using http/https protocols
+    res.status = constants.urlCheckStatuses.invalidUrl.code;
+  }
+
+  return res;
+};
+
+const checkUrlConnectivityWithBrowser = async url => {
+  const res = {};
+
+  const data = sanitizeUrlInput(url);
+
+  if (data.isValid) {
+    // Validate the connectivity of URL if the string format is url format
+    const browser = await chromium.launch({
+      channel:"chrome", 
+      headless: false
+    });
+    const context = await browser.newContext(); 
+    const page = await context.newPage();
+    
+    // method will not throw an error when any valid HTTP status code is returned by the remote server, including 404 "Not Found" and 500 "Internal Server Error".
+    // navigation to about:blank or navigation to the same URL with a different hash, which would succeed and return null.
+    try {
+      const response = await page.goto(url, {timeout: 15000}); 
+      res.status = constants.urlCheckStatuses.success.code; 
+
+      // Check for redirect link
+      const redirectUrl = await (response.request()).url();
+      console.log(redirectUrl);
+
+      if (redirectUrl != null) {
+        res.url = redirectUrl; 
+      } else {
+        res.url = url; 
+      }
+
+      res.content = await page.content();
+      // console.log(res.content);
+
+    } catch (error) {
+      // not sure what errors are thrown
+      console.log(error);
+
+      res.status = constants.urlCheckStatuses.systemError.code;
+    } finally {
+      await browser.close();
+    }
   } else {
     // enters here if input is not a URL or not using http/https protocols
     res.status = constants.urlCheckStatuses.invalidUrl.code;
@@ -186,8 +236,13 @@ const isSitemapContent = async content => {
   return true;
 };
 
-export const checkUrl = async (scanner, url) => {
-  const res = await checkUrlConnectivity(url);
+export const checkUrl = async (scanner, url, browserBased) => {
+  let res; 
+  if (browserBased) {
+    res = await checkUrlConnectivityWithBrowser(url);
+  } else {
+    res = await checkUrlConnectivity(url);
+  }
 
   if (
     res.status === constants.urlCheckStatuses.success.code &&
@@ -219,12 +274,14 @@ export const prepareData = argv => {
     maxpages,
     isLocalSitemap,
     finalUrl,
+    browserBased,
   } = argv;
 
   return {
     type: scanner,
     url: isLocalSitemap ? url : finalUrl,
     isHeadless: headless,
+    isBrowserBased: browserBased, 
     deviceChosen,
     customDevice,
     viewportWidth,
@@ -233,7 +290,7 @@ export const prepareData = argv => {
   };
 };
 
-export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
+export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount, isBrowserBased) => {
   const urls = new Set(); // for HTML documents
 
   const isLimitReached = () => {
@@ -251,6 +308,7 @@ export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
       } else {
         url = $(urlElement).text();
       }
+      console.log(url);
       urls.add(url);
     }
   };
@@ -262,14 +320,45 @@ export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
 
   const fetchUrls = async url => {
     let data;
+    let sitemapType; 
     if (validator.isURL(url, urlOptions)) {
-      const instance = axios.create({
-        httpsAgent: new https.Agent({
-          rejectUnauthorized: false,
-        }),
-      });
+      if (isBrowserBased) {
+        const browser = await chromium.launch({
+          channel:"chrome",  
+          headless: false,
+        });
+        const context = await browser.newContext(); 
+        const page = await context.newPage();
+        await page.goto(url); 
+    
+        const urlSet = page.locator('urlset'); 
+        const sitemapIndex = page.locator('sitemapindex'); 
+        const rss = page.locator('rss'); 
+        const feed = page.locator('feed');
 
-      data = await (await instance.get(url)).data;
+        const isRoot = async (locator) => {
+          return (await locator.count()) > 0;
+        }
+
+        if (await isRoot(urlSet)) {
+          data = await urlSet.evaluate(elem => elem.outerHTML);
+        } else if (await isRoot(sitemapIndex)) {
+          data = await sitemapIndex.evaluate(elem => elem.outerHTML);
+        } else if (await isRoot(rss)) {
+          data = await rss.evaluate(elem => elem.outerHTML);
+        } else if (await isRoot(feed)) {
+          data = await feed.evaluate(elem => elem.outerHTML);
+        }
+
+        await browser.close();
+      } else {
+        const instance = axios.create({
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false,
+          }),
+        });
+        data = await (await instance.get(url)).data;
+      }
     } else {
       data = fs.readFileSync(url, 'utf8');
     }
@@ -287,8 +376,6 @@ export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
     const { xmlns } = root.attribs;
     const xmlFormatNamespace = 'http://www.sitemaps.org/schemas/sitemap/0.9';
 
-    let sitemapType;
-
     if (root.name === 'urlset' && xmlns === xmlFormatNamespace) {
       sitemapType = constants.xmlSitemapTypes.xml;
     } else if (root.name === 'sitemapindex' && xmlns === xmlFormatNamespace) {
@@ -300,6 +387,8 @@ export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
     } else {
       sitemapType = constants.xmlSitemapTypes.unknown;
     }
+
+    console.log(sitemapType);
 
     switch (sitemapType) {
       case constants.xmlSitemapTypes.xmlIndex:

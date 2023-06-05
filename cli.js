@@ -109,8 +109,9 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
 const scanInit = async argvs => {
   argvs.scanner = constants.scannerTypes[argvs.scanner];
   argvs.headless = argvs.headless === 'yes';
+  argvs.browserBased = argvs.browserBased === 'yes';
 
-  const res = await checkUrl(argvs.scanner, argvs.url);
+  const res = await checkUrl(argvs.scanner, argvs.url, argvs.browserBased);
   const statuses = constants.urlCheckStatuses;
   switch (res.status) {
     case statuses.success.code:

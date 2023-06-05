@@ -52,5 +52,13 @@ export const cliOptions = {
     requiresArg: true,
     default: 'yes',
     demandOption: false,
+  },
+  b: {
+    alias: 'browserBased',
+    describe: 'Whether to use browser-based calls. Defaults to no.', 
+    choices: ['yes', 'no'], 
+    requiresArg: true, 
+    default: 'no', 
+    demandOption: false
   }
 };

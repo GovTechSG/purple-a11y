@@ -18,6 +18,7 @@ const crawlSitemap = async (
   host,
   viewportSettings,
   maxRequestsPerCrawl,
+  isBrowserBased
 ) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { deviceChosen, customDevice, viewportWidth } = viewportSettings;
@@ -25,7 +26,7 @@ const crawlSitemap = async (
 
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
   const requestList = new crawlee.RequestList({
-    sources: await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl),
+    sources: await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, isBrowserBased),
   });
   await requestList.initialize();
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
@@ -47,6 +48,7 @@ const crawlSitemap = async (
 
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
+      useChrome: isBrowserBased, // toggle to edge
       launchOptions: {
         args: constants.launchOptionsArgs,
       },

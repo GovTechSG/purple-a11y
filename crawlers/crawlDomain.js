@@ -9,7 +9,7 @@ import {
 } from './commonCrawlerFunc.js';
 import constants from '../constants/constants.js';
 
-const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequestsPerCrawl) => {
+const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequestsPerCrawl, isBrowserBased) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { maxConcurrency } = constants;
   const { deviceChosen, customDevice, viewportWidth } = viewportSettings;
@@ -36,6 +36,7 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
 
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
+      useChrome: isBrowserBased, // toggle to edge
       launchOptions: {
         args: constants.launchOptionsArgs,
       },
