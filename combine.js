@@ -4,12 +4,8 @@ import crawlSitemap from './crawlers/crawlSitemap.js';
 import crawlDomain from './crawlers/crawlDomain.js';
 
 import { generateArtifacts } from './mergeAxeResults.js';
-import {
-  getHost,
-  createAndUpdateResultsFolders,
-  createDetailsAndLogs,
-} from './utils.js';
-import constants from './constants/constants.js';
+import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
+import constants, { basicAuthRegex } from './constants/constants.js';
 
 const combineRun = async (details, deviceToScan) => {
   const envDetails = { ...details };
@@ -24,18 +20,24 @@ const combineRun = async (details, deviceToScan) => {
     viewportWidth,
     maxRequestsPerCrawl,
     isLocalSitemap,
-    isBrowserBased,
+    browser,
+    userDataDirectory,
   } = envDetails;
 
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
-  const host =
-    type === constants.scannerTypes.sitemap && isLocalSitemap ? '' : getHost(url);
+  const host = type === constants.scannerTypes.sitemap && isLocalSitemap ? '' : getHost(url);
+
+  // remove basic-auth credentials from URL
+  let finalUrl = url;
+  if (basicAuthRegex.test(url)) {
+    finalUrl = `${url.split('://')[0]}://${url.split('@')[1]}`;
+  }
 
   const scanDetails = {
     startTime: new Date().getTime(),
     crawlType: type,
-    requestUrl: url,
+    requestUrl: finalUrl,
   };
 
   const viewportSettings = {
@@ -53,7 +55,8 @@ const combineRun = async (details, deviceToScan) => {
         host,
         viewportSettings,
         maxRequestsPerCrawl,
-        isBrowserBased
+        browser,
+        userDataDirectory,
       );
       break;
 
@@ -64,7 +67,8 @@ const combineRun = async (details, deviceToScan) => {
         host,
         viewportSettings,
         maxRequestsPerCrawl,
-        isBrowserBased
+        browser,
+        userDataDirectory,
       );
       break;
 
