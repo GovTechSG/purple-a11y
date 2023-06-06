@@ -1,4 +1,4 @@
-import constants from "./constants.js";
+import constants from './constants.js';
 
 export const messageOptions = {
   border: false,
@@ -54,11 +54,11 @@ export const cliOptions = {
     demandOption: false,
   },
   b: {
-    alias: 'browserBased',
-    describe: 'Whether to use browser-based calls. Defaults to no.', 
-    choices: ['yes', 'no'], 
-    requiresArg: true, 
-    default: 'no', 
-    demandOption: false
-  }
+    alias: 'browserToRun',
+    describe: 'Browser to run the scan on: 1) Chromium, 2) Chrome, 3) Edge. Defaults to Chromium.',
+    choices: Object.keys(constants.browserTypes),
+    requiresArg: true,
+    default: 'chromium',
+    demandOption: false,
+  },
 };
