@@ -1,6 +1,6 @@
 {
   "name": "purple-hats",
-  "main": "index.js",
+  "main": "npmIndex.js",
   "version": "0.0.15",
   "type": "module",
   "imports": {
