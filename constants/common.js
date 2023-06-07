@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable camelcase */
 /* eslint-disable no-use-before-define */
 import validator from 'validator';
@@ -476,7 +477,7 @@ const cloneChromeProfileCookieFiles = (options, destDir) => {
   }
 
   if (profileCookiesDir.length > 0) {
-    profileCookiesDir.map(dir => {
+    profileCookiesDir.forEach(dir => {
       const profileName = dir.match(profileNamesRegex)[1];
       if (profileName) {
         let destProfileDir = path.join(destDir, profileName);
@@ -498,8 +499,7 @@ const cloneChromeProfileCookieFiles = (options, destDir) => {
       }
     });
   } else {
-    console.error('Unable to find Chrome profile cookies file in the system.');
-    return;
+    console.warn('Unable to find Chrome profile cookies file in the system.');
   }
 };
 
@@ -516,10 +516,10 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
   let profileNamesRegex;
   // Ignores the cloned Purple-HATS directory if exists
   if (os.platform() === 'win32') {
-    ignore: ['Purple-HATS/**'],
-      (profileCookiesDir = globSync('**/Network/Cookies', {
-        ...options,
-      }));
+    profileCookiesDir = globSync('**/Network/Cookies', {
+      ...options,
+      ignore: 'Purple-HATS/**',
+    });
     profileNamesRegex = /User Data\\(.*?)\\Network/;
   } else if (os.platform() === 'darwin') {
     // Ignores copying cookies from the Purple-HATS directory if it exists
@@ -531,7 +531,7 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
   }
 
   if (profileCookiesDir.length > 0) {
-    profileCookiesDir.map(dir => {
+    profileCookiesDir.forEach(dir => {
       const profileName = dir.match(profileNamesRegex)[1];
       if (profileName) {
         let destProfileDir = path.join(destDir, profileName);
@@ -553,8 +553,7 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
       }
     });
   } else {
-    console.error('Unable to find Edge profile cookies file in the system.');
-    return;
+    console.warn('Unable to find Edge profile cookies file in the system.');
   }
 };
 
@@ -571,12 +570,12 @@ const cloneLocalStateFile = (options, destDir) => {
   });
 
   if (localState.length > 0) {
+    // eslint-disable-next-line array-callback-return
     localState.map(dir => {
       fs.copyFileSync(dir, path.join(destDir, 'Local State'));
     });
   } else {
-    console.error('Unable to find local state file in the system.');
-    return;
+    console.warn('Unable to find local state file in the system.');
   }
 };
 
@@ -591,7 +590,7 @@ export const cloneChromeProfiles = () => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
-    console.error('Unable to find Chrome data directory in the system.');
+    console.warn('Unable to find Chrome data directory in the system.');
     return;
   }
 
@@ -628,7 +627,7 @@ export const cloneEdgeProfiles = () => {
   const baseDir = getDefaultEdgeDataDir();
 
   if (!baseDir) {
-    console.error('Unable to find Edge data directory in the system.');
+    console.warn('Unable to find Edge data directory in the system.');
     return;
   }
   const destDir = path.join(baseDir, 'Purple-HATS');
@@ -657,7 +656,7 @@ export const deleteClonedChromeProfiles = () => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
-    console.error('Unable to find Chrome data directory in the system.');
+    console.warn(`Unable to find Chrome data directory in the system.`);
     return;
   }
 
@@ -666,17 +665,16 @@ export const deleteClonedChromeProfiles = () => {
   if (fs.existsSync(destDir)) {
     fs.rmSync(destDir, { recursive: true });
     return;
-  } else {
-    console.error('Unable to find Purple-HATS directory in the Chrome data directory.');
-    return;
   }
+
+  console.warn('Unable to find Purple-HATS directory in the Chrome data directory.');
 };
 
 export const deleteClonedEdgeProfiles = () => {
   const baseDir = getDefaultEdgeDataDir();
 
   if (!baseDir) {
-    console.error('Unable to find Edge data directory in the system.');
+    console.warn(`Unable to find Edge data directory in the system.`);
     return;
   }
 
@@ -685,10 +683,8 @@ export const deleteClonedEdgeProfiles = () => {
   if (fs.existsSync(destDir)) {
     fs.rmSync(destDir, { recursive: true });
     return;
-  } else {
-    console.error('Unable to find Purple-HATS directory in the Edge data directory.');
-    return;
   }
+  console.warn('Unable to find Purple-HATS directory in the Edge data directory.');
 };
 
 /**
