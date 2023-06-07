@@ -224,6 +224,22 @@ const checkUrlConnectivityWithBrowser = async (url, browserToRun, clonedDataDir)
     res.status = constants.urlCheckStatuses.invalidUrl.code;
   }
 
+  // To mitigate agaisnt known bug where cookies are
+  // overriden after each browser session - i.e. logs user out
+  // after checkingUrl and unable to utilise same cookie for scan
+  switch (browserToRun) {
+    case constants.browserTypes.chrome:
+      deleteClonedChromeProfiles();
+      cloneChromeProfiles();
+      break;
+    case constants.browserTypes.edge:
+      deleteClonedEdgeProfiles();
+      cloneEdgeProfiles();
+      break;
+    default:
+      break;
+  }
+
   return res;
 };
 
@@ -248,6 +264,7 @@ const isSitemapContent = async content => {
 
 export const checkUrl = async (scanner, url, browser, clonedDataDir) => {
   let res;
+
   if (browser) {
     res = await checkUrlConnectivityWithBrowser(url, browser, clonedDataDir);
   } else {
@@ -399,8 +416,6 @@ export const getLinksFromSitemap = async (
     } else {
       sitemapType = constants.xmlSitemapTypes.unknown;
     }
-
-    console.log(sitemapType);
 
     switch (sitemapType) {
       case constants.xmlSitemapTypes.xmlIndex:
@@ -582,6 +597,10 @@ export const cloneChromeProfiles = () => {
 
   const destDir = path.join(baseDir, 'Purple-HATS');
 
+  if (fs.existsSync(destDir)) {
+    deleteClonedChromeProfiles();
+  }
+
   if (!fs.existsSync(destDir)) {
     fs.mkdirSync(destDir);
   }
@@ -612,8 +631,11 @@ export const cloneEdgeProfiles = () => {
     console.error('Unable to find Edge data directory in the system.');
     return;
   }
-
   const destDir = path.join(baseDir, 'Purple-HATS');
+
+  if (fs.existsSync(destDir)) {
+    deleteClonedEdgeProfiles();
+  }
 
   if (!fs.existsSync(destDir)) {
     fs.mkdirSync(destDir);
