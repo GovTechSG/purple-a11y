@@ -31,10 +31,14 @@ export const init = async entryUrl => {
 
   let isInstanceTerminated = false;
 
-  const getScripts = () => { 
+  const throwErrorIfTerminated = () => {
     if (isInstanceTerminated) {
       throw new Error('This instance of Purple HATS was terminated. Please start a new instance.');
     }
+  }
+
+  const getScripts = () => { 
+    throwErrorIfTerminated();
     const axeScript = fs.readFileSync(
       path.join(__dirname, 'node_modules/axe-core/axe.min.js'),
       'utf-8',
@@ -58,18 +62,14 @@ export const init = async entryUrl => {
   };
 
   const pushScanResults = async res => {
-    if (isInstanceTerminated) {
-      throw new Error('This instance of Purple HATS was terminated. Please start a new instance.');
-    }
+    throwErrorIfTerminated();
     const filteredResults = filterAxeResults(res.axeScanResults, res.pageTitle);
     urlsCrawled.scanned.push(res.pageUrl);
     await dataset.pushData(filteredResults);
   };
 
   const terminate = async () => {
-    if (isInstanceTerminated) {
-      throw new Error('This instance of Purple HATS was terminated. Please start a new instance.');
-    }
+    throwErrorIfTerminated();
     console.log('Stopping Purple HATS');
     isInstanceTerminated = true;
     scanDetails.endTime = new Date().getTime();
@@ -80,7 +80,7 @@ export const init = async entryUrl => {
     } else {
       await createDetailsAndLogs(scanDetails, randomToken);
       await createAndUpdateResultsFolders(randomToken);
-      await generateArtifacts(randomToken, scanDetails.requestUrl, scanDetails.crawlType, 'Desktop');
+      await generateArtifacts(randomToken, scanDetails.requestUrl, scanDetails.crawlType, null);
     }
 
     cleanUp(randomToken);
