@@ -10,10 +10,10 @@ In order to use this functionality, the testing framework must support:
 ### How to include Purple HATS in your project
 1. Add Purple HATS to your project by running the following command:
 
-    `npm install --save-dev purple-hats`
+    `npm install --save-dev @govtechsg/purple-hats`
 2. In the file of choice, import Purple HATS using:
     
-    `import purpleHatsInit from 'purple-hats'`
+    `import purpleHatsInit from '@govtechsg/purple-hats'`
 
     Note that Purple HATS should be imported in a script that runs in a NodeJS environment.
 
