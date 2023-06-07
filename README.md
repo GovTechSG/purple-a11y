@@ -10,6 +10,10 @@ Purple HATS is a customisable, automated accessibility testing tool that allows 
 4. [Playwright](https://playwright.dev/)
 5. [ImageMagick](https://github.com/ImageMagick/ImageMagick)
 
+## Using Purple HATS as a NodeJS module
+
+If you wish to use Purple HATS as a NodeJS module that can be integrated with end-to-end testing frameworks, refer to the [integration guide](./INTEGRATION.md) on how you can do so.
+
 ## Prerequisites and Installations
 
 ### Portable Purple hats

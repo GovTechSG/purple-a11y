@@ -77,7 +77,7 @@ const combineRun = async (details, deviceToScan) => {
     await createAndUpdateResultsFolders(randomToken);
     await generateArtifacts(randomToken, url, type, deviceToScan);
   } else {
-    printMessage([`No pages were scanned.`], constants.alertMessageOoptions);
+    printMessage([`No pages were scanned.`], constants.alertMessageOptions);
   }
 };
 

@@ -65,7 +65,7 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
       const location = await page.evaluate('location');
 
       if (location.host.includes(host)) {
-        const results = await runAxeScript(page, host);
+        const results = await runAxeScript(page);
         await dataset.pushData(results);
         urlsCrawled.scanned.push(currentUrl);
 

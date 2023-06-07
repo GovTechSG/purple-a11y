@@ -211,7 +211,7 @@ const checkIfScanRequired = async page => {
 
 const runAxeScan = async page => {
   const host = new URL(pageUrl).hostname;
-  const result = await runAxeScript(page, host);
+  const result = await runAxeScript(page);
   await dataset.pushData(result);
   urlsCrawled.scanned.push(pageUrl);
 }
