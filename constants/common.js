@@ -13,9 +13,8 @@ import * as https from 'https';
 import os from 'os';
 import { globSync } from 'glob';
 import { chromium, devices } from 'playwright';
-import constants from './constants.js';
+import constants, { getDefaultChromeDataDir, getDefaultEdgeDataDir } from './constants.js';
 import { silentLogger } from '../logs.js';
-import { getDefaultChromeDataDir, getDefaultEdgeDataDir } from './constants.js';
 
 const document = new JSDOM('').window;
 
@@ -225,22 +224,6 @@ const checkUrlConnectivityWithBrowser = async (url, browserToRun, clonedDataDir)
     res.status = constants.urlCheckStatuses.invalidUrl.code;
   }
 
-  // To mitigate agaisnt known bug where cookies are
-  // overriden after each browser session - i.e. logs user out
-  // after checkingUrl and unable to utilise same cookie for scan
-  switch (browserToRun) {
-    case constants.browserTypes.chrome:
-      deleteClonedChromeProfiles();
-      cloneChromeProfiles();
-      break;
-    case constants.browserTypes.edge:
-      deleteClonedEdgeProfiles();
-      cloneEdgeProfiles();
-      break;
-    default:
-      break;
-  }
-
   return res;
 };
 
@@ -366,9 +349,7 @@ export const getLinksFromSitemap = async (
         const rss = page.locator('rss');
         const feed = page.locator('feed');
 
-        const isRoot = async locator => {
-          return (await locator.count()) > 0;
-        };
+        const isRoot = async locator => (await locator.count()) > 0;
 
         if (await isRoot(urlSet)) {
           data = await urlSet.evaluate(elem => elem.outerHTML);
@@ -691,10 +672,20 @@ export const deleteClonedEdgeProfiles = () => {
  * @param {string} browser browser name ("chrome" or "edge", null for chromium, the default Playwright browser)
  * @returns playwright launch options object. For more details: https://playwright.dev/docs/api/class-browsertype#browser-type-launch
  */
-export const getPlaywrightLaunchOptions = browser => ({
+export const getPlaywrightLaunchOptions = browser => {
   // Drop the --use-mock-keychain flag to allow MacOS devices
   // to use the cloned cookies.
-  ignoreDefaultArgs: ['--use-mock-keychain'],
-  args: constants.launchOptionsArgs,
-  ...(browser && { channel: browser }),
-});
+  const ignoreDefaultArgs = ['--use-mock-keychain'];
+  if (!fs.existsSync('/.dockerenv')) {
+    // Drop this flag if not running in docker
+    // to allow MacOS devices running edge browser
+    // to use the cloned cookies across browser sessions.
+    ignoreDefaultArgs.push('--no-sandbox');
+  }
+
+  return {
+    ignoreDefaultArgs,
+    args: constants.launchOptionsArgs,
+    ...(browser && { channel: browser }),
+  };
+};
