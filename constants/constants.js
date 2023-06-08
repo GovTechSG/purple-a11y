@@ -40,7 +40,7 @@ export const getExecutablePath = function (dir, file) {
 };
 
 // for crawlers
-export const axeScript = 'node_modules/axe-core/axe.min.js';
+export const axeScript = path.join(__dirname, 'node_modules/axe-core/axe.min.js');
 
 const urlsCrawledObj = {
   toScan: [],
