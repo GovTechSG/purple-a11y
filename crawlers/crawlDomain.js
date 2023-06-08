@@ -65,6 +65,8 @@ const crawlDomain = async (
     device = {};
   }
 
+  let pagesCrawled = 0;
+
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
       launchOptions: getPlaywrightLaunchOptions(browser),
@@ -72,6 +74,16 @@ const crawlDomain = async (
     },
     browserPoolOptions: {
       useFingerprints: false,
+      preLaunchHooks: [
+        async (pageId, launchContext) => {
+          launchContext.launchOptions = {
+            ...launchContext.launchOptions,
+            bypassCSP: true,
+            ignoreHTTPSErrors: true,
+            ...device,
+          };
+        },
+      ],
       preLaunchHooks: [
         async (pageId, launchContext) => {
           launchContext.launchOptions = {

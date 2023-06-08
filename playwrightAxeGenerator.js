@@ -211,7 +211,7 @@ const checkIfScanRequired = async page => {
 
 const runAxeScan = async page => {
   const host = new URL(pageUrl).hostname;
-  const result = await runAxeScript(page, host);
+  const result = await runAxeScript(page);
   await dataset.pushData(result);
   urlsCrawled.scanned.push(pageUrl);
 }
@@ -446,6 +446,7 @@ const processPage = async page => {
       appendToGeneratedScript(line);
     }
 
+    fileStream.destroy();
     console.log(` Browser closed. Replaying steps and running accessibility scan...\n`);
 
     await import(generatedScript);
@@ -455,7 +456,7 @@ const processPage = async page => {
   } finally {
     try {
       if (tmpDir) {
-        fs.rmSync(tmpDir, { recursive: true });
+        fs.rmSync(tmpDir, { recursive: true, force: true });
       }
     } catch (e) {
       console.error(

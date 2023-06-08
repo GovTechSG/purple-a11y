@@ -77,7 +77,7 @@ const crawlSitemap = async (
       const status = response.status();
 
       if (status === 200 && isWhitelistedContentType(contentType)) {
-        const results = await runAxeScript(page, host);
+        const results = await runAxeScript(page);
         await dataset.pushData(results);
         urlsCrawled.scanned.push(currentUrl);
       } else {

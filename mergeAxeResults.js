@@ -64,8 +64,8 @@ const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResu
 };
 
 const writeHTML = async (allIssues, storagePath, htmlFilename = 'report') => {
-  const ejsString = fs.readFileSync('./static/ejs/report.ejs', 'utf-8');
-  const template = ejs.compile(ejsString, { filename: './static/ejs/report.ejs' });
+  const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/report.ejs'), 'utf-8');
+  const template = ejs.compile(ejsString, { filename: path.join(__dirname, './static/ejs/report.ejs') });
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
 };
