@@ -65,8 +65,6 @@ const crawlDomain = async (
     device = {};
   }
 
-  let pagesCrawled = 0;
-
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
       launchOptions: getPlaywrightLaunchOptions(browser),
