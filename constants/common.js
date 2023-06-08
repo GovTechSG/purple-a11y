@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable camelcase */
 /* eslint-disable no-use-before-define */
 import validator from 'validator';
@@ -7,10 +8,13 @@ import * as cheerio from 'cheerio';
 import crawlee from 'crawlee';
 import { parseString } from 'xml2js';
 import fs from 'fs';
-import constants from './constants.js';
-import { silentLogger } from '../logs.js';
+import path from 'path';
 import * as https from 'https';
-import { devices } from 'playwright';
+import os from 'os';
+import { globSync } from 'glob';
+import { chromium, devices } from 'playwright';
+import constants, { getDefaultChromeDataDir, getDefaultEdgeDataDir } from './constants.js';
+import { silentLogger } from '../logs.js';
 
 const document = new JSDOM('').window;
 
@@ -67,9 +71,7 @@ export const isSkippedUrl = (page, whitelistedDomains) => {
     return false;
   });
 
-  const noMatch = Object.keys(isWhitelisted).every(key => {
-    return isWhitelisted[key].length === 0;
-  });
+  const noMatch = Object.keys(isWhitelisted).every(key => isWhitelisted[key].length === 0);
 
   return !noMatch;
 };
@@ -130,7 +132,11 @@ const checkUrlConnectivity = async url => {
     // Validate the connectivity of URL if the string format is url format
     // User-Agent is modified to emulate a browser to handle cases where some sites ban non browser agents, resulting in a 403 error
     await axios
-      .get(data.url, { headers: { 'User-Agent': devices['Desktop Chrome HiDPI'].userAgent }, httpsAgent, timeout: 15000 })
+      .get(data.url, {
+        headers: { 'User-Agent': devices['Desktop Chrome HiDPI'].userAgent },
+        httpsAgent,
+        timeout: 15000,
+      })
       .then(async response => {
         const redirectUrl = response.request.res.responseUrl;
         res.status = constants.urlCheckStatuses.success.code;
@@ -142,16 +148,23 @@ const checkUrlConnectivity = async url => {
         }
 
         res.content = response.data;
+        // console.log(res.content);
       })
       .catch(error => {
         if (error.response) {
-          // enters here if server responds with a status other than 2xx
-          // the scan should still proceed even if error codes are received, so that accessibility scans for error pages can be done too
-          res.status = constants.urlCheckStatuses.success.code;
+          if (error.response.status === 401) {
+            // enters here if URL is protected by basic auth
+            res.status = constants.urlCheckStatuses.unauthorised.code;
+          } else {
+            // enters here if server responds with a status other than 2xx
+            // the scan should still proceed even if error codes are received, so that accessibility scans for error pages can be done too
+            res.status = constants.urlCheckStatuses.success.code;
+          }
           res.url = url;
           res.content = error.response.data;
           return res;
-        } else if (error.request) {
+        }
+        if (error.request) {
           // enters here if URL cannot be accessed
           res.status = constants.urlCheckStatuses.cannotBeResolved.code;
         } else {
@@ -159,6 +172,53 @@ const checkUrlConnectivity = async url => {
         }
         silentLogger.error(error);
       });
+  } else {
+    // enters here if input is not a URL or not using http/https protocols
+    res.status = constants.urlCheckStatuses.invalidUrl.code;
+  }
+
+  return res;
+};
+
+const checkUrlConnectivityWithBrowser = async (url, browserToRun, clonedDataDir) => {
+  const res = {};
+
+  const data = sanitizeUrlInput(url);
+
+  if (data.isValid) {
+    // Validate the connectivity of URL if the string format is url format
+    const browserContext = await chromium.launchPersistentContext(
+      clonedDataDir,
+      getPlaywrightLaunchOptions(browserToRun),
+    );
+    // const context = await browser.newContext();
+    const page = await browserContext.newPage();
+
+    // method will not throw an error when any valid HTTP status code is returned by the remote server, including 404 "Not Found" and 500 "Internal Server Error".
+    // navigation to about:blank or navigation to the same URL with a different hash, which would succeed and return null.
+    try {
+      const response = await page.goto(url, { timeout: 15000 });
+      res.status = constants.urlCheckStatuses.success.code;
+
+      // Check for redirect link
+      const redirectUrl = await response.request().url();
+
+      if (redirectUrl != null) {
+        res.url = redirectUrl;
+      } else {
+        res.url = url;
+      }
+
+      res.content = await page.content();
+      // console.log(res.content);
+    } catch (error) {
+      // not sure what errors are thrown
+      console.log(error);
+
+      res.status = constants.urlCheckStatuses.systemError.code;
+    } finally {
+      await browserContext.close();
+    }
   } else {
     // enters here if input is not a URL or not using http/https protocols
     res.status = constants.urlCheckStatuses.invalidUrl.code;
@@ -186,8 +246,14 @@ const isSitemapContent = async content => {
   return true;
 };
 
-export const checkUrl = async (scanner, url) => {
-  const res = await checkUrlConnectivity(url);
+export const checkUrl = async (scanner, url, browser, clonedDataDir) => {
+  let res;
+
+  if (browser) {
+    res = await checkUrlConnectivityWithBrowser(url, browser, clonedDataDir);
+  } else {
+    res = await checkUrlConnectivity(url);
+  }
 
   if (
     res.status === constants.urlCheckStatuses.success.code &&
@@ -219,12 +285,14 @@ export const prepareData = argv => {
     maxpages,
     isLocalSitemap,
     finalUrl,
+    browserBased,
   } = argv;
 
   return {
     type: scanner,
     url: isLocalSitemap ? url : finalUrl,
     isHeadless: headless,
+    isBrowserBased: browserBased,
     deviceChosen,
     customDevice,
     viewportWidth,
@@ -233,12 +301,15 @@ export const prepareData = argv => {
   };
 };
 
-export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
+export const getLinksFromSitemap = async (
+  sitemapUrl,
+  maxLinksCount,
+  browser,
+  userDataDirectory,
+) => {
   const urls = new Set(); // for HTML documents
 
-  const isLimitReached = () => {
-    return urls.size >= maxLinksCount;
-  };
+  const isLimitReached = () => urls.size >= maxLinksCount;
 
   const processXmlSitemap = async ($, sitemapType, selector) => {
     for (const urlElement of $(selector)) {
@@ -251,6 +322,7 @@ export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
       } else {
         url = $(urlElement).text();
       }
+      console.log(url);
       urls.add(url);
     }
   };
@@ -262,14 +334,42 @@ export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
 
   const fetchUrls = async url => {
     let data;
+    let sitemapType;
     if (validator.isURL(url, urlOptions)) {
-      const instance = axios.create({
-        httpsAgent: new https.Agent({
-          rejectUnauthorized: false,
-        }),
-      });
+      if (browser) {
+        const browserContext = await chromium.launchPersistentContext(
+          userDataDirectory,
+          getPlaywrightLaunchOptions(browser),
+        );
+        const page = await browserContext.newPage();
+        await page.goto(url);
 
-      data = await (await instance.get(url)).data;
+        const urlSet = page.locator('urlset');
+        const sitemapIndex = page.locator('sitemapindex');
+        const rss = page.locator('rss');
+        const feed = page.locator('feed');
+
+        const isRoot = async locator => (await locator.count()) > 0;
+
+        if (await isRoot(urlSet)) {
+          data = await urlSet.evaluate(elem => elem.outerHTML);
+        } else if (await isRoot(sitemapIndex)) {
+          data = await sitemapIndex.evaluate(elem => elem.outerHTML);
+        } else if (await isRoot(rss)) {
+          data = await rss.evaluate(elem => elem.outerHTML);
+        } else if (await isRoot(feed)) {
+          data = await feed.evaluate(elem => elem.outerHTML);
+        }
+
+        await browserContext.close();
+      } else {
+        const instance = axios.create({
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false,
+          }),
+        });
+        data = await (await instance.get(url)).data;
+      }
     } else {
       data = fs.readFileSync(url, 'utf8');
     }
@@ -286,8 +386,6 @@ export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
 
     const { xmlns } = root.attribs;
     const xmlFormatNamespace = 'http://www.sitemaps.org/schemas/sitemap/0.9';
-
-    let sitemapType;
 
     if (root.name === 'urlset' && xmlns === xmlFormatNamespace) {
       sitemapType = constants.xmlSitemapTypes.xml;
@@ -331,4 +429,263 @@ export const getLinksFromSitemap = async (sitemapUrl, maxLinksCount) => {
 
   await fetchUrls(sitemapUrl);
   return Array.from(urls);
+};
+
+/**
+ * Clone the Chrome profile cookie files to the destination directory
+ * @param {*} options glob options object
+ * @param {*} destDir destination directory
+ * @returns void
+ */
+const cloneChromeProfileCookieFiles = (options, destDir) => {
+  let profileCookiesDir;
+  // Cookies file per profile is located in .../User Data/<profile name>/Network/Cookies for windows
+  // and ../Chrome/<profile name>/Cookies for mac
+  let profileNamesRegex;
+  if (os.platform() === 'win32') {
+    profileCookiesDir = globSync('**/Network/Cookies', {
+      ...options,
+      ignore: ['Purple-HATS/**'],
+    });
+    profileNamesRegex = /User Data\\(.*?)\\Network/;
+  } else if (os.platform() === 'darwin') {
+    // maxDepth 2 to avoid copying cookies from the Purple-HATS directory if it exists
+    profileCookiesDir = globSync('**/Cookies', {
+      ...options,
+      ignore: 'Purple-HATS/**',
+    });
+    profileNamesRegex = /Chrome\/(.*?)\/Cookies/;
+  }
+
+  if (profileCookiesDir.length > 0) {
+    profileCookiesDir.forEach(dir => {
+      const profileName = dir.match(profileNamesRegex)[1];
+      if (profileName) {
+        let destProfileDir = path.join(destDir, profileName);
+        if (os.platform() === 'win32') {
+          destProfileDir = path.join(destProfileDir, 'Network');
+        }
+        // Recursive true to create all parent directories (e.g. PbProfile/Default/Cookies)
+        if (!fs.existsSync(destProfileDir)) {
+          fs.mkdirSync(destProfileDir, { recursive: true });
+          if (!fs.existsSync(destProfileDir)) {
+            fs.mkdirSync(destProfileDir);
+          }
+        }
+
+        // Prevents duplicate cookies file if the cookies already exist
+        if (!fs.existsSync(path.join(destProfileDir, 'Cookies'))) {
+          fs.copyFileSync(dir, path.join(destProfileDir, 'Cookies'));
+        }
+      }
+    });
+  } else {
+    console.warn('Unable to find Chrome profile cookies file in the system.');
+  }
+};
+
+/**
+ * Clone the Chrome profile cookie files to the destination directory
+ * @param {*} options glob options object
+ * @param {*} destDir destination directory
+ * @returns void
+ */
+const cloneEdgeProfileCookieFiles = (options, destDir) => {
+  let profileCookiesDir;
+  // Cookies file per profile is located in .../User Data/<profile name>/Network/Cookies for windows
+  // and ../Chrome/<profile name>/Cookies for mac
+  let profileNamesRegex;
+  // Ignores the cloned Purple-HATS directory if exists
+  if (os.platform() === 'win32') {
+    profileCookiesDir = globSync('**/Network/Cookies', {
+      ...options,
+      ignore: 'Purple-HATS/**',
+    });
+    profileNamesRegex = /User Data\\(.*?)\\Network/;
+  } else if (os.platform() === 'darwin') {
+    // Ignores copying cookies from the Purple-HATS directory if it exists
+    profileCookiesDir = globSync('**/Cookies', {
+      ...options,
+      ignore: 'Purple-HATS/**',
+    });
+    profileNamesRegex = /Microsoft Edge\/(.*?)\/Cookies/;
+  }
+
+  if (profileCookiesDir.length > 0) {
+    profileCookiesDir.forEach(dir => {
+      const profileName = dir.match(profileNamesRegex)[1];
+      if (profileName) {
+        let destProfileDir = path.join(destDir, profileName);
+        if (os.platform() === 'win32') {
+          destProfileDir = path.join(destProfileDir, 'Network');
+        }
+        // Recursive true to create all parent directories (e.g. PbProfile/Default/Cookies)
+        if (!fs.existsSync(destProfileDir)) {
+          fs.mkdirSync(destProfileDir, { recursive: true });
+          if (!fs.existsSync(destProfileDir)) {
+            fs.mkdirSync(destProfileDir);
+          }
+        }
+
+        // Prevents duplicate cookies file if the cookies already exist
+        if (!fs.existsSync(path.join(destProfileDir, 'Cookies'))) {
+          fs.copyFileSync(dir, path.join(destProfileDir, 'Cookies'));
+        }
+      }
+    });
+  } else {
+    console.warn('Unable to find Edge profile cookies file in the system.');
+  }
+};
+
+/**
+ * Both Edge and Chrome Local State files are located in the .../User Data directory
+ * @param {*} options - glob options object
+ * @param {string} destDir - destination directory
+ * @returns {void}
+ */
+const cloneLocalStateFile = (options, destDir) => {
+  const localState = globSync('**/*Local State', {
+    ...options,
+    maxDepth: 1,
+  });
+
+  if (localState.length > 0) {
+    // eslint-disable-next-line array-callback-return
+    localState.map(dir => {
+      fs.copyFileSync(dir, path.join(destDir, 'Local State'));
+    });
+  } else {
+    console.warn('Unable to find local state file in the system.');
+  }
+};
+
+/**
+ * Checks if the Chrome data directory exists and creates a clone
+ * of all profile within the Purple-HATS directory located in the
+ * .../User Data directory for Windows and
+ * .../Chrome directory for Mac.
+ * @returns {void}
+ */
+export const cloneChromeProfiles = () => {
+  const baseDir = getDefaultChromeDataDir();
+
+  if (!baseDir) {
+    console.warn('Unable to find Chrome data directory in the system.');
+    return;
+  }
+
+  const destDir = path.join(baseDir, 'Purple-HATS');
+
+  if (fs.existsSync(destDir)) {
+    deleteClonedChromeProfiles();
+  }
+
+  if (!fs.existsSync(destDir)) {
+    fs.mkdirSync(destDir);
+  }
+
+  const baseOptions = {
+    cwd: baseDir,
+    recursive: true,
+    absolute: true,
+    nodir: true,
+  };
+  cloneChromeProfileCookieFiles(baseOptions, destDir);
+  cloneLocalStateFile(baseOptions, destDir);
+  // eslint-disable-next-line no-undef, consistent-return
+  return path.join(baseDir, 'Purple-HATS');
+};
+
+/**
+ * Checks if the Edge data directory exists and creates a clone
+ * of all profile within the Purple-HATS directory located in the
+ * .../User Data directory for Windows and
+ * .../Microsoft Edge directory for Mac.
+ * @returns {void}
+ */
+export const cloneEdgeProfiles = () => {
+  const baseDir = getDefaultEdgeDataDir();
+
+  if (!baseDir) {
+    console.warn('Unable to find Edge data directory in the system.');
+    return;
+  }
+  const destDir = path.join(baseDir, 'Purple-HATS');
+
+  if (fs.existsSync(destDir)) {
+    deleteClonedEdgeProfiles();
+  }
+
+  if (!fs.existsSync(destDir)) {
+    fs.mkdirSync(destDir);
+  }
+
+  const baseOptions = {
+    cwd: baseDir,
+    recursive: true,
+    absolute: true,
+    nodir: true,
+  };
+  cloneEdgeProfileCookieFiles(baseOptions, destDir);
+  cloneLocalStateFile(baseOptions, destDir);
+  // eslint-disable-next-line no-undef, consistent-return
+  return path.join(baseDir, 'Purple-HATS');
+};
+
+export const deleteClonedChromeProfiles = () => {
+  const baseDir = getDefaultChromeDataDir();
+
+  if (!baseDir) {
+    console.warn(`Unable to find Chrome data directory in the system.`);
+    return;
+  }
+
+  const destDir = path.join(baseDir, 'Purple-HATS');
+
+  if (fs.existsSync(destDir)) {
+    fs.rmSync(destDir, { recursive: true });
+    return;
+  }
+
+  console.warn('Unable to find Purple-HATS directory in the Chrome data directory.');
+};
+
+export const deleteClonedEdgeProfiles = () => {
+  const baseDir = getDefaultEdgeDataDir();
+
+  if (!baseDir) {
+    console.warn(`Unable to find Edge data directory in the system.`);
+    return;
+  }
+
+  const destDir = path.join(baseDir, 'Purple-HATS');
+
+  if (fs.existsSync(destDir)) {
+    fs.rmSync(destDir, { recursive: true });
+    return;
+  }
+  console.warn('Unable to find Purple-HATS directory in the Edge data directory.');
+};
+
+/**
+ * @param {string} browser browser name ("chrome" or "edge", null for chromium, the default Playwright browser)
+ * @returns playwright launch options object. For more details: https://playwright.dev/docs/api/class-browsertype#browser-type-launch
+ */
+export const getPlaywrightLaunchOptions = browser => {
+  // Drop the --use-mock-keychain flag to allow MacOS devices
+  // to use the cloned cookies.
+  const ignoreDefaultArgs = ['--use-mock-keychain'];
+  if (!fs.existsSync('/.dockerenv')) {
+    // Drop this flag if not running in docker
+    // to allow MacOS devices running edge browser
+    // to use the cloned cookies across browser sessions.
+    ignoreDefaultArgs.push('--no-sandbox');
+  }
+
+  return {
+    ignoreDefaultArgs,
+    args: constants.launchOptionsArgs,
+    ...(browser && { channel: browser }),
+  };
 };

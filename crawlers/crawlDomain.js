@@ -7,16 +7,49 @@ import {
   runAxeScript,
   failedRequestHandler,
 } from './commonCrawlerFunc.js';
-import constants from '../constants/constants.js';
+import constants, { basicAuthRegex } from '../constants/constants.js';
+import { getPlaywrightLaunchOptions } from '../constants/common.js';
 
-const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequestsPerCrawl) => {
+const crawlDomain = async (
+  url,
+  randomToken,
+  host,
+  viewportSettings,
+  maxRequestsPerCrawl,
+  browser,
+  userDataDirectory,
+) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { maxConcurrency } = constants;
   const { deviceChosen, customDevice, viewportWidth } = viewportSettings;
 
   const { dataset, requestQueue } = await createCrawleeSubFolders(randomToken);
 
-  await requestQueue.addRequest({ url });
+  let finalUrl;
+  let pagesCrawled;
+  // Boolean to omit axe scan for basic auth URL
+  let isBasicAuth = false;
+  /**
+   * Regex to match http://username:password@hostname.com
+   * utilised in scan strategy to ensure subsequent URLs within the same domain are scanned.
+   * First time scan with original `url` containing credentials is strictly to authenticate for browser session
+   * subsequent URLs are without credentials.
+   * pagesCrawled is set to -1 for basic auth URL to ensure it is not counted towards maxRequestsPerCrawl
+   */
+
+  if (basicAuthRegex.test(url)) {
+    isBasicAuth = true;
+    // request to basic auth URL to authenticate for browser session
+    await requestQueue.addRequest({ url, uniqueKey: `auth:${url}` });
+
+    // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
+    finalUrl = `${url.split('://')[0]}://${url.split('@')[1]}`;
+    await requestQueue.addRequest({ url: finalUrl });
+    pagesCrawled = -1;
+  } else {
+    await requestQueue.addRequest({ url });
+    pagesCrawled = 0;
+  }
 
   // customDevice check for website scan
   let device;
@@ -32,16 +65,23 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
     device = {};
   }
 
-  let pagesCrawled = 0;
-
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
-      launchOptions: {
-        args: constants.launchOptionsArgs,
-      },
+      launchOptions: getPlaywrightLaunchOptions(browser),
+      userDataDir: userDataDirectory || '',
     },
     browserPoolOptions: {
       useFingerprints: false,
+      preLaunchHooks: [
+        async (pageId, launchContext) => {
+          launchContext.launchOptions = {
+            ...launchContext.launchOptions,
+            bypassCSP: true,
+            ignoreHTTPSErrors: true,
+            ...device,
+          };
+        },
+      ],
       preLaunchHooks: [
         async (pageId, launchContext) => {
           launchContext.launchOptions = {
@@ -60,12 +100,14 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
         return;
       }
       pagesCrawled++;
-      
+
       const currentUrl = request.url;
       const location = await page.evaluate('location');
 
-      if (location.host.includes(host)) {
-        const results = await runAxeScript(page, host);
+      if (isBasicAuth) {
+        isBasicAuth = false;
+      } else if (location.host.includes(host)) {
+        const results = await runAxeScript(page);
         await dataset.pushData(results);
         urlsCrawled.scanned.push(currentUrl);
 

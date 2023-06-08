@@ -1,24 +1,29 @@
 #!/usr/bin/env node
+/* eslint-disable no-fallthrough */
 /* eslint-disable no-undef */
 /* eslint-disable no-param-reassign */
 import fs from 'fs-extra';
 import _yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import printMessage from 'print-message';
+import { devices } from 'playwright';
+import { cleanUp, zipResults, setHeadlessMode, getVersion, getStoragePath } from './utils.js';
 import {
-  cleanUp,
-  zipResults,
-  setHeadlessMode,
-  setThresholdLimits,
-  getVersion,
-  getStoragePath,
-} from './utils.js';
-import { checkUrl, prepareData, isFileSitemap } from './constants/common.js';
+  checkUrl,
+  prepareData,
+  isFileSitemap,
+  cloneChromeProfiles,
+  cloneEdgeProfiles,
+  deleteClonedChromeProfiles,
+  deleteClonedEdgeProfiles,
+} from './constants/common.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
-import constants from './constants/constants.js';
+import constants, {
+  getDefaultChromeDataDir,
+  getDefaultEdgeDataDir,
+} from './constants/constants.js';
 import combineRun from './combine.js';
 import playwrightAxeGenerator from './playwrightAxeGenerator.js';
-import { devices } from 'playwright';
 import { silentLogger } from './logs.js';
 
 const appVersion = getVersion();
@@ -97,6 +102,25 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     }
     return option;
   })
+  .coerce('b', option => {
+    const { choices } = cliOptions.b;
+    if (typeof option === 'number') {
+      if (Number.isInteger(option) && option > 0 && option <= choices.length) {
+        option = choices[option - 1];
+      } else {
+        printMessage(
+          [
+            'Invalid option',
+            `Please enter an integer (1 to ${choices.length}) or keywords (${choices.join(', ')}).`,
+          ],
+          messageOptions,
+        );
+        process.exit(1);
+      }
+    }
+
+    return option;
+  })
   .check(argvs => {
     if (argvs.scanner === 'custom' && argvs.maxpages) {
       throw new Error('-p or --maxpages is only available in website and sitemap scans');
@@ -109,13 +133,90 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
 const scanInit = async argvs => {
   argvs.scanner = constants.scannerTypes[argvs.scanner];
   argvs.headless = argvs.headless === 'yes';
+  argvs.browserToRun = constants.browserTypes[argvs.browserToRun];
 
-  const res = await checkUrl(argvs.scanner, argvs.url);
+  let useChrome = false;
+  let useEdge = false;
+  let chromeDataDir = null;
+  let edgeDataDir = null;
+  let clonedDataDir = null;
+
+  if (argvs.browserToRun === constants.browserTypes.chrome) {
+    chromeDataDir = getDefaultChromeDataDir();
+    if (chromeDataDir) {
+      useChrome = true;
+      argvs.browserToRun = constants.browserTypes.chrome;
+    } else {
+      printMessage(
+        [
+          'Chrome browser profile is not detected in the default directory.',
+          'Please ensure the default directory is used. Falling back to Edge browser...',
+        ],
+        messageOptions,
+      );
+      edgeDataDir = getDefaultEdgeDataDir();
+      if (edgeDataDir) {
+        useEdge = true;
+        argvs.browserToRun = constants.browserTypes.edge;
+      } else {
+        printMessage(
+          [
+            'Both Chrome and Edge browser profile are not detected in the default directory.',
+            'Please ensure Edge and Chrome browser profiles are in the default directory before trying again. Falling back to incognito Chromium...',
+          ],
+          messageOptions,
+        );
+        argvs.browserToRun = constants.browserTypes.chromium;
+      }
+    }
+  } else if (argvs.browserToRun === constants.browserTypes.edge) {
+    edgeDataDir = getDefaultEdgeDataDir();
+    if (edgeDataDir) {
+      useEdge = true;
+      argvs.browserToRun = constants.browserTypes.edge;
+    } else {
+      printMessage(
+        [
+          'Edge browser profile is not detected in the default directory.',
+          'Please ensure the default directory is used. Falling back to Chrome browser...',
+        ],
+        messageOptions,
+      );
+      chromeDataDir = getDefaultChromeDataDir();
+      if (chromeDataDir) {
+        useChrome = true;
+        argvs.browserToRun = constants.browserTypes.chrome;
+      } else {
+        printMessage(
+          [
+            'Both Chrome and Edge browser profile are not detected in the default directory.',
+            'Please ensure Edge and Chrome browser profiles are in the default directory before trying again. Falling back to incognito Chromium...',
+          ],
+          messageOptions,
+        );
+        argvs.browserToRun = constants.browserTypes.chromium;
+      }
+    }
+  } else {
+    argvs.browserToRun = constants.browserTypes.chromium;
+  }
+
+  if (useChrome) {
+    clonedDataDir = cloneChromeProfiles();
+  } else if (useEdge) {
+    clonedDataDir = cloneEdgeProfiles();
+  }
+
+  const res = await checkUrl(argvs.scanner, argvs.url, argvs.browserToRun, clonedDataDir);
   const statuses = constants.urlCheckStatuses;
+  // eslint-disable-next-line default-case
   switch (res.status) {
     case statuses.success.code:
       argvs.finalUrl = res.url;
       break;
+    case statuses.unauthorised.code:
+      printMessage([statuses.unauthorised.message], messageOptions);
+      process.exit(res.status);
     case statuses.cannotBeResolved.code:
       printMessage([statuses.cannotBeResolved.message], messageOptions);
       process.exit(res.status);
@@ -127,19 +228,19 @@ const scanInit = async argvs => {
         printMessage([statuses.invalidUrl.message], messageOptions);
         process.exit(res.status);
       }
-
       /* if sitemap scan is selected, treat this URL as a filepath
         isFileSitemap will tell whether the filepath exists, and if it does, whether the
         file is a sitemap */
       if (isFileSitemap(argvs.url)) {
         argvs.isLocalSitemap = true;
-        break;
       } else {
         res.status = statuses.notASitemap.code;
       }
     case statuses.notASitemap.code:
       printMessage([statuses.notASitemap.message], messageOptions);
       process.exit(res.status);
+    default:
+      break;
   }
 
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
@@ -151,6 +252,19 @@ const scanInit = async argvs => {
   setHeadlessMode(data.isHeadless);
 
   let screenToScan;
+
+  if (useChrome) {
+    data.browser = constants.browserTypes.chrome;
+    data.userDataDirectory = clonedDataDir;
+  } else if (useEdge) {
+    data.browser = constants.browserTypes.edge;
+    data.userDataDirectory = clonedDataDir;
+  }
+  // Defaults to chromium by not specifying channels in Playwright, if no browser is found
+  else {
+    data.browser = constants.browserTypes.chromium;
+    data.userDataDirectory = null;
+  }
 
   if (!argvs.customDevice && !argvs.viewportWidth) {
     screenToScan = 'Desktop';
@@ -181,6 +295,12 @@ const scanInit = async argvs => {
     await combineRun(data, screenToScan);
   }
 
+  // Delete cloned directory
+  if (useChrome) {
+    deleteClonedChromeProfiles();
+  } else if (useEdge) {
+    deleteClonedEdgeProfiles();
+  }
   // Delete dataset and request queues
   cleanUp(data.randomToken);
 

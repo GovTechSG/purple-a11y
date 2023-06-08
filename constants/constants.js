@@ -14,6 +14,76 @@ const maxRequestsPerCrawl = 100;
 export const intermediateScreenshotsPath = './screenshots';
 export const destinationPath = storagePath => `${storagePath}/screenshots`;
 
+/**  Get the path to Default Profile in the Chrome Data Directory
+ * as per https://chromium.googlesource.com/chromium/src/+/master/docs/user_data_dir.md
+ * @returns {string} path to Default Profile in the Chrome Data Directory
+ */
+export const getDefaultChromeDataDir = () => {
+  try {
+    let defaultChromeDataDir = null;
+    if (os.platform() === 'win32') {
+      defaultChromeDataDir = path.join(
+        os.homedir(),
+        'AppData',
+        'Local',
+        'Google',
+        'Chrome',
+        'User Data',
+      );
+    } else if (os.platform() === 'darwin') {
+      defaultChromeDataDir = path.join(
+        os.homedir(),
+        'Library',
+        'Application Support',
+        'Google',
+        'Chrome',
+      );
+    }
+    if (defaultChromeDataDir && fs.existsSync(defaultChromeDataDir)) {
+      return defaultChromeDataDir;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error(`Error in getDefaultChromeDataDir(): ${error}`);
+  }
+};
+
+/**
+ * Get the path to Default Profile in the Edge Data Directory
+ * @returns {string} - path to Default Profile in the Edge Data Directory
+ */
+export const getDefaultEdgeDataDir = () => {
+  try {
+    let defaultEdgeDataDir = null;
+    if (os.platform() === 'win32') {
+      defaultEdgeDataDir = path.join(
+        os.homedir(),
+        'AppData',
+        'Local',
+        'Microsoft',
+        'Edge',
+        'User Data',
+      );
+    } else if (os.platform() === 'darwin') {
+      defaultEdgeDataDir = path.join(
+        os.homedir(),
+        'Library',
+        'Application Support',
+        'Microsoft Edge',
+      );
+    }
+
+    if (defaultEdgeDataDir && fs.existsSync(defaultEdgeDataDir)) {
+      return defaultEdgeDataDir;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error(`Error in getDefaultEdgeDataDir(): ${error}`);
+  }
+};
+
 export const removeQuarantineFlag = function (searchPath) {
   if (os.platform() === 'darwin') {
     let execPaths = globSync(searchPath, { absolute: true, recursive: true, nodir: true });
@@ -38,6 +108,10 @@ export const getExecutablePath = function (dir, file) {
     return execPaths[0];
   }
 };
+/**
+ * Matches the pattern user:password@domain.com
+ */
+export const basicAuthRegex = /^.*\/\/.*:.*@.*$/i;
 
 // for crawlers
 export const axeScript = path.join(__dirname, 'node_modules/axe-core/axe.min.js');
@@ -76,7 +150,8 @@ const urlCheckStatuses = {
     message:
       'Provided URL cannot be accessed. Please verify your internet connectivity and the correctness of the domain.',
   },
-  errorStatusReceived: { // unused for now
+  errorStatusReceived: {
+    // unused for now
     code: 13,
     message: 'Provided URL cannot be accessed. Server responded with code ', // append it with the response code received,
   },
@@ -85,6 +160,13 @@ const urlCheckStatuses = {
     message: 'Something went wrong when verifying the URL. Please try again later.',
   },
   notASitemap: { code: 15, message: 'Provided URL or filepath is not a sitemap.' },
+  unauthorised: { code: 16, message: 'Provided URL needs basic authorisation.' },
+};
+
+const browserTypes = {
+  chrome: 'chrome',
+  edge: 'msedge',
+  chromium: null, // null means uses Playwright's default browser (chromium)
 };
 
 const xmlSitemapTypes = {
@@ -101,6 +183,7 @@ export default {
   maxRequestsPerCrawl,
   maxConcurrency: 50,
   scannerTypes,
+  browserTypes,
   urlsCrawledObj,
   impactOrder,
   launchOptionsArgs: launchOptionsArgs,

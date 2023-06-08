@@ -1,7 +1,7 @@
 {
-  "name": "purple-hats",
-  "main": "index.js",
-  "version": "0.0.14",
+  "name": "@govtechsg/purple-hats",
+  "main": "npmIndex.js",
+  "version": "0.0.16-alpha",
   "type": "module",
   "imports": {
     "#root/*.js": "./*.js"
@@ -43,6 +43,14 @@
     "test": "node --experimental-vm-modules ./node_modules/.bin/jest"
   },
   "author": "",
-  "license": "ISC",
-  "description": ""
+  "license": "MIT",
+  "description": "Purple HATS is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GovTechSG/purple-hats-dev.git"
+  },
+  "bugs": {
+    "url": "https://github.com/GovTechSG/purple-hats-dev/issues"
+  },
+  "homepage": "https://github.com/GovTechSG/purple-hats-dev#readme"
 }

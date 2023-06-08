@@ -4,31 +4,7 @@ import crawlee from 'crawlee';
 import axe from 'axe-core';
 import { axeScript } from '../constants/constants.js';
 
-// const filterAxeResults = (results, host) => {
-//   const { violations, url } = results;
-//   const page = host === '' || url.split(host).length !== 2 ? url : url.split(host)[1];
-
-//   const errors = violations.map(violation => {
-//     const { id, nodes, help, impact, helpUrl } = violation;
-//     const fixes = nodes.map(node => ({
-//       htmlElement: node.html,
-//     }));
-//     return {
-//       id,
-//       description: help,
-//       impact,
-//       helpUrl,
-//       fixes,
-//     };
-//   });
-//   return {
-//     url,
-//     page,
-//     errors,
-//   };
-// };
-
-const filterAxeResults = (results, pageTitle) => {
+export const filterAxeResults = (results, pageTitle) => {
   const { violations, incomplete, passes, url } = results;
 
   let totalItems = 0;
@@ -74,9 +50,9 @@ const filterAxeResults = (results, pageTitle) => {
 
   passes.forEach(item => {
     const { id: rule, help: description, helpUrl, tags, nodes } = item;
-    
+
     if (rule === 'frame-tested') return;
-    
+
     const conformance = tags.filter(tag => tag.startsWith('wcag') || tag === 'best-practice');
 
     nodes.forEach(node => {
@@ -101,40 +77,22 @@ const filterAxeResults = (results, pageTitle) => {
   };
 };
 
-// export const runAxeScript = async (page, host) => {
-//   await crawlee.puppeteerUtils.injectFile(page, axeScript);
-//   const results = await page.evaluate(() => {
-//     axe.configure({
-//       branding: {
-//         application: 'purple-hats',
-//       },
-//       reporter: 'no-passes',
-//     });
-//     return axe.run({
-//       resultTypes: ['violations'],
-//     });
-//   });
-//   return filterAxeResults(results, host);
-// };
+export const runAxeScript = async (page, selectors = []) => {
+  await crawlee.playwrightUtils.injectFile(page, axeScript);
 
-export const runAxeScript = async (page) => {
-  await crawlee.puppeteerUtils.injectFile(page, axeScript);
-  const results = await page.evaluate(() => {
+  const results = await page.evaluate(selectors => {
     axe.configure({
       branding: {
         application: 'purple-hats',
       },
     });
-    return axe.run({
+    return axe.run(selectors, {
       resultTypes: ['violations', 'passes', 'incomplete'],
     });
-  });
-  const pageTitle = await page.evaluate(() => {
-    return document.title;
-  });
+  }, selectors);
+  const pageTitle = await page.evaluate(() => document.title);
   return filterAxeResults(results, pageTitle);
 };
-
 export const createCrawleeSubFolders = async randomToken => {
   const dataset = await crawlee.Dataset.open(randomToken);
   const requestQueue = await crawlee.RequestQueue.open(randomToken);
