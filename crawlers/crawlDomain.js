@@ -107,7 +107,7 @@ const crawlDomain = async (
       if (isBasicAuth) {
         isBasicAuth = false;
       } else if (location.host.includes(host)) {
-        const results = await runAxeScript(page, host);
+        const results = await runAxeScript(page);
         await dataset.pushData(results);
         urlsCrawled.scanned.push(currentUrl);
 

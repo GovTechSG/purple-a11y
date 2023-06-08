@@ -90,12 +90,9 @@ export const runAxeScript = async (page, selectors = []) => {
       resultTypes: ['violations', 'passes', 'incomplete'],
     });
   }, selectors);
-  const pageTitle = await page.evaluate(() => {
-    return document.title;
-  });
+  const pageTitle = await page.evaluate(() => document.title);
   return filterAxeResults(results, pageTitle);
 };
-
 export const createCrawleeSubFolders = async randomToken => {
   const dataset = await crawlee.Dataset.open(randomToken);
   const requestQueue = await crawlee.RequestQueue.open(randomToken);
