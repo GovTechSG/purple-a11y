@@ -356,6 +356,14 @@ const processPage = async page => {
         appendToGeneratedScript(`const browser = await chromium.launch({`);
         continue;
       }
+      if (
+        os.platform() === 'win32' &&
+        (line.trim() === `const browser = await chromium.launch({` ||
+          line.trim() === `const browser = await webkit.launch({`)
+      ) {
+        appendToGeneratedScript(`const browser = await chromium.launch({channel: 'chrome',`);
+        continue;
+      }
       if (line.trim() === `(async () => {`) {
         appendToGeneratedScript(`await (async () => {`);
         continue;
