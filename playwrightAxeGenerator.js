@@ -298,7 +298,9 @@ const processPage = async page => {
     }
 
     let codegenCmd = `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain}`;
-    let extraCodegenOpts = `${userAgentOpts} --browser ${browser} --block-service-workers --ignore-https-errors`;
+    let extraCodegenOpts = `${userAgentOpts} --browser ${browser} --block-service-workers --ignore-https-errors ${
+      os.platform() === 'win32' && `--channel chrome`
+    }`;
     let codegenResult;
 
     if (viewportWidth || customDevice === 'Specify viewport') {
