@@ -253,19 +253,6 @@ const scanInit = async argvs => {
 
   let screenToScan;
 
-  if (useChrome) {
-    data.browser = constants.browserTypes.chrome;
-    data.userDataDirectory = clonedDataDir;
-  } else if (useEdge) {
-    data.browser = constants.browserTypes.edge;
-    data.userDataDirectory = clonedDataDir;
-  }
-  // Defaults to chromium by not specifying channels in Playwright, if no browser is found
-  else {
-    data.browser = constants.browserTypes.chromium;
-    data.userDataDirectory = null;
-  }
-
   if (!argvs.customDevice && !argvs.viewportWidth) {
     screenToScan = 'Desktop';
   } else if (argvs.customDevice) {
@@ -278,6 +265,29 @@ const scanInit = async argvs => {
     ' ',
     '_',
   )}_${screenToScan.replaceAll(' ', '_')}`;
+
+  /**
+   * Cloning a second time with random token for parallel browser sessions
+   * Also To mitigate agaisnt known bug where cookies are
+   * overriden after each browser session - i.e. logs user out
+   * after checkingUrl and unable to utilise same cookie for scan
+   * */
+  if (useChrome) {
+    deleteClonedChromeProfiles();
+    clonedDataDir = cloneChromeProfiles(data.randomToken);
+    data.browser = constants.browserTypes.chrome;
+    data.userDataDirectory = clonedDataDir;
+  } else if (useEdge) {
+    deleteClonedEdgeProfiles();
+    clonedDataDir = cloneEdgeProfiles(data.randomToken);
+    data.browser = constants.browserTypes.edge;
+    data.userDataDirectory = clonedDataDir;
+  }
+  // Defaults to chromium by not specifying channels in Playwright, if no browser is found
+  else {
+    data.browser = constants.browserTypes.chromium;
+    data.userDataDirectory = null;
+  }
 
   printMessage([`Purple HATS version: ${appVersion}`, 'Starting scan...'], messageOptions);
 
@@ -297,9 +307,9 @@ const scanInit = async argvs => {
 
   // Delete cloned directory
   if (useChrome) {
-    deleteClonedChromeProfiles();
+    deleteClonedChromeProfiles(data.randomToken);
   } else if (useEdge) {
-    deleteClonedEdgeProfiles();
+    deleteClonedEdgeProfiles(data.randomToken);
   }
   // Delete dataset and request queues
   cleanUp(data.randomToken);

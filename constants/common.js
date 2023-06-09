@@ -224,22 +224,6 @@ const checkUrlConnectivityWithBrowser = async (url, browserToRun, clonedDataDir)
     res.status = constants.urlCheckStatuses.invalidUrl.code;
   }
 
-  // To mitigate agaisnt known bug where cookies are
-  // overriden after each browser session - i.e. logs user out
-  // after checkingUrl and unable to utilise same cookie for scan
-  switch (browserToRun) {
-    case constants.browserTypes.chrome:
-      deleteClonedChromeProfiles();
-      cloneChromeProfiles();
-      break;
-    case constants.browserTypes.edge:
-      deleteClonedEdgeProfiles();
-      cloneEdgeProfiles();
-      break;
-    default:
-      break;
-  }
-
   return res;
 };
 
@@ -583,7 +567,7 @@ const cloneLocalStateFile = (options, destDir) => {
  * .../Chrome directory for Mac.
  * @returns {void}
  */
-export const cloneChromeProfiles = () => {
+export const cloneChromeProfiles = randomToken => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
@@ -591,7 +575,13 @@ export const cloneChromeProfiles = () => {
     return;
   }
 
-  const destDir = path.join(baseDir, 'Purple-HATS');
+  let destDir;
+
+  if (randomToken) {
+    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
+  } else {
+    destDir = path.join(baseDir, 'Purple-HATS');
+  }
 
   if (fs.existsSync(destDir)) {
     deleteClonedChromeProfiles();
@@ -610,7 +600,7 @@ export const cloneChromeProfiles = () => {
   cloneChromeProfileCookieFiles(baseOptions, destDir);
   cloneLocalStateFile(baseOptions, destDir);
   // eslint-disable-next-line no-undef, consistent-return
-  return path.join(baseDir, 'Purple-HATS');
+  return path.join(destDir);
 };
 
 /**
@@ -620,14 +610,21 @@ export const cloneChromeProfiles = () => {
  * .../Microsoft Edge directory for Mac.
  * @returns {void}
  */
-export const cloneEdgeProfiles = () => {
+export const cloneEdgeProfiles = randomToken => {
   const baseDir = getDefaultEdgeDataDir();
 
   if (!baseDir) {
     console.warn('Unable to find Edge data directory in the system.');
     return;
   }
-  const destDir = path.join(baseDir, 'Purple-HATS');
+
+  let destDir;
+
+  if (randomToken) {
+    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
+  } else {
+    destDir = path.join(baseDir, 'Purple-HATS');
+  }
 
   if (fs.existsSync(destDir)) {
     deleteClonedEdgeProfiles();
@@ -646,10 +643,10 @@ export const cloneEdgeProfiles = () => {
   cloneEdgeProfileCookieFiles(baseOptions, destDir);
   cloneLocalStateFile(baseOptions, destDir);
   // eslint-disable-next-line no-undef, consistent-return
-  return path.join(baseDir, 'Purple-HATS');
+  return path.join(destDir);
 };
 
-export const deleteClonedChromeProfiles = () => {
+export const deleteClonedChromeProfiles = randomToken => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
@@ -657,7 +654,12 @@ export const deleteClonedChromeProfiles = () => {
     return;
   }
 
-  const destDir = path.join(baseDir, 'Purple-HATS');
+  let destDir;
+  if (randomToken) {
+    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
+  } else {
+    destDir = path.join(baseDir, 'Purple-HATS');
+  }
 
   if (fs.existsSync(destDir)) {
     fs.rmSync(destDir, { recursive: true });
@@ -667,7 +669,7 @@ export const deleteClonedChromeProfiles = () => {
   console.warn('Unable to find Purple-HATS directory in the Chrome data directory.');
 };
 
-export const deleteClonedEdgeProfiles = () => {
+export const deleteClonedEdgeProfiles = randomToken => {
   const baseDir = getDefaultEdgeDataDir();
 
   if (!baseDir) {
@@ -675,7 +677,12 @@ export const deleteClonedEdgeProfiles = () => {
     return;
   }
 
-  const destDir = path.join(baseDir, 'Purple-HATS');
+  let destDir;
+  if (randomToken) {
+    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
+  } else {
+    destDir = path.join(baseDir, 'Purple-HATS');
+  }
 
   if (fs.existsSync(destDir)) {
     fs.rmSync(destDir, { recursive: true });
