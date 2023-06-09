@@ -32,7 +32,7 @@ With reference to an instance of Purple HATS as `ph`:
     - Note that this step needs to be done for every page visited.
 3. Run a scan by executing `runA11yScan()` in the document's environment.
     - By default, the scan will be run for the entire page.
-    - It is possible to run the scan for specific sections or elements in the page. To do this, pass an argument into `runA11yScan` specifying what should be scanned. The format of the argument can be found [here](https://github.com/dequelabs/axe-core/blob/develop/doc/API.md#context-parameter).
+    - It is possible to run the scan for specific sections or elements in the page. One way to do this is to pass an array of CSS selectors of the elements to be scanned into `runA11yScan`. For example, `runA11yScan(['#my-component', 'button'])`. Other acceptable forms of argument can be found [here](https://github.com/dequelabs/axe-core/blob/develop/doc/API.md#context-parameter).
 4. Pass the scan results back into the NodeJS environment where `ph` is in. 
 5. Push the results using `await ph.pushScanResults(scanResults)`.
 6. Repeat steps 2-5 as many times as desired.
@@ -47,7 +47,7 @@ In <code>cypress.config.js</code>:
     import { defineConfig } from "cypress";
     import purpleHatsInit from 'purple-hats';
 
-    const ph = await purpleHatsInit("http://localhost:12345");
+    const ph = await purpleHatsInit("https://govtechsg.github.io");
 
     export default defineConfig({
     e2e: {
@@ -94,7 +94,7 @@ In <code>e2e/spec.cy.js</code>:
     
     describe("template spec", () => {
         it("passes", () => {
-            cy.visit("http://localhost:12345");
+            cy.visit("https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm");
             cy.injectPhScripts();
             cy.runPhScan();
         
@@ -116,7 +116,7 @@ In <code>e2e/spec.cy.js</code>:
     import { chromium } from 'playwright';
     import purpleHatsInit from 'purple-hats';
 
-    const ph = await purpleHatsInit('http://localhost:12345');
+    const ph = await purpleHatsInit('https://govtechsg.github.io');
 
     (async () => {
         const browser = await chromium.launch({
@@ -133,7 +133,7 @@ In <code>e2e/spec.cy.js</code>:
             await ph.pushScanResults(scanRes);
         };
 
-        await page.goto('http://localhost:12345');
+        await page.goto('https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm');
         await page.evaluate(ph.getScripts());
         await runPhScan();
 
