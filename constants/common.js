@@ -224,6 +224,22 @@ const checkUrlConnectivityWithBrowser = async (url, browserToRun, clonedDataDir)
     res.status = constants.urlCheckStatuses.invalidUrl.code;
   }
 
+  // To mitigate agaisnt known bug where cookies are
+  // overriden after each browser session - i.e. logs user out
+  // after checkingUrl and unable to utilise same cookie for scan
+  switch (browserToRun) {
+    case constants.browserTypes.chrome:
+      deleteClonedChromeProfiles();
+      cloneChromeProfiles();
+      break;
+    case constants.browserTypes.edge:
+      deleteClonedEdgeProfiles();
+      cloneEdgeProfiles();
+      break;
+    default:
+      break;
+  }
+
   return res;
 };
 
@@ -672,20 +688,10 @@ export const deleteClonedEdgeProfiles = () => {
  * @param {string} browser browser name ("chrome" or "edge", null for chromium, the default Playwright browser)
  * @returns playwright launch options object. For more details: https://playwright.dev/docs/api/class-browsertype#browser-type-launch
  */
-export const getPlaywrightLaunchOptions = browser => {
+export const getPlaywrightLaunchOptions = browser => ({
   // Drop the --use-mock-keychain flag to allow MacOS devices
   // to use the cloned cookies.
-  const ignoreDefaultArgs = ['--use-mock-keychain'];
-  if (!fs.existsSync('/.dockerenv')) {
-    // Drop this flag if not running in docker
-    // to allow MacOS devices running edge browser
-    // to use the cloned cookies across browser sessions.
-    ignoreDefaultArgs.push('--no-sandbox');
-  }
-
-  return {
-    ignoreDefaultArgs,
-    args: constants.launchOptionsArgs,
-    ...(browser && { channel: browser }),
-  };
-};
+  ignoreDefaultArgs: ['--use-mock-keychain'],
+  args: constants.launchOptionsArgs,
+  ...(browser && { channel: browser }),
+});
