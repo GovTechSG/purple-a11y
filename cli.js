@@ -312,7 +312,7 @@ const scanInit = async argvs => {
     deleteClonedEdgeProfiles(data.randomToken);
   }
   // Delete dataset and request queues
-  cleanUp(data.randomToken);
+  await cleanUp(data.randomToken);
 
   return getStoragePath(data.randomToken);
 };
