@@ -567,7 +567,7 @@ const cloneLocalStateFile = (options, destDir) => {
  * .../Chrome directory for Mac.
  * @returns {void}
  */
-export const cloneChromeProfiles = () => {
+export const cloneChromeProfiles = randomToken => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
@@ -575,7 +575,13 @@ export const cloneChromeProfiles = () => {
     return;
   }
 
-  const destDir = path.join(baseDir, 'Purple-HATS');
+  let destDir;
+
+  if (randomToken) {
+    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
+  } else {
+    destDir = path.join(baseDir, 'Purple-HATS');
+  }
 
   if (fs.existsSync(destDir)) {
     deleteClonedChromeProfiles();
@@ -594,7 +600,7 @@ export const cloneChromeProfiles = () => {
   cloneChromeProfileCookieFiles(baseOptions, destDir);
   cloneLocalStateFile(baseOptions, destDir);
   // eslint-disable-next-line no-undef, consistent-return
-  return path.join(baseDir, 'Purple-HATS');
+  return path.join(destDir);
 };
 
 /**
@@ -604,14 +610,21 @@ export const cloneChromeProfiles = () => {
  * .../Microsoft Edge directory for Mac.
  * @returns {void}
  */
-export const cloneEdgeProfiles = () => {
+export const cloneEdgeProfiles = randomToken => {
   const baseDir = getDefaultEdgeDataDir();
 
   if (!baseDir) {
     console.warn('Unable to find Edge data directory in the system.');
     return;
   }
-  const destDir = path.join(baseDir, 'Purple-HATS');
+
+  let destDir;
+
+  if (randomToken) {
+    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
+  } else {
+    destDir = path.join(baseDir, 'Purple-HATS');
+  }
 
   if (fs.existsSync(destDir)) {
     deleteClonedEdgeProfiles();
@@ -630,10 +643,10 @@ export const cloneEdgeProfiles = () => {
   cloneEdgeProfileCookieFiles(baseOptions, destDir);
   cloneLocalStateFile(baseOptions, destDir);
   // eslint-disable-next-line no-undef, consistent-return
-  return path.join(baseDir, 'Purple-HATS');
+  return path.join(destDir);
 };
 
-export const deleteClonedChromeProfiles = () => {
+export const deleteClonedChromeProfiles = randomToken => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
@@ -641,7 +654,12 @@ export const deleteClonedChromeProfiles = () => {
     return;
   }
 
-  const destDir = path.join(baseDir, 'Purple-HATS');
+  let destDir;
+  if (randomToken) {
+    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
+  } else {
+    destDir = path.join(baseDir, 'Purple-HATS');
+  }
 
   if (fs.existsSync(destDir)) {
     fs.rmSync(destDir, { recursive: true });
@@ -651,7 +669,7 @@ export const deleteClonedChromeProfiles = () => {
   console.warn('Unable to find Purple-HATS directory in the Chrome data directory.');
 };
 
-export const deleteClonedEdgeProfiles = () => {
+export const deleteClonedEdgeProfiles = randomToken => {
   const baseDir = getDefaultEdgeDataDir();
 
   if (!baseDir) {
@@ -659,7 +677,12 @@ export const deleteClonedEdgeProfiles = () => {
     return;
   }
 
-  const destDir = path.join(baseDir, 'Purple-HATS');
+  let destDir;
+  if (randomToken) {
+    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
+  } else {
+    destDir = path.join(baseDir, 'Purple-HATS');
+  }
 
   if (fs.existsSync(destDir)) {
     fs.rmSync(destDir, { recursive: true });
@@ -672,20 +695,10 @@ export const deleteClonedEdgeProfiles = () => {
  * @param {string} browser browser name ("chrome" or "edge", null for chromium, the default Playwright browser)
  * @returns playwright launch options object. For more details: https://playwright.dev/docs/api/class-browsertype#browser-type-launch
  */
-export const getPlaywrightLaunchOptions = browser => {
+export const getPlaywrightLaunchOptions = browser => ({
   // Drop the --use-mock-keychain flag to allow MacOS devices
   // to use the cloned cookies.
-  const ignoreDefaultArgs = ['--use-mock-keychain'];
-  if (!fs.existsSync('/.dockerenv')) {
-    // Drop this flag if not running in docker
-    // to allow MacOS devices running edge browser
-    // to use the cloned cookies across browser sessions.
-    ignoreDefaultArgs.push('--no-sandbox');
-  }
-
-  return {
-    ignoreDefaultArgs,
-    args: constants.launchOptionsArgs,
-    ...(browser && { channel: browser }),
-  };
-};
+  ignoreDefaultArgs: ['--use-mock-keychain'],
+  args: constants.launchOptionsArgs,
+  ...(browser && { channel: browser }),
+});

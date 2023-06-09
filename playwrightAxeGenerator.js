@@ -316,7 +316,9 @@ const processPage = async page => {
     }
 
     let codegenCmd = `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain}`;
-    let extraCodegenOpts = `${userAgentOpts} --browser ${browser} --block-service-workers --ignore-https-errors`;
+    let extraCodegenOpts = `${userAgentOpts} --browser ${browser} --block-service-workers --ignore-https-errors ${
+      os.platform() === 'win32' && `--channel chrome`
+    }`;
 
     if (viewportWidth || customDevice === 'Specify viewport') {
       codegenCmd = `${codegenCmd} --viewport-size=${viewportWidth},720 ${extraCodegenOpts}`
@@ -375,6 +377,14 @@ const processPage = async page => {
       }
       if (line.trim() === `const browser = await webkit.launch({`) {
         appendToGeneratedScript(`const browser = await chromium.launch({`);
+        continue;
+      }
+      if (
+        os.platform() === 'win32' &&
+        (line.trim() === `const browser = await chromium.launch({` ||
+          line.trim() === `const browser = await webkit.launch({`)
+      ) {
+        appendToGeneratedScript(`const browser = await chromium.launch({channel: 'chrome',`);
         continue;
       }
       if (line.trim() === `(async () => {`) {

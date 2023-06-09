@@ -206,8 +206,10 @@ Options:
       --reportbreakdown  Will break down the main report according to impact
                                                       [boolean] [default: false]
       --warn             Track for issues of target impact level
-  [choices: "critical", "serious", "moderate", "minor", "none"] [default: "none"
-                                                                               ]
+  [choices: "critical", "serious", "moderate", "minor", "none"] [default: "none"]
+  -b, --browserToRun   Browser to run the scan on: 1) Chromium, 2) Chrome, 3) Ed
+                       ge. Defaults to Chromium.
+                   [choices: "chrome", "edge", "chromium"] [default: "chromium"]
 
 Examples:
   To scan sitemap of website:', 'node cli.js -c [ 1 | Sitemap ] -d <device> -u
