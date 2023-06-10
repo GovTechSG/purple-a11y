@@ -220,7 +220,7 @@ Examples:
   <url_link> -w <viewportWidth>
 ```
 
-### Mobile Device Options
+### Device Options
 <details>
   <summary>Click here for list of device options supported</summary>
 
