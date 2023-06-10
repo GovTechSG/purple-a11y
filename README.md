@@ -224,6 +224,8 @@ Examples:
 <details>
   <summary>Click here for list of device options supported</summary>
 
+- "Desktop" (defaults to a 1280x720 viewport)
+- "Mobile" (defaults to iPhone 11 viewport)
 - "Desktop Chrome HiDPI"
 - "Desktop Edge HiDPI"
 - "Desktop Firefox HiDPI"
