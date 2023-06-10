@@ -246,11 +246,12 @@ const scanInit = async argvs => {
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
 
   const domain = argvs.isLocalSitemap ? 'custom' : new URL(argvs.url).hostname;
+
   if (argvs.customDevice === 'Desktop' || argvs.customDevice === 'Mobile') {
     argvs.deviceChosen = argvs.customDevice;
     delete argvs.customDevice;
   }
-  
+
   const data = prepareData(argvs);
 
   setHeadlessMode(data.isHeadless);
