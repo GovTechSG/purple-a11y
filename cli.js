@@ -70,7 +70,7 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   })
   .coerce('d', option => {
     const device = devices[option];
-    if (!device) {
+    if (!device && option !== "Desktop" && option !== "Mobile") {
       printMessage(
         [`Invalid device. Please provide an existing device to start the scan.`],
         messageOptions,
@@ -247,14 +247,19 @@ const scanInit = async argvs => {
 
   const domain = argvs.isLocalSitemap ? 'custom' : new URL(argvs.url).hostname;
 
+  if (argvs.customDevice === "Desktop" || argvs.customDevice === "Mobile") {
+    argvs.deviceChosen = argvs.customDevice;
+    delete argvs.customDevice;
+  }
+  
   const data = prepareData(argvs);
 
   setHeadlessMode(data.isHeadless);
 
   let screenToScan;
 
-  if (!argvs.customDevice && !argvs.viewportWidth) {
-    screenToScan = 'Desktop';
+  if (argvs.deviceChosen) {
+    screenToScan = argvs.deviceChosen;
   } else if (argvs.customDevice) {
     screenToScan = argvs.customDevice;
   } else {
@@ -325,8 +330,8 @@ scanInit(options).then(async storagePath => {
 
   await fs
     .ensureDir(storagePath)
-    .then(async () => {
-      await zipResults(constants.cliZipFileName, storagePath);
+    .then(() => {
+      zipResults(constants.cliZipFileName, storagePath);
       const messageToDisplay = [
         `Report of this run is at ${constants.cliZipFileName}`,
         `Results directory is at ${storagePath}`,
@@ -338,6 +343,7 @@ scanInit(options).then(async storagePath => {
         );
       }
       printMessage(messageToDisplay);
+      process.exit(0);
     })
     .catch(error => {
       printMessage([`Error in zipping results: ${error}`]);
