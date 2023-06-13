@@ -58,6 +58,13 @@ export const cliOptions = {
     default: 'yes',
     demandOption: false,
   },
+  s: {
+    alias: 'strategy',
+    describe: 'Strategy to choose which links to crawl in a website scan. Defaults to "same-domain".',
+    choices: ['same-domain', 'same-hostname'],
+    requiresArg: true,
+    demandOption: false
+  },
   reportbreakdown: {
     describe: 'Will break down the main report according to impact',
     type: 'boolean',

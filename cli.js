@@ -34,13 +34,13 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   .options(cliOptions)
   .example([
     [
-      `To scan sitemap of website:', 'node cli.js -c [ 1 | ${constants.scannerTypes.sitemap} ] -d <device> -u <url_link> -w <viewportWidth>`,
+      `To scan sitemap of website:', 'node cli.js -c [ 1 | sitemap ] -u <url_link> [ -d <device> | -w <viewport_width> ]`,
     ],
     [
-      `To scan a website', 'node cli.js -c [ 2 | ${constants.scannerTypes.website} ] -d <device> -u <url_link> -w <viewportWidth>`,
+      `To scan a website', 'node cli.js -c [ 2 | website ] -u <url_link> [ -d <device> | -w <viewport_width> ]`,
     ],
     [
-      `To start a custom flow scan', 'node cli.js -c [ 3 | ${constants.scannerTypes.custom} ] -d <device> -u <url_link> -w <viewportWidth>`,
+      `To start a custom flow scan', 'node cli.js -c [ 3 | custom ] -u <url_link> [ -d <device> | -w <viewport_width> ]`,
     ],
   ])
   .coerce('c', option => {
@@ -99,7 +99,13 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   })
   .check(argvs => {
     if (argvs.scanner === 'custom' && argvs.maxpages) {
-      throw new Error('-p or --maxpages is only available in website and sitemap scans');
+      throw new Error('-p or --maxpages is only available in website and sitemap scans.');
+    }
+    return true;
+  })
+  .check(argvs => {
+    if (argvs.scanner !== 'website' && argvs.strategy) {
+      throw new Error('-s or --strategy is only available in website scans.');
     }
     return true;
   })
@@ -109,6 +115,10 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
 const scanInit = async argvs => {
   argvs.scanner = constants.scannerTypes[argvs.scanner];
   argvs.headless = argvs.headless === 'yes';
+
+  if (argvs.scanner === constants.scannerTypes.website && !argvs.strategy) {
+    argvs.strategy = 'same-domain';
+  }
 
   const res = await checkUrl(argvs.scanner, argvs.url);
   const statuses = constants.urlCheckStatuses;

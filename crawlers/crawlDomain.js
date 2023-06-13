@@ -9,7 +9,7 @@ import {
 } from './commonCrawlerFunc.js';
 import constants from '../constants/constants.js';
 
-const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequestsPerCrawl) => {
+const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequestsPerCrawl, strategy) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { maxConcurrency } = constants;
   const { deviceChosen, customDevice, viewportWidth } = viewportSettings;
@@ -72,7 +72,7 @@ const crawlDomain = async (url, randomToken, host, viewportSettings, maxRequests
         await enqueueLinks({
           // set selector matches anchor elements with href but not contains # or starting with mailto:
           selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
-          strategy: 'same-domain',
+          strategy,
           requestQueue,
           transformRequestFunction(req) {
             // ignore all links ending with `.pdf`

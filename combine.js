@@ -4,11 +4,7 @@ import crawlSitemap from './crawlers/crawlSitemap.js';
 import crawlDomain from './crawlers/crawlDomain.js';
 
 import { generateArtifacts } from './mergeAxeResults.js';
-import {
-  getHost,
-  createAndUpdateResultsFolders,
-  createDetailsAndLogs,
-} from './utils.js';
+import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
 import constants from './constants/constants.js';
 
 const combineRun = async (details, deviceToScan) => {
@@ -24,12 +20,12 @@ const combineRun = async (details, deviceToScan) => {
     viewportWidth,
     maxRequestsPerCrawl,
     isLocalSitemap,
+    strategy,
   } = envDetails;
 
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
-  const host =
-    type === constants.scannerTypes.sitemap && isLocalSitemap ? '' : getHost(url);
+  const host = type === constants.scannerTypes.sitemap && isLocalSitemap ? '' : getHost(url);
 
   const scanDetails = {
     startTime: new Date().getTime(),
@@ -62,6 +58,7 @@ const combineRun = async (details, deviceToScan) => {
         host,
         viewportSettings,
         maxRequestsPerCrawl,
+        strategy,
       );
       break;
 

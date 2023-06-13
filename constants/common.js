@@ -217,6 +217,7 @@ export const prepareData = argv => {
     customDevice,
     viewportWidth,
     maxpages,
+    strategy,
     isLocalSitemap,
     finalUrl,
   } = argv;
@@ -229,6 +230,7 @@ export const prepareData = argv => {
     customDevice,
     viewportWidth,
     maxRequestsPerCrawl: maxpages || constants.maxRequestsPerCrawl,
+    strategy,
     isLocalSitemap,
   };
 };
