@@ -258,12 +258,14 @@ const scanInit = async argvs => {
 
   let screenToScan;
 
-  if (!argvs.customDevice && !argvs.viewportWidth) {
-    screenToScan = 'Desktop';
+  if (argvs.deviceChosen) {
+    screenToScan = argvs.deviceChosen;
   } else if (argvs.customDevice) {
     screenToScan = argvs.customDevice;
-  } else {
+  } else if (argvs.viewportWidth) {
     screenToScan = `CustomWidth_${argvs.viewportWidth}px`;
+  } else {
+    screenToScan = 'Desktop';
   }
 
   data.randomToken = `PHScan_${domain}_${date}_${time}_${argvs.scanner.replaceAll(

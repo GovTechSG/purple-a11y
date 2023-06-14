@@ -7,6 +7,7 @@ import safe from 'safe-regex';
 import { devices } from 'playwright';
 import { consoleLogger, silentLogger } from './logs.js';
 import { fileURLToPath } from 'url';
+import { proxy } from './constants/constants.js';
 
 // Do NOT remove. These import statements will be used when the custom flow scan is run from the GUI app
 import { chromium, webkit } from 'playwright';
@@ -372,6 +373,10 @@ const processPage = async page => {
     let lastGoToUrl;
     let nextStepNeedsProcessPage = false;
 
+    // used when running a scan on a machine with proxy
+    let awaitingProxyLogin = false;
+    let secondGotoMicrosoftLoginSeen = false;
+
     if (!process.env.RUNNING_FROM_PH_GUI) {
       appendToGeneratedScript(importStatements);
     }
@@ -386,9 +391,19 @@ const processPage = async page => {
         appendToGeneratedScript(block1);
         continue;
       }
-      if (line.trim() === `headless: false` && isHeadless) {
-        appendToGeneratedScript(`headless: true`);
-        continue;
+      if (line.trim() === `headless: false`) {
+        if (proxy) {
+          appendToGeneratedScript(`slowMo: 2000,`);
+          if (proxy.type === 'autoConfig') {
+            appendToGeneratedScript(`args: ['--proxy-pac-url=${proxy.url}'],`);
+          } else {
+            appendToGeneratedScript(`args: ['--proxy-server=${proxy.url}'],`);
+          }
+        }
+        if (!proxy && isHeadless) {
+          appendToGeneratedScript(`headless: true`);
+          continue;
+        }
       }
       if (line.trim() === `const browser = await webkit.launch({`) {
         appendToGeneratedScript(`const browser = await chromium.launch({`);
@@ -432,6 +447,24 @@ const processPage = async page => {
         pageObj = line.match(regexPageObj)[0];
       }
 
+      if (proxy && line.trim().startsWith(`await page.goto('https://login.microsoftonline.com/`)) {
+        if (!awaitingProxyLogin) {
+          awaitingProxyLogin = true;
+          continue;
+        } else if (!secondGotoMicrosoftLoginSeen) {
+          secondGotoMicrosoftLoginSeen = true;
+          continue;
+        }
+      }
+
+      if (awaitingProxyLogin) {
+        if (line.trim().startsWith(`await page.goto('${domain}`)) {
+          awaitingProxyLogin = false;
+        } else {
+          continue;
+        }
+      }
+
       if (line.trim().includes(`.goto(`)) {
         if (!firstGoToUrl) {
           firstGoToUrl = true;
@@ -460,7 +493,10 @@ const processPage = async page => {
         nextStepNeedsProcessPage = false;
       }
 
-      if (line.trim().includes('getBy') || line.trim().includes('click()')) {
+      if (
+        (line.trim().includes('getBy') && !line.trim().includes('getByPlaceholder')) ||
+        line.trim().includes('click()')
+      ) {
         const lastIndex = line.lastIndexOf('.');
         const locator = line.substring(0, lastIndex);
         appendToGeneratedScript(

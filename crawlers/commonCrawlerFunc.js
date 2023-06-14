@@ -2,7 +2,7 @@
 /* eslint-disable no-param-reassign */
 import crawlee from 'crawlee';
 import axe from 'axe-core';
-import { axeScript } from '../constants/constants.js';
+import { axeScript, saflyIconSelector } from '../constants/constants.js';
 
 export const filterAxeResults = (results, pageTitle) => {
   const { violations, incomplete, passes, url } = results;
@@ -79,8 +79,11 @@ export const filterAxeResults = (results, pageTitle) => {
 
 export const runAxeScript = async (page, selectors = []) => {
   await crawlee.playwrightUtils.injectFile(page, axeScript);
+  
+  const results = await page.evaluate(({ selectors, saflyIconSelector }) => {
+    // remove so that axe does not scan
+    document.querySelector(saflyIconSelector)?.remove();
 
-  const results = await page.evaluate(selectors => {
     axe.configure({
       branding: {
         application: 'purple-hats',
@@ -89,7 +92,8 @@ export const runAxeScript = async (page, selectors = []) => {
     return axe.run(selectors, {
       resultTypes: ['violations', 'passes', 'incomplete'],
     });
-  }, selectors);
+  }, { selectors, saflyIconSelector });
+
   const pageTitle = await page.evaluate(() => document.title);
   return filterAxeResults(results, pageTitle);
 };

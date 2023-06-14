@@ -11,9 +11,10 @@ import fs from 'fs';
 import path from 'path';
 import * as https from 'https';
 import os from 'os';
+import { execSync } from 'child_process';
 import { globSync } from 'glob';
 import { chromium, devices } from 'playwright';
-import constants, { getDefaultChromeDataDir, getDefaultEdgeDataDir } from './constants.js';
+import constants, { getDefaultChromeDataDir, getDefaultEdgeDataDir, proxy } from './constants.js';
 import { silentLogger } from '../logs.js';
 
 const document = new JSDOM('').window;
@@ -214,7 +215,7 @@ const checkUrlConnectivityWithBrowser = async (url, browserToRun, clonedDataDir)
     } catch (error) {
       // not sure what errors are thrown
       console.log(error);
-
+      silentLogger.error(error);
       res.status = constants.urlCheckStatuses.systemError.code;
     } finally {
       await browserContext.close();
@@ -695,10 +696,17 @@ export const deleteClonedEdgeProfiles = randomToken => {
  * @param {string} browser browser name ("chrome" or "edge", null for chromium, the default Playwright browser)
  * @returns playwright launch options object. For more details: https://playwright.dev/docs/api/class-browsertype#browser-type-launch
  */
-export const getPlaywrightLaunchOptions = browser => ({
-  // Drop the --use-mock-keychain flag to allow MacOS devices
-  // to use the cloned cookies.
-  ignoreDefaultArgs: ['--use-mock-keychain'],
-  args: constants.launchOptionsArgs,
-  ...(browser && { channel: browser }),
-});
+export const getPlaywrightLaunchOptions = browser => {
+  const options = {
+    // Drop the --use-mock-keychain flag to allow MacOS devices
+    // to use the cloned cookies.
+    ignoreDefaultArgs: ['--use-mock-keychain'],
+    args: constants.launchOptionsArgs,
+    ...(browser && { channel: browser }),
+  };
+  if (proxy) {
+    options[slowMo] = 2000;
+    headless: false;
+  }
+  return options
+};
