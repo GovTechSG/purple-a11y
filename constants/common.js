@@ -149,7 +149,6 @@ const checkUrlConnectivity = async url => {
         }
 
         res.content = response.data;
-        // console.log(res.content);
       })
       .catch(error => {
         if (error.response) {
@@ -231,7 +230,6 @@ const checkUrlConnectivityWithBrowser = async (
       }
 
       res.content = await page.content();
-      // console.log(res.content);
     } catch (error) {
       // not sure what errors are thrown
       console.log(error);
@@ -333,7 +331,7 @@ export const prepareData = argv => {
     customDevice,
     viewportWidth,
     playwrightDeviceDetailsObject,
-    maxRequestsPerCrawl: maxpages || cofnstants.maxRequestsPerCrawl,
+    maxRequestsPerCrawl: maxpages || constants.maxRequestsPerCrawl,
     isLocalSitemap,
   };
 };
@@ -359,7 +357,6 @@ export const getLinksFromSitemap = async (
       } else {
         url = $(urlElement).text();
       }
-      console.log(url);
       urls.add(url);
     }
   };
