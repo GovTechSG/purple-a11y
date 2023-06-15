@@ -11,7 +11,6 @@ import fs from 'fs';
 import path from 'path';
 import * as https from 'https';
 import os from 'os';
-import { execSync } from 'child_process';
 import { globSync } from 'glob';
 import { chromium, devices } from 'playwright';
 import constants, { getDefaultChromeDataDir, getDefaultEdgeDataDir, proxy } from './constants.js';
@@ -330,7 +329,7 @@ export const prepareData = argv => {
     customDevice,
     viewportWidth,
     playwrightDeviceDetailsObject,
-    maxRequestsPerCrawl: maxpages || constants.maxRequestsPerCrawl,
+    maxRequestsPerCrawl: maxpages || cofnstants.maxRequestsPerCrawl,
     isLocalSitemap,
   };
 };
@@ -509,7 +508,13 @@ const cloneChromeProfileCookieFiles = (options, destDir) => {
 
         // Prevents duplicate cookies file if the cookies already exist
         if (!fs.existsSync(path.join(destProfileDir, 'Cookies'))) {
-          fs.copyFileSync(dir, path.join(destProfileDir, 'Cookies'));
+          try {
+            fs.copyFileSync(dir, path.join(destProfileDir, 'Cookies'));
+          } catch (err) {
+            console.error(`Error copying cookies file: ${err}`);
+            silentLogger.error(err);
+            process.exit(constants.fileSystemOperationExitCode.copyError.code);
+          }
         }
       }
     });
@@ -563,7 +568,13 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
 
         // Prevents duplicate cookies file if the cookies already exist
         if (!fs.existsSync(path.join(destProfileDir, 'Cookies'))) {
-          fs.copyFileSync(dir, path.join(destProfileDir, 'Cookies'));
+          try {
+            fs.copyFileSync(dir, path.join(destProfileDir, 'Cookies'));
+          } catch (err) {
+            console.error(`Error copying cookies file: ${err}`);
+            silentLogger.error(err);
+            process.exit(constants.fileSystemOperationExitCode.copyError.code);
+          }
         }
       }
     });
@@ -587,7 +598,13 @@ const cloneLocalStateFile = (options, destDir) => {
   if (localState.length > 0) {
     // eslint-disable-next-line array-callback-return
     localState.map(dir => {
-      fs.copyFileSync(dir, path.join(destDir, 'Local State'));
+      try {
+        fs.copyFileSync(dir, path.join(destDir, 'Local State'));
+      } catch (err) {
+        console.error(`Error copying local state file: ${err}`);
+        silentLogger.error(err);
+        process.exit(constants.fileSystemOperationExitCode.copyError.code);
+      }
     });
   } else {
     console.warn('Unable to find local state file in the system.');
