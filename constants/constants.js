@@ -5,6 +5,8 @@ import { globSync } from 'glob';
 import which from 'which';
 import os from 'os';
 import { spawnSync } from 'child_process';
+import { silentLogger } from '../logs.js';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -207,10 +209,16 @@ const urlCheckStatuses = {
   unauthorised: { code: 16, message: 'Provided URL needs basic authorisation.' },
 };
 
+// Used in clone and delete profile operations
+const fileSystemOperationExitCode = {
+  success: { code: 0 },
+  copyError: { code: 21, message: 'Error copying file.' },
+};
+
 const browserTypes = {
   chrome: 'chrome',
   edge: 'msedge',
-  chromium: null, // null means uses Playwright's default browser (chromium)
+  chromium: 'chromium',
 };
 
 const xmlSitemapTypes = {
@@ -233,6 +241,7 @@ export default {
   launchOptionsArgs: launchOptionsArgs,
   xmlSitemapTypes,
   urlCheckStatuses,
+  fileSystemOperationExitCode,
 };
 
 export const rootPath = __dirname;

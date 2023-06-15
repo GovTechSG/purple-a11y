@@ -18,6 +18,7 @@ const combineRun = async (details, deviceToScan) => {
     deviceChosen,
     customDevice,
     viewportWidth,
+    playwrightDeviceDetailsObject,
     maxRequestsPerCrawl,
     isLocalSitemap,
     browser,
@@ -44,6 +45,7 @@ const combineRun = async (details, deviceToScan) => {
     deviceChosen,
     customDevice,
     viewportWidth,
+    playwrightDeviceDetailsObject,
   };
 
   let urlsCrawled;
