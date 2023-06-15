@@ -262,6 +262,7 @@ const scanInit = async argvs => {
         file is a sitemap */
       if (isFileSitemap(argvs.url)) {
         argvs.isLocalSitemap = true;
+        break;
       } else {
         res.status = statuses.notASitemap.code;
       }
