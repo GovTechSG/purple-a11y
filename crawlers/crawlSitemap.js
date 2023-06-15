@@ -1,5 +1,4 @@
 import crawlee from 'crawlee';
-import { devices } from 'playwright';
 import printMessage from 'print-message';
 import {
   createCrawleeSubFolders,
@@ -26,7 +25,7 @@ const crawlSitemap = async (
   userDataDirectory,
 ) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
-  const { deviceChosen, customDevice, viewportWidth } = viewportSettings;
+  const { playwrightDeviceDetailsObject } = viewportSettings;
   const { maxConcurrency } = constants;
 
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
@@ -37,19 +36,6 @@ const crawlSitemap = async (
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
 
   const { dataset } = await createCrawleeSubFolders(randomToken);
-
-  let device;
-  if (deviceChosen === 'Mobile' || customDevice === 'iPhone 11') {
-    device = devices['iPhone 11'];
-  } else if (customDevice === 'Samsung Galaxy S9+') {
-    device = devices['Galaxy S9+'];
-  } else if (viewportWidth) {
-    device = { viewport: { width: Number(viewportWidth), height: 720 } };
-  } else if (customDevice) {
-    device = devices[customDevice.replace('_', / /g)];
-  } else {
-    device = {};
-  }
 
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
@@ -64,7 +50,7 @@ const crawlSitemap = async (
             ...launchContext.launchOptions,
             bypassCSP: true,
             ignoreHTTPSErrors: true,
-            ...device,
+            ...playwrightDeviceDetailsObject,
           };
         },
       ],

@@ -139,7 +139,8 @@ const scanInit = async argvs => {
   let useEdge = false;
   let chromeDataDir = null;
   let edgeDataDir = null;
-  let clonedDataDir = null;
+  // Empty string for profile directory will use incognito mode in playwright
+  let clonedDataDir = '';
 
   if (argvs.browserToRun === constants.browserTypes.chrome) {
     chromeDataDir = getDefaultChromeDataDir();
@@ -207,7 +208,35 @@ const scanInit = async argvs => {
     clonedDataDir = cloneEdgeProfiles();
   }
 
-  const res = await checkUrl(argvs.scanner, argvs.url, argvs.browserToRun, clonedDataDir);
+  if (argvs.customDevice === 'Desktop' || argvs.customDevice === 'Mobile') {
+    argvs.deviceChosen = argvs.customDevice;
+    delete argvs.customDevice;
+  }
+
+  // Creating the playwrightDeviceDetailObject
+  // for use in crawlDomain & crawlSitemap's preLaunchHook
+  if (argvs.deviceChosen === 'Mobile' || argvs.customDevice === 'iPhone 11') {
+    argvs.playwrightDeviceDetailsObject = devices['iPhone 11'];
+  } else if (argvs.customDevice === 'Samsung Galaxy S9+') {
+    argvs.playwrightDeviceDetailsObject = devices['Galaxy S9+'];
+  } else if (argvs.viewportWidth) {
+    argvs.playwrightDeviceDetailsObject = {
+      viewport: { width: Number(argvs.viewportWidth), height: 720 },
+    };
+  } else if (argvs.customDevice) {
+    argvs.playwrightDeviceDetailsObject = devices[argvs.customDevice.replace('_', / /g)];
+  } else {
+    argvs.playwrightDeviceDetailsObject = {};
+  }
+
+  const res = await checkUrl(
+    argvs.scanner,
+    argvs.url,
+    argvs.browserToRun,
+    clonedDataDir,
+    argvs.playwrightDeviceDetailsObject,
+  );
+
   const statuses = constants.urlCheckStatuses;
   // eslint-disable-next-line default-case
   switch (res.status) {
@@ -293,7 +322,7 @@ const scanInit = async argvs => {
   // Defaults to chromium by not specifying channels in Playwright, if no browser is found
   else {
     data.browser = constants.browserTypes.chromium;
-    data.userDataDirectory = null;
+    data.userDataDirectory = '';
   }
 
   printMessage([`Purple HATS version: ${appVersion}`, 'Starting scan...'], messageOptions);

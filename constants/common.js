@@ -181,17 +181,37 @@ const checkUrlConnectivity = async url => {
   return res;
 };
 
-const checkUrlConnectivityWithBrowser = async (url, browserToRun, clonedDataDir) => {
+const checkUrlConnectivityWithBrowser = async (
+  url,
+  browserToRun,
+  clonedDataDir,
+  playwrightDeviceDetailsObject,
+) => {
   const res = {};
 
+  let viewport = null;
+  let userAgent = null;
+
+  if (Object.keys(playwrightDeviceDetailsObject).length > 0) {
+    if ('viewport' in playwrightDeviceDetailsObject) {
+      viewport = playwrightDeviceDetailsObject.viewport;
+    }
+
+    if ('userAgent' in playwrightDeviceDetailsObject) {
+      userAgent = playwrightDeviceDetailsObject.userAgent;
+    }
+  }
+
+  // Validate the connectivity of URL if the string format is url format
   const data = sanitizeUrlInput(url);
 
   if (data.isValid) {
-    // Validate the connectivity of URL if the string format is url format
-    const browserContext = await chromium.launchPersistentContext(
-      clonedDataDir,
-      getPlaywrightLaunchOptions(browserToRun),
-    );
+    const browserContext = await chromium.launchPersistentContext(clonedDataDir, {
+      ...getPlaywrightLaunchOptions(browserToRun),
+      ...(viewport && { viewport }),
+      ...(userAgent && { userAgent }),
+      headless: false,
+    });
     // const context = await browser.newContext();
     const page = await browserContext.newPage();
 
@@ -247,11 +267,22 @@ const isSitemapContent = async content => {
   return true;
 };
 
-export const checkUrl = async (scanner, url, browser, clonedDataDir) => {
+export const checkUrl = async (
+  scanner,
+  url,
+  browser,
+  clonedDataDir,
+  playwrightDeviceDetailsObject,
+) => {
   let res;
 
   if (browser) {
-    res = await checkUrlConnectivityWithBrowser(url, browser, clonedDataDir);
+    res = await checkUrlConnectivityWithBrowser(
+      url,
+      browser,
+      clonedDataDir,
+      playwrightDeviceDetailsObject,
+    );
   } else {
     res = await checkUrlConnectivity(url);
   }
@@ -283,6 +314,7 @@ export const prepareData = argv => {
     deviceChosen,
     customDevice,
     viewportWidth,
+    playwrightDeviceDetailsObject,
     maxpages,
     isLocalSitemap,
     finalUrl,
@@ -297,6 +329,7 @@ export const prepareData = argv => {
     deviceChosen,
     customDevice,
     viewportWidth,
+    playwrightDeviceDetailsObject,
     maxRequestsPerCrawl: maxpages || constants.maxRequestsPerCrawl,
     isLocalSitemap,
   };
@@ -697,16 +730,22 @@ export const deleteClonedEdgeProfiles = randomToken => {
  * @returns playwright launch options object. For more details: https://playwright.dev/docs/api/class-browsertype#browser-type-launch
  */
 export const getPlaywrightLaunchOptions = browser => {
+  let channel;
+  if (browser === constants.browserTypes.chromium) {
+    channel = null;
+  } else {
+    channel = browser;
+  }
   const options = {
     // Drop the --use-mock-keychain flag to allow MacOS devices
     // to use the cloned cookies.
     ignoreDefaultArgs: ['--use-mock-keychain'],
     args: constants.launchOptionsArgs,
-    ...(browser && { channel: browser }),
+    ...(channel && { channel }), // Having no channel is equivalent to "chromium"
   };
   if (proxy) {
     options[slowMo] = 2000;
     headless: false;
   }
-  return options
+  return options;
 };

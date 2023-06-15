@@ -210,7 +210,7 @@ const urlCheckStatuses = {
 const browserTypes = {
   chrome: 'chrome',
   edge: 'msedge',
-  chromium: null, // null means uses Playwright's default browser (chromium)
+  chromium: 'chromium',
 };
 
 const xmlSitemapTypes = {
