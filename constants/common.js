@@ -5,7 +5,7 @@ import validator from 'validator';
 import axios from 'axios';
 import { JSDOM } from 'jsdom';
 import * as cheerio from 'cheerio';
-import crawlee from 'crawlee';
+import crawlee, { constructRegExpObjectsFromPseudoUrls } from 'crawlee';
 import { parseString } from 'xml2js';
 import fs from 'fs';
 import path from 'path';
@@ -50,6 +50,7 @@ export const isSelectorValid = selector => {
 const blackListCharacters = '\\<>&\'"';
 
 export const isValidXML = async content => {
+  //fs.writeFileSync('sitemapcontent.txt', content);
   let status;
   let parsedContent = '';
   parseString(content, (err, result) => {
@@ -228,23 +229,26 @@ const checkUrlConnectivityWithBrowser = async (url, browserToRun, clonedDataDir)
   return res;
 };
 
-const isSitemapContent = async content => {
+export const isSitemapContent = async content => {
   const { status: isValid } = await isValidXML(content);
-  if (!isValid) {
-    const regexForHtml = new RegExp('<(?:!doctype html|html|head|body)+?>', 'gmi');
-    const regexForUrl = new RegExp('^.*(http|https):/{2}.*$', 'gmi');
-    // Check that the page is not a HTML page but still contains website links
-    if (!String(content).match(regexForHtml) && String(content).match(regexForUrl)) {
-      silentLogger.info(
-        'Sitemap URL provided is a Valid URL but it is not in XML sitemap, RSS, nor Atom formats.',
-      );
-      return true;
-    }
-    silentLogger.info('Not a sitemap, is most likely a HTML page; Possibly a malformed sitemap.');
-    return false;
+  if (isValid) {
+    return true;
   }
 
-  return true;
+  const regexForHtml = new RegExp('<(?:!doctype html|html|head|body)+?>', 'gmi');
+  const regexForXmlSitemap = new RegExp('<(?:urlset|feed|rss)+?.*>', 'gmi');
+  const regexForUrl = new RegExp('^.*(http|https):/{2}.*$', 'gmi');
+
+  if (String(content).match(regexForHtml) && String(content).match(regexForXmlSitemap)) {
+    // is an XML sitemap wrapped in a HTML document
+    return true;
+  } else if (!String(content).match(regexForHtml) && String(content).match(regexForUrl)) {
+    // treat this as a txt sitemap where all URLs will be extracted for crawling
+    return true;
+  } else {
+    // is HTML webpage
+    return false;
+  }
 };
 
 export const checkUrl = async (scanner, url, browser, clonedDataDir) => {
