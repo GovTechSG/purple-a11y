@@ -467,9 +467,14 @@ const processPage = async page => {
 
       if (line.trim().includes(`.goto(`)) {
         if (!firstGoToUrl) {
+          if (line.trim().startsWith(`await page.goto('https://login.singpass.gov.sg`)) {
+            continue;
+          }
           firstGoToUrl = true;
+          const firstGoToAddress = line.split(`('`)[1].split(`')`)[0];
           appendToGeneratedScript(
             `${line}
+            await page.waitForURL('${firstGoToAddress}', {timeout: 60000});
              await processPage(page);
             `,
           );
