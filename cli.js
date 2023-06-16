@@ -65,7 +65,7 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   })
   .coerce('d', option => {
     const device = devices[option];
-    if (!device) {
+    if (option != 'Desktop' && !device) {
       printMessage(
         [`Invalid device. Please provide an existing device to start the scan.`],
         messageOptions,
