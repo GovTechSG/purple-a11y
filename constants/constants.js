@@ -209,12 +209,6 @@ const urlCheckStatuses = {
   unauthorised: { code: 16, message: 'Provided URL needs basic authorisation.' },
 };
 
-// Used in clone and delete profile operations
-const fileSystemOperationExitCode = {
-  success: { code: 0 },
-  copyError: { code: 21, message: 'Error copying file.' },
-};
-
 const browserTypes = {
   chrome: 'chrome',
   edge: 'msedge',
@@ -241,7 +235,6 @@ export default {
   launchOptionsArgs: launchOptionsArgs,
   xmlSitemapTypes,
   urlCheckStatuses,
-  fileSystemOperationExitCode,
 };
 
 export const rootPath = __dirname;
