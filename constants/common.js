@@ -49,7 +49,7 @@ export const isSelectorValid = selector => {
 const blackListCharacters = '\\<>&\'"';
 
 export const isValidXML = async content => {
-  //fs.writeFileSync('sitemapcontent.txt', content);
+  // fs.writeFileSync('sitemapcontent.txt', content);
   let status;
   let parsedContent = '';
   parseString(content, (err, result) => {
@@ -209,7 +209,6 @@ const checkUrlConnectivityWithBrowser = async (
       ...getPlaywrightLaunchOptions(browserToRun),
       ...(viewport && { viewport }),
       ...(userAgent && { userAgent }),
-      headless: false,
     });
     // const context = await browser.newContext();
     const page = await browserContext.newPage();
@@ -259,13 +258,13 @@ export const isSitemapContent = async content => {
   if (String(content).match(regexForHtml) && String(content).match(regexForXmlSitemap)) {
     // is an XML sitemap wrapped in a HTML document
     return true;
-  } else if (!String(content).match(regexForHtml) && String(content).match(regexForUrl)) {
+  }
+  if (!String(content).match(regexForHtml) && String(content).match(regexForUrl)) {
     // treat this as a txt sitemap where all URLs will be extracted for crawling
     return true;
-  } else {
-    // is HTML webpage
-    return false;
   }
+  // is HTML webpage
+  return false;
 };
 
 export const checkUrl = async (
@@ -762,8 +761,7 @@ export const getPlaywrightLaunchOptions = browser => {
     ...(channel && { channel }), // Having no channel is equivalent to "chromium"
   };
   if (proxy) {
-    options[slowMo] = 2000;
-    headless: false;
+    options.headless = false;
   }
   return options;
 };
