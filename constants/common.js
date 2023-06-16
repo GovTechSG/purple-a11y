@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 /* eslint-disable no-console */
 /* eslint-disable camelcase */
 /* eslint-disable no-use-before-define */
@@ -13,6 +14,7 @@ import * as https from 'https';
 import os from 'os';
 import { globSync } from 'glob';
 import { chromium, devices } from 'playwright';
+import printMessage from 'print-message';
 import constants, { getDefaultChromeDataDir, getDefaultEdgeDataDir, proxy } from './constants.js';
 import { silentLogger } from '../logs.js';
 
@@ -468,7 +470,7 @@ export const getLinksFromSitemap = async (
  * Clone the Chrome profile cookie files to the destination directory
  * @param {*} options glob options object
  * @param {*} destDir destination directory
- * @returns void
+ * @returns boolean indicating whether the operation was successful
  */
 const cloneChromeProfileCookieFiles = (options, destDir) => {
   let profileCookiesDir;
@@ -491,6 +493,7 @@ const cloneChromeProfileCookieFiles = (options, destDir) => {
   }
 
   if (profileCookiesDir.length > 0) {
+    let success = true;
     profileCookiesDir.forEach(dir => {
       const profileName = dir.match(profileNamesRegex)[1];
       if (profileName) {
@@ -511,23 +514,26 @@ const cloneChromeProfileCookieFiles = (options, destDir) => {
           try {
             fs.copyFileSync(dir, path.join(destProfileDir, 'Cookies'));
           } catch (err) {
-            console.error(`Error copying cookies file: ${err}`);
             silentLogger.error(err);
-            process.exit(constants.fileSystemOperationExitCode.copyError.code);
+            printMessage([err], messageOptions);
+            success = false;
           }
         }
       }
     });
-  } else {
-    console.warn('Unable to find Chrome profile cookies file in the system.');
+    return success;
   }
+
+  silentLogger.warn('Unable to find Chrome profile cookies file in the system.');
+  printMessage(['Unable to find Chrome profile cookies file in the system.'], messageOptions);
+  return false;
 };
 
 /**
  * Clone the Chrome profile cookie files to the destination directory
  * @param {*} options glob options object
  * @param {*} destDir destination directory
- * @returns void
+ * @returns boolean indicating whether the operation was successful
  */
 const cloneEdgeProfileCookieFiles = (options, destDir) => {
   let profileCookiesDir;
@@ -551,6 +557,7 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
   }
 
   if (profileCookiesDir.length > 0) {
+    let success = true;
     profileCookiesDir.forEach(dir => {
       const profileName = dir.match(profileNamesRegex)[1];
       if (profileName) {
@@ -571,23 +578,25 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
           try {
             fs.copyFileSync(dir, path.join(destProfileDir, 'Cookies'));
           } catch (err) {
-            console.error(`Error copying cookies file: ${err}`);
             silentLogger.error(err);
-            process.exit(constants.fileSystemOperationExitCode.copyError.code);
+            printMessage([err], messageOptions);
+            success = false;
           }
         }
       }
     });
-  } else {
-    console.warn('Unable to find Edge profile cookies file in the system.');
+    return success;
   }
+  silentLogger.warn('Unable to find Edge profile cookies file in the system.');
+  printMessage(['Unable to find Edge profile cookies file in the system.'], messageOptions);
+  return false;
 };
 
 /**
  * Both Edge and Chrome Local State files are located in the .../User Data directory
  * @param {*} options - glob options object
  * @param {string} destDir - destination directory
- * @returns {void}
+ * @returns boolean indicating whether the operation was successful
  */
 const cloneLocalStateFile = (options, destDir) => {
   const localState = globSync('**/*Local State', {
@@ -596,19 +605,21 @@ const cloneLocalStateFile = (options, destDir) => {
   });
 
   if (localState.length > 0) {
-    // eslint-disable-next-line array-callback-return
-    localState.map(dir => {
+    let success = true;
+    localState.forEach(dir => {
       try {
         fs.copyFileSync(dir, path.join(destDir, 'Local State'));
       } catch (err) {
-        console.error(`Error copying local state file: ${err}`);
         silentLogger.error(err);
-        process.exit(constants.fileSystemOperationExitCode.copyError.code);
+        printMessage([err], messageOptions);
+        success = false;
       }
     });
-  } else {
-    console.warn('Unable to find local state file in the system.');
+    return success;
   }
+  silentLogger.warn('Unable to find local state file in the system.');
+  printMessage(['Unable to find local state file in the system.'], messageOptions);
+  return false;
 };
 
 /**
@@ -616,7 +627,8 @@ const cloneLocalStateFile = (options, destDir) => {
  * of all profile within the Purple-HATS directory located in the
  * .../User Data directory for Windows and
  * .../Chrome directory for Mac.
- * @returns {void}
+ * @param {string} randomToken - random token to append to the cloned directory
+ * @returns {string} cloned data directory, null if any of the sub files failed to copy
  */
 export const cloneChromeProfiles = randomToken => {
   const baseDir = getDefaultChromeDataDir();
@@ -648,10 +660,12 @@ export const cloneChromeProfiles = randomToken => {
     absolute: true,
     nodir: true,
   };
-  cloneChromeProfileCookieFiles(baseOptions, destDir);
-  cloneLocalStateFile(baseOptions, destDir);
-  // eslint-disable-next-line no-undef, consistent-return
-  return path.join(destDir);
+  const cloneLocalStateFileSucess = cloneLocalStateFile(baseOptions, destDir);
+  if (cloneChromeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSucess) {
+    return destDir;
+  }
+
+  return null;
 };
 
 /**
@@ -659,7 +673,8 @@ export const cloneChromeProfiles = randomToken => {
  * of all profile within the Purple-HATS directory located in the
  * .../User Data directory for Windows and
  * .../Microsoft Edge directory for Mac.
- * @returns {void}
+ * @param {string} randomToken - random token to append to the cloned directory
+ * @returns {string} cloned data directory, null if any of the sub files failed to copy
  */
 export const cloneEdgeProfiles = randomToken => {
   const baseDir = getDefaultEdgeDataDir();
@@ -691,10 +706,13 @@ export const cloneEdgeProfiles = randomToken => {
     absolute: true,
     nodir: true,
   };
-  cloneEdgeProfileCookieFiles(baseOptions, destDir);
-  cloneLocalStateFile(baseOptions, destDir);
-  // eslint-disable-next-line no-undef, consistent-return
-  return path.join(destDir);
+
+  const cloneLocalStateFileSucess = cloneLocalStateFile(baseOptions, destDir);
+  if (cloneEdgeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSucess) {
+    return destDir;
+  }
+
+  return null;
 };
 
 export const deleteClonedChromeProfiles = randomToken => {
@@ -713,10 +731,16 @@ export const deleteClonedChromeProfiles = randomToken => {
   }
 
   if (fs.existsSync(destDir)) {
-    fs.rmSync(destDir, { recursive: true });
+    try {
+      fs.rmSync(destDir, { recursive: true });
+    } catch (err) {
+      silentLogger.warn(`Unable to delete Purple-HATS folder in the Chrome data directory. ${err}`);
+      console.warn(`Unable to find Purple-HATS directory in the Chrome data directory. ${err}}`);
+    }
     return;
   }
 
+  silentLogger.warn('Unable to find Purple-HATS directory in the Chrome data directory.');
   console.warn('Unable to find Purple-HATS directory in the Chrome data directory.');
 };
 
@@ -736,9 +760,16 @@ export const deleteClonedEdgeProfiles = randomToken => {
   }
 
   if (fs.existsSync(destDir)) {
-    fs.rmSync(destDir, { recursive: true });
+    try {
+      fs.rmSync(destDir, { recursive: true });
+    } catch (err) {
+      silentLogger.warn(`Unable to delete Purple-HATS folder in the Edge data directory. ${err}`);
+      console.warn(`Unable to find Purple-HATS directory in the Edge data directory. ${err}`);
+    }
     return;
   }
+
+  silentLogger.warn('Unable to find Purple-HATS directory in the Edge data directory.');
   console.warn('Unable to find Purple-HATS directory in the Edge data directory.');
 };
 

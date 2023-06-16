@@ -144,68 +144,51 @@ const scanInit = async argvs => {
 
   if (argvs.browserToRun === constants.browserTypes.chrome) {
     chromeDataDir = getDefaultChromeDataDir();
-    if (chromeDataDir) {
-      useChrome = true;
+    clonedDataDir = cloneChromeProfiles();
+    if (chromeDataDir && clonedDataDir) {
       argvs.browserToRun = constants.browserTypes.chrome;
+      useChrome = true;
     } else {
-      printMessage(
-        [
-          'Chrome browser profile is not detected in the default directory.',
-          'Please ensure the default directory is used. Falling back to Edge browser...',
-        ],
-        messageOptions,
-      );
+      printMessage(['Unable to use Chrome, falling back to Edge browser...'], messageOptions);
       edgeDataDir = getDefaultEdgeDataDir();
-      if (edgeDataDir) {
+      clonedDataDir = cloneEdgeProfiles();
+      if (edgeDataDir && clonedDataDir) {
         useEdge = true;
         argvs.browserToRun = constants.browserTypes.edge;
       } else {
         printMessage(
-          [
-            'Both Chrome and Edge browser profile are not detected in the default directory.',
-            'Please ensure Edge and Chrome browser profiles are in the default directory before trying again. Falling back to incognito Chromium...',
-          ],
+          ['Unable to use both Chrome and Edge, falling back to Chromium...'],
           messageOptions,
         );
         argvs.browserToRun = constants.browserTypes.chromium;
+        clonedDataDir = '';
       }
     }
   } else if (argvs.browserToRun === constants.browserTypes.edge) {
     edgeDataDir = getDefaultEdgeDataDir();
-    if (edgeDataDir) {
+    clonedDataDir = cloneEdgeProfiles();
+    if (edgeDataDir && clonedDataDir) {
       useEdge = true;
       argvs.browserToRun = constants.browserTypes.edge;
     } else {
-      printMessage(
-        [
-          'Edge browser profile is not detected in the default directory.',
-          'Please ensure the default directory is used. Falling back to Chrome browser...',
-        ],
-        messageOptions,
-      );
+      printMessage(['Unable to use Edge, falling back to Chrome browser...'], messageOptions);
       chromeDataDir = getDefaultChromeDataDir();
-      if (chromeDataDir) {
+      clonedDataDir = cloneChromeProfiles();
+      if (chromeDataDir && clonedDataDir) {
         useChrome = true;
         argvs.browserToRun = constants.browserTypes.chrome;
       } else {
         printMessage(
-          [
-            'Both Chrome and Edge browser profile are not detected in the default directory.',
-            'Please ensure Edge and Chrome browser profiles are in the default directory before trying again. Falling back to incognito Chromium...',
-          ],
+          ['Unable to use both Chrome and Edge, falling back to Chromium...'],
           messageOptions,
         );
         argvs.browserToRun = constants.browserTypes.chromium;
+        clonedDataDir = '';
       }
     }
   } else {
     argvs.browserToRun = constants.browserTypes.chromium;
-  }
-
-  if (useChrome) {
-    clonedDataDir = cloneChromeProfiles();
-  } else if (useEdge) {
-    clonedDataDir = cloneEdgeProfiles();
+    clonedDataDir = '';
   }
 
   if (argvs.customDevice === 'Desktop' || argvs.customDevice === 'Mobile') {
