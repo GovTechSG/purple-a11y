@@ -238,6 +238,15 @@ const scanInit = async argvs => {
   );
 
   const statuses = constants.urlCheckStatuses;
+
+  // File clean up after url check
+  // files will clone a second time below if url check passes
+  if (useChrome) {
+    deleteClonedChromeProfiles();
+  } else if (useEdge) {
+    deleteClonedEdgeProfiles();
+  }
+
   // eslint-disable-next-line default-case
   switch (res.status) {
     case statuses.success.code:
@@ -310,12 +319,10 @@ const scanInit = async argvs => {
    * after checkingUrl and unable to utilise same cookie for scan
    * */
   if (useChrome) {
-    deleteClonedChromeProfiles();
     clonedDataDir = cloneChromeProfiles(data.randomToken);
     data.browser = constants.browserTypes.chrome;
     data.userDataDirectory = clonedDataDir;
   } else if (useEdge) {
-    deleteClonedEdgeProfiles();
     clonedDataDir = cloneEdgeProfiles(data.randomToken);
     data.browser = constants.browserTypes.edge;
     data.userDataDirectory = clonedDataDir;
