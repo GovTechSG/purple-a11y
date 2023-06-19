@@ -382,6 +382,16 @@ const processPage = async page => {
     }
 
     for await (let line of rl) {
+      if (/page\d.close\(\)/.test(line.trim())){
+          const handleUndefinedPageBlock = `try{
+            ${line}
+          } catch(err){
+            console.log(err)
+          }`
+          appendToGeneratedScript(handleUndefinedPageBlock)
+          continue;
+      }
+
       if (
         line.trim() === `const { chromium } = require('playwright');` ||
         line.trim() === `const { webkit } = require('playwright');` ||
