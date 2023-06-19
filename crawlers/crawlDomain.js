@@ -16,6 +16,7 @@ const crawlDomain = async (
   maxRequestsPerCrawl,
   browser,
   userDataDirectory,
+  strategy,
 ) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { maxConcurrency } = constants;
@@ -88,7 +89,7 @@ const crawlDomain = async (
         await enqueueLinks({
           // set selector matches anchor elements with href but not contains # or starting with mailto:
           selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
-          strategy: 'same-domain',
+          strategy,
           requestQueue,
           transformRequestFunction(req) {
             // ignore all links ending with `.pdf`

@@ -321,6 +321,7 @@ export const prepareData = argv => {
     viewportWidth,
     playwrightDeviceDetailsObject,
     maxpages,
+    strategy,
     isLocalSitemap,
     finalUrl,
     browserBased,
@@ -336,6 +337,7 @@ export const prepareData = argv => {
     viewportWidth,
     playwrightDeviceDetailsObject,
     maxRequestsPerCrawl: maxpages || constants.maxRequestsPerCrawl,
+    strategy,
     isLocalSitemap,
   };
 };

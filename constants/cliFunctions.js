@@ -6,6 +6,11 @@ export const messageOptions = {
   marginBottom: 2,
 };
 
+export const alertMessageOptions = {
+  border: true,
+  borderColor: 'red',
+};
+
 export const cliOptions = {
   c: {
     alias: 'scanner',
@@ -61,4 +66,32 @@ export const cliOptions = {
     default: 'chromium',
     demandOption: false,
   },
+  s: {
+    alias: 'strategy',
+    describe:
+      'Strategy to choose which links to crawl in a website scan. Defaults to "same-domain".',
+    choices: ['same-domain', 'same-hostname'],
+    requiresArg: true,
+    demandOption: false,
+  },
+  reportbreakdown: {
+    describe: 'Will break down the main report according to impact',
+    type: 'boolean',
+    default: false,
+    demandOption: false,
+  },
+  warn: {
+    describe: 'Track for issues of target impact level',
+    choices: ['critical', 'serious', 'moderate', 'minor', 'none'],
+    default: 'none',
+    demandOption: false,
+  },
+};
+
+export const configureReportSetting = isEnabled => {
+  if (isEnabled) {
+    process.env.REPORT_BREAKDOWN = 1;
+  } else {
+    process.env.REPORT_BREAKDOWN = 0;
+  }
 };

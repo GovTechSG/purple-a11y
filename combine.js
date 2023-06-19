@@ -23,6 +23,7 @@ const combineRun = async (details, deviceToScan) => {
     isLocalSitemap,
     browser,
     userDataDirectory,
+    strategy,
   } = envDetails;
 
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
@@ -71,6 +72,7 @@ const combineRun = async (details, deviceToScan) => {
         maxRequestsPerCrawl,
         browser,
         userDataDirectory,
+        strategy,
       );
       break;
 
