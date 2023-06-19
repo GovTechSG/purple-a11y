@@ -10,6 +10,7 @@ import questions from './constants/questions.js';
 import combineRun from './combine.js';
 import playwrightAxeGenerator from './playwrightAxeGenerator.js';
 import constants from './constants/constants.js';
+import { devices } from 'playwright';
 
 printMessage(
   [
@@ -26,19 +27,34 @@ printMessage(
 );
 
 inquirer.prompt(questions).then(async answers => {
-  const data = prepareData(answers);
-
-  setHeadlessMode(data.isHeadless);
-
   let screenToScan;
+  let playwrightDeviceDetailsObject = {};
 
   if (answers.deviceChosen !== 'Custom') {
     screenToScan = answers.deviceChosen;
+    if (answers.deviceChosen === 'Mobile') {
+      playwrightDeviceDetailsObject = devices['iPhone 11'];
+    }
   } else if (answers.customDevice !== 'Specify viewport') {
     screenToScan = answers.customDevice;
-  } else {
+    // Only iPhone 11 & Samsung Galaxy S9+ are selectable
+    if (answers.customDevice === 'Samsung Galaxy S9+') {
+      playwrightDeviceDetailsObject = devices['Galaxy S9+'];
+    } else {
+      playwrightDeviceDetailsObject = devices[answers.customDevice];
+    }
+  } else if (answers.viewportWidth) {
     screenToScan = `CustomWidth_${answers.viewportWidth}px`;
+    playwrightDeviceDetailsObject = {
+      viewport: { width: Number(answers.viewportWidth), height: 720 },
+    };
   }
+
+  answers.playwrightDeviceDetailsObject = playwrightDeviceDetailsObject;
+
+  const data = prepareData(answers);
+
+  setHeadlessMode(data.isHeadless);
 
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
 
@@ -58,4 +74,5 @@ inquirer.prompt(questions).then(async answers => {
   }
   // Delete dataset and request queues
   cleanUp(data.randomToken);
+  process.exit(0);
 });
