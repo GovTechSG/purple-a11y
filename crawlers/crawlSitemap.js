@@ -2,7 +2,7 @@ import crawlee from 'crawlee';
 import printMessage from 'print-message';
 import {
   createCrawleeSubFolders,
-  preNavigationHooks,
+  preNavigationHooksForSiteMap,
   runAxeScript,
   failedRequestHandler,
 } from './commonCrawlerFunc.js';
@@ -56,7 +56,7 @@ const crawlSitemap = async (
       ],
     },
     requestList,
-    preNavigationHooks,
+    preNavigationHooks: preNavigationHooksForSiteMap,
     requestHandler: async ({ page, request, response }) => {
       const currentUrl = request.url;
       const contentType = response.headers()['content-type'];

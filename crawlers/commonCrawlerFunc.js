@@ -109,6 +109,12 @@ export const preNavigationHooks = [
   },
 ];
 
+export const preNavigationHooksForSiteMap = [
+  async (_crawlingContext, gotoOptions) => {
+    gotoOptions = { waitUntil: 'networkidle', timeout: 30000 };
+  },
+];
+
 export const failedRequestHandler = async ({ request }) => {
   crawlee.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
 };

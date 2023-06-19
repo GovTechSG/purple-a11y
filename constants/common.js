@@ -218,7 +218,10 @@ const checkUrlConnectivityWithBrowser = async (
     // method will not throw an error when any valid HTTP status code is returned by the remote server, including 404 "Not Found" and 500 "Internal Server Error".
     // navigation to about:blank or navigation to the same URL with a different hash, which would succeed and return null.
     try {
-      const response = await page.goto(url, { timeout: 15000 });
+      const response = await page.goto(url, {
+        timeout: 30000,
+        ...(proxy && { waitUntil: 'networkidle' }),
+      });
       res.status = constants.urlCheckStatuses.success.code;
 
       // Check for redirect link
@@ -377,7 +380,7 @@ export const getLinksFromSitemap = async (
           getPlaywrightLaunchOptions(browser),
         );
         const page = await browserContext.newPage();
-        await page.goto(url);
+        await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
 
         const urlSet = page.locator('urlset');
         const sitemapIndex = page.locator('sitemapindex');
