@@ -79,20 +79,23 @@ export const filterAxeResults = (results, pageTitle) => {
 
 export const runAxeScript = async (page, selectors = []) => {
   await crawlee.playwrightUtils.injectFile(page, axeScript);
-  
-  const results = await page.evaluate(({ selectors, saflyIconSelector }) => {
-    // remove so that axe does not scan
-    document.querySelector(saflyIconSelector)?.remove();
 
-    axe.configure({
-      branding: {
-        application: 'purple-hats',
-      },
-    });
-    return axe.run(selectors, {
-      resultTypes: ['violations', 'passes', 'incomplete'],
-    });
-  }, { selectors, saflyIconSelector });
+  const results = await page.evaluate(
+    ({ selectors, saflyIconSelector }) => {
+      // remove so that axe does not scan
+      document.querySelector(saflyIconSelector)?.remove();
+
+      axe.configure({
+        branding: {
+          application: 'purple-hats',
+        },
+      });
+      return axe.run(selectors, {
+        resultTypes: ['violations', 'passes', 'incomplete'],
+      });
+    },
+    { selectors, saflyIconSelector },
+  );
 
   const pageTitle = await page.evaluate(() => document.title);
   return filterAxeResults(results, pageTitle);
@@ -104,12 +107,6 @@ export const createCrawleeSubFolders = async randomToken => {
 };
 
 export const preNavigationHooks = [
-  async (_crawlingContext, gotoOptions) => {
-    gotoOptions = { waitUntil: 'domcontentloaded', timeout: 30000 };
-  },
-];
-
-export const preNavigationHooksForSiteMap = [
   async (_crawlingContext, gotoOptions) => {
     gotoOptions = { waitUntil: 'networkidle', timeout: 30000 };
   },

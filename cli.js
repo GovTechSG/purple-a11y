@@ -269,11 +269,6 @@ const scanInit = async argvs => {
 
   const domain = argvs.isLocalSitemap ? 'custom' : new URL(argvs.url).hostname;
 
-  if (argvs.customDevice === 'Desktop' || argvs.customDevice === 'Mobile') {
-    argvs.deviceChosen = argvs.customDevice;
-    delete argvs.customDevice;
-  }
-
   const data = prepareData(argvs);
 
   setHeadlessMode(data.isHeadless);
