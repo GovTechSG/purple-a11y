@@ -796,6 +796,7 @@ export const getPlaywrightLaunchOptions = browser => {
   };
   if (proxy) {
     options.headless = false;
+    options.slowMo = 1000; // To ensure server-side rendered proxy page is loaded
   }
   return options;
 };
