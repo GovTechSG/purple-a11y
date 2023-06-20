@@ -720,7 +720,11 @@ export const cloneEdgeProfiles = randomToken => {
   return null;
 };
 
-export const deleteClonedChromeProfiles = randomToken => {
+/**
+ * Deletes all the cloned Purple-HATS directories in the Chrome data directory
+ * @returns null
+ */
+export const deleteClonedChromeProfiles = () => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
@@ -728,20 +732,24 @@ export const deleteClonedChromeProfiles = randomToken => {
     return;
   }
 
-  let destDir;
-  if (randomToken) {
-    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
-  } else {
-    destDir = path.join(baseDir, 'Purple-HATS');
-  }
+  // Find all the Purple-HATS directories in the Chrome data directory
+  const destDir = globSync('**/Purple-HATS*', {
+    cwd: baseDir,
+    recursive: true,
+    absolute: true,
+  });
 
-  if (fs.existsSync(destDir)) {
-    try {
-      fs.rmSync(destDir, { recursive: true });
-    } catch (err) {
-      silentLogger.warn(`Unable to delete Purple-HATS folder in the Chrome data directory. ${err}`);
-      console.warn(`Unable to find Purple-HATS directory in the Chrome data directory. ${err}}`);
-    }
+  if (destDir.length > 0) {
+    destDir.forEach(dir => {
+      if (fs.existsSync(dir)) {
+        try {
+          fs.rmSync(dir, { recursive: true });
+        } catch (err) {
+          silentLogger.warn(`Unable to delete ${dir} folder in the Chrome data directory. ${err}`);
+          console.warn(`Unable to delete ${dir} folder in the Chrome data directory. ${err}}`);
+        }
+      }
+    });
     return;
   }
 
@@ -749,7 +757,11 @@ export const deleteClonedChromeProfiles = randomToken => {
   console.warn('Unable to find Purple-HATS directory in the Chrome data directory.');
 };
 
-export const deleteClonedEdgeProfiles = randomToken => {
+/**
+ * Deletes all the cloned Purple-HATS directories in the Chrome data directory
+ * @returns null
+ */
+export const deleteClonedEdgeProfiles = () => {
   const baseDir = getDefaultEdgeDataDir();
 
   if (!baseDir) {
@@ -757,20 +769,24 @@ export const deleteClonedEdgeProfiles = randomToken => {
     return;
   }
 
-  let destDir;
-  if (randomToken) {
-    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
-  } else {
-    destDir = path.join(baseDir, 'Purple-HATS');
-  }
+  // Find all the Purple-HATS directories in the Chrome data directory
+  const destDir = globSync('**/Purple-HATS*', {
+    cwd: baseDir,
+    recursive: true,
+    absolute: true,
+  });
 
-  if (fs.existsSync(destDir)) {
-    try {
-      fs.rmSync(destDir, { recursive: true });
-    } catch (err) {
-      silentLogger.warn(`Unable to delete Purple-HATS folder in the Edge data directory. ${err}`);
-      console.warn(`Unable to find Purple-HATS directory in the Edge data directory. ${err}`);
-    }
+  if (destDir.length > 0) {
+    destDir.forEach(dir => {
+      if (fs.existsSync(dir)) {
+        try {
+          fs.rmSync(dir, { recursive: true });
+        } catch (err) {
+          silentLogger.warn(`Unable to delete ${dir} folder in the Chrome data directory. ${err}`);
+          console.warn(`Unable to delete ${dir} folder in the Chrome data directory. ${err}}`);
+        }
+      }
+    });
     return;
   }
 

@@ -338,9 +338,9 @@ const scanInit = async argvs => {
 
   // Delete cloned directory
   if (useChrome) {
-    deleteClonedChromeProfiles(data.randomToken);
+    deleteClonedChromeProfiles();
   } else if (useEdge) {
-    deleteClonedEdgeProfiles(data.randomToken);
+    deleteClonedEdgeProfiles();
   }
   // Delete dataset and request queues
   await cleanUp(data.randomToken);
