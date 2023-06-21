@@ -66,8 +66,10 @@ export const isValidXML = async content => {
   return { status, parsedContent };
 };
 
-export const isSkippedUrl = (page, whitelistedDomains) => {
+export const isSkippedUrl = (page, whitelistedDomains) => {	
   const isWhitelisted = whitelistedDomains.filter(pattern => {
+    pattern = pattern.replace(/[\n\r]+/g, '');
+
     if (pattern) {
       return new RegExp(pattern).test(page.url());
     }
@@ -220,7 +222,7 @@ const checkUrlConnectivityWithBrowser = async (
     try {
       const response = await page.goto(url, {
         timeout: 30000,
-        ...(proxy && { waitUntil: 'networkidle' }),
+        ...(proxy && { waitUntil: 'commit' }),
       });
       res.status = constants.urlCheckStatuses.success.code;
 
@@ -720,11 +722,7 @@ export const cloneEdgeProfiles = randomToken => {
   return null;
 };
 
-/**
- * Deletes all the cloned Purple-HATS directories in the Chrome data directory
- * @returns null
- */
-export const deleteClonedChromeProfiles = () => {
+export const deleteClonedChromeProfiles = randomToken => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
@@ -732,24 +730,20 @@ export const deleteClonedChromeProfiles = () => {
     return;
   }
 
-  // Find all the Purple-HATS directories in the Chrome data directory
-  const destDir = globSync('**/Purple-HATS*', {
-    cwd: baseDir,
-    recursive: true,
-    absolute: true,
-  });
+  let destDir;
+  if (randomToken) {
+    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
+  } else {
+    destDir = path.join(baseDir, 'Purple-HATS');
+  }
 
-  if (destDir.length > 0) {
-    destDir.forEach(dir => {
-      if (fs.existsSync(dir)) {
-        try {
-          fs.rmSync(dir, { recursive: true });
-        } catch (err) {
-          silentLogger.warn(`Unable to delete ${dir} folder in the Chrome data directory. ${err}`);
-          console.warn(`Unable to delete ${dir} folder in the Chrome data directory. ${err}}`);
-        }
-      }
-    });
+  if (fs.existsSync(destDir)) {
+    try {
+      fs.rmSync(destDir, { recursive: true });
+    } catch (err) {
+      silentLogger.warn(`Unable to delete Purple-HATS folder in the Chrome data directory. ${err}`);
+      console.warn(`Unable to find Purple-HATS directory in the Chrome data directory. ${err}}`);
+    }
     return;
   }
 
@@ -757,11 +751,7 @@ export const deleteClonedChromeProfiles = () => {
   console.warn('Unable to find Purple-HATS directory in the Chrome data directory.');
 };
 
-/**
- * Deletes all the cloned Purple-HATS directories in the Chrome data directory
- * @returns null
- */
-export const deleteClonedEdgeProfiles = () => {
+export const deleteClonedEdgeProfiles = randomToken => {
   const baseDir = getDefaultEdgeDataDir();
 
   if (!baseDir) {
@@ -769,24 +759,20 @@ export const deleteClonedEdgeProfiles = () => {
     return;
   }
 
-  // Find all the Purple-HATS directories in the Chrome data directory
-  const destDir = globSync('**/Purple-HATS*', {
-    cwd: baseDir,
-    recursive: true,
-    absolute: true,
-  });
+  let destDir;
+  if (randomToken) {
+    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
+  } else {
+    destDir = path.join(baseDir, 'Purple-HATS');
+  }
 
-  if (destDir.length > 0) {
-    destDir.forEach(dir => {
-      if (fs.existsSync(dir)) {
-        try {
-          fs.rmSync(dir, { recursive: true });
-        } catch (err) {
-          silentLogger.warn(`Unable to delete ${dir} folder in the Chrome data directory. ${err}`);
-          console.warn(`Unable to delete ${dir} folder in the Chrome data directory. ${err}}`);
-        }
-      }
-    });
+  if (fs.existsSync(destDir)) {
+    try {
+      fs.rmSync(destDir, { recursive: true });
+    } catch (err) {
+      silentLogger.warn(`Unable to delete Purple-HATS folder in the Edge data directory. ${err}`);
+      console.warn(`Unable to find Purple-HATS directory in the Edge data directory. ${err}`);
+    }
     return;
   }
 

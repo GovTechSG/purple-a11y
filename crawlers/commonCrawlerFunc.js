@@ -81,7 +81,7 @@ export const runAxeScript = async (page, selectors = []) => {
   await crawlee.playwrightUtils.injectFile(page, axeScript);
 
   const results = await page.evaluate(
-    ({ selectors, saflyIconSelector }) => {
+    async ({ selectors, saflyIconSelector }) => {
       // remove so that axe does not scan
       document.querySelector(saflyIconSelector)?.remove();
 
@@ -100,6 +100,7 @@ export const runAxeScript = async (page, selectors = []) => {
   const pageTitle = await page.evaluate(() => document.title);
   return filterAxeResults(results, pageTitle);
 };
+
 export const createCrawleeSubFolders = async randomToken => {
   const dataset = await crawlee.Dataset.open(randomToken);
   const requestQueue = await crawlee.RequestQueue.open(randomToken);

@@ -180,6 +180,8 @@ const checkIfScanRequired = async page => {
 
   if (await usesInfiniteScroll()){
     pageUrl = page.url();
+	console.log("Screenshot page at: ", pageUrl);
+	
     await page.screenshot({
       path: imgPath,
       clip: {
@@ -239,23 +241,32 @@ const checkIfScanRequired = async page => {
 };
 
 const runAxeScan = async page => {
-  const host = new URL(pageUrl).hostname;
   const result = await runAxeScript(page);
   await dataset.pushData(result);
-  urlsCrawled.scanned.push(pageUrl);
+  urlsCrawled.scanned.push(page.url());
 }
 
 
 const processPage = async page => {
-  await page.waitForLoadState('domcontentloaded'); 
+  try {
+		await page.waitForLoadState('networkidle', {'timeout': 10000 });
+  } catch (e) {
+		console.log('Unable to detect networkidle');
+  }
+  
+  console.log("Visiting page at: ",page.url());
+  
+  if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
+	return;
+  } else {
+	const scanRequired = await checkIfScanRequired(page);
+	
+	if (scanRequired) {
+		await runAxeScan(page);
+	}
+  }
+  
 
-  if (await checkIfScanRequired(page)) {
-    if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
-      return;
-    } else {
-      await runAxeScan(page);
-    }
-  };
 };`;
 
   const block2 = `  return urlsCrawled;
@@ -403,7 +414,7 @@ const processPage = async page => {
       }
       if (line.trim() === `headless: false`) {
         if (proxy) {
-          appendToGeneratedScript(`slowMo: 2000,`);
+          appendToGeneratedScript(`slowMo: 100,`);
           if (proxy.type === 'autoConfig') {
             appendToGeneratedScript(`args: ['--proxy-pac-url=${proxy.url}'],`);
           } else {
