@@ -180,7 +180,8 @@ const checkIfScanRequired = async page => {
 
   if (await usesInfiniteScroll()){
     pageUrl = page.url();
-	console.log("Screenshot page at: ", pageUrl);
+    consoleLogger.info('Screenshot page at: ', pageUrl);
+    silentLogger.info('Screenshot page at: ', pageUrl);
 	
     await page.screenshot({
       path: imgPath,
@@ -251,10 +252,12 @@ const processPage = async page => {
   try {
 		await page.waitForLoadState('networkidle', {'timeout': 10000 });
   } catch (e) {
-		console.log('Unable to detect networkidle');
+    consoleLogger.info('Unable to detect networkidle');
+    silentLogger.info('Unable to detect networkidle');
   }
   
-  console.log("Visiting page at: ",page.url());
+  consoleLogger.info('Visiting page at: ',page.url());
+  silentLogger.info('Visiting page at: ',page.url());
   
   if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
 	return;
