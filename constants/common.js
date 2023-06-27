@@ -225,6 +225,12 @@ const checkUrlConnectivityWithBrowser = async (
         ...(proxy && { waitUntil: 'commit' }),
       });
 
+      try {
+        await page.waitForLoadState('networkidle', { timeout: 10000 });
+      } catch (e) {
+        silentLogger.info('Unable to detect networkidle');
+      }
+
       if (response.status() === 401) {
         res.status = constants.urlCheckStatuses.unauthorised.code;
       } else {
