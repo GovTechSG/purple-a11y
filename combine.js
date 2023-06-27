@@ -18,10 +18,12 @@ const combineRun = async (details, deviceToScan) => {
     deviceChosen,
     customDevice,
     viewportWidth,
+    playwrightDeviceDetailsObject,
     maxRequestsPerCrawl,
     isLocalSitemap,
     browser,
     userDataDirectory,
+    strategy,
   } = envDetails;
 
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
@@ -44,6 +46,7 @@ const combineRun = async (details, deviceToScan) => {
     deviceChosen,
     customDevice,
     viewportWidth,
+    playwrightDeviceDetailsObject,
   };
 
   let urlsCrawled;
@@ -69,6 +72,7 @@ const combineRun = async (details, deviceToScan) => {
         maxRequestsPerCrawl,
         browser,
         userDataDirectory,
+        strategy,
       );
       break;
 

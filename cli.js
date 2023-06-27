@@ -39,13 +39,13 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   .options(cliOptions)
   .example([
     [
-      `To scan sitemap of website:', 'node cli.js -c [ 1 | ${constants.scannerTypes.sitemap} ] -d <device> -u <url_link> -w <viewportWidth>`,
+      `To scan sitemap of website:', 'node cli.js -c [ 1 | sitemap ] -u <url_link> [ -d <device> | -w <viewport_width> ]`,
     ],
     [
-      `To scan a website', 'node cli.js -c [ 2 | ${constants.scannerTypes.website} ] -d <device> -u <url_link> -w <viewportWidth>`,
+      `To scan a website', 'node cli.js -c [ 2 | website ] -u <url_link> [ -d <device> | -w <viewport_width> ]`,
     ],
     [
-      `To start a custom flow scan', 'node cli.js -c [ 3 | ${constants.scannerTypes.custom} ] -d <device> -u <url_link> -w <viewportWidth>`,
+      `To start a custom flow scan', 'node cli.js -c [ 3 | custom ] -u <url_link> [ -d <device> | -w <viewport_width> ]`,
     ],
   ])
   .coerce('c', option => {
@@ -123,7 +123,13 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   })
   .check(argvs => {
     if (argvs.scanner === 'custom' && argvs.maxpages) {
-      throw new Error('-p or --maxpages is only available in website and sitemap scans');
+      throw new Error('-p or --maxpages is only available in website and sitemap scans.');
+    }
+    return true;
+  })
+  .check(argvs => {
+    if (argvs.scanner !== 'website' && argvs.strategy) {
+      throw new Error('-s or --strategy is only available in website scans.');
     }
     return true;
   })
@@ -139,76 +145,100 @@ const scanInit = async argvs => {
   let useEdge = false;
   let chromeDataDir = null;
   let edgeDataDir = null;
-  let clonedDataDir = null;
+  // Empty string for profile directory will use incognito mode in playwright
+  let clonedDataDir = '';
 
   if (argvs.browserToRun === constants.browserTypes.chrome) {
     chromeDataDir = getDefaultChromeDataDir();
-    if (chromeDataDir) {
-      useChrome = true;
+    clonedDataDir = cloneChromeProfiles();
+    if (chromeDataDir && clonedDataDir) {
       argvs.browserToRun = constants.browserTypes.chrome;
+      useChrome = true;
     } else {
-      printMessage(
-        [
-          'Chrome browser profile is not detected in the default directory.',
-          'Please ensure the default directory is used. Falling back to Edge browser...',
-        ],
-        messageOptions,
-      );
+      printMessage(['Unable to use Chrome, falling back to Edge browser...'], messageOptions);
       edgeDataDir = getDefaultEdgeDataDir();
-      if (edgeDataDir) {
+      clonedDataDir = cloneEdgeProfiles();
+      if (edgeDataDir && clonedDataDir) {
         useEdge = true;
         argvs.browserToRun = constants.browserTypes.edge;
       } else {
         printMessage(
-          [
-            'Both Chrome and Edge browser profile are not detected in the default directory.',
-            'Please ensure Edge and Chrome browser profiles are in the default directory before trying again. Falling back to incognito Chromium...',
-          ],
+          ['Unable to use both Chrome and Edge, falling back to Chromium...'],
           messageOptions,
         );
         argvs.browserToRun = constants.browserTypes.chromium;
+        clonedDataDir = '';
       }
     }
   } else if (argvs.browserToRun === constants.browserTypes.edge) {
     edgeDataDir = getDefaultEdgeDataDir();
-    if (edgeDataDir) {
+    clonedDataDir = cloneEdgeProfiles();
+    if (edgeDataDir && clonedDataDir) {
       useEdge = true;
       argvs.browserToRun = constants.browserTypes.edge;
     } else {
-      printMessage(
-        [
-          'Edge browser profile is not detected in the default directory.',
-          'Please ensure the default directory is used. Falling back to Chrome browser...',
-        ],
-        messageOptions,
-      );
+      printMessage(['Unable to use Edge, falling back to Chrome browser...'], messageOptions);
       chromeDataDir = getDefaultChromeDataDir();
-      if (chromeDataDir) {
+      clonedDataDir = cloneChromeProfiles();
+      if (chromeDataDir && clonedDataDir) {
         useChrome = true;
         argvs.browserToRun = constants.browserTypes.chrome;
       } else {
         printMessage(
-          [
-            'Both Chrome and Edge browser profile are not detected in the default directory.',
-            'Please ensure Edge and Chrome browser profiles are in the default directory before trying again. Falling back to incognito Chromium...',
-          ],
+          ['Unable to use both Chrome and Edge, falling back to Chromium...'],
           messageOptions,
         );
         argvs.browserToRun = constants.browserTypes.chromium;
+        clonedDataDir = '';
       }
     }
   } else {
     argvs.browserToRun = constants.browserTypes.chromium;
+    clonedDataDir = '';
   }
 
-  if (useChrome) {
-    clonedDataDir = cloneChromeProfiles();
-  } else if (useEdge) {
-    clonedDataDir = cloneEdgeProfiles();
+  if (argvs.customDevice === 'Desktop' || argvs.customDevice === 'Mobile') {
+    argvs.deviceChosen = argvs.customDevice;
+    delete argvs.customDevice;
   }
 
-  const res = await checkUrl(argvs.scanner, argvs.url, argvs.browserToRun, clonedDataDir);
+  // Creating the playwrightDeviceDetailObject
+  // for use in crawlDomain & crawlSitemap's preLaunchHook
+  if (argvs.deviceChosen === 'Mobile' || argvs.customDevice === 'iPhone 11') {
+    argvs.playwrightDeviceDetailsObject = devices['iPhone 11'];
+  } else if (argvs.customDevice === 'Samsung Galaxy S9+') {
+    argvs.playwrightDeviceDetailsObject = devices['Galaxy S9+'];
+  } else if (argvs.viewportWidth) {
+    argvs.playwrightDeviceDetailsObject = {
+      viewport: { width: Number(argvs.viewportWidth), height: 720 },
+    };
+  } else if (argvs.customDevice) {
+    argvs.playwrightDeviceDetailsObject = devices[argvs.customDevice.replace('_', / /g)];
+  } else {
+    argvs.playwrightDeviceDetailsObject = {};
+  }
+
+  const res = await checkUrl(
+    argvs.scanner,
+    argvs.url,
+    argvs.browserToRun,
+    clonedDataDir,
+    argvs.playwrightDeviceDetailsObject,
+  );
+
+  if (argvs.scanner === constants.scannerTypes.website && !argvs.strategy) {
+    argvs.strategy = 'same-domain';
+  }
   const statuses = constants.urlCheckStatuses;
+
+  // File clean up after url check
+  // files will clone a second time below if url check passes
+  if (useChrome) {
+    deleteClonedChromeProfiles();
+  } else if (useEdge) {
+    deleteClonedEdgeProfiles();
+  }
+
   // eslint-disable-next-line default-case
   switch (res.status) {
     case statuses.success.code:
@@ -233,6 +263,7 @@ const scanInit = async argvs => {
         file is a sitemap */
       if (isFileSitemap(argvs.url)) {
         argvs.isLocalSitemap = true;
+        break;
       } else {
         res.status = statuses.notASitemap.code;
       }
@@ -247,11 +278,6 @@ const scanInit = async argvs => {
 
   const domain = argvs.isLocalSitemap ? 'custom' : new URL(argvs.url).hostname;
 
-  if (argvs.customDevice === 'Desktop' || argvs.customDevice === 'Mobile') {
-    argvs.deviceChosen = argvs.customDevice;
-    delete argvs.customDevice;
-  }
-
   const data = prepareData(argvs);
 
   setHeadlessMode(data.isHeadless);
@@ -262,8 +288,10 @@ const scanInit = async argvs => {
     screenToScan = argvs.deviceChosen;
   } else if (argvs.customDevice) {
     screenToScan = argvs.customDevice;
-  } else {
+  } else if (argvs.viewportWidth) {
     screenToScan = `CustomWidth_${argvs.viewportWidth}px`;
+  } else {
+    screenToScan = 'Desktop';
   }
 
   data.randomToken = `PHScan_${domain}_${date}_${time}_${argvs.scanner.replaceAll(
@@ -278,12 +306,10 @@ const scanInit = async argvs => {
    * after checkingUrl and unable to utilise same cookie for scan
    * */
   if (useChrome) {
-    deleteClonedChromeProfiles();
     clonedDataDir = cloneChromeProfiles(data.randomToken);
     data.browser = constants.browserTypes.chrome;
     data.userDataDirectory = clonedDataDir;
   } else if (useEdge) {
-    deleteClonedEdgeProfiles();
     clonedDataDir = cloneEdgeProfiles(data.randomToken);
     data.browser = constants.browserTypes.edge;
     data.userDataDirectory = clonedDataDir;
@@ -291,7 +317,7 @@ const scanInit = async argvs => {
   // Defaults to chromium by not specifying channels in Playwright, if no browser is found
   else {
     data.browser = constants.browserTypes.chromium;
-    data.userDataDirectory = null;
+    data.userDataDirectory = '';
   }
 
   printMessage([`Purple HATS version: ${appVersion}`, 'Starting scan...'], messageOptions);
@@ -312,9 +338,9 @@ const scanInit = async argvs => {
 
   // Delete cloned directory
   if (useChrome) {
-    deleteClonedChromeProfiles(data.randomToken);
+    deleteClonedChromeProfiles();
   } else if (useEdge) {
-    deleteClonedEdgeProfiles(data.randomToken);
+    deleteClonedEdgeProfiles();
   }
   // Delete dataset and request queues
   await cleanUp(data.randomToken);

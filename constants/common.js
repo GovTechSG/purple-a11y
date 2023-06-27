@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 /* eslint-disable no-console */
 /* eslint-disable camelcase */
 /* eslint-disable no-use-before-define */
@@ -5,7 +6,7 @@ import validator from 'validator';
 import axios from 'axios';
 import { JSDOM } from 'jsdom';
 import * as cheerio from 'cheerio';
-import crawlee from 'crawlee';
+import crawlee, { constructRegExpObjectsFromPseudoUrls } from 'crawlee';
 import { parseString } from 'xml2js';
 import fs from 'fs';
 import path from 'path';
@@ -13,7 +14,8 @@ import * as https from 'https';
 import os from 'os';
 import { globSync } from 'glob';
 import { chromium, devices } from 'playwright';
-import constants, { getDefaultChromeDataDir, getDefaultEdgeDataDir } from './constants.js';
+import printMessage from 'print-message';
+import constants, { getDefaultChromeDataDir, getDefaultEdgeDataDir, proxy } from './constants.js';
 import { silentLogger } from '../logs.js';
 
 const document = new JSDOM('').window;
@@ -49,6 +51,7 @@ export const isSelectorValid = selector => {
 const blackListCharacters = '\\<>&\'"';
 
 export const isValidXML = async content => {
+  // fs.writeFileSync('sitemapcontent.txt', content);
   let status;
   let parsedContent = '';
   parseString(content, (err, result) => {
@@ -65,6 +68,8 @@ export const isValidXML = async content => {
 
 export const isSkippedUrl = (page, whitelistedDomains) => {
   const isWhitelisted = whitelistedDomains.filter(pattern => {
+    pattern = pattern.replace(/[\n\r]+/g, '');
+
     if (pattern) {
       return new RegExp(pattern).test(page.url());
     }
@@ -148,7 +153,6 @@ const checkUrlConnectivity = async url => {
         }
 
         res.content = response.data;
-        // console.log(res.content);
       })
       .catch(error => {
         if (error.response) {
@@ -180,25 +184,52 @@ const checkUrlConnectivity = async url => {
   return res;
 };
 
-const checkUrlConnectivityWithBrowser = async (url, browserToRun, clonedDataDir) => {
+const checkUrlConnectivityWithBrowser = async (
+  url,
+  browserToRun,
+  clonedDataDir,
+  playwrightDeviceDetailsObject,
+) => {
   const res = {};
 
+  let viewport = null;
+  let userAgent = null;
+
+  if (Object.keys(playwrightDeviceDetailsObject).length > 0) {
+    if ('viewport' in playwrightDeviceDetailsObject) {
+      viewport = playwrightDeviceDetailsObject.viewport;
+    }
+
+    if ('userAgent' in playwrightDeviceDetailsObject) {
+      userAgent = playwrightDeviceDetailsObject.userAgent;
+    }
+  }
+
+  // Validate the connectivity of URL if the string format is url format
   const data = sanitizeUrlInput(url);
 
   if (data.isValid) {
-    // Validate the connectivity of URL if the string format is url format
-    const browserContext = await chromium.launchPersistentContext(
-      clonedDataDir,
-      getPlaywrightLaunchOptions(browserToRun),
-    );
+    const browserContext = await chromium.launchPersistentContext(clonedDataDir, {
+      ...getPlaywrightLaunchOptions(browserToRun),
+      ...(viewport && { viewport }),
+      ...(userAgent && { userAgent }),
+    });
     // const context = await browser.newContext();
     const page = await browserContext.newPage();
 
     // method will not throw an error when any valid HTTP status code is returned by the remote server, including 404 "Not Found" and 500 "Internal Server Error".
     // navigation to about:blank or navigation to the same URL with a different hash, which would succeed and return null.
     try {
-      const response = await page.goto(url, { timeout: 15000 });
-      res.status = constants.urlCheckStatuses.success.code;
+      const response = await page.goto(url, {
+        timeout: 30000,
+        ...(proxy && { waitUntil: 'commit' }),
+      });
+
+      if (response.status() === 401) {
+        res.status = constants.urlCheckStatuses.unauthorised.code;
+      } else {
+        res.status = constants.urlCheckStatuses.success.code;
+      }
 
       // Check for redirect link
       const redirectUrl = await response.request().url();
@@ -210,11 +241,10 @@ const checkUrlConnectivityWithBrowser = async (url, browserToRun, clonedDataDir)
       }
 
       res.content = await page.content();
-      // console.log(res.content);
     } catch (error) {
       // not sure what errors are thrown
       console.log(error);
-
+      silentLogger.error(error);
       res.status = constants.urlCheckStatuses.systemError.code;
     } finally {
       await browserContext.close();
@@ -227,30 +257,44 @@ const checkUrlConnectivityWithBrowser = async (url, browserToRun, clonedDataDir)
   return res;
 };
 
-const isSitemapContent = async content => {
+export const isSitemapContent = async content => {
   const { status: isValid } = await isValidXML(content);
-  if (!isValid) {
-    const regexForHtml = new RegExp('<(?:!doctype html|html|head|body)+?>', 'gmi');
-    const regexForUrl = new RegExp('^.*(http|https):/{2}.*$', 'gmi');
-    // Check that the page is not a HTML page but still contains website links
-    if (!String(content).match(regexForHtml) && String(content).match(regexForUrl)) {
-      silentLogger.info(
-        'Sitemap URL provided is a Valid URL but it is not in XML sitemap, RSS, nor Atom formats.',
-      );
-      return true;
-    }
-    silentLogger.info('Not a sitemap, is most likely a HTML page; Possibly a malformed sitemap.');
-    return false;
+  if (isValid) {
+    return true;
   }
 
-  return true;
+  const regexForHtml = new RegExp('<(?:!doctype html|html|head|body)+?>', 'gmi');
+  const regexForXmlSitemap = new RegExp('<(?:urlset|feed|rss)+?.*>', 'gmi');
+  const regexForUrl = new RegExp('^.*(http|https):/{2}.*$', 'gmi');
+
+  if (String(content).match(regexForHtml) && String(content).match(regexForXmlSitemap)) {
+    // is an XML sitemap wrapped in a HTML document
+    return true;
+  }
+  if (!String(content).match(regexForHtml) && String(content).match(regexForUrl)) {
+    // treat this as a txt sitemap where all URLs will be extracted for crawling
+    return true;
+  }
+  // is HTML webpage
+  return false;
 };
 
-export const checkUrl = async (scanner, url, browser, clonedDataDir) => {
+export const checkUrl = async (
+  scanner,
+  url,
+  browser,
+  clonedDataDir,
+  playwrightDeviceDetailsObject,
+) => {
   let res;
 
   if (browser) {
-    res = await checkUrlConnectivityWithBrowser(url, browser, clonedDataDir);
+    res = await checkUrlConnectivityWithBrowser(
+      url,
+      browser,
+      clonedDataDir,
+      playwrightDeviceDetailsObject,
+    );
   } else {
     res = await checkUrlConnectivity(url);
   }
@@ -282,7 +326,9 @@ export const prepareData = argv => {
     deviceChosen,
     customDevice,
     viewportWidth,
+    playwrightDeviceDetailsObject,
     maxpages,
+    strategy,
     isLocalSitemap,
     finalUrl,
     browserBased,
@@ -296,7 +342,9 @@ export const prepareData = argv => {
     deviceChosen,
     customDevice,
     viewportWidth,
+    playwrightDeviceDetailsObject,
     maxRequestsPerCrawl: maxpages || constants.maxRequestsPerCrawl,
+    strategy,
     isLocalSitemap,
   };
 };
@@ -322,7 +370,6 @@ export const getLinksFromSitemap = async (
       } else {
         url = $(urlElement).text();
       }
-      console.log(url);
       urls.add(url);
     }
   };
@@ -342,7 +389,7 @@ export const getLinksFromSitemap = async (
           getPlaywrightLaunchOptions(browser),
         );
         const page = await browserContext.newPage();
-        await page.goto(url);
+        await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
 
         const urlSet = page.locator('urlset');
         const sitemapIndex = page.locator('sitemapindex');
@@ -435,7 +482,7 @@ export const getLinksFromSitemap = async (
  * Clone the Chrome profile cookie files to the destination directory
  * @param {*} options glob options object
  * @param {*} destDir destination directory
- * @returns void
+ * @returns boolean indicating whether the operation was successful
  */
 const cloneChromeProfileCookieFiles = (options, destDir) => {
   let profileCookiesDir;
@@ -458,6 +505,7 @@ const cloneChromeProfileCookieFiles = (options, destDir) => {
   }
 
   if (profileCookiesDir.length > 0) {
+    let success = true;
     profileCookiesDir.forEach(dir => {
       const profileName = dir.match(profileNamesRegex)[1];
       if (profileName) {
@@ -475,20 +523,29 @@ const cloneChromeProfileCookieFiles = (options, destDir) => {
 
         // Prevents duplicate cookies file if the cookies already exist
         if (!fs.existsSync(path.join(destProfileDir, 'Cookies'))) {
-          fs.copyFileSync(dir, path.join(destProfileDir, 'Cookies'));
+          try {
+            fs.copyFileSync(dir, path.join(destProfileDir, 'Cookies'));
+          } catch (err) {
+            silentLogger.error(err);
+            printMessage([err], messageOptions);
+            success = false;
+          }
         }
       }
     });
-  } else {
-    console.warn('Unable to find Chrome profile cookies file in the system.');
+    return success;
   }
+
+  silentLogger.warn('Unable to find Chrome profile cookies file in the system.');
+  printMessage(['Unable to find Chrome profile cookies file in the system.'], messageOptions);
+  return false;
 };
 
 /**
  * Clone the Chrome profile cookie files to the destination directory
  * @param {*} options glob options object
  * @param {*} destDir destination directory
- * @returns void
+ * @returns boolean indicating whether the operation was successful
  */
 const cloneEdgeProfileCookieFiles = (options, destDir) => {
   let profileCookiesDir;
@@ -512,6 +569,7 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
   }
 
   if (profileCookiesDir.length > 0) {
+    let success = true;
     profileCookiesDir.forEach(dir => {
       const profileName = dir.match(profileNamesRegex)[1];
       if (profileName) {
@@ -529,20 +587,28 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
 
         // Prevents duplicate cookies file if the cookies already exist
         if (!fs.existsSync(path.join(destProfileDir, 'Cookies'))) {
-          fs.copyFileSync(dir, path.join(destProfileDir, 'Cookies'));
+          try {
+            fs.copyFileSync(dir, path.join(destProfileDir, 'Cookies'));
+          } catch (err) {
+            silentLogger.error(err);
+            printMessage([err], messageOptions);
+            success = false;
+          }
         }
       }
     });
-  } else {
-    console.warn('Unable to find Edge profile cookies file in the system.');
+    return success;
   }
+  silentLogger.warn('Unable to find Edge profile cookies file in the system.');
+  printMessage(['Unable to find Edge profile cookies file in the system.'], messageOptions);
+  return false;
 };
 
 /**
  * Both Edge and Chrome Local State files are located in the .../User Data directory
  * @param {*} options - glob options object
  * @param {string} destDir - destination directory
- * @returns {void}
+ * @returns boolean indicating whether the operation was successful
  */
 const cloneLocalStateFile = (options, destDir) => {
   const localState = globSync('**/*Local State', {
@@ -551,13 +617,21 @@ const cloneLocalStateFile = (options, destDir) => {
   });
 
   if (localState.length > 0) {
-    // eslint-disable-next-line array-callback-return
-    localState.map(dir => {
-      fs.copyFileSync(dir, path.join(destDir, 'Local State'));
+    let success = true;
+    localState.forEach(dir => {
+      try {
+        fs.copyFileSync(dir, path.join(destDir, 'Local State'));
+      } catch (err) {
+        silentLogger.error(err);
+        printMessage([err], messageOptions);
+        success = false;
+      }
     });
-  } else {
-    console.warn('Unable to find local state file in the system.');
+    return success;
   }
+  silentLogger.warn('Unable to find local state file in the system.');
+  printMessage(['Unable to find local state file in the system.'], messageOptions);
+  return false;
 };
 
 /**
@@ -565,7 +639,8 @@ const cloneLocalStateFile = (options, destDir) => {
  * of all profile within the Purple-HATS directory located in the
  * .../User Data directory for Windows and
  * .../Chrome directory for Mac.
- * @returns {void}
+ * @param {string} randomToken - random token to append to the cloned directory
+ * @returns {string} cloned data directory, null if any of the sub files failed to copy
  */
 export const cloneChromeProfiles = randomToken => {
   const baseDir = getDefaultChromeDataDir();
@@ -597,10 +672,12 @@ export const cloneChromeProfiles = randomToken => {
     absolute: true,
     nodir: true,
   };
-  cloneChromeProfileCookieFiles(baseOptions, destDir);
-  cloneLocalStateFile(baseOptions, destDir);
-  // eslint-disable-next-line no-undef, consistent-return
-  return path.join(destDir);
+  const cloneLocalStateFileSucess = cloneLocalStateFile(baseOptions, destDir);
+  if (cloneChromeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSucess) {
+    return destDir;
+  }
+
+  return null;
 };
 
 /**
@@ -608,7 +685,8 @@ export const cloneChromeProfiles = randomToken => {
  * of all profile within the Purple-HATS directory located in the
  * .../User Data directory for Windows and
  * .../Microsoft Edge directory for Mac.
- * @returns {void}
+ * @param {string} randomToken - random token to append to the cloned directory
+ * @returns {string} cloned data directory, null if any of the sub files failed to copy
  */
 export const cloneEdgeProfiles = randomToken => {
   const baseDir = getDefaultEdgeDataDir();
@@ -640,13 +718,20 @@ export const cloneEdgeProfiles = randomToken => {
     absolute: true,
     nodir: true,
   };
-  cloneEdgeProfileCookieFiles(baseOptions, destDir);
-  cloneLocalStateFile(baseOptions, destDir);
-  // eslint-disable-next-line no-undef, consistent-return
-  return path.join(destDir);
+
+  const cloneLocalStateFileSucess = cloneLocalStateFile(baseOptions, destDir);
+  if (cloneEdgeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSucess) {
+    return destDir;
+  }
+
+  return null;
 };
 
-export const deleteClonedChromeProfiles = randomToken => {
+/**
+ * Deletes all the cloned Purple-HATS directories in the Chrome data directory
+ * @returns null
+ */
+export const deleteClonedChromeProfiles = () => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
@@ -654,22 +739,36 @@ export const deleteClonedChromeProfiles = randomToken => {
     return;
   }
 
-  let destDir;
-  if (randomToken) {
-    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
-  } else {
-    destDir = path.join(baseDir, 'Purple-HATS');
-  }
+  // Find all the Purple-HATS directories in the Chrome data directory
+  const destDir = globSync('**/Purple-HATS*', {
+    cwd: baseDir,
+    recursive: true,
+    absolute: true,
+  });
 
-  if (fs.existsSync(destDir)) {
-    fs.rmSync(destDir, { recursive: true });
+  if (destDir.length > 0) {
+    destDir.forEach(dir => {
+      if (fs.existsSync(dir)) {
+        try {
+          fs.rmSync(dir, { recursive: true });
+        } catch (err) {
+          silentLogger.warn(`Unable to delete ${dir} folder in the Chrome data directory. ${err}`);
+          console.warn(`Unable to delete ${dir} folder in the Chrome data directory. ${err}}`);
+        }
+      }
+    });
     return;
   }
 
+  silentLogger.warn('Unable to find Purple-HATS directory in the Chrome data directory.');
   console.warn('Unable to find Purple-HATS directory in the Chrome data directory.');
 };
 
-export const deleteClonedEdgeProfiles = randomToken => {
+/**
+ * Deletes all the cloned Purple-HATS directories in the Chrome data directory
+ * @returns null
+ */
+export const deleteClonedEdgeProfiles = () => {
   const baseDir = getDefaultEdgeDataDir();
 
   if (!baseDir) {
@@ -677,28 +776,48 @@ export const deleteClonedEdgeProfiles = randomToken => {
     return;
   }
 
-  let destDir;
-  if (randomToken) {
-    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
-  } else {
-    destDir = path.join(baseDir, 'Purple-HATS');
-  }
+  // Find all the Purple-HATS directories in the Chrome data directory
+  const destDir = globSync('**/Purple-HATS*', {
+    cwd: baseDir,
+    recursive: true,
+    absolute: true,
+  });
 
-  if (fs.existsSync(destDir)) {
-    fs.rmSync(destDir, { recursive: true });
-    return;
+  if (destDir.length > 0) {
+    destDir.forEach(dir => {
+      if (fs.existsSync(dir)) {
+        try {
+          fs.rmSync(dir, { recursive: true });
+        } catch (err) {
+          silentLogger.warn(`Unable to delete ${dir} folder in the Chrome data directory. ${err}`);
+          console.warn(`Unable to delete ${dir} folder in the Chrome data directory. ${err}}`);
+        }
+      }
+    });
   }
-  console.warn('Unable to find Purple-HATS directory in the Edge data directory.');
 };
 
 /**
  * @param {string} browser browser name ("chrome" or "edge", null for chromium, the default Playwright browser)
  * @returns playwright launch options object. For more details: https://playwright.dev/docs/api/class-browsertype#browser-type-launch
  */
-export const getPlaywrightLaunchOptions = browser => ({
-  // Drop the --use-mock-keychain flag to allow MacOS devices
-  // to use the cloned cookies.
-  ignoreDefaultArgs: ['--use-mock-keychain'],
-  args: constants.launchOptionsArgs,
-  ...(browser && { channel: browser }),
-});
+export const getPlaywrightLaunchOptions = browser => {
+  let channel;
+  if (browser === constants.browserTypes.chromium) {
+    channel = null;
+  } else {
+    channel = browser;
+  }
+  const options = {
+    // Drop the --use-mock-keychain flag to allow MacOS devices
+    // to use the cloned cookies.
+    ignoreDefaultArgs: ['--use-mock-keychain'],
+    args: constants.launchOptionsArgs,
+    ...(channel && { channel }), // Having no channel is equivalent to "chromium"
+  };
+  if (proxy) {
+    options.headless = false;
+    options.slowMo = 1000; // To ensure server-side rendered proxy page is loaded
+  }
+  return options;
+};

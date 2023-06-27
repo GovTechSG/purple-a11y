@@ -7,6 +7,7 @@ import safe from 'safe-regex';
 import { devices } from 'playwright';
 import { consoleLogger, silentLogger } from './logs.js';
 import { fileURLToPath } from 'url';
+import { proxy } from './constants/constants.js';
 
 // Do NOT remove. These import statements will be used when the custom flow scan is run from the GUI app
 import { chromium, webkit } from 'playwright';
@@ -179,6 +180,9 @@ const checkIfScanRequired = async page => {
 
   if (await usesInfiniteScroll()){
     pageUrl = page.url();
+    consoleLogger.info('Screenshot page at: ', pageUrl);
+    silentLogger.info('Screenshot page at: ', pageUrl);
+	
     await page.screenshot({
       path: imgPath,
       clip: {
@@ -238,23 +242,34 @@ const checkIfScanRequired = async page => {
 };
 
 const runAxeScan = async page => {
-  const host = new URL(pageUrl).hostname;
   const result = await runAxeScript(page);
   await dataset.pushData(result);
-  urlsCrawled.scanned.push(pageUrl);
+  urlsCrawled.scanned.push(page.url());
 }
 
 
 const processPage = async page => {
-  await page.waitForLoadState('domcontentloaded'); 
+  try {
+		await page.waitForLoadState('networkidle', {'timeout': 10000 });
+  } catch (e) {
+    consoleLogger.info('Unable to detect networkidle');
+    silentLogger.info('Unable to detect networkidle');
+  }
+  
+  consoleLogger.info('Visiting page at: ',page.url());
+  silentLogger.info('Visiting page at: ',page.url());
+  
+  if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
+	return;
+  } else {
+	const scanRequired = await checkIfScanRequired(page);
+	
+	if (scanRequired) {
+		await runAxeScan(page);
+	}
+  }
+  
 
-  if (await checkIfScanRequired(page)) {
-    if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
-      return;
-    } else {
-      await runAxeScan(page);
-    }
-  };
 };`;
 
   const block2 = `  return urlsCrawled;
@@ -372,11 +387,25 @@ const processPage = async page => {
     let lastGoToUrl;
     let nextStepNeedsProcessPage = false;
 
+    // used when running a scan on a machine with proxy
+    let awaitingProxyLogin = false;
+    let secondGotoMicrosoftLoginSeen = false;
+
     if (!process.env.RUNNING_FROM_PH_GUI) {
       appendToGeneratedScript(importStatements);
     }
 
     for await (let line of rl) {
+      if (/page\d.close\(\)/.test(line.trim())){
+          const handleUndefinedPageBlock = `try{
+            ${line}
+          } catch(err){
+            console.log(err)
+          }`
+          appendToGeneratedScript(handleUndefinedPageBlock)
+          continue;
+      }
+
       if (
         line.trim() === `const { chromium } = require('playwright');` ||
         line.trim() === `const { webkit } = require('playwright');` ||
@@ -386,9 +415,19 @@ const processPage = async page => {
         appendToGeneratedScript(block1);
         continue;
       }
-      if (line.trim() === `headless: false` && isHeadless) {
-        appendToGeneratedScript(`headless: true`);
-        continue;
+      if (line.trim() === `headless: false`) {
+        if (proxy) {
+          appendToGeneratedScript(`slowMo: 100,`);
+          if (proxy.type === 'autoConfig') {
+            appendToGeneratedScript(`args: ['--proxy-pac-url=${proxy.url}'],`);
+          } else {
+            appendToGeneratedScript(`args: ['--proxy-server=${proxy.url}'],`);
+          }
+        }
+        if (!proxy && isHeadless) {
+          appendToGeneratedScript(`headless: true`);
+          continue;
+        }
       }
       if (line.trim() === `const browser = await webkit.launch({`) {
         appendToGeneratedScript(`const browser = await chromium.launch({`);
@@ -432,11 +471,34 @@ const processPage = async page => {
         pageObj = line.match(regexPageObj)[0];
       }
 
+      if (proxy && line.trim().startsWith(`await page.goto('https://login.microsoftonline.com/`)) {
+        if (!awaitingProxyLogin) {
+          awaitingProxyLogin = true;
+          continue;
+        } else if (!secondGotoMicrosoftLoginSeen) {
+          secondGotoMicrosoftLoginSeen = true;
+          continue;
+        }
+      }
+
+      if (awaitingProxyLogin) {
+        if (line.trim().startsWith(`await page.goto('${domain}`)) {
+          awaitingProxyLogin = false;
+        } else {
+          continue;
+        }
+      }
+
       if (line.trim().includes(`.goto(`)) {
         if (!firstGoToUrl) {
+          if (line.trim().startsWith(`await page.goto('https://login.singpass.gov.sg`)) {
+            continue;
+          }
           firstGoToUrl = true;
+          const firstGoToAddress = line.split(`('`)[1].split(`')`)[0];
           appendToGeneratedScript(
             `${line}
+            await page.waitForURL('${firstGoToAddress}', {timeout: 60000});
              await processPage(page);
             `,
           );
@@ -460,7 +522,10 @@ const processPage = async page => {
         nextStepNeedsProcessPage = false;
       }
 
-      if (line.trim().includes('getBy') || line.trim().includes('click()')) {
+      if (
+        (line.trim().includes('getBy') && !line.trim().includes('getByPlaceholder')) ||
+        line.trim().includes('click()')
+      ) {
         const lastIndex = line.lastIndexOf('.');
         const locator = line.substring(0, lastIndex);
         appendToGeneratedScript(

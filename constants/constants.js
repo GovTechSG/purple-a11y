@@ -5,6 +5,8 @@ import { globSync } from 'glob';
 import which from 'which';
 import os from 'os';
 import { spawnSync } from 'child_process';
+import { silentLogger } from '../logs.js';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -129,10 +131,54 @@ const scannerTypes = {
   custom: 'Custom',
 };
 
-// Check if running in docker container
 let launchOptionsArgs = [];
+
+// Check if running in docker container
 if (fs.existsSync('/.dockerenv')) {
   launchOptionsArgs = ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage'];
+}
+
+export const getProxy = () => {
+  if (os.platform() === 'win32') {
+    let internetSettings;
+    try {
+      internetSettings = execSync(
+        'Get-ItemProperty -Path "Registry::HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"',
+        { shell: 'powershell.exe' },
+      )
+        .toString()
+        .split('\n');
+    } catch (e) {
+      console.log(e.toString());
+      silentLogger.error(e.toString());
+    }
+
+    const getSettingValue = settingName =>
+      internetSettings
+        .find(s => s.startsWith(settingName))
+        // split only once at with ':' as the delimiter
+        ?.split(/:(.*)/s)[1]
+        ?.trim();
+
+    if (getSettingValue('AutoConfigURL')) {
+      return { type: 'autoConfig', url: getSettingValue('AutoConfigURL') };
+    } else if (getSettingValue('ProxyEnable') === '1') {
+      return { type: 'manualProxy', url: getSettingValue('ProxyServer') };
+    } else {
+      return null;
+    }
+  } else {
+    // develop for mac
+    return null;
+  }
+};
+
+export const proxy = getProxy();
+
+if (proxy && proxy.type === 'autoConfig') {
+  launchOptionsArgs.push(`--proxy-pac-url=${proxy.url}`);
+} else if (proxy && proxy.type === 'manualProxy') {
+  launchOptionsArgs.push(`--proxy-server=${proxy.url}`);
 }
 
 export const impactOrder = {
@@ -166,7 +212,7 @@ const urlCheckStatuses = {
 const browserTypes = {
   chrome: 'chrome',
   edge: 'msedge',
-  chromium: null, // null means uses Playwright's default browser (chromium)
+  chromium: 'chromium',
 };
 
 const xmlSitemapTypes = {
@@ -196,3 +242,5 @@ export const wcagWebPage = 'https://www.w3.org/TR/WCAG21/';
 const latestAxeVersion = '4.4';
 export const axeVersion = latestAxeVersion;
 export const axeWebPage = `https://dequeuniversity.com/rules/axe/${latestAxeVersion}/`;
+
+export const saflyIconSelector = `#__safly_icon`;

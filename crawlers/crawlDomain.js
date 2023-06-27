@@ -1,6 +1,4 @@
 import crawlee from 'crawlee';
-import { devices } from 'playwright';
-
 import {
   createCrawleeSubFolders,
   preNavigationHooks,
@@ -18,10 +16,11 @@ const crawlDomain = async (
   maxRequestsPerCrawl,
   browser,
   userDataDirectory,
+  strategy,
 ) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { maxConcurrency } = constants;
-  const { deviceChosen, customDevice, viewportWidth } = viewportSettings;
+  const { playwrightDeviceDetailsObject } = viewportSettings;
 
   const { dataset, requestQueue } = await createCrawleeSubFolders(randomToken);
 
@@ -51,20 +50,6 @@ const crawlDomain = async (
     pagesCrawled = 0;
   }
 
-  // customDevice check for website scan
-  let device;
-  if (deviceChosen === 'Mobile' || customDevice === 'iPhone 11') {
-    device = devices['iPhone 11'];
-  } else if (customDevice === 'Samsung Galaxy S9+') {
-    device = devices['Galaxy S9+'];
-  } else if (viewportWidth) {
-    device = { viewport: { width: Number(viewportWidth), height: 720 } };
-  } else if (customDevice) {
-    device = devices[customDevice.replace('_', / /g)];
-  } else {
-    device = {};
-  }
-
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
       launchOptions: getPlaywrightLaunchOptions(browser),
@@ -78,17 +63,7 @@ const crawlDomain = async (
             ...launchContext.launchOptions,
             bypassCSP: true,
             ignoreHTTPSErrors: true,
-            ...device,
-          };
-        },
-      ],
-      preLaunchHooks: [
-        async (pageId, launchContext) => {
-          launchContext.launchOptions = {
-            ...launchContext.launchOptions,
-            bypassCSP: true,
-            ignoreHTTPSErrors: true,
-            ...device,
+            ...playwrightDeviceDetailsObject,
           };
         },
       ],
@@ -114,7 +89,7 @@ const crawlDomain = async (
         await enqueueLinks({
           // set selector matches anchor elements with href but not contains # or starting with mailto:
           selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
-          strategy: 'same-domain',
+          strategy,
           requestQueue,
           transformRequestFunction(req) {
             // ignore all links ending with `.pdf`
