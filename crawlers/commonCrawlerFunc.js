@@ -2,7 +2,7 @@
 /* eslint-disable no-param-reassign */
 import crawlee from 'crawlee';
 import axe from 'axe-core';
-import { axeScript } from '../constants/constants.js';
+import { axeScript, saflyIconSelector } from '../constants/constants.js';
 
 export const filterAxeResults = (results, pageTitle) => {
   const { violations, incomplete, passes, url } = results;
@@ -80,19 +80,24 @@ export const filterAxeResults = (results, pageTitle) => {
 export const runAxeScript = async (page, selectors = []) => {
   await crawlee.playwrightUtils.injectFile(page, axeScript);
 
-  const results = await page.evaluate(selectors => {
-    axe.configure({
-      branding: {
-        application: 'purple-hats',
-      },
-    });
-    return axe.run(selectors, {
-      resultTypes: ['violations', 'passes', 'incomplete'],
-    });
-  }, selectors);
-  const pageTitle = await page.evaluate(() => {
-    return document.title;
-  });
+  const results = await page.evaluate(
+    async ({ selectors, saflyIconSelector }) => {
+      // remove so that axe does not scan
+      document.querySelector(saflyIconSelector)?.remove();
+
+      axe.configure({
+        branding: {
+          application: 'purple-hats',
+        },
+      });
+      return axe.run(selectors, {
+        resultTypes: ['violations', 'passes', 'incomplete'],
+      });
+    },
+    { selectors, saflyIconSelector },
+  );
+
+  const pageTitle = await page.evaluate(() => document.title);
   return filterAxeResults(results, pageTitle);
 };
 
@@ -104,7 +109,7 @@ export const createCrawleeSubFolders = async randomToken => {
 
 export const preNavigationHooks = [
   async (_crawlingContext, gotoOptions) => {
-    gotoOptions = { waitUntil: 'domcontentloaded', timeout: 30000 };
+    gotoOptions = { waitUntil: 'networkidle', timeout: 30000 };
   },
 ];
 

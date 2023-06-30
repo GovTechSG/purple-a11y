@@ -6,6 +6,29 @@ import readline from 'readline';
 import safe from 'safe-regex';
 import { devices } from 'playwright';
 import { consoleLogger, silentLogger } from './logs.js';
+import { fileURLToPath } from 'url';
+import { proxy } from './constants/constants.js';
+
+// Do NOT remove. These import statements will be used when the custom flow scan is run from the GUI app
+import { chromium, webkit } from 'playwright';
+import { createCrawleeSubFolders, runAxeScript } from '#root/crawlers/commonCrawlerFunc.js';
+import { generateArtifacts } from '#root/mergeAxeResults.js';
+import {
+  createAndUpdateResultsFolders,
+  createDetailsAndLogs,
+  createScreenshotsFolder,
+} from '#root/utils.js';
+import constants, {
+  intermediateScreenshotsPath,
+  getExecutablePath,
+  removeQuarantineFlag,
+} from '#root/constants/constants.js';
+import { isSkippedUrl } from '#root/constants/common.js';
+import { spawnSync } from 'child_process';
+import { getDefaultChromeDataDir, getDefaultEdgeDataDir } from './constants/constants.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const playwrightAxeGenerator = async (domain, data) => {
   const blacklistedPatternsFilename = 'exclusions.txt';
@@ -31,18 +54,24 @@ const playwrightAxeGenerator = async (domain, data) => {
   }
 
   let { isHeadless, randomToken, deviceChosen, customDevice, viewportWidth } = data;
-  const block1 = `import { chromium, devices, webkit } from 'playwright';
-  import { createCrawleeSubFolders, runAxeScript } from '#root/crawlers/commonCrawlerFunc.js';
-  import { generateArtifacts } from '#root/mergeAxeResults.js';
-  import { createAndUpdateResultsFolders, createDetailsAndLogs, createScreenshotsFolder } from '#root/utils.js';
-  import constants, { intermediateScreenshotsPath, getExecutablePath, removeQuarantineFlag } from '#root/constants/constants.js';
-  import fs from 'fs';
-  import path from 'path';
-  import { isSkippedUrl } from '#root/constants/common.js';
-  import { spawnSync } from 'child_process';
-  import safe from 'safe-regex';
-  import { consoleLogger, silentLogger } from '#root/logs.js';
-  const blacklistedPatternsFilename = 'exclusions.txt';
+
+  // these will be appended to the generated script if the scan is run from CLI/index.
+  // this is so as the final generated script can be rerun after the scan.
+  const importStatements = `
+    import { chromium, devices, webkit } from 'playwright';
+    import { createCrawleeSubFolders, runAxeScript } from '#root/crawlers/commonCrawlerFunc.js';
+    import { generateArtifacts } from '#root/mergeAxeResults.js';
+    import { createAndUpdateResultsFolders, createDetailsAndLogs, createScreenshotsFolder } from '#root/utils.js';
+    import constants, { intermediateScreenshotsPath, getExecutablePath, removeQuarantineFlag } from '#root/constants/constants.js';
+    import fs from 'fs';
+    import path from 'path';
+    import { isSkippedUrl } from '#root/constants/common.js';
+    import { spawnSync } from 'child_process';
+    import safe from 'safe-regex';
+    import { consoleLogger, silentLogger } from '#root/logs.js';
+
+  `;
+  const block1 = `const blacklistedPatternsFilename = 'exclusions.txt';
 
 process.env.CRAWLEE_STORAGE_DIR = '${randomToken}';
 const compareExe = getExecutablePath('**/ImageMagick*/bin','compare');
@@ -151,6 +180,9 @@ const checkIfScanRequired = async page => {
 
   if (await usesInfiniteScroll()){
     pageUrl = page.url();
+    consoleLogger.info('Screenshot page at: ', pageUrl);
+    silentLogger.info('Screenshot page at: ', pageUrl);
+	
     await page.screenshot({
       path: imgPath,
       clip: {
@@ -210,23 +242,34 @@ const checkIfScanRequired = async page => {
 };
 
 const runAxeScan = async page => {
-  const host = new URL(pageUrl).hostname;
   const result = await runAxeScript(page);
   await dataset.pushData(result);
-  urlsCrawled.scanned.push(pageUrl);
+  urlsCrawled.scanned.push(page.url());
 }
 
 
 const processPage = async page => {
-  await page.waitForLoadState('domcontentloaded'); 
+  try {
+		await page.waitForLoadState('networkidle', {'timeout': 10000 });
+  } catch (e) {
+    consoleLogger.info('Unable to detect networkidle');
+    silentLogger.info('Unable to detect networkidle');
+  }
+  
+  consoleLogger.info('Visiting page at: ',page.url());
+  silentLogger.info('Visiting page at: ',page.url());
+  
+  if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
+	return;
+  } else {
+	const scanRequired = await checkIfScanRequired(page);
+	
+	if (scanRequired) {
+		await runAxeScan(page);
+	}
+  }
+  
 
-  if (await checkIfScanRequired(page)) {
-    if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
-      return;
-    } else {
-      await runAxeScan(page);
-    }
-  };
 };`;
 
   const block2 = `  return urlsCrawled;
@@ -279,6 +322,7 @@ const processPage = async page => {
 
     let browser = 'webkit';
     let userAgentOpts = null;
+    let channel = null;
 
     // Performance workaround for macOS Big Sur and Windows to force Chromium browser instead of Webkit
     if (
@@ -297,27 +341,32 @@ const processPage = async page => {
       }
     }
 
+    if (os.platform() === 'win32' && getDefaultChromeDataDir()) {
+      channel = 'chrome';
+    }
+
     let codegenCmd = `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain}`;
-    let extraCodegenOpts = `${userAgentOpts} --browser ${browser} --block-service-workers --ignore-https-errors`;
-    let codegenResult;
+    let extraCodegenOpts = `${userAgentOpts} --browser ${browser} --block-service-workers --ignore-https-errors ${
+      channel && `--channel ${channel}`
+    }`;
 
     if (viewportWidth || customDevice === 'Specify viewport') {
-      codegenResult = execSync(
-        `${codegenCmd} --viewport-size=${viewportWidth},720 ${extraCodegenOpts}`,
-      );
+      codegenCmd = `${codegenCmd} --viewport-size=${viewportWidth},720 ${extraCodegenOpts}`;
     } else if (deviceChosen === 'Mobile') {
-      codegenResult = execSync(`${codegenCmd} --device="iPhone 11" ${extraCodegenOpts}`);
+      codegenCmd = `${codegenCmd} --device="iPhone 11" ${extraCodegenOpts}`;
     } else if (!customDevice || customDevice === 'Desktop' || deviceChosen === 'Desktop') {
-      codegenResult = execSync(`${codegenCmd} ${extraCodegenOpts}`);
+      codegenCmd = `${codegenCmd} ${extraCodegenOpts}`;
     } else if (customDevice === 'Samsung Galaxy S9+') {
-      codegenResult = execSync(`${codegenCmd} --device="Galaxy S9+" ${extraCodegenOpts}`);
+      codegenCmd = `${codegenCmd} --device="Galaxy S9+" ${extraCodegenOpts}`;
     } else if (customDevice) {
-      codegenResult = execSync(`${codegenCmd} --device="${customDevice}" ${extraCodegenOpts}`);
+      codegenCmd = `${codegenCmd} --device="${customDevice}" ${extraCodegenOpts}`;
     } else {
       console.error(
         `Error: Unable to parse device requested for scan. Please check the input parameters.`,
       );
     }
+
+    const codegenResult = execSync(codegenCmd, { cwd: __dirname });
 
     if (codegenResult.toString()) {
       console.error(`Error running Codegen: ${codegenResult.toString()}`);
@@ -338,7 +387,25 @@ const processPage = async page => {
     let lastGoToUrl;
     let nextStepNeedsProcessPage = false;
 
+    // used when running a scan on a machine with proxy
+    let awaitingProxyLogin = false;
+    let secondGotoMicrosoftLoginSeen = false;
+
+    if (!process.env.RUNNING_FROM_PH_GUI) {
+      appendToGeneratedScript(importStatements);
+    }
+
     for await (let line of rl) {
+      if (/page\d.close\(\)/.test(line.trim())){
+          const handleUndefinedPageBlock = `try{
+            ${line}
+          } catch(err){
+            console.log(err)
+          }`
+          appendToGeneratedScript(handleUndefinedPageBlock)
+          continue;
+      }
+
       if (
         line.trim() === `const { chromium } = require('playwright');` ||
         line.trim() === `const { webkit } = require('playwright');` ||
@@ -348,9 +415,19 @@ const processPage = async page => {
         appendToGeneratedScript(block1);
         continue;
       }
-      if (line.trim() === `headless: false` && isHeadless) {
-        appendToGeneratedScript(`headless: true`);
-        continue;
+      if (line.trim() === `headless: false`) {
+        if (proxy) {
+          appendToGeneratedScript(`slowMo: 100,`);
+          if (proxy.type === 'autoConfig') {
+            appendToGeneratedScript(`args: ['--proxy-pac-url=${proxy.url}'],`);
+          } else {
+            appendToGeneratedScript(`args: ['--proxy-server=${proxy.url}'],`);
+          }
+        }
+        if (!proxy && isHeadless) {
+          appendToGeneratedScript(`headless: true`);
+          continue;
+        }
       }
       if (line.trim() === `const browser = await webkit.launch({`) {
         appendToGeneratedScript(`const browser = await chromium.launch({`);
@@ -394,11 +471,34 @@ const processPage = async page => {
         pageObj = line.match(regexPageObj)[0];
       }
 
+      if (proxy && line.trim().startsWith(`await page.goto('https://login.microsoftonline.com/`)) {
+        if (!awaitingProxyLogin) {
+          awaitingProxyLogin = true;
+          continue;
+        } else if (!secondGotoMicrosoftLoginSeen) {
+          secondGotoMicrosoftLoginSeen = true;
+          continue;
+        }
+      }
+
+      if (awaitingProxyLogin) {
+        if (line.trim().startsWith(`await page.goto('${domain}`)) {
+          awaitingProxyLogin = false;
+        } else {
+          continue;
+        }
+      }
+
       if (line.trim().includes(`.goto(`)) {
         if (!firstGoToUrl) {
+          if (line.trim().startsWith(`await page.goto('https://login.singpass.gov.sg`)) {
+            continue;
+          }
           firstGoToUrl = true;
+          const firstGoToAddress = line.split(`('`)[1].split(`')`)[0];
           appendToGeneratedScript(
             `${line}
+            await page.waitForURL('${firstGoToAddress}', {timeout: 60000});
              await processPage(page);
             `,
           );
@@ -422,7 +522,10 @@ const processPage = async page => {
         nextStepNeedsProcessPage = false;
       }
 
-      if (line.trim().includes('getBy') || line.trim().includes('click()')) {
+      if (
+        (line.trim().includes('getBy') && !line.trim().includes('getByPlaceholder')) ||
+        line.trim().includes('click()')
+      ) {
         const lastIndex = line.lastIndexOf('.');
         const locator = line.substring(0, lastIndex);
         appendToGeneratedScript(
@@ -449,7 +552,22 @@ const processPage = async page => {
     fileStream.destroy();
     console.log(` Browser closed. Replaying steps and running accessibility scan...\n`);
 
-    await import(generatedScript);
+    if (process.env.RUNNING_FROM_PH_GUI) {
+      const genScriptString = fs.readFileSync(generatedScript, 'utf-8');
+      const genScriptCompleted = new Promise((resolve, reject) => {
+        eval(`(async () => {
+            try {
+              ${genScriptString} 
+              resolve(); 
+            } catch (e) {
+              reject(e)
+            }
+          })();`);
+      });
+      await genScriptCompleted;
+    } else {
+      await import(generatedScript);
+    }
   } catch (e) {
     console.error(`Error: ${e}`);
     throw e;
@@ -464,7 +582,11 @@ const processPage = async page => {
       );
     }
 
-    console.log(`\n You may re-run the recorded steps by executing:\n\tnode ${generatedScript} \n`);
+    if (!process.env.RUNNING_FROM_PH_GUI) {
+      console.log(
+        `\n You may re-run the recorded steps by executing:\n\tnode ${generatedScript} \n`,
+      );
+    }
   }
 };
 

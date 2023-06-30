@@ -1,4 +1,4 @@
-import { exec, execFile, execSync } from 'child_process';
+import { execFileSync, execSync } from 'child_process';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
@@ -19,7 +19,7 @@ export const getVersion = () => {
   return versionNum;
 };
 
-export const getHost = url => new URL(url).host
+export const getHost = url => new URL(url).host;
 
 export const getCurrentDate = () => {
   const date = new Date();
@@ -121,31 +121,30 @@ export const setThresholdLimits = setWarnLevel => {
   process.env.WARN_LEVEL = setWarnLevel;
 };
 
-export const zipResults = async (zipName, resultsPath) => {
+export const zipResults = (zipName, resultsPath) => {
   // Check prior zip file exist and remove
   if (fs.existsSync(zipName)) {
-    fs.unlink(zipName);
+    fs.unlinkSync(zipName);
   }
 
   if (os.platform() === 'win32') {
-    exec(
-      `Get-ChildItem -Path "${resultsPath}\\*.*" -Recurse | Compress-Archive -DestinationPath "${zipName}"`,
-      { shell: 'powershell.exe' },
-      err => {
-        if (err) {
-          throw err;
-        }
-      },
-    );
+    try {
+      execSync(
+        `Get-ChildItem -Path "${resultsPath}\\*.*" -Recurse | Compress-Archive -DestinationPath "${zipName}"`,
+        { shell: 'powershell.exe' },
+      );
+    } catch (err) {
+      throw err;
+    }
   } else {
     // To zip up files recursively )-r) in the results folder path
     // Will only zip up the content of the results folder path with (-j) i.e. junk the path
     const command = '/usr/bin/zip';
     const args = ['-r', '-j', zipName, resultsPath];
-    execFile(command, args, err => {
-      if (err) {
-        throw err;
-      }
-    });
+    try {
+      execFileSync(command, args);
+    } catch (err) {
+      throw err;
+    }
   }
 };
