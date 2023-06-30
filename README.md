@@ -203,13 +203,12 @@ Options:
                          ailable in website and sitemap scans           [number]
   -h, --headless         Whether to run the scan in headless mode. Defaults to y
                          es.    [string] [choices: "yes", "no"] [default: "yes"]
-      --reportbreakdown  Will break down the main report according to impact
-                                                      [boolean] [default: false]
-      --warn             Track for issues of target impact level
-  [choices: "critical", "serious", "moderate", "minor", "none"] [default: "none"]
   -b, --browserToRun   Browser to run the scan on: 1) Chromium, 2) Chrome, 3) Ed
                        ge. Defaults to Chromium.
                    [choices: "chrome", "edge", "chromium"] [default: "chromium"]
+  -s, --strategy       Strategy to choose which links to crawl in a website scan
+                       . Defaults to "same-domain".
+                                       [choices: "same-domain", "same-hostname"]
 
 Examples:
   To scan sitemap of website:', 'node cli.js -c [ 1 | Sitemap ] -d <device> -u

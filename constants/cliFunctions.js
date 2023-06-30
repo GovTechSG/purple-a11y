@@ -74,18 +74,6 @@ export const cliOptions = {
     requiresArg: true,
     demandOption: false,
   },
-  reportbreakdown: {
-    describe: 'Will break down the main report according to impact',
-    type: 'boolean',
-    default: false,
-    demandOption: false,
-  },
-  warn: {
-    describe: 'Track for issues of target impact level',
-    choices: ['critical', 'serious', 'moderate', 'minor', 'none'],
-    default: 'none',
-    demandOption: false,
-  },
 };
 
 export const configureReportSetting = isEnabled => {
