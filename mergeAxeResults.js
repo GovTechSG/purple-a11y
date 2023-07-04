@@ -9,6 +9,7 @@ import constants from './constants/constants.js';
 import { getCurrentTime, getStoragePath } from './utils.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import itemTypeDescription from './constants/itemTypeDescription.js';
+import { chromium } from 'playwright';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -65,9 +66,58 @@ const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResu
 
 const writeHTML = async (allIssues, storagePath, htmlFilename = 'report') => {
   const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/report.ejs'), 'utf-8');
-  const template = ejs.compile(ejsString, { filename: path.join(__dirname, './static/ejs/report.ejs') });
+  const template = ejs.compile(ejsString, {
+    filename: path.join(__dirname, './static/ejs/report.ejs'),
+  });
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
+};
+
+const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary') => {
+  const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/summary.ejs'), 'utf-8');
+  const template = ejs.compile(ejsString, {
+    filename: path.join(__dirname, './static/ejs/summary.ejs'),
+  });
+  const html = template(allIssues);
+  fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
+};
+
+const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
+  const browser = await chromium.launch({
+    headless: true,
+  });
+
+  const context = await browser.newContext({
+    ignoreHTTPSErrors: true,
+    serviceWorkers: 'block',
+  });
+
+  const page = await context.newPage();
+
+  fs.readFile(htmlFilePath, 'utf8', async (err, data) => {
+    await page.setContent(data);
+  });
+
+  await page.waitForLoadState('networkidle', {'timeout': 10000 });
+
+    await page.emulateMedia({ media: 'print' });
+
+    await page.pdf({
+    margin: { bottom: '32px' },
+    path: fileDestinationPath,
+    format: 'A4',
+    displayHeaderFooter: true,
+    footerTemplate: `
+    <div style="margin-top:50px;color:#333333;font-family:Open Sans;text-align: center;width: 100%;font-weight:400">
+      <span style="color:#333333;font-size: 14px;font-weight:400">Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+    </div>
+  `,
+  });
+
+  await page.close();
+
+  await context.close();
+  await browser.close();
 };
 
 const pushResults = async (rPath, allIssues) => {
@@ -181,8 +231,12 @@ export const generateArtifacts = async (randomToken, urlScanned, scanType, viewp
     `Must Fix: ${allIssues.items.mustFix.rules.length} issues / ${allIssues.items.mustFix.totalItems} occurrences`,
     `Good to Fix: ${allIssues.items.goodToFix.rules.length} issues / ${allIssues.items.goodToFix.totalItems} occurrences`,
     `Passed: ${allIssues.items.passed.totalItems} occurrences`,
-  ])
+  ]);
 
+  const htmlFilename = `${storagePath}/reports/summary.html`;
+  const fileDestinationPath = `${storagePath}/reports/summary.pdf`;
   await writeResults(allIssues, storagePath);
   await writeHTML(allIssues, storagePath);
+  await writeSummaryHTML(allIssues, storagePath);
+  await writeSummaryPdf(htmlFilename, fileDestinationPath);
 };
