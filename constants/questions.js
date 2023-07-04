@@ -84,7 +84,7 @@ const questions = [
           /* if sitemap scan is selected, treat this URL as a filepath
             isFileSitemap will tell whether the filepath exists, and if it does, whether the
             file is a sitemap */
-          if (isFileSitemap(answers.url)) {
+          if (isFileSitemap(url)) {
             answers.isLocalSitemap = true;
             return true;
           } else {

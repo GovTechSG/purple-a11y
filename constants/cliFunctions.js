@@ -1,4 +1,4 @@
-import constants from "./constants.js";
+import constants from './constants.js';
 
 export const messageOptions = {
   border: false,
@@ -58,16 +58,20 @@ export const cliOptions = {
     default: 'yes',
     demandOption: false,
   },
-  reportbreakdown: {
-    describe: 'Will break down the main report according to impact',
-    type: 'boolean',
-    default: false,
+  b: {
+    alias: 'browserToRun',
+    describe: 'Browser to run the scan on: 1) Chromium, 2) Chrome, 3) Edge. Defaults to Chromium.',
+    choices: Object.keys(constants.browserTypes),
+    requiresArg: true,
+    default: 'chromium',
     demandOption: false,
   },
-  warn: {
-    describe: 'Track for issues of target impact level',
-    choices: ['critical', 'serious', 'moderate', 'minor', 'none'],
-    default: 'none',
+  s: {
+    alias: 'strategy',
+    describe:
+      'Strategy to choose which links to crawl in a website scan. Defaults to "same-domain".',
+    choices: ['same-domain', 'same-hostname'],
+    requiresArg: true,
     demandOption: false,
   },
 };

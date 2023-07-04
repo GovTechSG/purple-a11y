@@ -53,7 +53,7 @@ const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResu
   try {
     await fs.writeFile(`${storagePath}/reports/${jsonFilename}.json`, finalResultsInJson);
     await fs.writeFile(
-      `${storagePath}/reports/passed_items.json`,
+      `${storagePath}/reports/passed_items.json.txt`,
       JSON.stringify(passedItemsJson, null, 4),
     );
   } catch (writeResultsError) {
