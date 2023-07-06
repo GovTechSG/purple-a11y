@@ -1,5 +1,6 @@
 /* eslint-disable consistent-return */
 /* eslint-disable no-console */
+import os from 'os';
 import fs from 'fs-extra';
 import printMessage from 'print-message';
 import path from 'path';
@@ -82,9 +83,16 @@ const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary'
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
 };
 
+let browserChannel = 'chrome';
+
+if (os.platform() === 'win32') {
+  browserChannel = 'msedge';
+}
+
 const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
   const browser = await chromium.launch({
     headless: true,
+    channel: browserChannel,
   });
 
   const context = await browser.newContext({
