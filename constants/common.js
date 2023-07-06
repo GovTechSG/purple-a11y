@@ -484,6 +484,12 @@ export const getLinksFromSitemap = async (
   return Array.from(urls);
 };
 
+export const validEmail = email => {
+  const regex = /\S+@\S+\.\S+/;
+
+  return regex.test(email);
+};
+
 /**
  * Clone the Chrome profile cookie files to the destination directory
  * @param {*} options glob options object

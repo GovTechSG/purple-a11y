@@ -1,9 +1,4 @@
-import {
-  checkUrl,
-  getUrlMessage,
-  isFileSitemap,
-  sanitizeUrlInput,
-} from './common.js';
+import { checkUrl, getUrlMessage, isFileSitemap, sanitizeUrlInput, validEmail } from './common.js';
 import constants from './constants.js';
 
 // const isLoginScan = (answers) => {
@@ -97,6 +92,17 @@ const questions = [
 
     filter: input => {
       return sanitizeUrlInput(input.trim()).url;
+    },
+  },
+  {
+    type: 'input',
+    name: 'email',
+    message: `Your email address to help improve our service:`,
+    validate: email => {
+      if (!validEmail(email)) {
+        return 'Invalid email address. Please provide a valid email address.';
+      }
+      return true;
     },
   },
 ];
