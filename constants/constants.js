@@ -42,7 +42,6 @@ export const whitelistedAttributes = [
   `content`,
   `name`,
   `onclick`,
-  `data`,
   `aria*`,
   `src`,
   `value`,
@@ -52,8 +51,16 @@ export const whitelistedAttributes = [
 ];
 
 // Attributes to mute
-export const mutedAttributeValues = [`name`, `data`, `src`, `value`, `href`, `title`, `aria-label`, `aria-labelledby`];
-
+export const mutedAttributeValues = [
+  `name`,
+  `data`,
+  `src`,
+  `value`,
+  `href`,
+  `title`,
+  `aria-label`,
+  `aria-labelledby`,
+];
 
 export const intermediateScreenshotsPath = './screenshots';
 export const destinationPath = storagePath => `${storagePath}/screenshots`;
