@@ -13,6 +13,47 @@ const __dirname = path.dirname(__filename);
 
 const maxRequestsPerCrawl = 100;
 
+export const ruleIdsWithHtml = [
+  'aria-hidden-focus',
+  'aria-input-field-name',
+  'aria-roles',
+  'aria-toggle-field-name',
+  'aria-valid-attr-value',
+  'aria-valid-attr',
+  'marquee',
+  'nested-interactive',
+  'avoid-inline-spacing',
+  'aria-allowed-role',
+  'tabindex',
+];
+
+// Whitelisted attributes (to not drop)
+// i.e. any other attribute will be dropped
+export const whitelistedAttributes = [
+  `type`,
+  `tabindex`,
+  `lang`,
+  `scope`,
+  `alt`,
+  `role`,
+  `charset`,
+  `for`,
+  `content`,
+  `name`,
+  `onclick`,
+  `data`,
+  `aria*`,
+  `src`,
+  `value`,
+  `href`,
+  `title`,
+  `style`,
+];
+
+// Attributes to mute
+export const mutedAttributeValues = [`name`, `data`, `src`, `value`, `href`, `title`, `aria-label`, `aria-labelledby`];
+
+
 export const intermediateScreenshotsPath = './screenshots';
 export const destinationPath = storagePath => `${storagePath}/screenshots`;
 
