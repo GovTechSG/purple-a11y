@@ -16,6 +16,8 @@ import {
   cloneEdgeProfiles,
   deleteClonedChromeProfiles,
   deleteClonedEdgeProfiles,
+  validEmail,
+  submitFormViaPlaywright,
 } from './constants/common.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
 import constants, {
@@ -120,6 +122,16 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     }
 
     return option;
+  })
+  .coerce('k', email => {
+    if (!validEmail(email)) {
+      printMessage(
+        [`Invalid emaill address. Please provide a valid email adress.`],
+        messageOptions,
+      );
+      process.exit(1);
+    }
+    return email;
   })
   .check(argvs => {
     if (argvs.scanner === 'custom' && argvs.maxpages) {
@@ -335,6 +347,14 @@ const scanInit = async argvs => {
   } else {
     await combineRun(data, screenToScan);
   }
+
+  await submitFormViaPlaywright(
+    data.browserToRun,
+    data.url,
+    argvs.scanner,
+    argvs.email,
+    JSON.stringify({}),
+  );
 
   // Delete cloned directory
   if (useChrome) {

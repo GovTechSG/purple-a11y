@@ -3,14 +3,14 @@
 /* eslint-disable no-param-reassign */
 import printMessage from 'print-message';
 import inquirer from 'inquirer';
-import { getVersion } from './utils.js';
-import { cleanUp, setHeadlessMode } from './utils.js';
-import { prepareData, messageOptions } from './constants/common.js';
+import { devices } from 'playwright';
+import { getVersion, cleanUp, setHeadlessMode } from './utils.js';
+
+import { prepareData, messageOptions, submitFormViaPlaywright } from './constants/common.js';
 import questions from './constants/questions.js';
 import combineRun from './combine.js';
 import playwrightAxeGenerator from './playwrightAxeGenerator.js';
 import constants from './constants/constants.js';
-import { devices } from 'playwright';
 
 printMessage(
   [
@@ -72,6 +72,18 @@ inquirer.prompt(questions).then(async answers => {
   } else {
     await combineRun(data, screenToScan);
   }
+
+  if (answers.email === null || answers.email === '' || answers.email === undefined) {
+    answers.email = 'Anonymous';
+  }
+
+  await submitFormViaPlaywright(
+    null,
+    answers.url,
+    answers.scanner,
+    answers.email,
+    JSON.stringify({}),
+  );
   // Delete dataset and request queues
   cleanUp(data.randomToken);
   process.exit(0);

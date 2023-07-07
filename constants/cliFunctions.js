@@ -74,6 +74,12 @@ export const cliOptions = {
     requiresArg: true,
     demandOption: false,
   },
+  k: {
+    alias: 'email',
+    describe: `Your email address, the collection is for telemetry purposes and fully complies with GovTech's Privacy Policy`,
+    type: 'string',
+    demandOption: false,
+  },
 };
 
 export const configureReportSetting = isEnabled => {

@@ -19,6 +19,7 @@ import constants, {
   getDefaultChromeDataDir,
   getDefaultEdgeDataDir,
   proxy,
+  formDataFields,
   whitelistedAttributes,
   mutedAttributeValues,
 } from './constants.js';
@@ -565,6 +566,12 @@ export const getLinksFromSitemap = async (
   return Array.from(urls);
 };
 
+export const validEmail = email => {
+  const regex = /\S+@\S+\.\S+/;
+
+  return regex.test(email);
+};
+
 /**
  * Clone the Chrome profile cookie files to the destination directory
  * @param {*} options glob options object
@@ -882,6 +889,39 @@ export const deleteClonedEdgeProfiles = () => {
       }
     });
   }
+};
+
+export const submitFormViaPlaywright = async (
+  browserToRun,
+  websiteUrl,
+  scanType,
+  email,
+  scanResultsJson,
+) => {
+  const browser = await chromium.launch({
+    headless: true,
+    ...(browserToRun && { channel: browserToRun }),
+  });
+
+  const finalUrl =
+    `${formDataFields.formUrl}?` +
+    `${formDataFields.websiteUrlField}=${websiteUrl}&` +
+    `${formDataFields.scanTypeField}=${scanType}&` +
+    `${formDataFields.emailField}=${email}&` +
+    `${formDataFields.resultsField}=${scanResultsJson}`;
+
+  const context = await browser.newContext({
+    ignoreHTTPSErrors: true,
+    serviceWorkers: 'block',
+  });
+
+  const page = await context.newPage();
+  await page.goto(finalUrl, {
+    ...(proxy && { waitUntil: 'networkidle' }),
+  });
+
+  await page.close();
+  await context.close();
 };
 
 /**
