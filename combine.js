@@ -86,10 +86,9 @@ const combineRun = async (details, deviceToScan) => {
 
   if (scanDetails.urlsCrawled.scanned.length > 0) {
     await createAndUpdateResultsFolders(randomToken);
-    await generateArtifacts(randomToken, url, type, deviceToScan);
-  } else {
-    printMessage([`No pages were scanned.`], constants.alertMessageOptions);
+    return generateArtifacts(randomToken, url, type, deviceToScan);
   }
+  printMessage([`No pages were scanned.`], constants.alertMessageOptions);
 };
 
 export default combineRun;

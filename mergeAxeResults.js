@@ -260,7 +260,7 @@ const createRuleIdJson = allIssues => {
   var snippets = [];
 
   allIssues.items.mustFix.rules.map(rule => {
-    snippets = [];  
+    snippets = [];
     ruleIdJson = {};
     var ruleId = rule.rule;
 
@@ -289,7 +289,7 @@ const createRuleIdJson = allIssues => {
 
   allIssues.items.goodToFix.rules.map(rule => {
     var ruleId = rule.rule;
-    snippets = [];  
+    snippets = [];
     ruleIdJson = {};
 
     if (ruleIdsWithHtml.includes(ruleId)) {
@@ -315,7 +315,7 @@ const createRuleIdJson = allIssues => {
     compiledRuleJson[ruleId] = ruleIdJson;
   });
 
-  return compiledRuleJson
+  return compiledRuleJson;
 };
 
 export const generateArtifacts = async (randomToken, urlScanned, scanType, viewport) => {
@@ -360,8 +360,7 @@ export const generateArtifacts = async (randomToken, urlScanned, scanType, viewp
     `Passed: ${allIssues.items.passed.totalItems} occurrences`,
   ]);
 
-  const compiledRuleJson = createRuleIdJson(allIssues);
-
+  // const compiledRuleJson = createRuleIdJson(allIssues);
   // fs.appendFileSync('compiledJson.json', JSON.stringify(compiledRuleJson));
   const htmlFilename = `${storagePath}/reports/summary.html`;
   const fileDestinationPath = `${storagePath}/reports/summary.pdf`;
@@ -369,4 +368,5 @@ export const generateArtifacts = async (randomToken, urlScanned, scanType, viewp
   await writeHTML(allIssues, storagePath);
   await writeSummaryHTML(allIssues, storagePath);
   await writeSummaryPdf(htmlFilename, fileDestinationPath);
+  return createRuleIdJson(allIssues);
 };

@@ -30,7 +30,7 @@ import { getDefaultChromeDataDir, getDefaultEdgeDataDir } from './constants/cons
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const playwrightAxeGenerator = async (domain, data) => {
+const playwrightAxeGenerator = async (argvs, data) => {
   const blacklistedPatternsFilename = 'exclusions.txt';
   let blacklistedPatterns = null;
 
@@ -65,7 +65,7 @@ const playwrightAxeGenerator = async (domain, data) => {
     import constants, { intermediateScreenshotsPath, getExecutablePath, removeQuarantineFlag } from '#root/constants/constants.js';
     import fs from 'fs';
     import path from 'path';
-    import { isSkippedUrl } from '#root/constants/common.js';
+    import { isSkippedUrl, submitFormViaPlaywright } from '#root/constants/common.js';
     import { spawnSync } from 'child_process';
     import safe from 'safe-regex';
     import { consoleLogger, silentLogger } from '#root/logs.js';
@@ -91,7 +91,7 @@ process.env.DYLD_LIBRARY_PATH = ImageMagickPath + '/lib/';
 const scanDetails = {
     startTime: new Date().getTime(),
     crawlType: 'Custom Flow',
-    requestUrl: '${domain}',
+    requestUrl: '${argvs.url}',
 };
     
 const urlsCrawled = { ...constants.urlsCrawledObj };
@@ -293,7 +293,9 @@ const processPage = async page => {
             await createDetailsAndLogs(scanDetails, '${randomToken}');
             await createAndUpdateResultsFolders('${randomToken}');
             createScreenshotsFolder('${randomToken}');
-            await generateArtifacts('${randomToken}', '${domain}', 'Customized', '${
+            const basicFormHTMLSnippet = await generateArtifacts('${randomToken}', '${
+    argvs.url
+  }', 'Customized', '${
     viewportWidth
       ? `CustomWidth_${viewportWidth}px`
       : customDevice
@@ -302,7 +304,18 @@ const processPage = async page => {
       ? deviceChosen
       : 'Desktop'
   }');
-        });`;
+        });
+
+        await submitFormViaPlaywright(
+          "${data.browserToRun}",
+          "${data.url}",
+          "${argvs.scanner}",
+          "${argvs.email}",
+          JSON.stringify(basicFormHTMLSnippet),
+        );
+
+        
+        `;
 
   let tmpDir;
   const appPrefix = 'purple-hats';
@@ -314,7 +327,7 @@ const processPage = async page => {
   const generatedScript = `./custom_flow_scripts/generatedScript-${randomToken}.js`;
 
   console.log(
-    ` ℹ️  A new browser will be launched shortly.\n Navigate and record custom steps for ${domain} in the new browser.\n Close the browser when you are done recording your steps.`,
+    ` ℹ️  A new browser will be launched shortly.\n Navigate and record custom steps for ${argvs.url} in the new browser.\n Close the browser when you are done recording your steps.`,
   );
 
   try {
@@ -345,7 +358,7 @@ const processPage = async page => {
       channel = 'chrome';
     }
 
-    let codegenCmd = `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${domain}`;
+    let codegenCmd = `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${argvs.url}`;
     let extraCodegenOpts = `${userAgentOpts} --browser ${browser} --block-service-workers --ignore-https-errors ${
       channel && `--channel ${channel}`
     }`;
@@ -396,14 +409,14 @@ const processPage = async page => {
     }
 
     for await (let line of rl) {
-      if (/page\d.close\(\)/.test(line.trim())){
-          const handleUndefinedPageBlock = `try{
+      if (/page\d.close\(\)/.test(line.trim())) {
+        const handleUndefinedPageBlock = `try{
             ${line}
           } catch(err){
             console.log(err)
-          }`
-          appendToGeneratedScript(handleUndefinedPageBlock)
-          continue;
+          }`;
+        appendToGeneratedScript(handleUndefinedPageBlock);
+        continue;
       }
 
       if (
@@ -482,7 +495,7 @@ const processPage = async page => {
       }
 
       if (awaitingProxyLogin) {
-        if (line.trim().startsWith(`await page.goto('${domain}`)) {
+        if (line.trim().startsWith(`await page.goto('${argvs.url}`)) {
           awaitingProxyLogin = false;
         } else {
           continue;
