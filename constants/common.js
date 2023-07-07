@@ -15,7 +15,12 @@ import os from 'os';
 import { globSync } from 'glob';
 import { chromium, devices } from 'playwright';
 import printMessage from 'print-message';
-import constants, { getDefaultChromeDataDir, getDefaultEdgeDataDir, proxy } from './constants.js';
+import constants, {
+  formDataFields,
+  getDefaultChromeDataDir,
+  getDefaultEdgeDataDir,
+  proxy,
+} from './constants.js';
 import { silentLogger } from '../logs.js';
 
 const document = new JSDOM('').window;
@@ -807,6 +812,41 @@ export const deleteClonedEdgeProfiles = () => {
       }
     });
   }
+};
+
+export const submitFormViaPlaywright = async (
+  browserToRun,
+  websiteUrl,
+  scanType,
+  email,
+  scanResultsJson,
+) => {
+  const browser = await chromium.launch({
+    headless: true,
+    ...(browserToRun && { channel: browserToRun }),
+  });
+
+  const finalUrl =
+    `${formDataFields.formUrl}?` +
+    `${formDataFields.websiteUrlField}=${websiteUrl}&` +
+    `${formDataFields.scanTypeField}=${scanType}&` +
+    `${formDataFields.emailField}=${email}&` +
+    `${formDataFields.resultsField}=${scanResultsJson}`;
+
+  console.log(finalUrl);
+
+  const context = await browser.newContext({
+    ignoreHTTPSErrors: true,
+    serviceWorkers: 'block',
+  });
+
+  const page = await context.newPage();
+  await page.goto(finalUrl, {
+    ...(proxy && { waitUntil: 'networkidle' }),
+  });
+
+  await page.close();
+  await context.close();
 };
 
 /**

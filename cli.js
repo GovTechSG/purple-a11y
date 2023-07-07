@@ -17,6 +17,7 @@ import {
   deleteClonedChromeProfiles,
   deleteClonedEdgeProfiles,
   validEmail,
+  submitFormViaPlaywright,
 } from './constants/common.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
 import constants, {
@@ -346,6 +347,14 @@ const scanInit = async argvs => {
   } else {
     await combineRun(data, screenToScan);
   }
+
+  await submitFormViaPlaywright(
+    data.browserToRun,
+    data.url,
+    argvs.scanner,
+    argvs.email,
+    JSON.stringify({}),
+  );
 
   // Delete cloned directory
   if (useChrome) {
