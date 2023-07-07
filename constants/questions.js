@@ -82,23 +82,24 @@ const questions = [
           if (isFileSitemap(url)) {
             answers.isLocalSitemap = true;
             return true;
-          } else {
-            res.status = statuses.notASitemap.code;
           }
+          res.status = statuses.notASitemap.code;
+
         case statuses.notASitemap.code:
           return statuses.notASitemap.message;
       }
     },
 
-    filter: input => {
-      return sanitizeUrlInput(input.trim()).url;
-    },
+    filter: input => sanitizeUrlInput(input.trim()).url,
   },
   {
     type: 'input',
     name: 'email',
-    message: `Your email address to help improve our service:`,
+    message: `[Optional] Your email address for Purple HATs to update you on our service (leave blank and press enter if you prefer not to):`,
     validate: email => {
+      if (email === '' || email === undefined || email === null) {
+        return true;
+      }
       if (!validEmail(email)) {
         return 'Invalid email address. Please provide a valid email address.';
       }

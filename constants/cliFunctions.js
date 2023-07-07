@@ -78,7 +78,7 @@ export const cliOptions = {
     alias: 'email',
     describe: `Your email address, the collection is for telemetry purposes and fully complies with GovTech's Privacy Policy`,
     type: 'string',
-    demandOption: true,
+    demandOption: false,
   },
 };
 

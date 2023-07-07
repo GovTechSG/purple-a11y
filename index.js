@@ -73,6 +73,10 @@ inquirer.prompt(questions).then(async answers => {
     await combineRun(data, screenToScan);
   }
 
+  if (answers.email === null || answers.email === '' || answers.email === undefined) {
+    answers.email = 'Anonymous';
+  }
+
   await submitFormViaPlaywright(
     null,
     answers.url,
