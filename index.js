@@ -52,6 +52,14 @@ inquirer.prompt(questions).then(async answers => {
 
   answers.playwrightDeviceDetailsObject = playwrightDeviceDetailsObject;
 
+  // TODO: Do not hard set browser to Chromium after
+  // index has option to choose browser
+  answers.browserToRun = constants.browserTypes.chromium;
+
+  if (answers.email === null || answers.email === '' || answers.email === undefined) {
+    answers.email = 'Anonymous';
+  }
+
   const data = prepareData(answers);
 
   setHeadlessMode(data.isHeadless);
@@ -68,22 +76,11 @@ inquirer.prompt(questions).then(async answers => {
   printMessage(['Scanning website...'], messageOptions);
 
   if (answers.scanner === constants.scannerTypes.custom) {
-    await playwrightAxeGenerator(answers.url, data);
+    await playwrightAxeGenerator(data);
   } else {
     await combineRun(data, screenToScan);
   }
 
-  if (answers.email === null || answers.email === '' || answers.email === undefined) {
-    answers.email = 'Anonymous';
-  }
-
-  await submitFormViaPlaywright(
-    null,
-    answers.url,
-    answers.scanner,
-    answers.email,
-    JSON.stringify({}),
-  );
   // Delete dataset and request queues
   cleanUp(data.randomToken);
   process.exit(0);
