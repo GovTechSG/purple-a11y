@@ -4,13 +4,28 @@
 import printMessage from 'print-message';
 import inquirer from 'inquirer';
 import { devices } from 'playwright';
-import { getVersion, cleanUp, setHeadlessMode } from './utils.js';
+import { getVersion, cleanUp, setHeadlessMode, getUserData } from './utils.js';
 
 import { prepareData, messageOptions, submitFormViaPlaywright } from './constants/common.js';
 import questions from './constants/questions.js';
 import combineRun from './combine.js';
 import playwrightAxeGenerator from './playwrightAxeGenerator.js';
 import constants from './constants/constants.js';
+
+/**
+ * Pseudocode
+ * 1. Check if userDataTxt exists
+ * 2. If it does, personalise printMessage "Welcome ${userData.name} ..."
+ * 3. If it dosen't, change printMessage to "Welcome..., To personalise your experience, we will be collecting your name, email address and app usage data. Your information fully complies with GovTech’s Privacy Policy."
+ * 4. Bring up questions
+ */
+
+const userData = getUserData();
+if (userData) {
+  // 2. Personalise printMessage
+} else {
+  // 3.
+}
 
 printMessage(
   [
