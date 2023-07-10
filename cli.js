@@ -241,6 +241,11 @@ const scanInit = async argvs => {
   if (argvs.scanner === constants.scannerTypes.website && !argvs.strategy) {
     argvs.strategy = 'same-domain';
   }
+
+  if (argvs.email === null || argvs.email === '' || argvs.email === undefined) {
+    argvs.email = 'Annonymous';
+  }
+
   const statuses = constants.urlCheckStatuses;
 
   // File clean up after url check
@@ -334,13 +339,9 @@ const scanInit = async argvs => {
 
   printMessage([`Purple HATS version: ${appVersion}`, 'Starting scan...'], messageOptions);
 
-  if (argvs.email === null || argvs.email === '' || argvs.email === undefined) {
-    argvs.email = 'Annonymous';
-  }
-
   if (argvs.scanner === constants.scannerTypes.custom) {
     try {
-      await playwrightAxeGenerator(argvs, data);
+      await playwrightAxeGenerator(data);
     } catch (error) {
       silentLogger.error(error);
       printMessage([
@@ -349,15 +350,7 @@ const scanInit = async argvs => {
       process.exit(2);
     }
   } else {
-    const basicFormHTMLSnippet = await combineRun(data, screenToScan);
-
-    await submitFormViaPlaywright(
-      data.browserToRun,
-      data.url,
-      argvs.scanner,
-      argvs.email,
-      JSON.stringify(basicFormHTMLSnippet),
-    );
+    await combineRun(data, screenToScan);
   }
 
   // Delete cloned directory
