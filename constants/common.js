@@ -419,14 +419,14 @@ export const prepareData = argv => {
     strategy,
     isLocalSitemap,
     finalUrl,
-    browserBased,
+    browserToRun,
+    email,
   } = argv;
 
   return {
     type: scanner,
     url: isLocalSitemap ? url : finalUrl,
     isHeadless: headless,
-    isBrowserBased: browserBased,
     deviceChosen,
     customDevice,
     viewportWidth,
@@ -434,6 +434,8 @@ export const prepareData = argv => {
     maxRequestsPerCrawl: maxpages || constants.maxRequestsPerCrawl,
     strategy,
     isLocalSitemap,
+    browser: browserToRun,
+    email,
   };
 };
 
@@ -467,13 +469,18 @@ export const getLinksFromSitemap = async (
     urlsFromData.forEach(url => urls.add(url));
   };
 
+  let finalUserDataDirectory = userDataDirectory;
+  if (userDataDirectory === null || userDataDirectory === undefined) {
+    finalUserDataDirectory = '';
+  }
+
   const fetchUrls = async url => {
     let data;
     let sitemapType;
     if (validator.isURL(url, urlOptions)) {
       if (browser) {
         const browserContext = await chromium.launchPersistentContext(
-          userDataDirectory,
+          finalUserDataDirectory,
           getPlaywrightLaunchOptions(browser),
         );
         const page = await browserContext.newPage();

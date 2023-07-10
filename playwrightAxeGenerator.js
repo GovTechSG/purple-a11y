@@ -30,7 +30,7 @@ import { getDefaultChromeDataDir, getDefaultEdgeDataDir } from './constants/cons
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const playwrightAxeGenerator = async (argvs, data) => {
+const playwrightAxeGenerator = async data => {
   const blacklistedPatternsFilename = 'exclusions.txt';
   let blacklistedPatterns = null;
 
@@ -91,7 +91,7 @@ process.env.DYLD_LIBRARY_PATH = ImageMagickPath + '/lib/';
 const scanDetails = {
     startTime: new Date().getTime(),
     crawlType: 'Custom Flow',
-    requestUrl: '${argvs.url}',
+    requestUrl: '${data.url}',
 };
     
 const urlsCrawled = { ...constants.urlsCrawledObj };
@@ -294,7 +294,7 @@ const processPage = async page => {
             await createAndUpdateResultsFolders('${randomToken}');
             createScreenshotsFolder('${randomToken}');
             const basicFormHTMLSnippet = await generateArtifacts('${randomToken}', '${
-    argvs.url
+    data.url
   }', 'Customized', '${
     viewportWidth
       ? `CustomWidth_${viewportWidth}px`
@@ -304,17 +304,14 @@ const processPage = async page => {
       ? deviceChosen
       : 'Desktop'
   }');
+  await submitFormViaPlaywright(
+    "${data.browser}",
+    "${data.url}",
+    "${data.type}",
+    "${data.email}",
+    JSON.stringify(basicFormHTMLSnippet),
+  );
         });
-
-        await submitFormViaPlaywright(
-          "${data.browserToRun}",
-          "${data.url}",
-          "${argvs.scanner}",
-          "${argvs.email}",
-          JSON.stringify(basicFormHTMLSnippet),
-        );
-
-        
         `;
 
   let tmpDir;
@@ -327,7 +324,7 @@ const processPage = async page => {
   const generatedScript = `./custom_flow_scripts/generatedScript-${randomToken}.js`;
 
   console.log(
-    ` ℹ️  A new browser will be launched shortly.\n Navigate and record custom steps for ${argvs.url} in the new browser.\n Close the browser when you are done recording your steps.`,
+    ` ℹ️  A new browser will be launched shortly.\n Navigate and record custom steps for ${data.url} in the new browser.\n Close the browser when you are done recording your steps.`,
   );
 
   try {
@@ -358,7 +355,7 @@ const processPage = async page => {
       channel = 'chrome';
     }
 
-    let codegenCmd = `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${argvs.url}`;
+    let codegenCmd = `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${data.url}`;
     let extraCodegenOpts = `${userAgentOpts} --browser ${browser} --block-service-workers --ignore-https-errors ${
       channel && `--channel ${channel}`
     }`;
@@ -495,7 +492,7 @@ const processPage = async page => {
       }
 
       if (awaitingProxyLogin) {
-        if (line.trim().startsWith(`await page.goto('${argvs.url}`)) {
+        if (line.trim().startsWith(`await page.goto('${data.url}`)) {
           awaitingProxyLogin = false;
         } else {
           continue;
