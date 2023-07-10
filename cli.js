@@ -242,10 +242,6 @@ const scanInit = async argvs => {
     argvs.strategy = 'same-domain';
   }
 
-  if (argvs.email === null || argvs.email === '' || argvs.email === undefined) {
-    argvs.email = 'Annonymous';
-  }
-
   const statuses = constants.urlCheckStatuses;
 
   // File clean up after url check
