@@ -123,6 +123,14 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return option;
   })
   .coerce('k', nameEmail => {
+    // If ":" is not found,
+    if (nameEmail.indexOf(':') === -1) {
+      printMessage(
+        [`Invalid format. Please provide your name and email address separated by ":"`],
+        messageOptions,
+      );
+      process.exit(1);
+    }
     const [name, email] = nameEmail.split(':');
     if (name === '' || name === undefined || name === null) {
       printMessage([`Please provide your name.`], messageOptions);
