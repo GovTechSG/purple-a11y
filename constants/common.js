@@ -420,7 +420,7 @@ export const prepareData = argv => {
     isLocalSitemap,
     finalUrl,
     browserToRun,
-    email,
+    nameEmail,
   } = argv;
 
   return {
@@ -435,7 +435,7 @@ export const prepareData = argv => {
     strategy,
     isLocalSitemap,
     browser: browserToRun,
-    email,
+    nameEmail,
   };
 };
 
@@ -918,6 +918,8 @@ export const submitFormViaPlaywright = async (
     `${formDataFields.emailField}=${email}&` +
     `${formDataFields.nameField}=${name}&` +
     `${formDataFields.resultsField}=${scanResultsJson}`;
+
+  console.log(finalUrl);
 
   const context = await browser.newContext({
     ignoreHTTPSErrors: true,
