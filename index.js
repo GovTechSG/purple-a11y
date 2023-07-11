@@ -6,7 +6,7 @@ import inquirer from 'inquirer';
 import { devices } from 'playwright';
 import { getVersion, cleanUp, setHeadlessMode, getUserData } from './utils.js';
 
-import { prepareData, messageOptions, submitFormViaPlaywright } from './constants/common.js';
+import { prepareData, messageOptions } from './constants/common.js';
 import questions from './constants/questions.js';
 import combineRun from './combine.js';
 import playwrightAxeGenerator from './playwrightAxeGenerator.js';

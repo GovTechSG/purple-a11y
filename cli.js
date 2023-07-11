@@ -17,7 +17,6 @@ import {
   deleteClonedChromeProfiles,
   deleteClonedEdgeProfiles,
   validEmail,
-  submitFormViaPlaywright,
 } from './constants/common.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
 import constants, {
@@ -123,7 +122,12 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
 
     return option;
   })
-  .coerce('k', email => {
+  .coerce('k', nameEmail => {
+    const [name, email] = nameEmail.split(':');
+    if (name === '' || name === undefined || name === null) {
+      printMessage([`Please provide your name.`], messageOptions);
+      process.exit(1);
+    }
     if (!validEmail(email)) {
       printMessage(
         [`Invalid emaill address. Please provide a valid email adress.`],
@@ -131,7 +135,7 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
       );
       process.exit(1);
     }
-    return email;
+    return nameEmail;
   })
   .check(argvs => {
     if (argvs.scanner === 'custom' && argvs.maxpages) {

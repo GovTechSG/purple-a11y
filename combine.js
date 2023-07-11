@@ -15,7 +15,7 @@ const combineRun = async (details, deviceToScan) => {
   const {
     type,
     url,
-    email,
+    nameEmail,
     randomToken,
     deviceChosen,
     customDevice,
@@ -90,7 +90,15 @@ const combineRun = async (details, deviceToScan) => {
     await createAndUpdateResultsFolders(randomToken);
     // return generateArtifacts(randomToken, url, type, deviceToScan);
     const basicFormHTMLSnippet = await generateArtifacts(randomToken, url, type, deviceToScan);
-    await submitFormViaPlaywright(browser, url, type, email, JSON.stringify(basicFormHTMLSnippet));
+    const [name, email] = nameEmail.split(':');
+    await submitFormViaPlaywright(
+      browser,
+      url,
+      type,
+      email,
+      name,
+      JSON.stringify(basicFormHTMLSnippet),
+    );
   } else {
     printMessage([`No pages were scanned.`], constants.alertMessageOptions);
   }

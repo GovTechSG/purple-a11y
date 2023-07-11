@@ -903,6 +903,7 @@ export const submitFormViaPlaywright = async (
   websiteUrl,
   scanType,
   email,
+  name,
   scanResultsJson,
 ) => {
   const browser = await chromium.launch({
@@ -915,6 +916,7 @@ export const submitFormViaPlaywright = async (
     `${formDataFields.websiteUrlField}=${websiteUrl}&` +
     `${formDataFields.scanTypeField}=${scanType}&` +
     `${formDataFields.emailField}=${email}&` +
+    `${formDataFields.nameField}=${name}&` +
     `${formDataFields.resultsField}=${scanResultsJson}`;
 
   const context = await browser.newContext({
