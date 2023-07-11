@@ -28,7 +28,7 @@ import { silentLogger } from '../logs.js';
 // Drop all attributes from the HTML snippet except whitelisted
 export const dropAllExceptWhitelisted = htmlSnippet => {
   const regex = new RegExp(
-    `(\\s+)(?!${whitelistedAttributes.join(`|`)})(\\w+)(\\s*=\\s*"[^"]*")`,
+    `(\\s+)(?!${whitelistedAttributes.join(`|`)})([\\w-]+)(\\s*=\\s*"[^"]*")`,
     `g`,
   );
   return htmlSnippet.replace(regex, ``);
