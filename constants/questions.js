@@ -1,9 +1,35 @@
+import { getUserData, writeToUserDataTxt } from '../utils.js';
 import { checkUrl, getUrlMessage, isFileSitemap, sanitizeUrlInput, validEmail } from './common.js';
 import constants from './constants.js';
 
-// const isLoginScan = (answers) => {
-//   return !!answers.scanner && answers.scanner === constants.scannerTypes.login;
-// }
+const userData = getUserData();
+/**
+ * 1. Check if userDataTxt exists
+ * 2. Instantiate questions array
+ * 3. If exists 1st question: Would you like to scan or edit email?
+ * 4. If not exists 1st question: Please give me your name (use writeToUserDataTxt(key, value))
+ * 4.1 2nd question: Please give me your email
+ * 4.2 Validate email, save email to the file (use validEmail())
+ * 5. Push the remaining questions to the array
+ */
+
+// const questions = [];
+// UserDataTxt exists, i.e. not first time user
+if (userData) {
+  // questions.push(
+  //   {
+  //     userData.name
+  //     continue scan? or edit email
+  //   }
+  // )
+} else {
+  // question.push(
+  //   please give me ur name
+  // )
+  // {
+  //   give email
+  // }
+}
 
 // Questions used in Inquirer.js
 const questions = [
@@ -95,11 +121,11 @@ const questions = [
   {
     type: 'input',
     name: 'email',
-    message: `[Optional] Your email address for Purple HATs to update you on our service (leave blank and press enter if you prefer not to):`,
+    message: `Your email address for Purple HATS to update you on our service and telemetry:`,
     validate: email => {
-      if (email === '' || email === undefined || email === null) {
-        return true;
-      }
+      // if (email === '' || email === undefined || email === null) {
+      //   return true;
+      // }
       if (!validEmail(email)) {
         return 'Invalid email address. Please provide a valid email address.';
       }
