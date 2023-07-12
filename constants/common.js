@@ -919,8 +919,6 @@ export const submitFormViaPlaywright = async (
     `${formDataFields.nameField}=${name}&` +
     `${formDataFields.resultsField}=${scanResultsJson}`;
 
-  console.log(finalUrl);
-
   const context = await browser.newContext({
     ignoreHTTPSErrors: true,
     serviceWorkers: 'block',
