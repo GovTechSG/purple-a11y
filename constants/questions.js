@@ -9,16 +9,6 @@ import {
 } from './common.js';
 import constants from './constants.js';
 
-/**
- * 1. Check if userDataTxt exists
- * 2. Instantiate questions array
- * 3. If exists 1st question: Would you like to scan or edit email?
- * 4. If not exists 1st question: Please give me your name (use writeToUserDataTxt(key, value))
- * 4.1 2nd question: Please give me your email
- * 4.2 Validate email, save email to the file (use validEmail())
- * 5. Push the remaining questions to the array
- */
-
 const userData = getUserDataTxt();
 
 const questions = [];
