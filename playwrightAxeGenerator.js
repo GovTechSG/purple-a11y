@@ -304,11 +304,14 @@ const processPage = async page => {
       ? deviceChosen
       : 'Desktop'
   }');
+
   await submitFormViaPlaywright(
     "${data.browser}",
     "${data.url}",
     "${data.type}",
-    "${data.email}",
+    // nameEmail = name:email
+    "${data.nameEmail.split(':')[1]}", 
+    "${data.nameEmail.split(':')[0]}",
     JSON.stringify(basicFormHTMLSnippet),
   );
         });
