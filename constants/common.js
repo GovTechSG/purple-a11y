@@ -574,9 +574,9 @@ export const getLinksFromSitemap = async (
 };
 
 export const validEmail = email => {
-  const regex = /\S+@\S+\.\S+/;
+  const emailRegex = new RegExp(/^[A-Za-z0-9_!#$%&'*+\/=?`{|}~^.-]+@[A-Za-z0-9.-]+$/, 'gm');
 
-  return regex.test(email);
+  return emailRegex.test(email);
 };
 
 // For new user flow.
@@ -933,7 +933,6 @@ export const submitFormViaPlaywright = async (
     `${formDataFields.emailField}=${email}&` +
     `${formDataFields.nameField}=${name}&` +
     `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}`;
-
 
   const context = await browser.newContext({
     ignoreHTTPSErrors: true,
