@@ -307,6 +307,7 @@ const processPage = async page => {
 
   await submitFormViaPlaywright(
     "${data.browser}",
+    "${data.userDataDirectory}",
     "${data.url}",
     "${data.type}",
     // nameEmail = name:email

@@ -93,6 +93,7 @@ const combineRun = async (details, deviceToScan) => {
     const [name, email] = nameEmail.split(':');
     await submitFormViaPlaywright(
       browser,
+      userDataDirectory,
       url,
       type,
       email,

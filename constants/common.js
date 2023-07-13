@@ -915,17 +915,13 @@ export const deleteClonedEdgeProfiles = () => {
 
 export const submitFormViaPlaywright = async (
   browserToRun,
+  userDataDirectory,
   websiteUrl,
   scanType,
   email,
   name,
   scanResultsJson,
 ) => {
-  const browser = await chromium.launch({
-    headless: true,
-    ...(browserToRun && { channel: browserToRun }),
-  });
-
   const finalUrl =
     `${formDataFields.formUrl}?` +
     `${formDataFields.websiteUrlField}=${websiteUrl}&` +
@@ -934,18 +930,38 @@ export const submitFormViaPlaywright = async (
     `${formDataFields.nameField}=${name}&` +
     `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}`;
 
-  const context = await browser.newContext({
-    ignoreHTTPSErrors: true,
-    serviceWorkers: 'block',
+  const browserContext = await chromium.launchPersistentContext(userDataDirectory, {
+    ...getPlaywrightLaunchOptions(browserToRun),
   });
+  // const context = await browser.newContext();
 
-  const page = await context.newPage();
-  await page.goto(finalUrl, {
-    ...(proxy && { waitUntil: 'networkidle' }),
-  });
+  const page = await browserContext.newPage();
+  // const page = await context.newPage();
 
-  await page.close();
-  await context.close();
+  try {
+    const response = await page.goto(finalUrl, {
+      timeout: 30000,
+      ...(proxy && { waitUntil: 'commit' }),
+    });
+
+    try {
+      await page.waitForLoadState('networkidle', { timeout: 10000 });
+    } catch (e) {
+      silentLogger.info('Unable to detect networkidle');
+    }
+  } catch (error) {
+    // not sure what errors are thrown
+    console.log(error);
+    silentLogger.error(error);
+  } finally {
+    await browserContext.close();
+  }
+  // await page.goto(finalUrl, {
+  //   ...(proxy && { waitUntil: 'networkidle' }),
+  // });
+
+  // await page.close();
+  // await context.close();
 };
 
 /**
