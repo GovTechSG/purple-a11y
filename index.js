@@ -32,10 +32,10 @@ if (userData) {
       // Note that the color is based on kleur NPM package
       border: true,
       borderColor: 'magenta',
-    }
+    },
   );
 
-  inquirer.prompt(questions).then(async (answers) => {
+  inquirer.prompt(questions).then(async answers => {
     let screenToScan;
     let playwrightDeviceDetailsObject = {};
 
@@ -71,18 +71,13 @@ if (userData) {
 
     setHeadlessMode(data.isHeadless);
 
-    const [date, time] = new Date()
-      .toLocaleString('sv')
-      .replaceAll(/-|:/g, '')
-      .split(' ');
+    const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
 
-    const domain = answers.isLocalSitemap
-      ? 'custom'
-      : new URL(answers.url).hostname;
+    const domain = answers.isLocalSitemap ? 'custom' : new URL(answers.url).hostname;
 
     data.randomToken = `PHScan_${domain}_${date}_${time}_${answers.scanner.replaceAll(
       ' ',
-      '_'
+      '_',
     )}_${screenToScan.replaceAll(' ', '_')}`;
 
     printMessage(['Scanning website...'], messageOptions);
@@ -101,7 +96,8 @@ if (userData) {
   printMessage(
     [
       `Welcome to HATS Accessibility Testing Tool!`,
-      'We recommend using Chrome browser for the best experience.',
+      `To personalise your experience, we will be collecting your name, email address and app usage data.`,
+      `Your information fully complies with GovTech’s Privacy Policy.`,
       '',
       `Version: ${getVersion()}`,
     ],
@@ -109,10 +105,10 @@ if (userData) {
       // Note that the color is based on kleur NPM package
       border: true,
       borderColor: 'magenta',
-    }
+    },
   );
 
-  inquirer.prompt(questions).then(async (answers) => {
+  inquirer.prompt(questions).then(async answers => {
     const { name, email } = answers;
 
     await writeToUserDataTxt('name', name);
@@ -152,18 +148,13 @@ if (userData) {
 
     setHeadlessMode(data.isHeadless);
 
-    const [date, time] = new Date()
-      .toLocaleString('sv')
-      .replaceAll(/-|:/g, '')
-      .split(' ');
+    const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
 
-    const domain = answers.isLocalSitemap
-      ? 'custom'
-      : new URL(answers.url).hostname;
+    const domain = answers.isLocalSitemap ? 'custom' : new URL(answers.url).hostname;
 
     data.randomToken = `PHScan_${domain}_${date}_${time}_${answers.scanner.replaceAll(
       ' ',
-      '_'
+      '_',
     )}_${screenToScan.replaceAll(' ', '_')}`;
 
     printMessage(['Scanning website...'], messageOptions);
