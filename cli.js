@@ -17,6 +17,7 @@ import {
   deleteClonedChromeProfiles,
   deleteClonedEdgeProfiles,
   validEmail,
+  validName,
 } from './constants/common.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
 import constants, {
@@ -133,6 +134,10 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     const [name, email] = nameEmail.split(':');
     if (name === '' || name === undefined || name === null) {
       printMessage([`Please provide your name.`], messageOptions);
+      process.exit(1);
+    }
+    if (!validName(name)) {
+      printMessage([`Invalid name. Please provide a valid name.`], messageOptions);
       process.exit(1);
     }
     if (!validEmail(email)) {
