@@ -579,6 +579,21 @@ export const validEmail = email => {
   return regex.test(email);
 };
 
+// For new user flow.
+export const validName = name => {
+  const maxLength = 50;
+  const regex = /^[A-Za-z\s]+$/;
+
+  if (name.length > maxLength) {
+    return false; // Reject names exceeding maxlength
+  }
+
+  if (!regex.test(name)) {
+    return false; // Reject names with non-alphabetic or non-whitespace characters
+  }
+
+  return true;
+};
 /**
  * Clone the Chrome profile cookie files to the destination directory
  * @param {*} options glob options object
