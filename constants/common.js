@@ -911,18 +911,13 @@ export const submitFormViaPlaywright = async (
     ...(browserToRun && { channel: browserToRun }),
   });
 
-  // Replace & with %26 to avoid truncation of the query string in elements with ampersand
-  // eslint-disable-next-line no-param-reassign
-  scanResultsJson = scanResultsJson.replace('&', '%26');
-
-  const finalUrl = encodeURI(
+  const finalUrl =
     `${formDataFields.formUrl}?` +
-      `${formDataFields.websiteUrlField}=${websiteUrl}&` +
-      `${formDataFields.scanTypeField}=${scanType}&` +
-      `${formDataFields.emailField}=${email}&` +
-      `${formDataFields.nameField}=${name}&` +
-      `${formDataFields.resultsField}=${scanResultsJson}`,
-  );
+    `${formDataFields.websiteUrlField}=${websiteUrl}&` +
+    `${formDataFields.scanTypeField}=${scanType}&` +
+    `${formDataFields.emailField}=${email}&` +
+    `${formDataFields.nameField}=${name}&` +
+    `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}`;
 
 
   const context = await browser.newContext({
