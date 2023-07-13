@@ -65,6 +65,8 @@ if (userData) {
     // index has option to choose browser
     answers.browserToRun = constants.browserTypes.chromium;
 
+    answers.nameEmail = `${userData.name}:${userData.email}`;
+
     const data = prepareData(answers);
 
     setHeadlessMode(data.isHeadless);
@@ -139,6 +141,7 @@ if (userData) {
       };
     }
 
+    answers.nameEmail = `${name}:${email}`;
     answers.playwrightDeviceDetailsObject = playwrightDeviceDetailsObject;
 
     // TODO: Do not hard set browser to Chromium after
