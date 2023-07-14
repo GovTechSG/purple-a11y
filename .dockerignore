@@ -1,0 +1,22 @@
+# Node
+**/node_modules/
+**/dist
+.git
+npm-debug.log
+.coverage
+.coverage.*
+.env
+.aws
+
+#MacOS
+**/.DS_Store
+**/thumbs.db
+
+# App-specific
+.github
+screenshots/
+logs/
+results/
+ImageMagick-*/
+errors.txt
+a11y-scan-results.zip

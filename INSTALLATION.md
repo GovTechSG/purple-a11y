@@ -6,9 +6,10 @@ Purple hats is provided as a portable distribution which minimises installation 
 Purple hats is a customisable, automated accessibility testing tool that allows software development teams to find and fix accessibility problems to improve persons with disabilities (PWDs) access to digital services.
 
 ### System Requirements
- * Purple hats can run on MacOS Big Sur or above, and Windows 10 (64-bit) or above.
- * One-time Internet access is needed to download and install Purple hats.
- * You are recommended to be logged on to an admin user to run Purple hats.
+* Purple HATS can run on MacOS Big Sur or above, and a [supported](https://learn.microsoft.com/en-us/windows/release-health/supported-versions-windows-client) version of Windows 10 (64-bit) or Windows 11.
+* Google Chrome browser is [installed](https://www.google.com/chrome).
+* One-time Internet access is needed to download and install Purple HATS Desktop.
+* You are recommended to be logged on to an admin user to run Purple HATS Desktop.
 
 ### Windows
 <details>

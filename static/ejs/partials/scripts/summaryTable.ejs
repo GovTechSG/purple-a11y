@@ -1,0 +1,71 @@
+<script>
+      Object.keys(scanItems).forEach(category => {
+        if (category !== 'passed') {
+          const ruleInCategory = scanItems[category].rules.forEach((rule, index) => {
+            helpUrl = `<a href=${rule.helpUrl} target="_blank" class="help-link"></a>`;
+            wcagLink =
+              rule.conformance[0] === 'best-practice'
+                ? `<span style="color:#4A6168">Best practice</span>`
+                : generateWcagConformanceLinks(rule.conformance);
+            description = `${rule.description}`.replace(/</g, '&lt;').replace(/>/g, '&gt;') + `\n${wcagLink}`;
+
+            rowStrings = [
+              `${category}-description-${index}`,
+              `${category}-occurrences-${index}`,
+              `${category}-pages-${index}`,
+              `${category}-helpUrl-${index}`,
+            ];
+
+            var newRow = document.createElement('tr');
+            var newCell = document.createElement('td');
+            newCell.setAttribute('class', `table-${category}-icon`);
+            newRow.append(newCell);
+
+            rowStrings.forEach(string => {
+              var newCell = document.createElement('td');
+              newCell.setAttribute('id', `table-${string}`);
+              newRow.append(newCell);
+            });
+
+            document.getElementById('summary-table-contents').appendChild(newRow);
+
+            document.getElementById(`table-${category}-description-${index}`).innerHTML =
+              description;
+            document
+              .getElementById(`table-${category}-description-${index}`)
+              .setAttribute(
+                'style',
+                'text-align: left; padding-left: 10px;white-space:break-spaces',
+              );
+
+            document.getElementById(`table-${category}-occurrences-${index}`).innerHTML =
+              rule.totalItems;
+            document
+              .getElementById(`table-${category}-occurrences-${index}`)
+              .setAttribute('style', 'text-align: right; padding-right: 10px');
+
+            document.getElementById(`table-${category}-pages-${index}`).innerHTML =
+              rule.pagesAffected.length;
+            document
+              .getElementById(`table-${category}-pages-${index}`)
+              .setAttribute('style', 'text-align: right;');
+
+            document.getElementById(`table-${category}-helpUrl-${index}`).innerHTML = helpUrl;
+          });
+        }
+      });
+      
+      const allMustFixIcons = document.getElementsByClassName('table-mustFix-icon')
+      for (let i=0; i < allMustFixIcons.length; i++){
+        const mustFixImg =  document.createElement('img');
+        mustFixImg.src = `data:image/svg+xml,%3Csvg width='25' height='25' viewBox='0 0 20 21' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M17.1429 0.102879H2.85714C1.27919 0.102879 0 1.38206 0 2.96002V17.2457C0 18.8237 1.27919 20.1029 2.85714 20.1029H17.1429C18.7208 20.1029 20 18.8237 20 17.2457V2.96002C20 1.38206 18.7208 0.102879 17.1429 0.102879Z' fill='%23D7260F'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M11.4294 10.101V5.81531C11.4294 5.02633 10.7898 4.38673 10.0008 4.38673C9.21186 4.38673 8.57227 5.02633 8.57227 5.81531V10.101C8.57227 10.89 9.21186 11.5296 10.0008 11.5296C10.7898 11.5296 11.4294 10.89 11.4294 10.101ZM10.0008 12.9582C9.21227 12.9582 8.57227 13.5982 8.57227 14.3867C8.57227 15.1753 9.21227 15.8153 10.0008 15.8153C10.7894 15.8153 11.4294 15.1753 11.4294 14.3867C11.4294 13.5982 10.7894 12.9582 10.0008 12.9582Z' fill='white'/%3E%3C/svg%3E%0A`
+        allMustFixIcons[i].appendChild(mustFixImg)
+      }
+
+      const allGoodToFixIcons = document.getElementsByClassName('table-goodToFix-icon')
+      for (let i=0; i < allGoodToFixIcons.length; i++){
+        const goodToFixImg = document.createElement('img')
+        goodToFixImg.src = `data:image/svg+xml,%3Csvg width='25' height='25' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M17.1429 0H2.85714C1.27919 0 0 1.27919 0 2.85714V17.1429C0 18.7208 1.27919 20 2.85714 20H17.1429C18.7208 20 20 18.7208 20 17.1429V2.85714C20 1.27919 18.7208 0 17.1429 0Z' fill='%23F79009'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M10 6.5625C8.10131 6.5625 6.5625 8.10131 6.5625 10C6.5625 11.8987 8.10131 13.4375 10 13.4375C11.8987 13.4375 13.4375 11.8987 13.4375 10C13.4375 8.10131 11.8987 6.5625 10 6.5625ZM4.84375 10C4.84375 7.15207 7.15207 4.84375 10 4.84375C12.8479 4.84375 15.1562 7.15207 15.1562 10C15.1562 12.8479 12.8479 15.1562 10 15.1562C7.15207 15.1562 4.84375 12.8479 4.84375 10Z' fill='white'/%3E%3C/svg%3E%0A`
+        allGoodToFixIcons[i].appendChild(goodToFixImg)
+      }
+</script>
