@@ -86,8 +86,7 @@
     </svg>
     <% } %>
     <span>
-      <%= viewport.startsWith("CustomWidth") ? `${viewport.split("_")[1]} width` : viewport %>
-      viewport <%= scanType === 'Customized' ? '(customized scan)' : '' %>
+      <%= viewport.startsWith("CustomWidth") ? `${viewport.split("_")[1]} width` : viewport %> viewport
     </span>
   </li>
   <% } %>
@@ -137,6 +136,6 @@
         </clipPath>
       </defs>
     </svg>
-    <span><%= totalPagesScanned %> <%= totalPagesScanned > 1 ? 'pages' : 'page'%></span>
+    <span><%= scanType === 'Customized' ? 'Custom Flow' : totalPagesScanned + ' pages'%></span>
   </li>
 </ul>

@@ -127,21 +127,29 @@ const writeHTML = async (allIssues, storagePath, scanType, customFlowLabel, html
   });
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
+  
   if (!process.env.RUNNING_FROM_PH_GUI && scanType === 'Customized' && customFlowLabel) {
-    const data = fs.readFileSync(`${storagePath}/reports/${htmlFilename}.html`, {encoding: "utf-8"}); 
-    const result = data.replaceAll(/Custom Flow/g, customFlowLabel); 
-    fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, result);
+    addCustomFlowLabel(`${storagePath}/reports/${htmlFilename}.html`, customFlowLabel);
   }
 };
 
-const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary') => {
+const writeSummaryHTML = async (allIssues, storagePath, scanType, customFlowLabel, htmlFilename = 'summary') => {
   const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/summary.ejs'), 'utf-8');
   const template = ejs.compile(ejsString, {
     filename: path.join(__dirname, './static/ejs/summary.ejs'),
   });
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
+  if (!process.env.RUNNING_FROM_PH_GUI && scanType === 'Customized' && customFlowLabel) {
+    addCustomFlowLabel(`${storagePath}/reports/${htmlFilename}.html`, customFlowLabel);
+  }
 };
+
+const addCustomFlowLabel = (path, customFlowLabel) => {
+    const data = fs.readFileSync(path, {encoding: "utf-8"}); 
+    const result = data.replaceAll(/Custom Flow/g, customFlowLabel); 
+    fs.writeFileSync(path, result);
+}
 
 let browserChannel = 'chrome';
 
@@ -369,7 +377,7 @@ export const generateArtifacts = async (randomToken, urlScanned, scanType, viewp
   const fileDestinationPath = `${storagePath}/reports/summary.pdf`;
   await writeResults(allIssues, storagePath);
   await writeHTML(allIssues, storagePath, scanType, customFlowLabel);
-  await writeSummaryHTML(allIssues, storagePath);
+  await writeSummaryHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryPdf(htmlFilename, fileDestinationPath);
   return createRuleIdJson(allIssues);
 };
