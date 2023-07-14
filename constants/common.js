@@ -66,7 +66,7 @@ export const isValidXML = async content => {
   return { status, parsedContent };
 };
 
-export const isSkippedUrl = (page, whitelistedDomains) => {	
+export const isSkippedUrl = (page, whitelistedDomains) => {
   const isWhitelisted = whitelistedDomains.filter(pattern => {
     pattern = pattern.replace(/[\n\r]+/g, '');
 
@@ -224,7 +224,18 @@ const checkUrlConnectivityWithBrowser = async (
         timeout: 30000,
         ...(proxy && { waitUntil: 'commit' }),
       });
-      res.status = constants.urlCheckStatuses.success.code;
+
+      try {
+        await page.waitForLoadState('networkidle', { timeout: 10000 });
+      } catch (e) {
+        silentLogger.info('Unable to detect networkidle');
+      }
+
+      if (response.status() === 401) {
+        res.status = constants.urlCheckStatuses.unauthorised.code;
+      } else {
+        res.status = constants.urlCheckStatuses.success.code;
+      }
 
       // Check for redirect link
       const redirectUrl = await response.request().url();
