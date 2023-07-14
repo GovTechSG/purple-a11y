@@ -84,7 +84,7 @@ const crawlDomain = async (
       } else if (location.host.includes(host)) {
         const results = await runAxeScript(page);
         await dataset.pushData(results);
-        urlsCrawled.scanned.push(currentUrl);
+        urlsCrawled.scanned.push({url: currentUrl, pageTitle: results.pageTitle});
 
         await enqueueLinks({
           // set selector matches anchor elements with href but not contains # or starting with mailto:

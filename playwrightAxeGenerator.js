@@ -244,7 +244,7 @@ const checkIfScanRequired = async page => {
 const runAxeScan = async page => {
   const result = await runAxeScript(page);
   await dataset.pushData(result);
-  urlsCrawled.scanned.push(page.url());
+  urlsCrawled.scanned.push({ url: page.url(), pageTitle: result.pageTitle });
 }
 
 
@@ -301,7 +301,7 @@ const processPage = async page => {
       : deviceChosen
       ? deviceChosen
       : 'Desktop'
-  }');
+  }', urlsCrawled.scanned);
         });`;
 
   let tmpDir;

@@ -1,0 +1,26 @@
+<div 
+    id="pagesScannedModal"
+    class="modal fade"
+    aria-labelledby="pagesScannedModalLabel"
+    aria-hidden="true"
+    tabindex="-1"
+    >
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title fw-bold" id="pagesScannedModalLabel"><%= totalPagesScanned %> pages</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>  
+            </div>
+            <div class="modal-body">
+                <ul class="unbulleted-list">
+                    <% pagesScanned.forEach((page, index) => { %>
+                        <li>
+                          <a href="<%= page.url %>" target="_blank"><%= page.pageTitle %></a>
+                          <span><%= page.url %></span>
+                        </li>
+                    <% }) %>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

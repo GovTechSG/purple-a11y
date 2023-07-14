@@ -299,6 +299,38 @@
   .scan-about-item a {
     display: inline-block;
   }
+  #pagesScannedModalToggle {
+    background-color: transparent;
+    color: #0047FA;
+    border: none;
+    padding: 0;
+  }
+  #pagesScannedModalToggle:hover {
+    color: #00339A;
+  }
+  /* #pagesScannedModal .modal-header {
+    border-bottom: none;
+    padding: 1rem 1.5rem 0 1.5rem;
+  }
+  #pagesScannedModal .modal-title {
+    font-size: 1.125rem;
+  } */
+  #pagesScannedModal .modal-body {
+    max-height: 632px;
+    overflow-y: scroll;
+  }
+  #pagesScannedModal li {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    border-bottom: 1px solid #B5C5CA;
+  }
+  #pagesScannedModal span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: #4A6168;
+  }
   #wcag-compliance-card,
   #top-five-card {
     border-radius: 0.25rem;
@@ -333,13 +365,12 @@
   #wcagModalToggle:hover svg path {
     fill: #86b7fe;
   }
-  #wcagModal .modal-dialog {
-    margin-top: 10vh;
-  }
+  #pagesScannedModal .modal-header,
   #wcagModal .modal-header {
     border: none;
     padding: 1rem 1.5rem 0 1.5rem;
   }
+  #pagesScannedModal .modal-title
   #wcagModal .modal-title {
     font-size: 1.125rem;
   }

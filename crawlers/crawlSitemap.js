@@ -65,7 +65,7 @@ const crawlSitemap = async (
       if (status === 200 && isWhitelistedContentType(contentType)) {
         const results = await runAxeScript(page);
         await dataset.pushData(results);
-        urlsCrawled.scanned.push(currentUrl);
+        urlsCrawled.scanned.push({url: currentUrl, pageTitle: results.pageTitle});
       } else {
         urlsCrawled.invalid.push(currentUrl);
       }
