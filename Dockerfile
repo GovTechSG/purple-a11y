@@ -1,7 +1,8 @@
+# Use Node LTS alpine distribution
 FROM node:lts-alpine
 
 # Installation of packages for purple-hats and chromium
-RUN apk add --no-cache build-base gcompat g++ make python3 chromium zip bash git imagemagick
+RUN apk add build-base gcompat g++ make python3 chromium zip bash git imagemagick
  
 WORKDIR /app
 
@@ -11,9 +12,8 @@ COPY package*.json ./
 # Environment variables for node
 ENV NODE_ENV=production
 
+# Install dependencies
 RUN npm ci --omit=dev
-
-COPY . .
 
 # Add non-privileged user
 RUN addgroup -S purple && adduser -S -G purple purple
@@ -24,3 +24,6 @@ USER purple
 
 # Install Playwright browsers
 RUN npx playwright install
+
+# Copy application and support files
+COPY . .

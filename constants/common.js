@@ -421,6 +421,7 @@ export const prepareData = argv => {
     finalUrl,
     browserToRun,
     nameEmail,
+    customFlowLabel,
   } = argv;
 
   return {
@@ -436,6 +437,7 @@ export const prepareData = argv => {
     isLocalSitemap,
     browser: browserToRun,
     nameEmail,
+    customFlowLabel
   };
 };
 

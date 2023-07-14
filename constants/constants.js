@@ -11,8 +11,7 @@ import { execSync } from 'child_process';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const maxRequestsPerCrawl = 100;
-const isDev = true;
+const maxRequestsPerCrawl = 3;
 
 export const ruleIdsWithHtml = [
   'aria-hidden-focus',
@@ -240,9 +239,7 @@ export const impactOrder = {
 };
 
 export const formDataFields = {
-  formUrl: isDev
-    ? `https://docs.google.com/forms/d/1hsacvT6LnTHdupOo0FajxjwpbwTkIxmh9qaLWaUp1-c/formResponse`
-    : `https://docs.google.com/forms/d/e/1FAIpQLSem5C8fyNs5TiU5Vv2Y63-SH7CHN86f-LEPxeN_1u_ldUbgUA/viewform`,
+  formUrl: `https://docs.google.com/forms/d/e/1FAIpQLSem5C8fyNs5TiU5Vv2Y63-SH7CHN86f-LEPxeN_1u_ldUbgUA/formResponse`,
   websiteUrlField: 'entry.1562345227',
   scanTypeField: 'entry.1148680657',
   emailField: 'entry.52161304',

@@ -17,7 +17,7 @@ const startScanQuestions = [
   {
     type: 'list',
     name: 'scanner',
-    message: 'What would you like to scan today?',
+    message: 'What would you like to scan?',
     choices: Object.values(constants.scannerTypes),
   },
   {
@@ -36,15 +36,15 @@ const startScanQuestions = [
     type: 'list',
     name: 'customDevice',
     message: 'Custom: (use arrow keys)',
-    when: (answers) => answers.deviceChosen === 'Custom',
+    when: answers => answers.deviceChosen === 'Custom',
     choices: ['iPhone 11', 'Samsung Galaxy S9+', 'Specify viewport'],
   },
   {
     type: 'input',
     name: 'viewportWidth',
     message: 'Specify width of the viewport in pixels (e.g. 360):',
-    when: (answers) => answers.customDevice === 'Specify viewport',
-    validate: (viewport) => {
+    when: answers => answers.customDevice === 'Specify viewport',
+    validate: viewport => {
       if (!Number.isInteger(Number(viewport))) {
         return 'Invalid viewport width. Please provide a number.';
       }
@@ -57,7 +57,7 @@ const startScanQuestions = [
   {
     type: 'input',
     name: 'url',
-    message: (answers) => getUrlMessage(answers.scanner),
+    message: answers => getUrlMessage(answers.scanner),
     // eslint-disable-next-line func-names
     // eslint-disable-next-line object-shorthand
     validate: async function (url, answers) {
@@ -96,17 +96,22 @@ const startScanQuestions = [
           return statuses.notASitemap.message;
       }
     },
-
-    filter: (input) => sanitizeUrlInput(input.trim()).url,
+    filter: input => sanitizeUrlInput(input.trim()).url,
   },
+  {
+    type: 'input',
+    name: 'customFlowLabel',
+    message: 'Give a preferred label to your custom scan flow (Optional)',
+    when: answers => answers.scanner === constants.scannerTypes.custom,
+  }
 ];
 
 const newUserQuestions = [
   {
     type: 'input',
     name: 'name',
-    message: `What is your name`,
-    validate: (name) => {
+    message: `Name:`,
+    validate: name => {
       // if (name === '' || name === undefined || name === null) {
       //   return true;
       // }
@@ -119,8 +124,8 @@ const newUserQuestions = [
   {
     type: 'input',
     name: 'email',
-    message: `Your email address for Purple HATS to update you on our service and telemetry:`,
-    validate: (email) => {
+    message: `Email:`,
+    validate: email => {
       // if (email === '' || email === undefined || email === null) {
       //   return true;
       // }

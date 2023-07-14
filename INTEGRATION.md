@@ -42,10 +42,27 @@ With reference to an instance of Purple HATS as `ph`:
 #### Cypress
 <details>
 <summary>Click here to see an example usage in an E2E Cypress test</summary>
-In <code>cypress.config.js</code>:
+
+We will be creating the following files in a demo Cypress project:
     
-    import { defineConfig } from "cypress";
-    import purpleHatsInit from 'purple-hats';
+    ├── cypress
+    │   ├── e2e
+    │   │   └── spec.cy.js
+    │   └── support
+    │       └── e2e.js
+    ├── cypress.config.js
+    └── package.json
+
+Create a <code>package.json</code> by running <code>npm init</code> . Accept the default options or customise it as needed.
+
+Install the following node dependencies by running <code>npm install cypress @govtechsg/purple-hats --save-dev </code>
+
+Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> within the folder to install remaining Purple HATS dependencies.
+
+Create <code>cypress.config.js</code> with the following contents:
+    
+    import { defineConfig } from 'cypress';
+    import purpleHatsInit from '@govtechsg/purple-hats';
 
     const ph = await purpleHatsInit("https://govtechsg.github.io");
 
@@ -69,7 +86,7 @@ In <code>cypress.config.js</code>:
     },
     });
 
-In <code>support/commands.js</code>:
+Create a sub-folder and file <code>cypress/support/e2e.js</code> with the following contents::
 
     Cypress.Commands.add('injectPhScripts', () => {
         cy.task('getPhScripts').then(s => {
@@ -90,7 +107,7 @@ In <code>support/commands.js</code>:
         cy.task('terminatePh')
     })
 
-In <code>e2e/spec.cy.js</code>:
+Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
     
     describe("template spec", () => {
         it("passes", () => {
@@ -108,6 +125,10 @@ In <code>e2e/spec.cy.js</code>:
         cy.terminatePh();
     })
 </details>
+
+Run your test with <code>npx cypress run</code> .
+
+You will see Purple HATS results generated in <code>results</code> folder.
 
 #### Playwright
 <details>
