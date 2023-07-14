@@ -923,10 +923,11 @@ export const submitFormViaPlaywright = async (
   scanResultsJson,
 ) => {
   const dirName = `clone-${Date.now()}`;
+  let clonedDir = null;
   if (proxy && browserToRun === constants.browserTypes.edge) {
-    cloneEdgeProfiles(dirName);
+    clonedDir = cloneEdgeProfiles(dirName);
   } else if (proxy && browserToRun === constants.browserTypes.chrome) {
-    cloneChromeProfiles(dirName);
+    clonedDir = cloneChromeProfiles(dirName);
   }
 
   const finalUrl =
@@ -937,7 +938,7 @@ export const submitFormViaPlaywright = async (
     `${formDataFields.nameField}=${name}&` +
     `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}`;
 
-  const browserContext = await chromium.launchPersistentContext(userDataDirectory, {
+  const browserContext = await chromium.launchPersistentContext(clonedDir || userDataDirectory, {
     ...getPlaywrightLaunchOptions(browserToRun),
   });
   // const context = await browser.newContext();
