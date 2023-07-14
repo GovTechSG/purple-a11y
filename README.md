@@ -61,13 +61,16 @@ You can interact via your arrow keys.
 ```shell
 % node index
 ┌────────────────────────────────────────────────────────────┐
-│ Welcome to HATS Accessibility Testing Tool!                │
-│ We recommend using Chrome browser for the best experience. │
+│  Purple HATS (ver 0.9.1)                                   │
+│  We recommend using Chrome browser for the best experience.│
+│                                                            │
+│ Welcome back user!!                                           │
+│ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
-? What would you like to scan today?
-❯ sitemap
-  website
-  custom flow 
+? What would you like to scan? (Use arrow keys)
+❯ Sitemap
+  Website
+  Custom
 ```
 
 ### Headless Mode
@@ -77,10 +80,13 @@ Headless mode would allow you to run the scan in the background. If you would li
 ```shell
  % node index
 ┌────────────────────────────────────────────────────────────┐
-│ Welcome to HATS Accessibility Testing Tool!                │
+│ Purple HATS (ver 0.9.1)                                    │
 │ We recommend using Chrome browser for the best experience. │
+│                                                            │
+│ Welcome back User!                                           │
+│ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
-? What would you like to scan today? Sitemap
+? What would you like to scan? Sitemap
 ? Do you want purple-hats to run in the background? (Y/n) Y
 ```
 
@@ -89,12 +95,23 @@ Headless mode would allow you to run the scan in the background. If you would li
 ```shell
 % node index
 ┌────────────────────────────────────────────────────────────┐
-│ Welcome to HATS Accessibility Testing Tool!                │
+│ Purple HATS (ver 0.9.1)                                    │
 │ We recommend using Chrome browser for the best experience. │
+│                                                            │
+│ Welcome back User!                                         │
+│ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
-? What would you like to scan today? Sitemap
+? What would you like to scan? Sitemap
 ? Do you want purple-hats to run in the background? Yes
-? Please enter URL to sitemap:  https://www.sitemaps.org/sitemap.xml
+? Which screen size would you like to scan? (Use arrow keys) Desktop
+? Please enter URL or file path to sitemap, or drag and drop a sitemap file here:  https://www.sitemaps.org/sitemap.xml
+
+
+ Scanning website...
+
+
+ Fetching URLs. This might take some time...
+
 
 Scanning website...
 
@@ -114,12 +131,17 @@ If the sitemap URL provided is invalid, an error message will be prompted for yo
 ```shell
 % node index
 ┌────────────────────────────────────────────────────────────┐
-│ Welcome to HATS Accessibility Testing Tool!                │
+│ Purple HATS (ver 0.9.1)                                    │
 │ We recommend using Chrome browser for the best experience. │
+│                                                            │
+│ Welcome back User!                                         │
+│ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
-? What would you like to scan today? Website
+? What would you like to scan? Website
 ? Do you want purple-hats to run in the background? Yes
-? Please enter URL of website:  https://www.sitemaps.org
+? Which screen size would you like to scan? (Use arrow keys) Desktop
+? Please enter URL of website:  https://www.domain.org
+
 ```
 
 If the website URL provided is invalid, an error message will be prompted for you to provide a valid input.
@@ -130,17 +152,21 @@ If the website URL provided is invalid, an error message will be prompted for yo
 
 ### Customised Mobile Device Scan
 
-```
+``` shell
+% node index
 ┌────────────────────────────────────────────────────────────┐
-│ Welcome to HATS Accessibility Testing Tool!                │
+│ Purple HATS (ver 0.9.1)                                    │
 │ We recommend using Chrome browser for the best experience. │
+│                                                            │
+│ Welcome back User!                                         │
+│ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
-? What would you like to scan today? website
+? What would you like to scan? Website
 ? Do you want purple-hats to run in the background? No
-? Which screen size would you like to scan? (Use arrow keys) 
-  Desktop 
-❯ Mobile 
-  Custom 
+? Which screen size would you like to scan? (Use arrow keys) (Use arrow keys)
+❯ Desktop 
+  Mobile
+  Custom
 ```
 
 Choose `Mobile` for a default mobile screen size scan and `Custom` to choose a device or specify viewport width options.
@@ -150,35 +176,45 @@ Choose `Mobile` for a default mobile screen size scan and `Custom` to choose a d
 Custom flow allows you to record a series of actions in the browser and re-play them and Purple hats will trigger the accessibility scan at each step.  This is useful to scan websites that require user and form input.  The recorded script will be stored as `generatedScript*.js`.
 
 1. Start by choosing the `Custom flow` in the menu selection.
+
 ```shell
 % node index
 ┌────────────────────────────────────────────────────────────┐
-│ Welcome to HATS Accessibility Testing Tool!                │
+│ Purple HATS (ver 0.9.1)                                    │
 │ We recommend using Chrome browser for the best experience. │
+│                                                            │
+│ Welcome back User!                                         │
+│ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
-? What would you like to scan today? (Use arrow keys)
-  sitemap 
-  website 
-❯ custom flow 
+? What would you like to scan?
+  Sitemap
+  Website
+❯ Custom
   ```
-2. Specify the URL of the starting page you wish to scan
-3. A Chrome and Playwright Inspector window will appear.  Navigate through the pages you would like to conduct an accessibility scan.
-4. Close the Chrome window.  Purple HATS will then proceed to re-run your recorded actions and scan each page for accessibility.
+
+1. Specify the URL of the starting page you wish to scan
+2. A Chrome and Playwright Inspector window will appear.  Navigate through the pages you would like to conduct an accessibility scan.
+3. Close the Chrome window.  Purple HATS will then proceed to re-run your recorded actions and scan each page for accessibility.
 
 Other options:
 - You can specify sites to exclude from accessibility scan (e.g. login page) by adding a pattern of the domain to `exclusions.txt`. An example of `exclusions.txt`:
-```
+
+``` txt
 \.*singpass.gov.sg\.*
 ```
+
 - You can re-run your accessibility scan by running `node generatedScript-PHScan_...js` file that is generated.
 
 **Caution**: During the custom flow, sensitive information such as username and passwords might be stored in `generatedScript*.js` as part of the recording.
 
 #### Known Issues
+
 If the custom flow fails to start, you might be runnning multiple versions of Playwright. Re-install Playwright:
+
 1. On Windows, delete the folder `%USERPROFILE%\AppData\Local\ms-playwright` where `%USERPROFILE%` is typically located at `C:\Users\<username>`.
 2. On MacOS, delete the folder `~/Library/Caches/ms-playwright` where `~` refers to `/Users/<username>`.
 3. Within PowerShell (Windows) or Terminal (MacOS) app, run the following two commands to re-install Playwright:
+
 ```Shell
 npx playwright@1.27.1 install
 ```
@@ -227,6 +263,7 @@ Examples:
 ```
 
 ### Device Options
+
 <details>
   <summary>Click here for list of device options supported</summary>
 
@@ -345,6 +382,7 @@ Examples:
 - "Pixel 5 landscape"
 - "Moto G4"
 - "Moto G4 landscape"
+
 </details>
 
 If the device name contains ```(``` and ```)```, wrap the device name in single quotes when entered into the CLI.
