@@ -922,6 +922,12 @@ export const submitFormViaPlaywright = async (
   name,
   scanResultsJson,
 ) => {
+  if (proxy && browserToRun === constants.browserTypes.edge) {
+    cloneEdgeProfiles();
+  } else if (proxy && browserToRun === constants.browserTypes.chrome) {
+    cloneChromeProfiles();
+  }
+
   const finalUrl =
     `${formDataFields.formUrl}?` +
     `${formDataFields.websiteUrlField}=${websiteUrl}&` +
@@ -955,6 +961,11 @@ export const submitFormViaPlaywright = async (
     silentLogger.error(error);
   } finally {
     await browserContext.close();
+    if (proxy && browserToRun === constants.browserTypes.edge) {
+      deleteClonedEdgeProfiles();
+    } else if (proxy && browserToRun === constants.browserTypes.chrome) {
+      deleteClonedChromeProfiles();
+    }
   }
   // await page.goto(finalUrl, {
   //   ...(proxy && { waitUntil: 'networkidle' }),
