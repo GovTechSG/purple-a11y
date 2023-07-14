@@ -209,7 +209,8 @@ Options:
   -s, --strategy       Strategy to choose which links to crawl in a website scan
                        . Defaults to "same-domain".
                                        [choices: "same-domain", "same-hostname"]
-
+  -j, --customFlowLabel  Give Custom Flow Scan a label for easier reference in t
+                         he report                                      [string]
 Examples:
   To scan sitemap of website:', 'node cli.js -c [ 1 | Sitemap ] -d <device> -u
    <url_link> -w <viewportWidth>
