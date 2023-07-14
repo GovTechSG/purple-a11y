@@ -64,7 +64,7 @@ You can interact via your arrow keys.
 │  Purple HATS (ver 0.9.1)                                   │
 │  We recommend using Chrome browser for the best experience.│
 │                                                            │
-│ Welcome back user!!                                           │
+│ Welcome back User!!                                        │
 │ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
 ? What would you like to scan? (Use arrow keys)
@@ -83,7 +83,7 @@ Headless mode would allow you to run the scan in the background. If you would li
 │ Purple HATS (ver 0.9.1)                                    │
 │ We recommend using Chrome browser for the best experience. │
 │                                                            │
-│ Welcome back User!                                           │
+│ Welcome back User!                                         │
 │ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
 ? What would you like to scan? Sitemap
@@ -197,6 +197,7 @@ Custom flow allows you to record a series of actions in the browser and re-play 
 3. Close the Chrome window.  Purple HATS will then proceed to re-run your recorded actions and scan each page for accessibility.
 
 Other options:
+
 - You can specify sites to exclude from accessibility scan (e.g. login page) by adding a pattern of the domain to `exclusions.txt`. An example of `exclusions.txt`:
 
 ``` txt
