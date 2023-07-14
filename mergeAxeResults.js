@@ -63,11 +63,17 @@ const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResu
   }
 };
 
-const writeHTML = async (allIssues, storagePath, htmlFilename = 'report') => {
+const writeHTML = async (allIssues, storagePath, scanType, customFlowLabel, htmlFilename = 'report') => {
   const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/report.ejs'), 'utf-8');
   const template = ejs.compile(ejsString, { filename: path.join(__dirname, './static/ejs/report.ejs') });
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
+  console.log(customFlowLabel);
+  if (!process.env.RUNNING_FROM_PH_GUI && scanType === 'Customized' && customFlowLabel) {
+    const data = fs.readFileSync(`${storagePath}/reports/${htmlFilename}.html`, {encoding: "utf-8"}); 
+    const result = data.replaceAll(/Custom Flow/g, customFlowLabel); 
+    fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, result);
+  }
 };
 
 const pushResults = async (rPath, allIssues) => {
@@ -141,7 +147,7 @@ const flattenAndSortResults = allIssues => {
   allIssues.wcagViolations = Array.from(allIssues.wcagViolations);
 };
 
-export const generateArtifacts = async (randomToken, urlScanned, scanType, viewport, pagesScanned) => {
+export const generateArtifacts = async (randomToken, urlScanned, scanType, viewport, pagesScanned, customFlowLabel) => {
   const storagePath = getStoragePath(randomToken);
   const directory = `${storagePath}/${constants.allIssueFileName}`;
   const allIssues = {
@@ -184,5 +190,5 @@ export const generateArtifacts = async (randomToken, urlScanned, scanType, viewp
   ])
 
   await writeResults(allIssues, storagePath);
-  await writeHTML(allIssues, storagePath);
+  await writeHTML(allIssues, storagePath, scanType, customFlowLabel);
 };

@@ -338,6 +338,7 @@ export const prepareData = argv => {
     isLocalSitemap,
     finalUrl,
     browserBased,
+    customFlowLabel,
   } = argv;
 
   return {
@@ -352,6 +353,7 @@ export const prepareData = argv => {
     maxRequestsPerCrawl: maxpages || constants.maxRequestsPerCrawl,
     strategy,
     isLocalSitemap,
+    customFlowLabel
   };
 };
 

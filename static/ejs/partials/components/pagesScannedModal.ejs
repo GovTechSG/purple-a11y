@@ -8,10 +8,11 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title fw-bold" id="pagesScannedModalLabel"><%= totalPagesScanned %> pages</h4>
+                <h4 class="modal-title fw-bold" id="pagesScannedModalLabel"><%= scanType === 'Customized' ? 'Custom Flow' : totalPagesScanned + ' pages'%></h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>  
             </div>
             <div class="modal-body">
+                <h6 class="modal-title fw-bold"><%= scanType === 'Customized' ? totalPagesScanned + ' pages' : ''%></h6>
                 <ul class="unbulleted-list">
                     <% pagesScanned.forEach((page, index) => { %>
                         <li>
