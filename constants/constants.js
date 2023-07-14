@@ -58,6 +58,7 @@ export const mutedAttributeValues = [
   `value`,
   `href`,
   `title`,
+  `aria-describedby`,
   `aria-label`,
   `aria-labelledby`,
 ];
