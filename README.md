@@ -52,7 +52,7 @@ Purple HATS can perform the following to scan the target URL.
 - Results will be compiled in JSON format, followed by generating a HTML report.
 - To start using Purple HATS, run `node index`. Questions will be prompted to assist you in providing the right inputs.
 
-> NOTE: For your initial scan, there may be some loading time required before use.
+> NOTE: For your initial scan, there may be some loading time required before use. Purple-HATS will also ask for your name and email address and collect your app usage data to personalise your experience. Your information fully complies with [GovTech’s Privacy Policy](https://www.tech.gov.sg/privacy/).
 
 ### Scan Selection
 
@@ -209,6 +209,12 @@ Options:
   -s, --strategy       Strategy to choose which links to crawl in a website scan
                        . Defaults to "same-domain".
                                        [choices: "same-domain", "same-hostname"]
+  -k, --nameEmail      To personalise your experience, we will be
+                       collecting your name, email address and usage data. 
+                       Your information fully complies with GovTech’s Privacy Policy. 
+                       Please provide your name and email address 
+                       in this format "John Doe:john@domain.com".                   
+                                        [string] [required]
 
 Examples:
   To scan sitemap of website:', 'node cli.js -c [ 1 | Sitemap ] -d <device> -u
@@ -414,6 +420,10 @@ zsh: abort      node index.js
 If you find a scan takes too long to complete due to large website, or there are too many pages in a sitemap to scan, you may choose to limit number of pages scanned.
 
 To do this, open `constants\constants.js` with a text editor. Change the value for `maxRequestsPerCrawl` to a smaller number like 10, e.g. `export let maxRequestsPerCrawl = 10;` and save the file. Start a new purple-hats scan.
+
+## How do I change the name and email address used for node index scans?
+
+You can edit the userData.txt which is located at %AppData%/Purple HATS on Windows and ~/.Library/Application Support/Purple HATS on Mac.
 
 ## Additional Information on Data
 

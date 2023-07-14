@@ -11,6 +11,7 @@ import crypto from 'crypto';
 
 import constants from './constants/constants.js';
 import { silentLogger } from './logs.js';
+import { get } from 'http';
 
 export const getVersion = () => {
   const loadJSON = path => JSON.parse(fs.readFileSync(new URL(path, import.meta.url)));
@@ -47,6 +48,46 @@ export const createDetailsAndLogs = async (scanDetails, randomToken) => {
       await fs.copy('errors.txt', `${logPath}/${randomToken}.txt`);
     }
   });
+};
+
+export const getUserDataTxt = () => {
+  const textFilePath =
+    os.platform() === 'win32'
+      ? path.join(process.env.APPDATA, 'Purple HATS', 'userData.txt')
+      : path.join(
+          process.env.HOME,
+          'Library',
+          'Application Support',
+          'Purple HATS',
+          'userData.txt',
+        );
+  // check if textFilePath exists
+  if (fs.existsSync(textFilePath)) {
+    const userData = JSON.parse(fs.readFileSync(textFilePath, 'utf8'));
+    return userData;
+  }
+  return null;
+};
+
+export const writeToUserDataTxt = async (key, value) => {
+  const textFilePath =
+    os.platform() === 'win32'
+      ? path.join(process.env.APPDATA, 'Purple HATS', 'userData.txt')
+      : path.join(
+          process.env.HOME,
+          'Library',
+          'Application Support',
+          'Purple HATS',
+          'userData.txt',
+        );
+  // Create file if it doesn't exist
+  if (fs.existsSync(textFilePath)) {
+    const userData = JSON.parse(fs.readFileSync(textFilePath, 'utf8'));
+    userData[key] = value;
+    await fs.writeFile(textFilePath, JSON.stringify(userData, 0, 2));
+  } else {
+    fs.appendFileSync(textFilePath, JSON.stringify({ [key]: value }, 0, 2));
+  }
 };
 
 export const createAndUpdateResultsFolders = async randomToken => {

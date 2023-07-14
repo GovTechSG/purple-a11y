@@ -16,6 +16,8 @@ import {
   cloneEdgeProfiles,
   deleteClonedChromeProfiles,
   deleteClonedEdgeProfiles,
+  validEmail,
+  validName,
 } from './constants/common.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
 import constants, {
@@ -120,6 +122,32 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     }
 
     return option;
+  })
+  .coerce('k', nameEmail => {
+    if (nameEmail.indexOf(':') === -1) {
+      printMessage(
+        [`Invalid format. Please provide your name and email address separated by ":"`],
+        messageOptions,
+      );
+      process.exit(1);
+    }
+    const [name, email] = nameEmail.split(':');
+    if (name === '' || name === undefined || name === null) {
+      printMessage([`Please provide your name.`], messageOptions);
+      process.exit(1);
+    }
+    if (!validName(name)) {
+      printMessage([`Invalid name. Please provide a valid name.`], messageOptions);
+      process.exit(1);
+    }
+    if (!validEmail(email)) {
+      printMessage(
+        [`Invalid emaill address. Please provide a valid email adress.`],
+        messageOptions,
+      );
+      process.exit(1);
+    }
+    return nameEmail;
   })
   .check(argvs => {
     if (argvs.scanner === 'custom' && argvs.maxpages) {
@@ -229,6 +257,7 @@ const scanInit = async argvs => {
   if (argvs.scanner === constants.scannerTypes.website && !argvs.strategy) {
     argvs.strategy = 'same-domain';
   }
+
   const statuses = constants.urlCheckStatuses;
 
   // File clean up after url check
@@ -324,7 +353,7 @@ const scanInit = async argvs => {
 
   if (argvs.scanner === constants.scannerTypes.custom) {
     try {
-      await playwrightAxeGenerator(argvs.url, data);
+      await playwrightAxeGenerator(data);
     } catch (error) {
       silentLogger.error(error);
       printMessage([
