@@ -215,7 +215,8 @@ Options:
                        Please provide your name and email address 
                        in this format "John Doe:john@domain.com".                   
                                         [string] [required]
-
+  -j, --customFlowLabel  Give Custom Flow Scan a label for easier reference in t
+                         he report                                      [string]
 Examples:
   To scan sitemap of website:', 'node cli.js -c [ 1 | Sitemap ] -d <device> -u
    <url_link> -w <viewportWidth>

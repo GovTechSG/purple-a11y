@@ -120,13 +120,18 @@ const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResu
   }
 };
 
-const writeHTML = async (allIssues, storagePath, htmlFilename = 'report') => {
+const writeHTML = async (allIssues, storagePath, scanType, customFlowLabel, htmlFilename = 'report') => {
   const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/report.ejs'), 'utf-8');
   const template = ejs.compile(ejsString, {
     filename: path.join(__dirname, './static/ejs/report.ejs'),
   });
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
+  if (!process.env.RUNNING_FROM_PH_GUI && scanType === 'Customized' && customFlowLabel) {
+    const data = fs.readFileSync(`${storagePath}/reports/${htmlFilename}.html`, {encoding: "utf-8"}); 
+    const result = data.replaceAll(/Custom Flow/g, customFlowLabel); 
+    fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, result);
+  }
 };
 
 const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary') => {
@@ -318,15 +323,15 @@ const createRuleIdJson = allIssues => {
   return compiledRuleJson;
 };
 
-export const generateArtifacts = async (randomToken, urlScanned, scanType, viewport) => {
+export const generateArtifacts = async (randomToken, urlScanned, scanType, viewport, pagesScanned, customFlowLabel) => {
   const storagePath = getStoragePath(randomToken);
-
   const directory = `${storagePath}/${constants.allIssueFileName}`;
   const allIssues = {
     startTime: getCurrentTime(),
     urlScanned,
     scanType,
     viewport,
+    pagesScanned,
     totalPagesScanned: 0,
     totalItems: 0,
     topFiveMostIssues: [],
@@ -360,12 +365,10 @@ export const generateArtifacts = async (randomToken, urlScanned, scanType, viewp
     `Passed: ${allIssues.items.passed.totalItems} occurrences`,
   ]);
 
-  // const compiledRuleJson = createRuleIdJson(allIssues);
-  // fs.appendFileSync('compiledJson.json', JSON.stringify(compiledRuleJson));
   const htmlFilename = `${storagePath}/reports/summary.html`;
   const fileDestinationPath = `${storagePath}/reports/summary.pdf`;
   await writeResults(allIssues, storagePath);
-  await writeHTML(allIssues, storagePath);
+  await writeHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryHTML(allIssues, storagePath);
   await writeSummaryPdf(htmlFilename, fileDestinationPath);
   return createRuleIdJson(allIssues);

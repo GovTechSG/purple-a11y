@@ -168,7 +168,7 @@ const scanInit = async argvs => {
   argvs.scanner = constants.scannerTypes[argvs.scanner];
   argvs.headless = argvs.headless === 'yes';
   argvs.browserToRun = constants.browserTypes[argvs.browserToRun];
-
+  
   let useChrome = false;
   let useEdge = false;
   let chromeDataDir = null;
