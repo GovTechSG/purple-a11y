@@ -5,13 +5,68 @@ import fs from 'fs-extra';
 import printMessage from 'print-message';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import ejs from 'ejs';
+import ejs, { compile } from 'ejs';
 import constants from './constants/constants.js';
 import { getCurrentTime, getStoragePath } from './utils.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import itemTypeDescription from './constants/itemTypeDescription.js';
 import { chromium } from 'playwright';
+import { ruleIdsWithHtml } from './constants/constants.js';
+import {
+  muteAttributeValues,
+  dropAllExceptWhitelisted,
+  sortAlphaAttributes,
+} from './constants/common.js';
 
+const ruleMappingList = [
+  {
+    ruleId: 'aria-hidden-focus',
+    htmlSnippet:
+      'Fix this code to ensures aria-hidden elements are not focusable nor contain focusable elements ``` ${htmlSnippet}```',
+  },
+  {
+    ruleId: 'aria-input-field-name',
+    htmlSnippet:
+      'Fix this code to ensure every ARIA input field has an accessible name```${htmlSnippet}```',
+  },
+  {
+    ruleId: 'aria-roles',
+    htmlSnippet: 'Fix the code with invalid element role ``` ${htmlSnippet}',
+  },
+  {
+    ruleId: 'aria-toggle-field-name',
+    htmlSnippet: 'Fix this code to have valid aria attribute: ```${htmlSnippet} ```',
+  },
+  {
+    ruleId: 'aria-valid-attr-value',
+    htmlSnippet: 'Fix this code with invalid aria attributes’ values: ```${htmlSnippet}```',
+  },
+  {
+    ruleId: 'aria-valid-attr',
+    htmlSnippet: 'Fix this code with invalid aria attributes: ```${htmlSnippet}',
+  },
+  {
+    ruleId: 'marquee',
+    htmlSnippet: 'Suggest an alternative to the marquee element ${htmlElement}',
+  },
+  {
+    ruleId: 'nested-interactive',
+    htmlSnippet: 'Ways to make this snippet not have nested interactivity? ${htmlSnippet}',
+  },
+  {
+    ruleId: 'avoid-inline-spacing',
+    htmlSnippet:
+      'Fix code snipept such that the style attribute does not have forced line-height,letter-spacing and word-spacing property to ensure inline text spacing is adjustable with custom stylesheets ${htmlSnippet}',
+  },
+  {
+    ruleId: 'aria-allowed-role',
+    htmlSnippet: 'Fix the code with invalid element role ${htmlSnippet}',
+  },
+  {
+    ruleId: 'tabindex',
+    htmlSnippet: 'What is inaccessible about this ${htmlSnippet}',
+  },
+];
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -65,23 +120,36 @@ const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResu
   }
 };
 
-const writeHTML = async (allIssues, storagePath, htmlFilename = 'report') => {
+const writeHTML = async (allIssues, storagePath, scanType, customFlowLabel, htmlFilename = 'report') => {
   const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/report.ejs'), 'utf-8');
   const template = ejs.compile(ejsString, {
     filename: path.join(__dirname, './static/ejs/report.ejs'),
   });
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
+  
+  if (!process.env.RUNNING_FROM_PH_GUI && scanType === 'Customized' && customFlowLabel) {
+    addCustomFlowLabel(`${storagePath}/reports/${htmlFilename}.html`, customFlowLabel);
+  }
 };
 
-const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary') => {
+const writeSummaryHTML = async (allIssues, storagePath, scanType, customFlowLabel, htmlFilename = 'summary') => {
   const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/summary.ejs'), 'utf-8');
   const template = ejs.compile(ejsString, {
     filename: path.join(__dirname, './static/ejs/summary.ejs'),
   });
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
+  if (!process.env.RUNNING_FROM_PH_GUI && scanType === 'Customized' && customFlowLabel) {
+    addCustomFlowLabel(`${storagePath}/reports/${htmlFilename}.html`, customFlowLabel);
+  }
 };
+
+const addCustomFlowLabel = (path, customFlowLabel) => {
+    const data = fs.readFileSync(path, {encoding: "utf-8"}); 
+    const result = data.replaceAll(/Custom Flow/g, customFlowLabel); 
+    fs.writeFileSync(path, result);
+}
 
 let browserChannel = 'chrome';
 
@@ -106,11 +174,11 @@ const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
     await page.setContent(data);
   });
 
-  await page.waitForLoadState('networkidle', {'timeout': 10000 });
+  await page.waitForLoadState('networkidle', { timeout: 10000 });
 
-    await page.emulateMedia({ media: 'print' });
+  await page.emulateMedia({ media: 'print' });
 
-    await page.pdf({
+  await page.pdf({
     margin: { bottom: '32px' },
     path: fileDestinationPath,
     format: 'A4',
@@ -199,15 +267,79 @@ const flattenAndSortResults = allIssues => {
   allIssues.wcagViolations = Array.from(allIssues.wcagViolations);
 };
 
-export const generateArtifacts = async (randomToken, urlScanned, scanType, viewport) => {
-  const storagePath = getStoragePath(randomToken);
+const createRuleIdJson = allIssues => {
+  var compiledRuleJson = {};
+  var ruleIdJson = {};
+  var snippets = [];
 
+  allIssues.items.mustFix.rules.map(rule => {
+    snippets = [];
+    ruleIdJson = {};
+    var ruleId = rule.rule;
+
+    if (ruleIdsWithHtml.includes(ruleId)) {
+      var snippetsSet = new Set();
+      rule.pagesAffected.forEach(page => {
+        page.items.map(htmlItem => {
+          var flaggedHtml = htmlItem.html;
+
+          var standardisedHtmlString = sortAlphaAttributes(
+            muteAttributeValues(dropAllExceptWhitelisted(flaggedHtml)),
+          );
+          // fs.appendFileSync(
+          //   'standardisedHtml.txt',
+          //   `flagged: ${flaggedHtml} \n standardised: ${standardisedHtmlString} \n`,
+          // );
+          snippetsSet.add(standardisedHtmlString);
+        });
+      });
+      snippets = [...snippetsSet];
+    }
+    ruleIdJson.snippets = snippets;
+    ruleIdJson.occurrences = rule.totalItems;
+    compiledRuleJson[ruleId] = ruleIdJson;
+  });
+
+  allIssues.items.goodToFix.rules.map(rule => {
+    var ruleId = rule.rule;
+    snippets = [];
+    ruleIdJson = {};
+
+    if (ruleIdsWithHtml.includes(ruleId)) {
+      var snippetsSet = new Set();
+      rule.pagesAffected.forEach(page => {
+        page.items.map(htmlItem => {
+          var flaggedHtml = htmlItem.html;
+
+          var standardisedHtmlString = sortAlphaAttributes(
+            muteAttributeValues(dropAllExceptWhitelisted(flaggedHtml)),
+          );
+          // fs.appendFileSync(
+          //   'standardisedHtml.txt',
+          //   `flagged: ${flaggedHtml} \n standardised: ${standardisedHtmlString} \n`,
+          // );
+          snippetsSet.add(standardisedHtmlString);
+        });
+      });
+      snippets = [...snippetsSet];
+    }
+    ruleIdJson.snippets = snippets;
+    ruleIdJson.occurrences = rule.totalItems;
+    compiledRuleJson[ruleId] = ruleIdJson;
+  });
+
+  return compiledRuleJson;
+};
+
+export const generateArtifacts = async (randomToken, urlScanned, scanType, viewport, pagesScanned, customFlowLabel) => {
+  const storagePath = getStoragePath(randomToken);
   const directory = `${storagePath}/${constants.allIssueFileName}`;
   const allIssues = {
     startTime: getCurrentTime(),
     urlScanned,
     scanType,
     viewport,
+    pagesScanned,
     totalPagesScanned: 0,
     totalItems: 0,
     topFiveMostIssues: [],
@@ -244,7 +376,8 @@ export const generateArtifacts = async (randomToken, urlScanned, scanType, viewp
   const htmlFilename = `${storagePath}/reports/summary.html`;
   const fileDestinationPath = `${storagePath}/reports/summary.pdf`;
   await writeResults(allIssues, storagePath);
-  await writeHTML(allIssues, storagePath);
-  await writeSummaryHTML(allIssues, storagePath);
+  await writeHTML(allIssues, storagePath, scanType, customFlowLabel);
+  await writeSummaryHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryPdf(htmlFilename, fileDestinationPath);
+  return createRuleIdJson(allIssues);
 };

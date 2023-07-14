@@ -1,21 +1,23 @@
+import { getUserDataTxt, writeToUserDataTxt } from '../utils.js';
 import {
   checkUrl,
   getUrlMessage,
   isFileSitemap,
   sanitizeUrlInput,
+  validEmail,
+  validName,
 } from './common.js';
 import constants from './constants.js';
 
-// const isLoginScan = (answers) => {
-//   return !!answers.scanner && answers.scanner === constants.scannerTypes.login;
-// }
+const userData = getUserDataTxt();
 
-// Questions used in Inquirer.js
-const questions = [
+const questions = [];
+
+const startScanQuestions = [
   {
     type: 'list',
     name: 'scanner',
-    message: 'What would you like to scan today?',
+    message: 'What would you like to scan?',
     choices: Object.values(constants.scannerTypes),
   },
   {
@@ -82,23 +84,64 @@ const questions = [
           }
 
           /* if sitemap scan is selected, treat this URL as a filepath
-            isFileSitemap will tell whether the filepath exists, and if it does, whether the
-            file is a sitemap */
+              isFileSitemap will tell whether the filepath exists, and if it does, whether the
+              file is a sitemap */
           if (isFileSitemap(url)) {
             answers.isLocalSitemap = true;
             return true;
-          } else {
-            res.status = statuses.notASitemap.code;
           }
+          res.status = statuses.notASitemap.code;
+
         case statuses.notASitemap.code:
           return statuses.notASitemap.message;
       }
     },
+    filter: input => sanitizeUrlInput(input.trim()).url,
+  },
+  {
+    type: 'input',
+    name: 'customFlowLabel',
+    message: 'Give a preferred label to your custom scan flow (Optional)',
+    when: answers => answers.scanner === constants.scannerTypes.custom,
+  }
+];
 
-    filter: input => {
-      return sanitizeUrlInput(input.trim()).url;
+const newUserQuestions = [
+  {
+    type: 'input',
+    name: 'name',
+    message: `Name:`,
+    validate: name => {
+      // if (name === '' || name === undefined || name === null) {
+      //   return true;
+      // }
+      if (!validName(name)) {
+        return 'Invalid name. Please provide a valid name. Only alphabets in under 50 characters allowed.';
+      }
+      return true;
+    },
+  },
+  {
+    type: 'input',
+    name: 'email',
+    message: `Email:`,
+    validate: email => {
+      // if (email === '' || email === undefined || email === null) {
+      //   return true;
+      // }
+      if (!validEmail(email)) {
+        return 'Invalid email address. Please provide a valid email address.';
+      }
+      return true;
     },
   },
 ];
+
+if (userData) {
+  questions.unshift(...startScanQuestions);
+} else {
+  newUserQuestions.push(...startScanQuestions);
+  questions.unshift(...newUserQuestions);
+}
 
 export default questions;

@@ -15,8 +15,90 @@ import os from 'os';
 import { globSync } from 'glob';
 import { chromium, devices } from 'playwright';
 import printMessage from 'print-message';
-import constants, { getDefaultChromeDataDir, getDefaultEdgeDataDir, proxy } from './constants.js';
+import constants, {
+  getDefaultChromeDataDir,
+  getDefaultEdgeDataDir,
+  proxy,
+  formDataFields,
+  whitelistedAttributes,
+  mutedAttributeValues,
+} from './constants.js';
 import { silentLogger } from '../logs.js';
+
+// Drop all attributes from the HTML snippet except whitelisted
+export const dropAllExceptWhitelisted = htmlSnippet => {
+  const regex = new RegExp(
+    `(\\s+)(?!${whitelistedAttributes.join(`|`)})([\\w-]+)(\\s*=\\s*"[^"]*")`,
+    `g`,
+  );
+  return htmlSnippet.replace(regex, ``);
+};
+
+// For all attributes within mutedAttributeValues array
+// replace their values with "something" while maintaining the attribute
+export const muteAttributeValues = htmlSnippet => {
+  const regex = new RegExp(`(\\s+)([\\w-]+)(\\s*=\\s*")([^"]*)(")`, `g`);
+
+  // p1 is the whitespace before the attribute
+  // p2 is the attribute name
+  // p3 is the attribute value before the replacement
+  // p4 is the attribute value (replaced with "...")
+  // p5 is the closing quote of the attribute value
+  return htmlSnippet.replace(regex, (match, p1, p2, p3, p4, p5) => {
+    if (mutedAttributeValues.includes(p2)) {
+      return `${p1}${p2}${p3}...${p5}`;
+    }
+    return match;
+  });
+};
+
+export const sortAlphaAttributes = htmlString => {
+  let entireHtml = '';
+  const htmlOpeningTagRegex = /<[^>]+/g;
+  const htmlTagmatches = htmlString.match(htmlOpeningTagRegex);
+
+  let sortedHtmlTag;
+
+  htmlTagmatches.forEach(htmlTag => {
+    const closingTag = htmlTag.trim().slice(-1) === '/' ? '/>' : '>';
+
+    const htmlElementRegex = /<[^> ]+/;
+    const htmlElement = htmlTag.match(htmlElementRegex);
+
+    const htmlAttributeRegex = /[a-z-]+="[^"]*"/g;
+    const allAttributes = htmlTag.match(htmlAttributeRegex);
+
+    if (allAttributes) {
+      sortedHtmlTag = `${htmlElement} `;
+      allAttributes.sort((a, b) => {
+        const attributeA = a.toLowerCase();
+        const attributeB = b.toLowerCase();
+
+        if (attributeA < attributeB) {
+          return -1;
+        }
+
+        if (attributeA > attributeB) {
+          return 1;
+        }
+      });
+
+      allAttributes.forEach((htmlAttribute, index) => {
+        sortedHtmlTag += htmlAttribute;
+        if (index !== allAttributes.length - 1) {
+          sortedHtmlTag += ' ';
+        }
+      });
+
+      sortedHtmlTag += closingTag;
+    } else {
+      sortedHtmlTag = htmlElement + closingTag;
+    }
+
+    entireHtml += sortedHtmlTag;
+  });
+  return entireHtml;
+};
 
 const document = new JSDOM('').window;
 
@@ -337,14 +419,15 @@ export const prepareData = argv => {
     strategy,
     isLocalSitemap,
     finalUrl,
-    browserBased,
+    browserToRun,
+    nameEmail,
+    customFlowLabel,
   } = argv;
 
   return {
     type: scanner,
     url: isLocalSitemap ? url : finalUrl,
     isHeadless: headless,
-    isBrowserBased: browserBased,
     deviceChosen,
     customDevice,
     viewportWidth,
@@ -352,6 +435,9 @@ export const prepareData = argv => {
     maxRequestsPerCrawl: maxpages || constants.maxRequestsPerCrawl,
     strategy,
     isLocalSitemap,
+    browser: browserToRun,
+    nameEmail,
+    customFlowLabel
   };
 };
 
@@ -385,13 +471,18 @@ export const getLinksFromSitemap = async (
     urlsFromData.forEach(url => urls.add(url));
   };
 
+  let finalUserDataDirectory = userDataDirectory;
+  if (userDataDirectory === null || userDataDirectory === undefined) {
+    finalUserDataDirectory = '';
+  }
+
   const fetchUrls = async url => {
     let data;
     let sitemapType;
     if (validator.isURL(url, urlOptions)) {
       if (browser) {
         const browserContext = await chromium.launchPersistentContext(
-          userDataDirectory,
+          finalUserDataDirectory,
           getPlaywrightLaunchOptions(browser),
         );
         const page = await browserContext.newPage();
@@ -484,6 +575,27 @@ export const getLinksFromSitemap = async (
   return Array.from(urls);
 };
 
+export const validEmail = email => {
+  const emailRegex = new RegExp(/^[A-Za-z0-9_!#$%&'*+\/=?`{|}~^.-]+@[A-Za-z0-9.-]+$/, 'gm');
+
+  return emailRegex.test(email);
+};
+
+// For new user flow.
+export const validName = name => {
+  const maxLength = 50;
+  const regex = /^[A-Za-z\s]+$/;
+
+  if (name.length > maxLength) {
+    return false; // Reject names exceeding maxlength
+  }
+
+  if (!regex.test(name)) {
+    return false; // Reject names with non-alphabetic or non-whitespace characters
+  }
+
+  return true;
+};
 /**
  * Clone the Chrome profile cookie files to the destination directory
  * @param {*} options glob options object
@@ -801,6 +913,70 @@ export const deleteClonedEdgeProfiles = () => {
       }
     });
   }
+};
+
+export const submitFormViaPlaywright = async (
+  browserToRun,
+  userDataDirectory,
+  websiteUrl,
+  scanType,
+  email,
+  name,
+  scanResultsJson,
+) => {
+  const dirName = `clone-${Date.now()}`;
+  let clonedDir = null;
+  if (proxy && browserToRun === constants.browserTypes.edge) {
+    clonedDir = cloneEdgeProfiles(dirName);
+  } else if (proxy && browserToRun === constants.browserTypes.chrome) {
+    clonedDir = cloneChromeProfiles(dirName);
+  }
+
+  const finalUrl =
+    `${formDataFields.formUrl}?` +
+    `${formDataFields.websiteUrlField}=${websiteUrl}&` +
+    `${formDataFields.scanTypeField}=${scanType}&` +
+    `${formDataFields.emailField}=${email}&` +
+    `${formDataFields.nameField}=${name}&` +
+    `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}`;
+
+  const browserContext = await chromium.launchPersistentContext(clonedDir || userDataDirectory, {
+    ...getPlaywrightLaunchOptions(browserToRun),
+  });
+  // const context = await browser.newContext();
+
+  const page = await browserContext.newPage();
+  // const page = await context.newPage();
+
+  try {
+    const response = await page.goto(finalUrl, {
+      timeout: 30000,
+      ...(proxy && { waitUntil: 'commit' }),
+    });
+
+    try {
+      await page.waitForLoadState('networkidle', { timeout: 10000 });
+    } catch (e) {
+      silentLogger.info('Unable to detect networkidle');
+    }
+  } catch (error) {
+    // not sure what errors are thrown
+    console.log(error);
+    silentLogger.error(error);
+  } finally {
+    await browserContext.close();
+    if (proxy && browserToRun === constants.browserTypes.edge) {
+      deleteClonedEdgeProfiles();
+    } else if (proxy && browserToRun === constants.browserTypes.chrome) {
+      deleteClonedChromeProfiles();
+    }
+  }
+  // await page.goto(finalUrl, {
+  //   ...(proxy && { waitUntil: 'networkidle' }),
+  // });
+
+  // await page.close();
+  // await context.close();
 };
 
 /**

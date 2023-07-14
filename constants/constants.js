@@ -11,7 +11,55 @@ import { execSync } from 'child_process';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const maxRequestsPerCrawl = 100;
+const maxRequestsPerCrawl = 3;
+
+export const ruleIdsWithHtml = [
+  'aria-hidden-focus',
+  'aria-input-field-name',
+  'aria-roles',
+  'aria-toggle-field-name',
+  'aria-valid-attr-value',
+  'aria-valid-attr',
+  'marquee',
+  'nested-interactive',
+  'avoid-inline-spacing',
+  'aria-allowed-role',
+  'tabindex',
+];
+
+// Whitelisted attributes (to not drop)
+// i.e. any other attribute will be dropped
+export const whitelistedAttributes = [
+  `type`,
+  `tabindex`,
+  `lang`,
+  `scope`,
+  `alt`,
+  `role`,
+  `charset`,
+  `for`,
+  `content`,
+  `name`,
+  `onclick`,
+  `aria*`,
+  `src`,
+  `value`,
+  `href`,
+  `title`,
+  `style`,
+];
+
+// Attributes to mute
+export const mutedAttributeValues = [
+  `name`,
+  `data`,
+  `src`,
+  `value`,
+  `href`,
+  `title`,
+  `aria-label`,
+  `aria-labelledby`,
+];
 
 export const intermediateScreenshotsPath = './screenshots';
 export const destinationPath = storagePath => `${storagePath}/screenshots`;
@@ -110,6 +158,7 @@ export const getExecutablePath = function (dir, file) {
     return execPaths[0];
   }
 };
+
 /**
  * Matches the pattern user:password@domain.com
  */
@@ -186,6 +235,15 @@ export const impactOrder = {
   moderate: 1,
   serious: 2,
   critical: 3,
+};
+
+export const formDataFields = {
+  formUrl: `https://docs.google.com/forms/d/e/1FAIpQLSem5C8fyNs5TiU5Vv2Y63-SH7CHN86f-LEPxeN_1u_ldUbgUA/formResponse`,
+  websiteUrlField: 'entry.1562345227',
+  scanTypeField: 'entry.1148680657',
+  emailField: 'entry.52161304',
+  nameField: 'entry.1787318910',
+  resultsField: 'entry.904051439',
 };
 
 const urlCheckStatuses = {

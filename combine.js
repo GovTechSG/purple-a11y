@@ -6,6 +6,7 @@ import crawlDomain from './crawlers/crawlDomain.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
 import constants, { basicAuthRegex } from './constants/constants.js';
+import { submitFormViaPlaywright } from './constants/common.js';
 
 const combineRun = async (details, deviceToScan) => {
   const envDetails = { ...details };
@@ -14,6 +15,7 @@ const combineRun = async (details, deviceToScan) => {
   const {
     type,
     url,
+    nameEmail,
     randomToken,
     deviceChosen,
     customDevice,
@@ -86,7 +88,17 @@ const combineRun = async (details, deviceToScan) => {
 
   if (scanDetails.urlsCrawled.scanned.length > 0) {
     await createAndUpdateResultsFolders(randomToken);
-    await generateArtifacts(randomToken, url, type, deviceToScan);
+    const basicFormHTMLSnippet = await generateArtifacts(randomToken, url, type, deviceToScan,  urlsCrawled.scanned);
+    const [name, email] = nameEmail.split(':');
+    await submitFormViaPlaywright(
+      browser,
+      userDataDirectory,
+      url,
+      type,
+      email,
+      name,
+      JSON.stringify(basicFormHTMLSnippet),
+    );
   } else {
     printMessage([`No pages were scanned.`], constants.alertMessageOptions);
   }
