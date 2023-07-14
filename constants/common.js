@@ -922,10 +922,11 @@ export const submitFormViaPlaywright = async (
   name,
   scanResultsJson,
 ) => {
+  const dirName = `clone-${Date.now()}`;
   if (proxy && browserToRun === constants.browserTypes.edge) {
-    cloneEdgeProfiles();
+    cloneEdgeProfiles(dirName);
   } else if (proxy && browserToRun === constants.browserTypes.chrome) {
-    cloneChromeProfiles();
+    cloneChromeProfiles(dirName);
   }
 
   const finalUrl =
