@@ -930,6 +930,17 @@ export const submitFormViaPlaywright = async (
     clonedDir = cloneChromeProfiles(dirName);
   }
 
+  const launchOptionsArgs = ['--window-size=10,10'];
+  if (proxy && proxy.type === 'autoConfig') {
+    launchOptionsArgs.push(`--proxy-pac-url=${proxy.url}`);
+  } else if (proxy && proxy.type === 'manualProxy') {
+    launchOptionsArgs.push(`--proxy-server=${proxy.url}`);
+  }
+
+  if (fs.existsSync('/.dockerenv')) {
+    launchOptionsArgs.push(['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage']);
+  }
+
   const finalUrl =
     `${formDataFields.formUrl}?` +
     `${formDataFields.websiteUrlField}=${websiteUrl}&` +
@@ -939,7 +950,9 @@ export const submitFormViaPlaywright = async (
     `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}`;
 
   const browserContext = await chromium.launchPersistentContext(clonedDir || userDataDirectory, {
+    ignoreDefaultArgs: ['--use-mock-keychain'],
     ...getPlaywrightLaunchOptions(browserToRun),
+    args: launchOptionsArgs,
   });
   // const context = await browser.newContext();
 
