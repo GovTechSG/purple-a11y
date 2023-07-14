@@ -68,6 +68,7 @@ if (userData) {
     answers.nameEmail = `${userData.name}:${userData.email}`;
 
     const data = prepareData(answers);
+    data.userDataDirectory = '';
 
     setHeadlessMode(data.isHeadless);
 
