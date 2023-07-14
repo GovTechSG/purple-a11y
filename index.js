@@ -23,10 +23,11 @@ const userData = getUserDataTxt();
 if (userData) {
   printMessage(
     [
-      `Welcome ${userData.name.toUpperCase()} to HATS Accessibility Testing Tool!`,
+      `Purple HATS (ver ${getVersion()})`,
       'We recommend using Chrome browser for the best experience.',
       '',
-      `Version: ${getVersion()}`,
+      `Welcome back ${userData.name}!`,
+      `(Refer to readme.txt on how to change your profile)`,
     ],
     {
       // Note that the color is based on kleur NPM package
@@ -96,16 +97,23 @@ if (userData) {
 } else {
   printMessage(
     [
-      `Welcome to HATS Accessibility Testing Tool!`,
-      `To personalise your experience, we will be collecting your name, email address and app usage data.`,
-      `Your information fully complies with GovTech’s Privacy Policy.`,
-      '',
-      `Version: ${getVersion()}`,
+      `Purple HATS (ver ${getVersion()})`,
+      'We recommend using Chrome browser for the best experience.',
     ],
     {
       // Note that the color is based on kleur NPM package
       border: true,
       borderColor: 'magenta',
+    },
+  );
+
+  printMessage(
+    [
+      `To personalise your experience, we will be collecting your name, email address and app usage data.`,
+      `Your information fully complies with GovTech's Privacy Policy.`,
+    ],
+    {
+      border: false,
     },
   );
 
