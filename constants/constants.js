@@ -11,7 +11,7 @@ import { execSync } from 'child_process';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const maxRequestsPerCrawl = 100;
+const maxRequestsPerCrawl = 3;
 const isDev = true;
 
 export const ruleIdsWithHtml = [

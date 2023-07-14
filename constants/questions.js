@@ -96,9 +96,14 @@ const startScanQuestions = [
           return statuses.notASitemap.message;
       }
     },
-
     filter: input => sanitizeUrlInput(input.trim()).url,
   },
+  {
+    type: 'input',
+    name: 'customFlowLabel',
+    message: 'Give a preferred label to your custom scan flow (Optional)',
+    when: answers => answers.scanner === constants.scannerTypes.custom,
+  }
 ];
 
 const newUserQuestions = [
