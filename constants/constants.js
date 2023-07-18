@@ -20,11 +20,9 @@ export const ruleIdsWithHtml = [
   'aria-toggle-field-name',
   'aria-valid-attr-value',
   'aria-valid-attr',
-  'marquee',
   'nested-interactive',
   'avoid-inline-spacing',
   'aria-allowed-role',
-  'tabindex',
 ];
 
 // Whitelisted attributes (to not drop)
