@@ -14,6 +14,8 @@ const __dirname = path.dirname(__filename);
 const maxRequestsPerCrawl = 100;
 const isDev = true;
 
+// Attributes to process axe outputted HTML into basicFormHTML snippets
+// for sending to backend services to query GPT
 export const ruleIdsWithHtml = [
   'aria-hidden-focus',
   'aria-input-field-name',
@@ -21,11 +23,15 @@ export const ruleIdsWithHtml = [
   'aria-toggle-field-name',
   'aria-valid-attr-value',
   'aria-valid-attr',
-  'marquee',
   'nested-interactive',
   'avoid-inline-spacing',
   'aria-allowed-role',
-  'tabindex',
+  'aria-required-attr',
+  'aria-required-children',
+  'aria-required-parent',
+  'aria-allowed-attr',
+  'input-button-name',
+  'link-name',
 ];
 
 // Whitelisted attributes (to not drop)
@@ -50,7 +56,7 @@ export const whitelistedAttributes = [
   `style`,
 ];
 
-// Attributes to mute
+// Attributes to mute, to be replace with "..."
 export const mutedAttributeValues = [
   `name`,
   `data`,
