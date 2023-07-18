@@ -4,25 +4,32 @@ import printMessage from 'print-message';
 import { fileURLToPath } from 'url';
 import constants from './constants/constants.js';
 import { createCrawleeSubFolders, filterAxeResults } from './crawlers/commonCrawlerFunc.js';
-import { cleanUp, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
+import {
+  cleanUp,
+  createAndUpdateResultsFolders,
+  createDetailsAndLogs,
+  getStoragePath,
+} from './utils.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const init = async entryUrl => {
+export const init = async (entryUrl, customFlowLabelTestString) => {
   console.log('Starting Purple HATS');
 
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
   const domain = new URL(entryUrl).hostname;
+
   const randomToken = `PHScan_${domain}_${date}_${time}_IntegratedScan`;
 
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
   const scanDetails = {
     startTime: new Date().getTime(),
-    crawlType: 'Integrated Scan',
+    crawlType: 'Customized',
     requestUrl: entryUrl,
+    urlsCrawled: { ...constants.urlsCrawledObj },
   };
 
   const urlsCrawled = { ...constants.urlsCrawledObj };
@@ -30,14 +37,15 @@ export const init = async entryUrl => {
   const { dataset } = await createCrawleeSubFolders(randomToken);
 
   let isInstanceTerminated = false;
+  let numPagesScanned = 0;
 
   const throwErrorIfTerminated = () => {
     if (isInstanceTerminated) {
       throw new Error('This instance of Purple HATS was terminated. Please start a new instance.');
     }
-  }
+  };
 
-  const getScripts = () => { 
+  const getScripts = () => {
     throwErrorIfTerminated();
     const axeScript = fs.readFileSync(
       path.join(__dirname, 'node_modules/axe-core/axe.min.js'),
@@ -64,7 +72,7 @@ export const init = async entryUrl => {
   const pushScanResults = async res => {
     throwErrorIfTerminated();
     const filteredResults = filterAxeResults(res.axeScanResults, res.pageTitle);
-    urlsCrawled.scanned.push(res.pageUrl);
+    urlsCrawled.scanned.push({ url: res.pageUrl, pageTitle: res.pageTitle });
     await dataset.pushData(filteredResults);
   };
 
@@ -80,16 +88,24 @@ export const init = async entryUrl => {
     } else {
       await createDetailsAndLogs(scanDetails, randomToken);
       await createAndUpdateResultsFolders(randomToken);
-      await generateArtifacts(randomToken, scanDetails.requestUrl, scanDetails.crawlType, null);
+      await generateArtifacts(
+        randomToken,
+        scanDetails.requestUrl,
+        scanDetails.crawlType,
+        null,
+        scanDetails.urlsCrawled.scanned,
+        customFlowLabelTestString,
+      );
     }
-
-    cleanUp(randomToken);
+    return null;
   };
 
   return {
     getScripts,
     pushScanResults,
     terminate,
+    scanDetails,
+    randomToken,
   };
 };
 

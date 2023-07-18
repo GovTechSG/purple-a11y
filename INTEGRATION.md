@@ -60,27 +60,32 @@ Install the following node dependencies by running <code>npm install cypress @go
 Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> within the folder to install remaining Purple HATS dependencies.
 
 Create <code>cypress.config.js</code> with the following contents:
-    
-    import { defineConfig } from 'cypress';
-    import purpleHatsInit from '@govtechsg/purple-hats';
 
-    const ph = await purpleHatsInit("https://govtechsg.github.io");
+    import { defineConfig } from "cypress";
+    import purpleHatsInit from "@govtechsg/purple-hats";
+
+    const ph = await purpleHatsInit(
+    "https://govtechsg.github.io",
+    "customFlowLabelTestString"
+    );
 
     export default defineConfig({
     e2e: {
         setupNodeEvents(on, config) {
-        on('task', {
+        on("task", {
             getPhScripts() {
-                return ph.getScripts();
+            return ph.getScripts();
             },
             async pushPhScanResults(res) {
-                await ph.pushScanResults(res);
-                return null;
+            await ph.pushScanResults(res);
+            return null;
+            },
+            returnResultsDir() {
+            return `results/${ph.randomToken}_${ph.scanDetails.urlsCrawled.scanned.length}pages/reports/report.html`;
             },
             async terminatePh() {
-                await ph.terminate();
-                return null;
-            }
+            return await ph.terminate();
+            },
         });
         },
     },
@@ -88,42 +93,60 @@ Create <code>cypress.config.js</code> with the following contents:
 
 Create a sub-folder and file <code>cypress/support/e2e.js</code> with the following contents::
 
-    Cypress.Commands.add('injectPhScripts', () => {
-        cy.task('getPhScripts').then(s => {
-            cy.window().then(win => {
-                win.eval(s);
-            })
-        })
-    })
+    Cypress.Commands.add("injectPhScripts", () => {
+    cy.task("getPhScripts").then((s) => {
+        cy.window().then((win) => {
+        win.eval(s);
+        });
+    });
+    });
 
-    Cypress.Commands.add('runPhScan', (elements) => {
-        cy.window().then(async win => {
-            const res = await win.runA11yScan(elements);
-            cy.task('pushPhScanResults', res);
-        })
-    })
+    Cypress.Commands.add("runPhScan", (elements) => {
+    cy.window().then(async (win) => {
+        const res = await win.runA11yScan(elements);
+        cy.task("pushPhScanResults", res);
+    });
+    });
 
-    Cypress.Commands.add('terminatePh', () => {
-        cy.task('terminatePh')
-    })
+    Cypress.Commands.add("terminatePh", () => {
+    cy.task("terminatePh");
+    });
 
 Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
     
     describe("template spec", () => {
-        it("passes", () => {
-            cy.visit("https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm");
-            cy.injectPhScripts();
-            cy.runPhScan();
-        
-            cy.contains('Click Me').click();
-            // Run a scan on <input> and <button> elements
-            cy.runPhScan(['input', 'button']);
+    it("should run purple HATS", () => {
+        cy.visit(
+        "https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm"
+        );
+        cy.injectPhScripts();
+        cy.runPhScan();
+        cy.contains("Click Me").click();
+        // Run a scan on <input> and <button> elements
+        cy.runPhScan(["input", "button"]);
+
+        cy.terminatePh();
+    });
+
+    it("should contain custom flow label", () => {
+        cy.task("returnResultsDir").then((res) => {
+        console.log("res: ", res);
+        cy.visit(`./${res}`);
+        cy.get("#pagesScannedModalToggle").should(
+            "contain",
+            "customFlowLabelTestString"
+        );
         });
     });
 
-    after(() => {
-        cy.terminatePh();
-    })
+    it("should run purple HATS from command line", () => {
+        //test for k flag
+        cy.exec(
+        "node node_modules/@govtechsg/purple-hats/cli.js -c 2 -u https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm -k testuser:testuser@gmail.com"
+        );
+    });
+    });
+
 </details>
 
 Run your test with <code>npx cypress run</code> .
