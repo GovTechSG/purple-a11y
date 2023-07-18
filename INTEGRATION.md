@@ -130,7 +130,6 @@ Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
 
     it("should contain custom flow label", () => {
         cy.task("returnResultsDir").then((res) => {
-        console.log("res: ", res);
         cy.visit(`./${res}`);
         cy.get("#pagesScannedModalToggle").should(
             "contain",
