@@ -11,7 +11,7 @@ import { execSync } from 'child_process';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const maxRequestsPerCrawl = 3;
+const maxRequestsPerCrawl = 100;
 
 export const ruleIdsWithHtml = [
   'aria-hidden-focus',
@@ -20,11 +20,9 @@ export const ruleIdsWithHtml = [
   'aria-toggle-field-name',
   'aria-valid-attr-value',
   'aria-valid-attr',
-  'marquee',
   'nested-interactive',
   'avoid-inline-spacing',
   'aria-allowed-role',
-  'tabindex',
 ];
 
 // Whitelisted attributes (to not drop)
@@ -57,6 +55,7 @@ export const mutedAttributeValues = [
   `value`,
   `href`,
   `title`,
+  `aria-describedby`,
   `aria-label`,
   `aria-labelledby`,
 ];

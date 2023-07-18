@@ -469,4 +469,4 @@ You can edit the userData.txt which is located at %AppData%/Purple HATS on Windo
 
 Purple HATS uses third-party open-source tools that may be downloaded over the Internet during the installation process of Purple HATS. Users should be aware of the libraries used by examining `package.json`.
 
-Purple HATS may send information to the website or URL where the user chooses to initiate a Purple HATS scan. By default, data collected by Purple HATS is processed and stored locally on the machine where the tool is run.
+Purple HATS may send information to the website, URL and HTML code snippets where the user chooses to initiate a Purple HATS scan for telemetry purposes.

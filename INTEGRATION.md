@@ -59,112 +59,155 @@ Install the following node dependencies by running <code>npm install cypress @go
 
 Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> within the folder to install remaining Purple HATS dependencies.
 
-Create <code>cypress.config.js</code> with the following contents:
+Create <code>cypress.config.js</code> with the following contents, and change your Name and E-mail address below:
+
+    import { defineConfig } from "cypress";
+    import purpleHatsInit from "@govtechsg/purple-hats";
     
-    import { defineConfig } from 'cypress';
-    import purpleHatsInit from '@govtechsg/purple-hats';
-
-    const ph = await purpleHatsInit("https://govtechsg.github.io");
-
+    const ph = await purpleHatsInit(
+        "https://govtechsg.github.io",
+        "Demo Cypress Scan",
+        "Your Name",
+        "email@domain.com"
+    );
+    
     export default defineConfig({
-    e2e: {
-        setupNodeEvents(on, config) {
-        on('task', {
-            getPhScripts() {
-                return ph.getScripts();
+        e2e: {
+            setupNodeEvents(on, config) {
+                on("task", {
+                    getPhScripts() {
+                        return ph.getScripts();
+                    },
+                    async pushPhScanResults(res) {
+                        await ph.pushScanResults(res);
+                        return null;
+                    },
+                    returnResultsDir() {
+                        return `results/${ph.randomToken}_${ph.scanDetails.urlsCrawled.scanned.length}pages/reports/report.html`;
+                    },
+                    async terminatePh() {
+                        return await ph.terminate();
+                    },
+                });
             },
-            async pushPhScanResults(res) {
-                await ph.pushScanResults(res);
-                return null;
-            },
-            async terminatePh() {
-                await ph.terminate();
-                return null;
-            }
-        });
         },
-    },
     });
 
 Create a sub-folder and file <code>cypress/support/e2e.js</code> with the following contents::
-
-    Cypress.Commands.add('injectPhScripts', () => {
-        cy.task('getPhScripts').then(s => {
-            cy.window().then(win => {
-                win.eval(s);
-            })
-        })
-    })
-
-    Cypress.Commands.add('runPhScan', (elements) => {
-        cy.window().then(async win => {
-            const res = await win.runA11yScan(elements);
-            cy.task('pushPhScanResults', res);
-        })
-    })
-
-    Cypress.Commands.add('terminatePh', () => {
-        cy.task('terminatePh')
-    })
-
-Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
     
-    describe("template spec", () => {
-        it("passes", () => {
-            cy.visit("https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm");
-            cy.injectPhScripts();
-            cy.runPhScan();
-        
-            cy.contains('Click Me').click();
-            // Run a scan on <input> and <button> elements
-            cy.runPhScan(['input', 'button']);
+    Cypress.Commands.add("injectPhScripts", () => {
+        cy.task("getPhScripts").then((s) => {
+            cy.window().then((win) => {
+                win.eval(s);
+            });
         });
     });
+    
+    Cypress.Commands.add("runPhScan", (elements) => {
+        cy.window().then(async (win) => {
+            const res = await win.runA11yScan(elements);
+            cy.task("pushPhScanResults", res);
+        });
+    });
+    
+    Cypress.Commands.add("terminatePh", () => {
+        cy.task("terminatePh");
+    });
 
-    after(() => {
-        cy.terminatePh();
-    })
-</details>
+Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
+
+    describe("template spec", () => {
+        it("should run purple HATS", () => {
+            cy.visit(
+                "https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm"
+            );
+            cy.injectPhScripts();
+            cy.runPhScan();
+            cy.contains("Click Me").click();
+            // Run a scan on <input> and <button> elements
+            cy.runPhScan(["input", "button"]);
+    
+            cy.terminatePh();
+        });
+    
+        it("should contain custom flow label", () => {
+            cy.task("returnResultsDir").then((res) => {
+                cy.visit(`./${res}`);
+                cy.get("#pagesScannedModalToggle").should(
+                    "contain",
+                    "Demo Cypress Scan"
+                );
+            });
+        });
+    
+        it("should run purple HATS from command line", () => {
+            //test for k flag
+            cy.exec(
+                "node node_modules/@govtechsg/purple-hats/cli.js -c 2 -u https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm -k testuser:testuser@gmail.com"
+            );
+        });
+    });
 
 Run your test with <code>npx cypress run</code> .
 
 You will see Purple HATS results generated in <code>results</code> folder.
 
+</details>
+
 #### Playwright
+
 <details>
     <summary>Click here to see an example usage in Playwright</summary>
 
-    import { chromium } from 'playwright';
-    import purpleHatsInit from 'purple-hats';
+Create a <code>package.json</code> by running <code>npm init</code> . Accept the default options or customise it as needed.
 
-    const ph = await purpleHatsInit('https://govtechsg.github.io');
+Install the following node dependencies by running <code>npm install playwright @govtechsg/purple-hats --save-dev </code>
 
+Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> within the folder to install remaining  Purple HATS dependencies.
+
+On your project's root folder, create a Playwright test file <code>ph-playwright-demo.js</code>:
+
+    import { chromium } from "playwright";
+    import purpleHatsInit from "@govtechsg/purple-hats";
+    
+    const ph = await purpleHatsInit(
+        "https://govtechsg.github.io",
+        "Demo Playwright Scan",
+        "Your Name",
+        "email@domain.com"
+    );
+    
     (async () => {
         const browser = await chromium.launch({
             headless: false,
         });
         const context = await browser.newContext();
         const page = await context.newPage();
-
+    
         const runPhScan = async (elementsToScan) => {
             const scanRes = await page.evaluate(
-            async elementsToScan => await runA11yScan(elementsToScan),
-            elementsToScan,
+                async elementsToScan => await runA11yScan(elementsToScan),
+                elementsToScan,
             );
             await ph.pushScanResults(scanRes);
         };
-
+    
         await page.goto('https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm');
         await page.evaluate(ph.getScripts());
         await runPhScan();
-
+    
         await page.getByRole('button', { name: 'Click Me' }).click();
         // Run a scan on <input> and <button> elements
         await runPhScan(['input', 'button'])
-
+    
         // ---------------------
         await context.close();
         await browser.close();
         await ph.terminate();
     })();
+
+Run your test with <code>node ph-playwright-demo.js</code> .
+
+You will see Purple HATS results generated in <code>results</code> folder.
+
 </details>
