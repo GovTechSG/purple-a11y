@@ -3,19 +3,18 @@ import path from 'path';
 import printMessage from 'print-message';
 import { fileURLToPath } from 'url';
 import constants from './constants/constants.js';
+import { submitFormViaPlaywright } from './constants/common.js'
 import { createCrawleeSubFolders, filterAxeResults } from './crawlers/commonCrawlerFunc.js';
 import {
-  cleanUp,
   createAndUpdateResultsFolders,
   createDetailsAndLogs,
-  getStoragePath,
 } from './utils.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const init = async (entryUrl, customFlowLabelTestString) => {
+export const init = async (entryUrl, customFlowLabelTestString, name, email) => {
   console.log('Starting Purple HATS');
 
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
@@ -88,7 +87,7 @@ export const init = async (entryUrl, customFlowLabelTestString) => {
     } else {
       await createDetailsAndLogs(scanDetails, randomToken);
       await createAndUpdateResultsFolders(randomToken);
-      await generateArtifacts(
+      const basicFormHTMLSnippet = await generateArtifacts(
         randomToken,
         scanDetails.requestUrl,
         scanDetails.crawlType,
@@ -96,6 +95,17 @@ export const init = async (entryUrl, customFlowLabelTestString) => {
         scanDetails.urlsCrawled.scanned,
         customFlowLabelTestString,
       );
+
+      await submitFormViaPlaywright(
+        constants.browserTypes.chromium,
+        '',
+        scanDetails.requestUrl,
+        scanDetails.crawlType,
+        email,
+        name,
+        JSON.stringify(basicFormHTMLSnippet),
+      )
+
     }
     return null;
   };
@@ -109,4 +119,4 @@ export const init = async (entryUrl, customFlowLabelTestString) => {
   };
 };
 
-export default init;
+export default init

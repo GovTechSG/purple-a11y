@@ -66,7 +66,9 @@ Create <code>cypress.config.js</code> with the following contents:
 
     const ph = await purpleHatsInit(
     "https://govtechsg.github.io",
-    "customFlowLabelTestString"
+    "customFlowLabelTestString",
+    "testName",
+    "testMail@gmail.com"
     );
 
     export default defineConfig({
@@ -130,6 +132,7 @@ Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
 
     it("should contain custom flow label", () => {
         cy.task("returnResultsDir").then((res) => {
+        console.log("res: ", res);
         cy.visit(`./${res}`);
         cy.get("#pagesScannedModalToggle").should(
             "contain",
@@ -137,15 +140,7 @@ Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
         );
         });
     });
-
-    it("should run purple HATS from command line", () => {
-        //test for k flag
-        cy.exec(
-        "node node_modules/@govtechsg/purple-hats/cli.js -c 2 -u https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm -k testuser:testuser@gmail.com"
-        );
     });
-    });
-
 </details>
 
 Run your test with <code>npx cypress run</code> .
