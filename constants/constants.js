@@ -15,17 +15,21 @@ const maxRequestsPerCrawl = 100;
 const isDev = true;
 
 export const ruleIdsWithHtml = [
+  'aria-allowed-attr',
   'aria-hidden-focus',
   'aria-input-field-name',
+  'aria-required-attr',
+  'aria-required-children',
+  'aria-required-parent',
   'aria-roles',
   'aria-toggle-field-name',
   'aria-valid-attr-value',
   'aria-valid-attr',
-  'marquee',
+  'input-button-name',
+  'link-name',
   'nested-interactive',
   'avoid-inline-spacing',
   'aria-allowed-role',
-  'tabindex',
 ];
 
 // Whitelisted attributes (to not drop)
