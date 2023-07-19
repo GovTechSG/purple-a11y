@@ -23,6 +23,7 @@ const crawlSitemap = async (
   maxRequestsPerCrawl,
   browser,
   userDataDirectory,
+  userSpecifiedMaxConcurrency,
 ) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { playwrightDeviceDetailsObject } = viewportSettings;
@@ -65,14 +66,14 @@ const crawlSitemap = async (
       if (status === 200 && isWhitelistedContentType(contentType)) {
         const results = await runAxeScript(page);
         await dataset.pushData(results);
-        urlsCrawled.scanned.push({url: currentUrl, pageTitle: results.pageTitle});
+        urlsCrawled.scanned.push({ url: currentUrl, pageTitle: results.pageTitle });
       } else {
         urlsCrawled.invalid.push(currentUrl);
       }
     },
     failedRequestHandler,
     maxRequestsPerCrawl,
-    maxConcurrency,
+    maxConcurrency: userSpecifiedMaxConcurrency || maxConcurrency,
   });
 
   await crawler.run();

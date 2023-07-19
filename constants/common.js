@@ -422,6 +422,7 @@ export const prepareData = argv => {
     browserToRun,
     nameEmail,
     customFlowLabel,
+    userSpecifiedMaxConcurrency,
   } = argv;
 
   return {
@@ -437,7 +438,8 @@ export const prepareData = argv => {
     isLocalSitemap,
     browser: browserToRun,
     nameEmail,
-    customFlowLabel
+    customFlowLabel,
+    userSpecifiedMaxConcurrency,
   };
 };
 

@@ -17,6 +17,7 @@ const crawlDomain = async (
   browser,
   userDataDirectory,
   strategy,
+  userSpecifiedMaxConcurrency,
 ) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { maxConcurrency } = constants;
@@ -84,7 +85,7 @@ const crawlDomain = async (
       } else if (location.host.includes(host)) {
         const results = await runAxeScript(page);
         await dataset.pushData(results);
-        urlsCrawled.scanned.push({url: currentUrl, pageTitle: results.pageTitle});
+        urlsCrawled.scanned.push({ url: currentUrl, pageTitle: results.pageTitle });
 
         await enqueueLinks({
           // set selector matches anchor elements with href but not contains # or starting with mailto:
@@ -116,7 +117,7 @@ const crawlDomain = async (
     },
     failedRequestHandler,
     maxRequestsPerCrawl,
-    maxConcurrency,
+    maxConcurrency: userSpecifiedMaxConcurrency || maxConcurrency,
   });
 
   await crawler.run();
