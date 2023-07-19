@@ -12,6 +12,7 @@ variables:
   A11Y_SCAN_ARTIFACT_NAME: "a11y-scan-results.zip"
   # A11Y_SCAN_NAME_EMAIL: "John Doe:john@domain.com"
   A11Y_SCAN_NAME_EMAIL: "John Doe:john@domain.com"
+
 a11y-scan:
   stage: test
   tags:
