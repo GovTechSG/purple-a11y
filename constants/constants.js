@@ -284,7 +284,7 @@ export default {
   allIssueFileName: 'all_issues',
   cliZipFileName: 'a11y-scan-results.zip',
   maxRequestsPerCrawl,
-  maxConcurrency: 50,
+  maxConcurrency: 25,
   scannerTypes,
   browserTypes,
   urlsCrawledObj,
