@@ -55,9 +55,15 @@ We will be creating the following files in a demo Cypress project:
 
 Create a <code>package.json</code> by running <code>npm init</code> . Accept the default options or customise it as needed.
 
+Change the type of npm package to module by running <code>npm pkg set type="module";</code>
+
 Install the following node dependencies by running <code>npm install cypress @govtechsg/purple-hats --save-dev </code>
 
-Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> within the folder to install remaining Purple HATS dependencies.
+Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> within the folder to install remaining Purple HATS dependencies:
+
+    cd node_modules/@govtechsg/purple-hats
+    npm install
+    cd ../../..
 
 Create <code>cypress.config.js</code> with the following contents, and change your Name and E-mail address below:
 
@@ -138,13 +144,6 @@ Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
                     "Demo Cypress Scan"
                 );
             });
-        });
-    
-        it("should run purple HATS from command line", () => {
-            //test for k flag
-            cy.exec(
-                "node node_modules/@govtechsg/purple-hats/cli.js -c 2 -u https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm -k testuser:testuser@gmail.com"
-            );
         });
     });
 
