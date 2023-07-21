@@ -22,6 +22,7 @@ import constants, {
   formDataFields,
   whitelistedAttributes,
   mutedAttributeValues,
+  blackListedFileExtensions,
 } from './constants.js';
 import { silentLogger } from '../logs.js';
 
@@ -98,6 +99,11 @@ export const sortAlphaAttributes = htmlString => {
     entireHtml += sortedHtmlTag;
   });
   return entireHtml;
+};
+
+export const isBlacklistedFileExtensions = (url, blacklistedFileExtensions) => {
+  const urlExtension = url.split('.').pop();
+  return blacklistedFileExtensions.includes(urlExtension);
 };
 
 const document = new JSDOM('').window;
@@ -437,7 +443,7 @@ export const prepareData = argv => {
     isLocalSitemap,
     browser: browserToRun,
     nameEmail,
-    customFlowLabel
+    customFlowLabel,
   };
 };
 

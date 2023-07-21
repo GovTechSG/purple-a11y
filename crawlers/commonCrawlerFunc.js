@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-param-reassign */
-import crawlee from 'crawlee';
+import crawlee, { playwrightUtils } from 'crawlee';
 import axe from 'axe-core';
 import { axeScript, saflyIconSelector } from '../constants/constants.js';
 
