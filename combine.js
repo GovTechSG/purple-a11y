@@ -26,7 +26,7 @@ const combineRun = async (details, deviceToScan) => {
     browser,
     userDataDirectory,
     strategy,
-    userSpecifiedMaxConcurrency,
+    specifiedMaxConcurrency,
   } = envDetails;
 
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
@@ -63,7 +63,7 @@ const combineRun = async (details, deviceToScan) => {
         maxRequestsPerCrawl,
         browser,
         userDataDirectory,
-        userSpecifiedMaxConcurrency,
+        specifiedMaxConcurrency,
       );
       break;
 
@@ -77,7 +77,7 @@ const combineRun = async (details, deviceToScan) => {
         browser,
         userDataDirectory,
         strategy,
-        userSpecifiedMaxConcurrency,
+        specifiedMaxConcurrency,
       );
       break;
 

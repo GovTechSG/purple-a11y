@@ -23,7 +23,7 @@ const crawlSitemap = async (
   maxRequestsPerCrawl,
   browser,
   userDataDirectory,
-  userSpecifiedMaxConcurrency,
+  specifiedMaxConcurrency,
 ) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { playwrightDeviceDetailsObject } = viewportSettings;
@@ -73,7 +73,7 @@ const crawlSitemap = async (
     },
     failedRequestHandler,
     maxRequestsPerCrawl,
-    maxConcurrency: userSpecifiedMaxConcurrency || maxConcurrency,
+    maxConcurrency: specifiedMaxConcurrency || maxConcurrency,
   });
 
   await crawler.run();

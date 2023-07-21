@@ -17,7 +17,7 @@ const crawlDomain = async (
   browser,
   userDataDirectory,
   strategy,
-  userSpecifiedMaxConcurrency,
+  specifiedMaxConcurrency,
 ) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { maxConcurrency } = constants;
@@ -117,7 +117,7 @@ const crawlDomain = async (
     },
     failedRequestHandler,
     maxRequestsPerCrawl,
-    maxConcurrency: userSpecifiedMaxConcurrency || maxConcurrency,
+    maxConcurrency: specifiedMaxConcurrency || maxConcurrency,
   });
 
   await crawler.run();

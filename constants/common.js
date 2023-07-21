@@ -422,7 +422,7 @@ export const prepareData = argv => {
     browserToRun,
     nameEmail,
     customFlowLabel,
-    userSpecifiedMaxConcurrency,
+    specifiedMaxConcurrency,
   } = argv;
 
   return {
@@ -439,7 +439,7 @@ export const prepareData = argv => {
     browser: browserToRun,
     nameEmail,
     customFlowLabel,
-    userSpecifiedMaxConcurrency,
+    specifiedMaxConcurrency,
   };
 };
 

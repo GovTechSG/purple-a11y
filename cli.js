@@ -126,7 +126,7 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   .coerce('t', option => {
     if (!Number.isInteger(option) || Number(option) <= 0) {
       printMessage(
-        [`Invalid maximum number of max concurrency. Please provide a positive integer.`],
+        [`Invalid number for max concurrency. Please provide a positive integer.`],
         messageOptions,
       );
       process.exit(1);

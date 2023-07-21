@@ -88,9 +88,9 @@ export const cliOptions = {
     demandOption: true,
   },
   t: {
-    alias: 'userSpecifiedMaxConcurrency',
+    alias: 'specifiedMaxConcurrency',
     describe:
-      'Maximum number of pages to scan concurrently. Use for sites with throttling. Defaults to 50.',
+      'Maximum number of pages to scan concurrently. Use for sites with throttling. Defaults to 25.',
     type: 'number',
     demandOption: false,
   },
