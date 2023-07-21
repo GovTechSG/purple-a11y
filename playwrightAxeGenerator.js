@@ -360,7 +360,7 @@ const processPage = async page => {
       channel = 'chrome';
     }
 
-    let codegenCmd = `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${data.url}`;
+    let codegenCmd = `npx playwright codegen --target javascript -o "${tmpDir}/intermediateScript.js" "${data.url}"`;
     let extraCodegenOpts = `${userAgentOpts} --browser ${browser} --block-service-workers --ignore-https-errors ${
       channel && `--channel ${channel}`
     }`;
