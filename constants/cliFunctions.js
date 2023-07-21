@@ -78,14 +78,21 @@ export const cliOptions = {
     alias: 'customFlowLabel',
     describe: 'Give Custom Flow Scan a label for easier reference in the report',
     type: 'string',
-    requiresArg: true, 
-    demandOption: false
+    requiresArg: true,
+    demandOption: false,
   },
   k: {
     alias: 'nameEmail',
     describe: `To personalise your experience, we will be collecting your name, email address and app usage data. Your information fully complies with GovTech’s Privacy Policy. Please provice your name and email address in this format "John Doe:john@domain.com".`,
     type: 'string',
     demandOption: true,
+  },
+  t: {
+    alias: 'specifiedMaxConcurrency',
+    describe:
+      'Maximum number of pages to scan concurrently. Use for sites with throttling. Defaults to 25.',
+    type: 'number',
+    demandOption: false,
   },
 };
 

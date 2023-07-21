@@ -1,12 +1,12 @@
-import crawlee from 'crawlee';
+import crawlee, { playwrightUtils } from 'crawlee';
 import {
   createCrawleeSubFolders,
   preNavigationHooks,
   runAxeScript,
   failedRequestHandler,
 } from './commonCrawlerFunc.js';
-import constants, { basicAuthRegex } from '../constants/constants.js';
-import { getPlaywrightLaunchOptions } from '../constants/common.js';
+import constants, { basicAuthRegex, blackListedFileExtensions } from '../constants/constants.js';
+import { getPlaywrightLaunchOptions, isBlacklistedFileExtensions } from '../constants/common.js';
 
 const crawlDomain = async (
   url,
@@ -17,6 +17,7 @@ const crawlDomain = async (
   browser,
   userDataDirectory,
   strategy,
+  specifiedMaxConcurrency,
 ) => {
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { maxConcurrency } = constants;
@@ -70,13 +71,31 @@ const crawlDomain = async (
     },
     requestQueue,
     preNavigationHooks,
-    requestHandler: async ({ page, request, enqueueLinks, enqueueLinksByClickingElements }) => {
+    requestHandler: async ({
+      page,
+      request,
+      response,
+      enqueueLinks,
+      enqueueLinksByClickingElements,
+    }) => {
+      const currentUrl = request.url;
+
+      if (isBlacklistedFileExtensions(currentUrl, blackListedFileExtensions)) {
+        urlsCrawled.invalid.push(currentUrl);
+        return;
+      }
+
+      if (response.status() !== 200) {
+        urlsCrawled.invalid.push(request.url);
+        return;
+      }
+
       if (pagesCrawled === maxRequestsPerCrawl) {
+        urlsCrawled.invalid.push(request.url);
         return;
       }
       pagesCrawled++;
 
-      const currentUrl = request.url;
       const location = await page.evaluate('location');
 
       if (isBasicAuth) {
@@ -84,7 +103,7 @@ const crawlDomain = async (
       } else if (location.host.includes(host)) {
         const results = await runAxeScript(page);
         await dataset.pushData(results);
-        urlsCrawled.scanned.push({url: currentUrl, pageTitle: results.pageTitle});
+        urlsCrawled.scanned.push({ url: currentUrl, pageTitle: results.pageTitle });
 
         await enqueueLinks({
           // set selector matches anchor elements with href but not contains # or starting with mailto:
@@ -116,7 +135,7 @@ const crawlDomain = async (
     },
     failedRequestHandler,
     maxRequestsPerCrawl,
-    maxConcurrency,
+    maxConcurrency: specifiedMaxConcurrency || maxConcurrency,
   });
 
   await crawler.run();
