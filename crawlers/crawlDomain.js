@@ -84,6 +84,11 @@ const crawlDomain = async (
         return;
       }
 
+      if (response.status() !== 200) {
+        urlsCrawled.invalid.push(request.url);
+        return;
+      }
+
       if (pagesCrawled === maxRequestsPerCrawl) {
         urlsCrawled.invalid.push(request.url);
         return;
