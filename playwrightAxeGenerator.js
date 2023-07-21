@@ -335,7 +335,7 @@ const processPage = async page => {
   try {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
 
-    let browser = 'webkit';
+    let browser = 'chromium';
     let userAgentOpts = null;
     let channel = null;
 
