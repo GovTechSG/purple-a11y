@@ -95,7 +95,6 @@ const crawlDomain = async (
       }
       pagesCrawled++;
 
-      const currentUrl = request.url;
       const location = await page.evaluate('location');
 
       if (isBasicAuth) {
