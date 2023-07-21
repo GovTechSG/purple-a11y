@@ -254,7 +254,8 @@ Options:
                                         [string] [required]
   -j, --customFlowLabel  Give Custom Flow Scan a label for easier reference in t
                          he report                                      [string]
-  -t, --specifiedMaxConcurrency  Maximum number of pages to scan concurrently. Use for sites with throttling. Defaults to 25.
+  -t, --specifiedMaxConcurrency  Maximum number of pages to scan concurrently.
+                                 Use for sites with throttling. Defaults to 25.
                                                                           [number]
 Examples:
   To scan sitemap of website:', 'node cli.js -c [ 1 | Sitemap ] -d <device> -u
