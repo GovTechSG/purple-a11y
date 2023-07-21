@@ -123,6 +123,16 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
 
     return option;
   })
+  .coerce('t', option => {
+    if (!Number.isInteger(option) || Number(option) <= 0) {
+      printMessage(
+        [`Invalid number for max concurrency. Please provide a positive integer.`],
+        messageOptions,
+      );
+      process.exit(1);
+    }
+    return option;
+  })
   .coerce('k', nameEmail => {
     if (nameEmail.indexOf(':') === -1) {
       printMessage(
@@ -168,7 +178,7 @@ const scanInit = async argvs => {
   argvs.scanner = constants.scannerTypes[argvs.scanner];
   argvs.headless = argvs.headless === 'yes';
   argvs.browserToRun = constants.browserTypes[argvs.browserToRun];
-  
+
   let useChrome = false;
   let useEdge = false;
   let chromeDataDir = null;

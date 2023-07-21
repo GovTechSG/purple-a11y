@@ -26,6 +26,7 @@ const combineRun = async (details, deviceToScan) => {
     browser,
     userDataDirectory,
     strategy,
+    specifiedMaxConcurrency,
   } = envDetails;
 
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
@@ -62,6 +63,7 @@ const combineRun = async (details, deviceToScan) => {
         maxRequestsPerCrawl,
         browser,
         userDataDirectory,
+        specifiedMaxConcurrency,
       );
       break;
 
@@ -75,6 +77,7 @@ const combineRun = async (details, deviceToScan) => {
         browser,
         userDataDirectory,
         strategy,
+        specifiedMaxConcurrency,
       );
       break;
 
@@ -88,7 +91,13 @@ const combineRun = async (details, deviceToScan) => {
 
   if (scanDetails.urlsCrawled.scanned.length > 0) {
     await createAndUpdateResultsFolders(randomToken);
-    const basicFormHTMLSnippet = await generateArtifacts(randomToken, url, type, deviceToScan,  urlsCrawled.scanned);
+    const basicFormHTMLSnippet = await generateArtifacts(
+      randomToken,
+      url,
+      type,
+      deviceToScan,
+      urlsCrawled.scanned,
+    );
     const [name, email] = nameEmail.split(':');
     await submitFormViaPlaywright(
       browser,
