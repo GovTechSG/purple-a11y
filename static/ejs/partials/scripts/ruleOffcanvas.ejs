@@ -187,34 +187,31 @@ category summary is clicked %>
       const elementCardsList = createElementFromString('<ul class="unbulleted-list"></ul>');
 
       page.items.forEach(item => {
-        const itemCard = createElementFromString(`
-          <li>
-            <div class="card mt-3">
-              ${
-                item.needsReview
-                  ? `<div class="needsReview">This occurrence might be a false positive that needs to be verified by a human.</div>`
-                  : ``
-              }
-              <div class="p-3">
-                <div class="d-flex justify-content-between">
-                  <div class="fw-bold">HTML element</div>
-                  <pre class="page-item-card-section-content"><code class="language-html">${htmlEscapeString(
-                    item.html,
-                  )}</code></pre>
-                </div>
-                <hr />
-                <div class="d-flex justify-content-between">
-                  <div class="fw-bold">${item.needsReview ? 'Details' : 'How to fix'}</div>
-                  <div class="page-item-card-section-content">
-                    ${generateItemMessageElement(item.needsReview, item.message)}
+        if (!item.needsReview){
+          const itemCard = createElementFromString(`
+            <li>
+              <div class="card mt-3">
+                <div class="p-3">
+                  <div class="d-flex justify-content-between">
+                    <div class="fw-bold">HTML element</div>
+                    <pre class="page-item-card-section-content"><code class="language-html">${htmlEscapeString(
+                      item.html,
+                    )}</code></pre>
+                  </div>
+                  <hr />
+                  <div class="d-flex justify-content-between">
+                    <div class="fw-bold">How to fix</div>
+                    <div class="page-item-card-section-content">
+                      ${generateItemMessageElement(item.message)}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          <li>
-        `);
-
-        elementCardsList.appendChild(itemCard);
+            <li>
+          `);
+  
+          elementCardsList.appendChild(itemCard);
+        }
       });
 
       accordionBody.appendChild(elementCardsList);
@@ -224,16 +221,9 @@ category summary is clicked %>
     hljs.highlightAll();
   }
 
-  function generateItemMessageElement(needsReview, rawMessage) {
+  function generateItemMessageElement(rawMessage) {
     const htmlEscapedMessageArray = rawMessage.split('\n  ').map(m => htmlEscapeString(m));
 
-    if (needsReview) {
-      if (htmlEscapedMessageArray.length === 1) {
-        return `<p class="mb-0">${htmlEscapedMessageArray[0]}</p>`;
-      } else {
-        return `<ul>${htmlEscapedMessageArray.map(m => `<li>${m}</li>`).join('')}</ul>`;
-      }
-    } else {
       let i = 0;
       const elements = [];
 
@@ -256,7 +246,7 @@ category summary is clicked %>
 
       return elements.join('');
     }
-  }
+  
 
   const whyItMatters = {
     accesskeys:

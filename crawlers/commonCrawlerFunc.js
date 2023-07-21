@@ -5,14 +5,14 @@ import axe from 'axe-core';
 import { axeScript, saflyIconSelector } from '../constants/constants.js';
 
 export const filterAxeResults = (results, pageTitle) => {
-  const { violations, incomplete, passes, url } = results;
+  const { violations, passes, url } = results;
 
   let totalItems = 0;
   const mustFix = { totalItems: 0, rules: {} };
   const goodToFix = { totalItems: 0, rules: {} };
   const passed = { totalItems: 0, rules: {} };
 
-  const process = (item, needsReview = false) => {
+  const process = (item) => {
     const { id: rule, help: description, helpUrl, tags, nodes } = item;
 
     if (rule === 'frame-tested') return;
@@ -24,11 +24,9 @@ export const filterAxeResults = (results, pageTitle) => {
       if (!(rule in category.rules)) {
         category.rules[rule] = { description, helpUrl, conformance, totalItems: 0, items: [] };
       }
-      const message = needsReview
-        ? failureSummary.slice(failureSummary.indexOf('\n') + 1).trim()
-        : failureSummary;
+      const message = failureSummary;
       category.rules[rule].items.push(
-        needsReview ? { html, message, needsReview } : { html, message },
+        { html, message },
       );
       category.rules[rule].totalItems += 1;
       category.totalItems += 1;
@@ -46,7 +44,6 @@ export const filterAxeResults = (results, pageTitle) => {
   };
 
   violations.forEach(item => process(item));
-  incomplete.forEach(item => process(item, true));
 
   passes.forEach(item => {
     const { id: rule, help: description, helpUrl, tags, nodes } = item;
@@ -91,7 +88,7 @@ export const runAxeScript = async (page, selectors = []) => {
         },
       });
       return axe.run(selectors, {
-        resultTypes: ['violations', 'passes', 'incomplete'],
+        resultTypes: ['violations', 'passes'],
       });
     },
     { selectors, saflyIconSelector },
