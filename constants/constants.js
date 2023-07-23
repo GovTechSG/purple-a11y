@@ -74,6 +74,7 @@ export const blackListedFileExtensions = [
   'woff',
   'pdf',
   'zip',
+  'webp',
 ];
 
 export const intermediateScreenshotsPath = './screenshots';
