@@ -255,8 +255,11 @@ const processPage = async page => {
     silentLogger.info('Unable to detect networkidle');
   }
   
-  consoleLogger.info('Visiting page at: ',page.url());
-  silentLogger.info('Visiting page at: ',page.url());
+  if (process.env.RUNNING_FROM_PH_GUI) {
+    console.log("Electron crawling: ", page.url());
+  }
+
+  silentLogger.info('Visiting page at: ', page.url());
   
   if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
 	return;
