@@ -62,6 +62,9 @@ const crawlSitemap = async (
       const currentUrl = request.url;
       const contentType = response.headers()['content-type'];
       const status = response.status();
+      if (process.env.RUNNING_FROM_PH_GUI) {
+        console.log(`Electron crawling: ${currentUrl}`);
+      }
 
       if (status === 200 && isWhitelistedContentType(contentType)) {
         const results = await runAxeScript(page);

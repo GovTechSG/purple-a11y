@@ -96,6 +96,10 @@ const crawlDomain = async (
       }
       pagesCrawled++;
 
+      if (process.env.RUNNING_FROM_PH_GUI) {
+        console.log(`Electron crawling: ${currentUrl}`);
+      }
+
       const location = await page.evaluate('location');
 
       if (isBasicAuth) {
