@@ -60,10 +60,11 @@ const playwrightAxeGenerator = async data => {
     import { chromium, devices, webkit } from 'playwright';
     import { createCrawleeSubFolders, runAxeScript } from '#root/crawlers/commonCrawlerFunc.js';
     import { generateArtifacts } from '#root/mergeAxeResults.js';
-    import { createAndUpdateResultsFolders, createDetailsAndLogs, createScreenshotsFolder } from '#root/utils.js';
+    import { createAndUpdateResultsFolders, createDetailsAndLogs, createScreenshotsFolder, getStoragePath } from '#root/utils.js';
     import constants, { intermediateScreenshotsPath, getExecutablePath, removeQuarantineFlag } from '#root/constants/constants.js';
     import fs from 'fs';
     import path from 'path';
+    import printMessage from 'print-message';
     import { isSkippedUrl, submitFormViaPlaywright } from '#root/constants/common.js';
     import { spawnSync } from 'child_process';
     import safe from 'safe-regex';
@@ -274,7 +275,7 @@ const processPage = async page => {
 
 };`;
 
-  const block2 = `  return urlsCrawled;
+  const block2Code = `  return urlsCrawled;
         })().then(async (urlsCrawled) => {
             fs.readdir(intermediateScreenshotsPath, (err, files) => {
                 if (err) {
@@ -309,27 +310,38 @@ const processPage = async page => {
   urlsCrawled.scanned, 
   '${customFlowLabel}');
 
-  await submitFormViaPlaywright(
-    "${data.browser}",
-    "${data.userDataDirectory}",
-    "${data.url}",
-    "${data.type}",
-    // nameEmail = name:email
-    "${data.nameEmail.split(':')[1]}", 
-    "${data.nameEmail.split(':')[0]}",
-    JSON.stringify(basicFormHTMLSnippet),
-  );
-        });
+  // await submitFormViaPlaywright(
+  //   "${data.browser}",
+  //   "${data.userDataDirectory}",
+  //   "${data.url}",
+  //   "${data.type}",
+  //   // nameEmail = name:email
+  //   "${data.nameEmail.split(':')[1]}", 
+  //   "${data.nameEmail.split(':')[0]}",
+  //   JSON.stringify(basicFormHTMLSnippet),
+  // );
         `;
+
+  const block2 = process.env.RUNNING_FROM_PH_GUI 
+    ? block2Code + `\nprintMessage([getStoragePath('${randomToken}')])\n});`
+    : block2Code + `\n});`
 
   let tmpDir;
   const appPrefix = 'purple-hats';
 
-  if (!fs.existsSync('./custom_flow_scripts')) {
-    fs.mkdirSync('./custom_flow_scripts');
+  let customFlowScripts; 
+  if (process.env.RUNNING_FROM_PH_GUI) {
+    customFlowScripts = './Purple HATS Backend/purple-hats/custom_flow_scripts'; 
+  } else {
+    customFlowScripts = './custom_flow_scripts'
   }
 
-  const generatedScript = `./custom_flow_scripts/generatedScript-${randomToken}.js`;
+  if (!fs.existsSync(`${customFlowScripts}`)) {
+    fs.mkdirSync(`${customFlowScripts}`);
+  }
+
+  const generatedScriptName = `generatedScript-${randomToken}.js`;
+  const generatedScript = `${customFlowScripts}/${generatedScriptName}`;
 
   console.log(
     ` ℹ️  A new browser will be launched shortly.\n Navigate and record custom steps for ${data.url} in the new browser.\n Close the browser when you are done recording your steps.`,
@@ -338,7 +350,7 @@ const processPage = async page => {
   try {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
 
-    let browser = 'chromium';
+    let browser = 'webkit';
     let userAgentOpts = null;
     let channel = null;
 
@@ -363,7 +375,7 @@ const processPage = async page => {
       channel = 'chrome';
     }
 
-    let codegenCmd = `npx playwright codegen --target javascript -o "${tmpDir}/intermediateScript.js" "${data.url}"`;
+    let codegenCmd = `npx playwright codegen --target javascript -o ${tmpDir}/intermediateScript.js ${data.url}`;
     let extraCodegenOpts = `${userAgentOpts} --browser ${browser} --block-service-workers --ignore-https-errors ${
       channel && `--channel ${channel}`
     }`;
@@ -409,9 +421,9 @@ const processPage = async page => {
     let awaitingProxyLogin = false;
     let secondGotoMicrosoftLoginSeen = false;
 
-    if (!process.env.RUNNING_FROM_PH_GUI) {
-      appendToGeneratedScript(importStatements);
-    }
+    // if (!process.env.RUNNING_FROM_PH_GUI) {
+    appendToGeneratedScript(importStatements);
+    // }
 
     for await (let line of rl) {
       if (/page\d.close\(\)/.test(line.trim())) {
@@ -571,18 +583,21 @@ const processPage = async page => {
     console.log(` Browser closed. Replaying steps and running accessibility scan...\n`);
 
     if (process.env.RUNNING_FROM_PH_GUI) {
-      const genScriptString = fs.readFileSync(generatedScript, 'utf-8');
-      const genScriptCompleted = new Promise((resolve, reject) => {
-        eval(`(async () => {
-            try {
-              ${genScriptString} 
-              resolve(); 
-            } catch (e) {
-              reject(e)
-            }
-          })();`);
-      });
-      await genScriptCompleted;
+      console.log(generatedScriptName);
+      // printMessage([generatedScriptName]);
+      process.exit(0);
+      // const genScriptString = fs.readFileSync(generatedScript, 'utf-8');
+      // const genScriptCompleted = new Promise((resolve, reject) => {
+      //   eval(`(async () => {
+      //       try {
+      //         ${genScriptString} 
+      //         resolve(); 
+      //       } catch (e) {
+      //         reject(e)
+      //       }
+      //     })();`);
+      // });
+      // await genScriptCompleted;
     } else {
       await import(generatedScript);
     }
