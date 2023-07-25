@@ -53,7 +53,8 @@ const playwrightAxeGenerator = async data => {
     }
   }
 
-  let { isHeadless, randomToken, deviceChosen, customDevice, viewportWidth, customFlowLabel } = data;
+  let { isHeadless, randomToken, deviceChosen, customDevice, viewportWidth, customFlowLabel } =
+    data;
   // these will be appended to the generated script if the scan is run from CLI/index.
   // this is so as the final generated script can be rerun after the scan.
   const importStatements = `
@@ -274,7 +275,12 @@ const processPage = async page => {
 
 };`;
 
-  const block2 = `  return urlsCrawled;
+  const block2 = ` 
+    return urlsCrawled
+      } catch (e) {
+        console.error('Error: ', e);
+        process.exit(1);
+      }
         })().then(async (urlsCrawled) => {
             fs.readdir(intermediateScreenshotsPath, (err, files) => {
                 if (err) {
@@ -319,8 +325,9 @@ const processPage = async page => {
     "${data.nameEmail.split(':')[0]}",
     JSON.stringify(basicFormHTMLSnippet),
   );
-        });
-        `;
+  process.exit(0);
+});
+`;
 
   let tmpDir;
   const appPrefix = 'purple-hats';
@@ -447,12 +454,13 @@ const processPage = async page => {
           continue;
         }
       }
-      if (line.trim() === `const browser = await webkit.launch({`) {
-        appendToGeneratedScript(`const browser = await chromium.launch({`);
+      if (line.trim() === `(async () => {`) {
+        appendToGeneratedScript(`await (async () => {
+                                        try {`);
         continue;
       }
-      if (line.trim() === `(async () => {`) {
-        appendToGeneratedScript(`await (async () => {`);
+      if (line.trim() === `const browser = await webkit.launch({`) {
+        appendToGeneratedScript(`const browser = await chromium.launch({`);
         continue;
       }
       if (line.trim() === `const page = await context.newPage();`) {
