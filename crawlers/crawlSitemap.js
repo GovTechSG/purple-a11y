@@ -59,16 +59,27 @@ const crawlSitemap = async (
     requestList,
     preNavigationHooks,
     requestHandler: async ({ page, request, response }) => {
-      const currentUrl = request.url;
+      const actualUrl = request.loadedUrl || request.url;
       const contentType = response.headers()['content-type'];
       const status = response.status();
 
       if (status === 200 && isWhitelistedContentType(contentType)) {
         const results = await runAxeScript(page);
+        if (request.loadedUrl !== request.url) {
+          urlsCrawled.scanned.push({
+            url: request.url,
+            pageTitle: results.pageTitle,
+            actualUrl: request.loadedUrl, // i.e. actualUrl
+          });
+          results.url = request.url;
+          results.actualUrl = request.loadedUrl;
+        } else {
+          urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
+        }
         await dataset.pushData(results);
-        urlsCrawled.scanned.push({ url: currentUrl, pageTitle: results.pageTitle });
+        urlsCrawled.scanned.push({ url: actualUrl, pageTitle: results.pageTitle });
       } else {
-        urlsCrawled.invalid.push(currentUrl);
+        urlsCrawled.invalid.push(actualUrl);
       }
     },
     failedRequestHandler,
