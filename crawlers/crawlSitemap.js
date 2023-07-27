@@ -37,6 +37,7 @@ const crawlSitemap = async (
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
 
   const { dataset } = await createCrawleeSubFolders(randomToken);
+  let pagesCrawled;
 
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
@@ -63,6 +64,13 @@ const crawlSitemap = async (
       const contentType = response.headers()['content-type'];
       const status = response.status();
 
+      if (pagesCrawled === maxRequestsPerCrawl) {
+        urlsCrawled.invalid.push(request.url);
+        return;
+      }
+
+      pagesCrawled++;
+
       if (status === 200 && isWhitelistedContentType(contentType)) {
         const results = await runAxeScript(page);
         if (request.loadedUrl !== request.url) {
@@ -81,7 +89,6 @@ const crawlSitemap = async (
           urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
         }
         await dataset.pushData(results);
-        urlsCrawled.scanned.push({ url: actualUrl, pageTitle: results.pageTitle });
       } else {
         urlsCrawled.invalid.push(actualUrl);
       }
