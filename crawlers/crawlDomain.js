@@ -110,6 +110,10 @@ const crawlDomain = async (
             pageTitle: results.pageTitle,
             actualUrl: request.loadedUrl, // i.e. actualUrl
           });
+          urlsCrawled.redirects.push({
+            fromUrl: request.url,
+            toUrl: request.loadedUrl, // i.e. actualUrl
+          });
           results.url = request.url;
           results.actualUrl = request.loadedUrl;
         } else {

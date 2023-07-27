@@ -33,7 +33,9 @@ export const isWhitelistedContentType = contentType => {
 };
 
 export const getStoragePath = randomToken =>
-  `results/${randomToken}_${constants.urlsCrawledObj.scanned.length}pages`;
+  `results/${randomToken}_${
+    constants.urlsCrawledObj.scanned.length - constants.urlsCrawledObj.redirects.length
+  }pages`;
 
 export const createDetailsAndLogs = async (scanDetails, randomToken) => {
   const storagePath = getStoragePath(randomToken);

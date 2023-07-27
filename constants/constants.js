@@ -186,6 +186,7 @@ const urlsCrawledObj = {
   toScan: [],
   scanned: [],
   invalid: [],
+  redirects: [],
   outOfDomain: [],
 };
 
