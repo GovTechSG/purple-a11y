@@ -198,7 +198,11 @@ const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
 
 const pushResults = async (rPath, allIssues) => {
   const pageResults = await parseContentToJson(rPath);
-  const { url, pageTitle } = pageResults;
+  const { url, pageTitle, actualUrl } = pageResults;
+
+  if (actualUrl) {
+    return;
+  }
 
   allIssues.totalPagesScanned += 1;
 
@@ -222,6 +226,7 @@ const pushResults = async (rPath, allIssues) => {
           helpUrl,
           conformance,
           totalItems: 0,
+          // numberOfPagesAffectedAfterRedirects: 0,
           pagesAffected: {},
         };
       }
@@ -238,9 +243,21 @@ const pushResults = async (rPath, allIssues) => {
 
       if (!(url in currRuleFromAllIssues.pagesAffected)) {
         currRuleFromAllIssues.pagesAffected[url] = { pageTitle, items: [] };
+        /*if (actualUrl) {
+          currRuleFromAllIssues.pagesAffected[url].actualUrl = actualUrl;
+          // Deduct duplication count from totalItems
+          currRuleFromAllIssues.totalItems -= 1;
+          // Previously using pagesAffected.length to display no. of pages affected
+          // However, since pagesAffected array contains duplicates, we need to deduct the duplicates
+          // Hence, start with negative offset, will add pagesAffected.length later
+          currRuleFromAllIssues.numberOfPagesAffectedAfterRedirects -= 1;
+          currCategoryFromAllIssues.totalItems -= 1;
+        }*/
       }
 
       currRuleFromAllIssues.pagesAffected[url].items.push(...items);
+      // currRuleFromAllIssues.numberOfPagesAffectedAfterRedirects +=
+      //   currRuleFromAllIssues.pagesAffected.length;
     });
   });
 };
