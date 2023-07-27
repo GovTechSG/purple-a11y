@@ -78,10 +78,11 @@ const crawlDomain = async (
       enqueueLinks,
       enqueueLinksByClickingElements,
     }) => {
-      const currentUrl = request.url;
+      // loadedUrl is the URL after redirects
+      const actualUrl = request.loadedUrl || request.url;
 
-      if (isBlacklistedFileExtensions(currentUrl, blackListedFileExtensions)) {
-        urlsCrawled.invalid.push(currentUrl);
+      if (isBlacklistedFileExtensions(actualUrl, blackListedFileExtensions)) {
+        urlsCrawled.invalid.push(request.url);
         return;
       }
 
@@ -102,8 +103,19 @@ const crawlDomain = async (
         isBasicAuth = false;
       } else if (location.host.includes(host)) {
         const results = await runAxeScript(page);
+        // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
+        if (request.loadedUrl !== request.url) {
+          urlsCrawled.scanned.push({
+            url: request.url,
+            pageTitle: results.pageTitle,
+            actualUrl: request.loadedUrl, // i.e. actualUrl
+          });
+          results.url = request.url;
+          results.actualUrl = request.loadedUrl;
+        } else {
+          urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
+        }
         await dataset.pushData(results);
-        urlsCrawled.scanned.push({ url: currentUrl, pageTitle: results.pageTitle });
 
         await enqueueLinks({
           // set selector matches anchor elements with href but not contains # or starting with mailto:
@@ -130,7 +142,7 @@ const crawlDomain = async (
           },
         });
       } else {
-        urlsCrawled.outOfDomain.push(currentUrl);
+        urlsCrawled.outOfDomain.push(request.url);
       }
     },
     failedRequestHandler,
