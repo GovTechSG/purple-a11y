@@ -144,8 +144,43 @@ category summary is clicked %>
 
     const accordionsList = createElementFromString(`<ul class="unbulleted-list"></ul>`);
 
+    // const duplicatedLinks = {};
+
     ruleInCategory.pagesAffected.forEach((page, index) => {
       const accordionId = `${ruleInCategory.rule}-${category}-page-${index}`;
+      /*const accordionId = `${ruleInCategory.rule}-${category}-${page.url}`;
+      if (page.hasOwnProperty('actualUrl')) {
+        const existingAccordionId = `${ruleInCategory.rule}-${category}-${page.actualUrl}`;
+        // Check if the page already has an accordion for the actual URL this page is a duplicate of
+        const existingList = Array.from(accordionsList.children);
+        const existingEle = existingList.find(
+          ele => ele.children[0].children[0].children[0].id === `${existingAccordionId}-title`,
+        );
+        if (existingEle) {
+          // If the page already has an accordion for the actual URL this page is a duplicate of
+          if (
+            !duplicatedLinks.hasOwnProperty(page.actualUrl) &&
+            !page.actualUrl.hasOwnProperty('redirectUrls')
+          ) {
+            duplicatedLinks[page.actualUrl] = {};
+            duplicatedLinks[page.actualUrl]['redirectUrls'] = [page.url];
+          } else {
+            duplicatedLinks[page.actualUrl]['redirectUrls'].push(page.url);
+          }
+          duplicatedLinks[page.actualUrl]['elementId'] = `${existingAccordionId}-content`;
+          // const htmlSnippet = `<br><a aria-label="URL to ${page.pageTitle}" href="${page.url}" target="_blank">
+          //  ${page.url}
+          //</a>`;
+          //existingEle.children[0].children[0].children[1].children[0].children[0].insertAdjacentHTML(
+          //  'afterend',
+          //  htmlSnippet,
+          // ); 
+
+          // Terminate the current iteration early to prevent creation of a new accordion
+          return;
+        }
+      }*/
+
       const accordion = createElementFromString(`
         <li>
           <div class="accordion mt-2 ${category}">
@@ -218,6 +253,22 @@ category summary is clicked %>
       return accordion;
     });
     contentContainer.replaceChildren(contentTitle, accordionsList);
+
+    // Insert duplicated links into existing accordions
+    /*Object.keys(duplicatedLinks).forEach(baseUrl => {
+      const existingAccordionBody = document.getElementById(duplicatedLinks[baseUrl]['elementId']);
+      const paragraphSnippet = `<br><p>Here are the list of URLs that also redirects to the above</p>`;
+      existingAccordionBody.children[0].children[0].insertAdjacentHTML(
+        'afterend',
+        paragraphSnippet,
+      );
+      duplicatedLinks[baseUrl]['redirectUrls'].forEach(redirectUrl => {
+        const htmlSnippet = `<br><a aria-label="URL to ${baseUrl}" href="${redirectUrl}" target="_blank">
+          ${redirectUrl}
+        </a>`;
+        existingAccordionBody.children[0].children[1].insertAdjacentHTML('afterend', htmlSnippet);
+      });
+    });*/
     hljs.highlightAll();
   }
 
