@@ -273,6 +273,10 @@ category summary is clicked %>
   }
 
   function generateItemMessageElement(rawMessage) {
+    if (rawMessage.includes('\n\nFix')) {
+      rawMessage = rawMessage.replace('\n\nFix', '\n  Fix');
+    }
+
     const htmlEscapedMessageArray = rawMessage.split('\n  ').map(m => htmlEscapeString(m));
 
       let i = 0;
