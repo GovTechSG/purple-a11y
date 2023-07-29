@@ -276,7 +276,7 @@ const processPage = async page => {
 
 };`;
 
-  const block2Code = ` 
+  const block2 = ` 
     return urlsCrawled
       } catch (e) {
         console.error('Error: ', e);
@@ -326,13 +326,17 @@ const processPage = async page => {
     "${data.nameEmail.split(':')[0]}",
     JSON.stringify(basicFormHTMLSnippet),
   );
-  process.exit(0);
+
+  if (process.env.RUNNING_FROM_PH_GUI) {
+    printMessage([getStoragePath('${randomToken}')]); 
+    process.exit(0);
+  }
 });
 `;
 
-  const block2 = process.env.RUNNING_FROM_PH_GUI 
-    ? block2Code + `\nprintMessage([getStoragePath('${randomToken}')])\n});`
-    : block2Code + `\n});`
+  // const block2 = process.env.RUNNING_FROM_PH_GUI 
+  //   ? block2Code + `\nprintMessage([getStoragePath('${randomToken}')])\nprocess.exit(0);\n});`
+  //   : block2Code + `\n});`
 
   let tmpDir;
   const appPrefix = 'purple-hats';
