@@ -99,15 +99,15 @@ const combineRun = async (details, deviceToScan) => {
       urlsCrawled.scanned,
     );
     const [name, email] = nameEmail.split(':');
-    await submitFormViaPlaywright(
-      browser,
-      userDataDirectory,
-      url,
-      type,
-      email,
-      name,
-      JSON.stringify(basicFormHTMLSnippet),
-    );
+    // await submitFormViaPlaywright(
+    //   browser,
+    //   userDataDirectory,
+    //   url,
+    //   type,
+    //   email,
+    //   name,
+    //   JSON.stringify(basicFormHTMLSnippet),
+    // );
   } else {
     printMessage([`No pages were scanned.`], constants.alertMessageOptions);
   }

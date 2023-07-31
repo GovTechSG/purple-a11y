@@ -154,7 +154,7 @@ export const isValidXML = async content => {
   return { status, parsedContent };
 };
 
-export const isSkippedUrl = (page, whitelistedDomains) => {
+export const isSkippedUrl = (page, whitelistedDomains) => {	
   const isWhitelisted = whitelistedDomains.filter(pattern => {
     pattern = pattern.replace(/[\n\r]+/g, '');
 
