@@ -322,14 +322,16 @@
     font-size: 1.125rem;
   } */
   #pagesScannedModal .modal-body {
-    max-height: 632px;
+    max-height: 80vh;
     overflow-y: scroll;
-  }
+    padding: 0 1.5rem;
+    margin: 1rem 0;
+}
   #pagesScannedModal li {
     display: flex;
     flex-direction: column;
-    padding: 8px;
     border-bottom: 1px solid #B5C5CA;
+    padding: 0.5rem 0;
   }
   #pagesScannedModal span {
     overflow: hidden;
@@ -339,9 +341,14 @@
   }
   #pagesScannedModal h6 {
     padding-left: 0.5rem;
+    padding-bottom: 0.5rem;
   }
+
   #wcag-compliance-card,
-  #top-five-card,
+  #top-five-card{
+    border-radius: 0.25rem;
+  }
+  
   #summary-scan-results-card,
   #scanabout-compliance-card {
     box-shadow: none;
@@ -883,12 +890,30 @@ hr.solid {
   border-top: 1px solid rgb(174, 121, 128);
 }
 
-.expandedRuleAiFeedback{
-    text-align: left; 
-    margin-top: 32px; 
-    margin-bottom: 10px; 
-    background-color: #F7F6FE; 
-    border: 1px solid #785EF0;
-    border-radius: 4px;
-  }
+.aiGenerateResponseButton{
+  background-color: #ffffff;
+  border: 1px solid #6E52EF;
+  color: #6E52EF;
+  border-radius: 4px;
+  height: 44px;
+  padding-left: 16px;
+  padding-right: 16px;
+  width: 100%;
+}
+
+#aiUsefulButton{
+  background-color: #ffffff;
+  border: 1px solid #6E52EF;
+  color: #6E52EF;
+  border-radius: 4px;
+  height: 44px;
+}
+#aiUsefulButton:hover{
+}
+.codeForAiResponse{
+  border: 1px solid #B5C5CA;
+  background-color: #F6F8F9;
+  display: inline-block;
+}
+
 </style>

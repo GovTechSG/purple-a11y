@@ -335,6 +335,7 @@ export const generateArtifacts = async (randomToken, urlScanned, scanType, viewp
   const storagePath = getStoragePath(randomToken);
   const directory = `${storagePath}/${constants.allIssueFileName}`;
   const allIssues = {
+    storagePath,
     startTime: getCurrentTime(),
     urlScanned,
     scanType,

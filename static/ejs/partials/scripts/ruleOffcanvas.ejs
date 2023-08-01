@@ -68,6 +68,22 @@ category summary is clicked %>
     `),
     );
 
+    if (ruleIdsWithHtml.includes(selectedRule.rule)) {
+      document.getElementById(
+        'expandedRuleAiFeedback',
+      ).innerHTML = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M13.5272 5.84609C12.1792 4.49755 11.2565 2.14266 10.7986 0C10.34 2.14309 9.41829 4.49848 8.06975 5.84702C6.72171 7.19463 4.3661 8.11732 2.22388 8.57615C4.36697 9.03405 6.72214 9.95619 8.07019 11.3048C9.41824 12.6528 10.3409 15.0082 10.7995 17.1509C11.2574 15.0078 12.1798 12.6524 13.5277 11.3039C14.8757 9.9558 17.2313 9.03356 19.3735 8.57473C17.2309 8.11683 14.8758 7.1942 13.5272 5.84609Z" fill="#785EF0"/>
+      <path d="M22.2835 16.6434C21.4788 15.8384 20.9267 14.4308 20.6532 13.1509C20.3791 14.4308 19.8289 15.8383 19.0233 16.6439C18.2178 17.4485 16.8104 18.0002 15.5308 18.2742C16.8109 18.5482 18.2178 19.099 19.0233 19.9045C19.8289 20.7096 20.3801 22.1172 20.6541 23.3971C20.9276 22.1167 21.4788 20.7096 22.2839 19.9041C23.089 19.099 24.4966 18.5477 25.776 18.2733C24.4966 17.9997 23.0891 17.4486 22.2835 16.6434Z" fill="#785EF0"/>
+      <path d="M8.00356 19.3979C7.77349 20.4724 7.31149 21.6545 6.63533 22.3306C5.95928 23.0062 4.77771 23.4692 3.70337 23.6993C4.77771 23.9298 5.95928 24.3914 6.63533 25.0679C7.31149 25.744 7.77442 26.9251 8.00449 28.0002C8.23434 26.9251 8.69656 25.7441 9.37293 25.0675C10.0485 24.3915 11.2303 23.9289 12.3045 23.6984C11.2304 23.4687 10.0485 23.0063 9.37249 22.3302C8.69656 21.6546 8.23341 20.4725 8.00356 19.3979Z" fill="#785EF0"/>
+      </svg>
+      This issue has AI suggested fixes.  
+      <a target="_blank">Let us know if it helps!</a></div>`;
+      document.getElementById('expandedRuleAiFeedback').style =
+        'text-align: left; margin-top: 32px; margin-bottom: 10px; background-color: #F7F6FE; border: 1px solid #785EF0; border-radius: 4px; display: flex; padding: 1rem; align-items: center;';
+    } else {
+      document.querySelector('#expandedRuleAiFeedback').style.display = 'none';
+    }
+
     const availableFixCategories = [];
     const categorySelectors = [];
 
@@ -129,6 +145,71 @@ category summary is clicked %>
     document.getElementById('expandedRuleCategorySelectors').replaceChildren(...categorySelectors);
   }
 
+  const aiResponseFeedbackDataFields = {
+    formUrl: `https://docs.google.com/forms/d/e/1FAIpQLSdWbOHX9ggWlL7JUAz8s-Jmv-fjvM-R7dcFwqm1gTZ-sNcxHg/formResponse`,
+    uuidField: 'entry.1599149312',
+    websiteUrlField: 'entry.1146860880',
+    ruleIdField: 'entry.942691547',
+    basicHtmlField: 'entry.2085981400',
+    usefulCount: 'entry.809957654',
+    notUsefulCount: 'entry.89318735',
+  };
+
+  const uuidv4 = () => {
+    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+      (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16),
+    );
+  };
+
+  const uniqueUserUuid = uuidv4();
+
+  const logAiResponseFeedback = (feedbackType, ruleId, buttonsDiv, basicHtml) => {
+    const websiteUrl = document.querySelector('a[aria-label="URL scanned"]').innerText;
+
+    if (feedbackType === 'useful') {
+      const finalUrl = `${aiResponseFeedbackDataFields.formUrl}?${aiResponseFeedbackDataFields.uuidField}=${uniqueUserUuid}&${aiResponseFeedbackDataFields.websiteUrlField}=${websiteUrl}&${aiResponseFeedbackDataFields.ruleIdField}=${ruleId}&${aiResponseFeedbackDataFields.basicHtmlField}=${basicHtml}&${aiResponseFeedbackDataFields.usefulCount}=1&${aiResponseFeedbackDataFields.notUsefulCount}=0`;
+
+      if (!localStorage.getItem(storagePath)) {
+        var aiUsefulFeedback = {};
+      } else {
+        var aiUsefulFeedback = JSON.parse(localStorage.getItem(storagePath));
+      }
+
+      aiUsefulFeedback[buttonsDiv] = 'useful';
+      localStorage.setItem(storagePath, JSON.stringify(aiUsefulFeedback));
+
+      fetch(finalUrl, { mode: 'no-cors' });
+
+      document
+        .getElementById(buttonsDiv)
+        .replaceChildren(
+          createElementFromString(
+            `<div style="color:#4A6168" >You rated this AI suggestion useful. Undo</div>`,
+          ),
+        );
+    } else {
+      const finalUrl = `${aiResponseFeedbackDataFields.formUrl}?${aiResponseFeedbackDataFields.uuidField}=${uniqueUserUuid}&${aiResponseFeedbackDataFields.websiteUrlField}=${websiteUrl}&${aiResponseFeedbackDataFields.ruleIdField}=${ruleId}&${aiResponseFeedbackDataFields.basicHtmlField}=${basicHtml}&${aiResponseFeedbackDataFields.usefulCount}=0&${aiResponseFeedbackDataFields.notUsefulCount}=1`;
+
+      if (!localStorage.getItem(storagePath)) {
+        var aiUsefulFeedback = {};
+      } else {
+        var aiUsefulFeedback = JSON.parse(localStorage.getItem(storagePath));
+      }
+
+      aiUsefulFeedback[buttonsDiv] = 'notUseful';
+      localStorage.setItem(storagePath, JSON.stringify(aiUsefulFeedback));
+
+      fetch(finalUrl, { mode: 'no-cors' });
+      document
+        .getElementById(buttonsDiv)
+        .replaceChildren(
+          createElementFromString(
+            `<div style="color:#4A6168" >You rated this AI suggestion not useful. Undo</div>`,
+          ),
+        );
+    }
+  };
+
   function buildExpandedRuleCategoryContent(category, ruleInCategory) {
     const contentContainer = document.getElementById('expandedRuleCategoryContent');
 
@@ -146,82 +227,172 @@ category summary is clicked %>
 
     ruleInCategory.pagesAffected.forEach((page, index) => {
       const accordionId = `${ruleInCategory.rule}-${category}-page-${index}`;
+      var accordionAIId = `${ruleInCategory.rule}-${category}-accordion-AI-${index}`;
+      var buttonAIId = `${ruleInCategory.rule}-${category}-button-AI-${index}`;
+
       const accordion = createElementFromString(`
-        <li>
-          <div class="accordion mt-2 ${category}">
-            <div class="accordion-item">
-              <div class="accordion-header" id="${accordionId}-title">
-                <button 
-                  aria-label="Page ${index + 1}: ${page.pageTitle}, ${
+          <li>
+            <div class="accordion mt-2 ${category}">
+              <div class="accordion-item">
+                <div class="accordion-header" id="${accordionId}-title">
+                  <button
+                    aria-label="Page ${index + 1}: ${page.pageTitle}, ${
         page.items.length
-      } occurrences" class="accordion-button collapsed" 
-                  type="button" 
-                  data-bs-toggle="collapse" 
-                  data-bs-target="#${accordionId}-content" 
-                  aria-expanded="false" 
-                  aria-controls="${accordionId}-content"
-                >
-                  <div class="me-3">${page.pageTitle}</div>
-                  <div class="ms-auto counter">${page.items.length}</div>
-                </button>
-              </div>
-              <div id="${accordionId}-content" class="accordion-collapse collapse" aria-labelledby="${accordionId}-title">
-                <div class="accordion-body p-3">
-                  <a aria-label="URL to ${page.pageTitle}" href="${page.url}" target="_blank">${
+      } occurrences" class="accordion-button collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#${accordionId}-content"
+                    aria-expanded="false"
+                    aria-controls="${accordionId}-content"
+                  >
+                    <div class="me-3">${page.pageTitle}</div>
+                    <div class="ms-auto counter">${page.items.length}</div>
+                  </button>
+                </div>
+                <div id="${accordionId}-content" class="accordion-collapse collapse" aria-labelledby="${accordionId}-title">
+                  <div class="accordion-body p-3">
+                    <a aria-label="URL to ${page.pageTitle}" href="${page.url}" target="_blank">${
         page.url
       }</a>
-                  <div class="page-accordion-content-title">
-                    <span>${getFormattedCategoryTitle(category)} elements</span>
-                    <span class="page-items-count">${page.items.length}</span>
+                    <div class="page-accordion-content-title">
+                      <span>${getFormattedCategoryTitle(category)} elements</span>
+                      <span class="page-items-count">${page.items.length}</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </li>
-      `);
+          </li>
+        `);
 
       accordionsList.appendChild(accordion);
 
       const accordionBody = accordion.getElementsByClassName('accordion-body')[0];
       const elementCardsList = createElementFromString('<ul class="unbulleted-list"></ul>');
 
-      page.items.forEach(item => {
-        const itemCard = createElementFromString(`
-          <li>
-            <div class="card mt-3">
-              ${
-                item.needsReview
-                  ? `<div class="needsReview">This occurrence might be a false positive that needs to be verified by a human.</div>`
-                  : ``
-              }
-              <div class="p-3">
-                <div class="d-flex justify-content-between">
-                  <div class="fw-bold">HTML element</div>
-                  <pre class="page-item-card-section-content"><code class="language-html">${htmlEscapeString(
-                    item.html,
-                  )}</code></pre>
-                </div>
-                <hr />
-                <div class="d-flex justify-content-between">
-                  <div class="fw-bold">${item.needsReview ? 'Details' : 'How to fix'}</div>
-                  <div class="page-item-card-section-content">
-                    ${generateItemMessageElement(item.needsReview, item.message)}
+      page.items.forEach(async (item, index) => {
+        const accordionDivToAppendAI = `${accordionAIId}-${index}`;
+        const buttonDivForAiFeedback = `${buttonAIId}-${index}`;
+
+        if (!ruleIdsWithHtml.includes(ruleInCategory.rule)) {
+          const itemCard = createElementFromString(`
+              <li>
+                <div class="card mt-3">
+                  ${
+                    item.needsReview
+                      ? `<div class="needsReview">This occurrence might be a false positive that needs to be verified by a human.</div>`
+                      : ``
+                  }
+                  <div class="p-3">
+                    <div class="d-flex justify-content-between">
+                      <div class="fw-bold">HTML element</div>
+                      <pre class="page-item-card-section-content"><code class="language-html">${escapeHtmlForAI(
+                        item.html,
+                      )}</code></pre>
+                    </div>
+                    <div id="${accordionDivToAppendAI}" class=" justify-content-between"></div>
+                    <hr />
+                    <div class="d-flex justify-content-between">
+                      <div class="fw-bold">${item.needsReview ? 'Details' : 'How to fix'}</div>
+                      <div class="page-item-card-section-content">
+                        ${generateItemMessageElement(item.needsReview, item.message)}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          <li>
-        `);
-
-        elementCardsList.appendChild(itemCard);
+              <li>
+            `);
+          elementCardsList.appendChild(itemCard);
+        } else {
+          const checkQueryLabel = await needsQueryForHTML(ruleInCategory.rule, item.html);
+          if (checkQueryLabel) {
+            const itemCard = createElementFromString(`
+              <li>
+                <div class="card mt-3">
+                  ${
+                    item.needsReview
+                      ? `<div class="needsReview">This occurrence might be a false positive that needs to be verified by a human.</div>`
+                      : ``
+                  }
+                  <div class="p-3">
+                    <div class="d-flex">
+                      <div class="fw-bold">HTML element</div>
+                        <pre class="page-item-card-section-content"><code class="language-html">${escapeHtmlForAI(
+                          item.html,
+                        )}</code></pre>
+                    </div>
+                    <hr />
+                    <div class="d-flex">
+                      <div class="fw-bold">${item.needsReview ? 'Details' : 'How to fix'}</div>
+                      <div class="page-item-card-section-content">
+                        ${generateItemMessageElement(item.needsReview, item.message)}
+                      </div>
+                    </div>
+                    <hr />
+                    <div class="d-flex">
+                      <div class="fw-bold">AI suggestion</div>
+                      <div id="${accordionDivToAppendAI}" style="margin-right: 16px">
+                        <button id=${buttonDivForAiFeedback} class="page-item-card-section-content aiGenerateResponseButton" onClick="generateQuery('${
+              ruleInCategory.rule
+            }','${accordionDivToAppendAI}', '${checkQueryLabel}', '${buttonDivForAiFeedback}')">Generate response</button>
+                        <div id="aiGenerateResponseError"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <li>
+            `);
+            elementCardsList.appendChild(itemCard);
+          } else {
+            const itemCard = createElementFromString(`
+              <li>
+                <div class="card mt-3">
+                  ${
+                    item.needsReview
+                      ? `<div class="needsReview">This occurrence might be a false positive that needs to be verified by a human.</div>`
+                      : ``
+                  }
+                  <div class="p-3">
+                    <div class="d-flex justify-content-between">
+                      <div class="fw-bold">HTML element</div>
+                      <pre class="page-item-card-section-content"><code class="language-html">${escapeHtmlForAI(
+                        item.html,
+                      )}</code></pre>
+                    </div>                    <hr />
+                    <div class="d-flex justify-content-between">
+                      <div class="fw-bold">${item.needsReview ? 'Details' : 'How to fix'}</div>
+                      <div class="page-item-card-section-content">
+                        ${generateItemMessageElement(item.needsReview, item.message)}
+                      </div>
+                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-between" id="${accordionDivToAppendAI}">
+                      <div class="fw-bold">AI suggestion</div>
+                      <div class="page-item-card-section-content" id="${accordionDivToAppendAI}">
+                        <div>Processing AI suggestions, please check back later.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <li>
+            `);
+            elementCardsList.appendChild(itemCard);
+          }
+        }
+        hljs.highlightAll();
       });
-
       accordionBody.appendChild(elementCardsList);
       return accordion;
     });
+
     contentContainer.replaceChildren(contentTitle, accordionsList);
     hljs.highlightAll();
+    // document.addEventListener('DOMContentLoaded', (event) => {
+    //   document.querySelectorAll('pre code').forEach((block) => {
+    //     block.innerHTML = escapeHtmlForAI(block.innerHTML);
+    //     hljs.highlightBlock(block);
+    //   });
+    // });
   }
 
   function generateItemMessageElement(needsReview, rawMessage) {
