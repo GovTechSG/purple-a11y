@@ -277,6 +277,9 @@ const processPage = async page => {
 };`;
 
   const block2 = ` 
+    if (process.env.RUNNING_FROM_PH_GUI) {
+      console.log('Electron scan completed');
+    }
     return urlsCrawled
       } catch (e) {
         console.error('Error: ', e);

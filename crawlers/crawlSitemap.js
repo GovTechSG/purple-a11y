@@ -81,6 +81,9 @@ const crawlSitemap = async (
 
   await crawler.run();
   await requestList.isFinished();
+  if (process.env.RUNNING_FROM_PH_GUI) {
+    console.log('Electron scan completed');
+  }
   return urlsCrawled;
 };
 

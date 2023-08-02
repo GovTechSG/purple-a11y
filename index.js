@@ -17,7 +17,6 @@ import questions from './constants/questions.js';
 import combineRun from './combine.js';
 import playwrightAxeGenerator from './playwrightAxeGenerator.js';
 import constants from './constants/constants.js';
-import { devices } from 'playwright';
 
 const userData = getUserDataTxt();
 

@@ -90,7 +90,11 @@ const crawlDomain = async (
         return;
       }
 
-      if (pagesCrawled === maxRequestsPerCrawl) {
+      if (pagesCrawled >= maxRequestsPerCrawl) {
+        if (process.env.RUNNING_FROM_PH_GUI) {
+          console.log('Electron scan completed'); 
+        }
+        pagesCrawled++; 
         urlsCrawled.invalid.push(request.url);
         return;
       }
