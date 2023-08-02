@@ -164,8 +164,6 @@ category summary is clicked %>
   const uniqueUserUuid = uuidv4();
 
   const logAiResponseFeedback = (feedbackType, ruleId, buttonsDiv, basicHtml) => {
-    const websiteUrl = document.querySelector('a[aria-label="URL scanned"]').innerText;
-
     if (feedbackType === 'useful') {
       const finalUrl = `${aiResponseFeedbackDataFields.formUrl}?${aiResponseFeedbackDataFields.uuidField}=${uniqueUserUuid}&${aiResponseFeedbackDataFields.websiteUrlField}=${websiteUrl}&${aiResponseFeedbackDataFields.ruleIdField}=${ruleId}&${aiResponseFeedbackDataFields.basicHtmlField}=${basicHtml}&${aiResponseFeedbackDataFields.usefulCount}=1&${aiResponseFeedbackDataFields.notUsefulCount}=0`;
 
@@ -184,11 +182,19 @@ category summary is clicked %>
         .getElementById(buttonsDiv)
         .replaceChildren(
           createElementFromString(
-            `<div style="color:#4A6168" >You rated this AI suggestion useful. Undo</div>`,
+            `<div style="color:#4A6168" >You rated this AI suggestion useful. <a style="cursor: pointer;" href="#" onclick="undoAiFeedback(\'${buttonsDiv}\', \'${ruleId}\', \'${escapeHtmlForAI(
+              basicHtml,
+            )}\')">Undo</a></div>`,
           ),
         );
     } else {
-      const finalUrl = `${aiResponseFeedbackDataFields.formUrl}?${aiResponseFeedbackDataFields.uuidField}=${uniqueUserUuid}&${aiResponseFeedbackDataFields.websiteUrlField}=${websiteUrl}&${aiResponseFeedbackDataFields.ruleIdField}=${ruleId}&${aiResponseFeedbackDataFields.basicHtmlField}=${basicHtml}&${aiResponseFeedbackDataFields.usefulCount}=0&${aiResponseFeedbackDataFields.notUsefulCount}=1`;
+      const finalUrl = `${aiResponseFeedbackDataFields.formUrl}?${
+        aiResponseFeedbackDataFields.uuidField
+      }=${uniqueUserUuid}&${aiResponseFeedbackDataFields.websiteUrlField}=${websiteUrl}&${
+        aiResponseFeedbackDataFields.ruleIdField
+      }=${ruleId}&${aiResponseFeedbackDataFields.basicHtmlField}=${escapeHtmlForAI(basicHtml)}&${
+        aiResponseFeedbackDataFields.usefulCount
+      }=0&${aiResponseFeedbackDataFields.notUsefulCount}=1`;
 
       if (!localStorage.getItem(storagePath)) {
         var aiUsefulFeedback = {};
@@ -204,7 +210,9 @@ category summary is clicked %>
         .getElementById(buttonsDiv)
         .replaceChildren(
           createElementFromString(
-            `<div style="color:#4A6168" >You rated this AI suggestion not useful. Undo</div>`,
+            `<div style="color:#4A6168" >You rated this AI suggestion not useful. <a style="cursor: pointer;" href="#" onclick="undoAiFeedback(\'${buttonsDiv}\', \'${ruleId}\', \'${escapeHtmlForAI(
+              basicHtml,
+            )}\')">Undo</a></div>`,
           ),
         );
     }
