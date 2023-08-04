@@ -74,19 +74,6 @@ const playwrightAxeGenerator = async data => {
   const block1 = `const blacklistedPatternsFilename = 'exclusions.txt';
 
 process.env.CRAWLEE_STORAGE_DIR = '${randomToken}';
-const compareExe = getExecutablePath('**/ImageMagick*/bin','compare');
-
-if (!compareExe) {
-  let ImagMagickNotFoundError = "Could not find ImageMagick compare.  Please ensure ImageMagick is installed at current directory.";
-  consoleLogger.error(ImagMagickNotFoundError);
-  silentLogger.error(ImagMagickNotFoundError);
-  process.exit(1);
-} 
-
-removeQuarantineFlag('**/ImageMagick*/lib/*.dylib');
-const ImageMagickPath = path.resolve(compareExe, '../../');
-process.env.MAGICK_HOME = ImageMagickPath;
-process.env.DYLD_LIBRARY_PATH = ImageMagickPath + '/lib/';
 
 const scanDetails = {
     startTime: new Date().getTime(),

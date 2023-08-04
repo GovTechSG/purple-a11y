@@ -21,9 +21,6 @@ $env:Path = "$path_to_hats\node_modules\.bin;./node_modules/.bin;$env:Path";
 echo "INFO: Set path to Playwright cache for this session"
 $env:PLAYWRIGHT_BROWSERS_PATH = "$path_to_hats\ms-playwright"
 
-echo "INFO: Set path to ImageMagick for this session"
-$env:Path = "$path_to_hats\ImageMagick\bin;$env:Path"
-
 if (Test-Path purple-hats) {
    echo "INFO: Set path to purple-hats for this session"
 	$env:Path = "$path_to_hats\purple-hats;$env:Path"	
