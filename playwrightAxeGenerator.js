@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 import { proxy } from './constants/constants.js';
 
 // Do NOT remove. These import statements will be used when the custom flow scan is run from the GUI app
-import { chromium, webkit } from 'playwright';
+import { chromium } from 'playwright';
 import { createCrawleeSubFolders, runAxeScript } from '#root/crawlers/commonCrawlerFunc.js';
 import { generateArtifacts } from '#root/mergeAxeResults.js';
 import {
@@ -57,7 +57,7 @@ const playwrightAxeGenerator = async data => {
   // these will be appended to the generated script if the scan is run from CLI/index.
   // this is so as the final generated script can be rerun after the scan.
   const importStatements = `
-    import { chromium, devices, webkit } from 'playwright';
+    import { chromium, devices } from 'playwright';
     import { getComparator } from 'playwright-core/lib/utils';
     import { createCrawleeSubFolders, runAxeScript } from '#root/crawlers/commonCrawlerFunc.js';
     import { generateArtifacts } from '#root/mergeAxeResults.js';
@@ -158,7 +158,7 @@ const usesInfiniteScroll = async () => {
         }, prevHeight);
 
         resolve(result);
-      }, 5000);
+      }, 2500);
     });
   }
 
@@ -323,28 +323,24 @@ const processPage = async page => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), appPrefix));
 
     let browser = 'chromium';
+    let channel = 'chrome';
     let userAgentOpts = null;
-    let channel = null;
+    let viewportHeight = 720;
 
-    // Performance workaround for macOS Big Sur and Windows to force Chromium browser instead of Webkit
-    if (
-      (os.platform() === 'darwin' && os.release().startsWith('20.')) ||
-      os.platform() === 'win32'
-    ) {
-      browser = 'chromium';
-
-      if (deviceChosen === 'Mobile') {
-        customDevice = 'iPhone 11';
-      }
-
-      if (customDevice && !viewportWidth) {
-        viewportWidth = devices[customDevice].viewport.width;
-        userAgentOpts = `--user-agent \"${devices[customDevice].userAgent}\"`;
-      }
+    // use webkit for recording due to flaky codegen on mobile / specify viewports
+    if (os.platform() === 'darwin') {
+      browser = 'webkit';
+      channel = '';
+    }
+    
+    if (deviceChosen === 'Mobile') {
+      customDevice = 'iPhone 11';
     }
 
-    if (os.platform() === 'win32' && getDefaultChromeDataDir()) {
-      channel = 'chrome';
+    if (customDevice && !viewportWidth) {
+      viewportWidth = devices[customDevice].viewport.width;
+      viewportHeight = devices[customDevice].viewport.height;
+      userAgentOpts = `--user-agent \"${devices[customDevice].userAgent}\"`;
     }
 
     let codegenCmd = `npx playwright codegen --target javascript -o "${tmpDir}/intermediateScript.js" "${data.url}"`;
@@ -353,20 +349,10 @@ const processPage = async page => {
     }`;
 
     if (viewportWidth || customDevice === 'Specify viewport') {
-      codegenCmd = `${codegenCmd} --viewport-size=${viewportWidth},720 ${extraCodegenOpts}`;
-    } else if (deviceChosen === 'Mobile') {
-      codegenCmd = `${codegenCmd} --device="iPhone 11" ${extraCodegenOpts}`;
-    } else if (!customDevice || customDevice === 'Desktop' || deviceChosen === 'Desktop') {
-      codegenCmd = `${codegenCmd} ${extraCodegenOpts}`;
-    } else if (customDevice === 'Samsung Galaxy S9+') {
-      codegenCmd = `${codegenCmd} --device="Galaxy S9+" ${extraCodegenOpts}`;
-    } else if (customDevice) {
-      codegenCmd = `${codegenCmd} --device="${customDevice}" ${extraCodegenOpts}`;
+      codegenCmd = `${codegenCmd} --viewport-size=\"${viewportWidth},${viewportHeight}\" ${extraCodegenOpts}`;
     } else {
-      console.error(
-        `Error: Unable to parse device requested for scan. Please check the input parameters.`,
-      );
-    }
+      codegenCmd = `${codegenCmd} ${extraCodegenOpts}`;
+    } 
 
     const codegenResult = execSync(codegenCmd, { cwd: __dirname });
 
@@ -439,6 +425,12 @@ const processPage = async page => {
     args:['--window-size=1920,1040'],`);
         continue;
       }
+      
+      if ( line.trim() === `const browser = await webkit.launch({`) {
+        appendToGeneratedScript(`  const browser = await chromium.launch({`);
+        continue;
+      }
+
       if ( !(viewportWidth || customDevice) && line.trim() ===`const context = await browser.newContext({`) {
         appendToGeneratedScript(`
   const context = await browser.newContext({
