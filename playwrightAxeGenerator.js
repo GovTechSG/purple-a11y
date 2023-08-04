@@ -206,7 +206,6 @@ if (!urlImageDictionary[pageUrl]) {
       const isDiff = comparator(currImg, prevImg, { maxDiffPixelRatio: 0.15 });
 
       if (isDiff && isDiff.errorMessage && isDiff.errorMessage.includes("ratio")) {
-          console.log(isDiff.errorMessage);
           urlImageDictionary[pageUrl].push(imgPath)
           isSimilarPage = false;
       } else {
