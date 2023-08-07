@@ -129,6 +129,24 @@ category summary is clicked %>
     document.getElementById('expandedRuleCategorySelectors').replaceChildren(...categorySelectors);
   }
 
+  const ruleIdsWithHtml = [
+  'aria-allowed-attr',
+  'aria-hidden-focus',
+  'aria-input-field-name',
+  'aria-required-attr',
+  'aria-required-children',
+  'aria-required-parent',
+  'aria-roles',
+  'aria-toggle-field-name',
+  'aria-valid-attr-value',
+  'aria-valid-attr',
+  'input-button-name',
+  'link-name',
+  'nested-interactive',
+  'avoid-inline-spacing',
+  'aria-allowed-role',
+  ];
+
   function buildExpandedRuleCategoryContent(category, ruleInCategory) {
     const contentContainer = document.getElementById('expandedRuleCategoryContent');
 
