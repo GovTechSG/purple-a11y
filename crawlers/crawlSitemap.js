@@ -7,10 +7,11 @@ import {
   failedRequestHandler,
 } from './commonCrawlerFunc.js';
 
-import constants from '../constants/constants.js';
+import constants, { blackListedFileExtensions } from '../constants/constants.js';
 import {
   getLinksFromSitemap,
   getPlaywrightLaunchOptions,
+  isBlacklistedFileExtensions,
   messageOptions,
 } from '../constants/common.js';
 import { isWhitelistedContentType } from '../utils.js';
@@ -59,13 +60,23 @@ const crawlSitemap = async (
     },
     requestList,
     preNavigationHooks,
-    requestHandler: async ({ page, request, response }) => {
+    requestHandler: async ({ page, request, response}) => {
       const actualUrl = request.loadedUrl || request.url;
       const contentType = response.headers()['content-type'];
       const status = response.status();
 
-      if (pagesCrawled === maxRequestsPerCrawl) {
+      if (status === 403){
+        urlsCrawled.forbidden.push(request.url);
+        return;
+      }
+
+      if (status !== 200) {
         urlsCrawled.invalid.push(request.url);
+        return;
+      }
+
+      if (pagesCrawled === maxRequestsPerCrawl) {
+        urlsCrawled.exceededRequests.push(request.url);
         return;
       }
 
@@ -74,15 +85,35 @@ const crawlSitemap = async (
       if (status === 200 && isWhitelistedContentType(contentType)) {
         const results = await runAxeScript(page);
         if (request.loadedUrl !== request.url) {
-          urlsCrawled.scanned.push({
-            url: request.url,
-            pageTitle: results.pageTitle,
-            actualUrl: request.loadedUrl, // i.e. actualUrl
-          });
-          urlsCrawled.redirects.push({
-            fromUrl: request.url,
-            toUrl: request.loadedUrl, // i.e. actualUrl
-          });
+          const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
+            (item) => {
+              if (item.hasOwnProperty(actualUrl)){
+                return item.actualUrl === request.loadedUrl
+              } else {
+                return item.url === request.loadedUrl
+              }
+            }
+          );
+
+          if (isLoadedUrlInCrawledUrls){
+            urlsCrawled.notScannedRedirects.push({
+              fromUrl: request.url,
+              toUrl: request.loadedUrl, // i.e. actualUrl              
+            })
+            return;
+          }  else {
+            urlsCrawled.scanned.push({
+              url: request.url,
+              pageTitle: results.pageTitle,
+              actualUrl: request.loadedUrl, // i.e. actualUrl
+            });
+  
+            urlsCrawled.scannedRedirects.push({
+              fromUrl: request.url,
+              toUrl: request.loadedUrl, // i.e. actualUrl
+            });
+          }
+
           results.url = request.url;
           results.actualUrl = request.loadedUrl;
         } else {
@@ -92,6 +123,7 @@ const crawlSitemap = async (
       } else {
         urlsCrawled.invalid.push(actualUrl);
       }
+
     },
     failedRequestHandler,
     maxRequestsPerCrawl,

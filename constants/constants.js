@@ -186,8 +186,12 @@ const urlsCrawledObj = {
   toScan: [],
   scanned: [],
   invalid: [],
-  redirects: [],
+  scannedRedirects: [],
+  notScannedRedirects: [],
   outOfDomain: [],
+  blacklisted: [],
+  exceededRequests: [],
+  forbidden: []
 };
 
 const scannerTypes = {

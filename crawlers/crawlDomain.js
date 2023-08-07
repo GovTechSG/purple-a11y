@@ -82,7 +82,12 @@ const crawlDomain = async (
       const actualUrl = request.loadedUrl || request.url;
 
       if (isBlacklistedFileExtensions(actualUrl, blackListedFileExtensions)) {
-        urlsCrawled.invalid.push(request.url);
+        urlsCrawled.blacklisted.push(request.url);
+        return;
+      }
+
+      if (response.status() === 403){
+        urlsCrawled.forbidden.push(request.url);
         return;
       }
 
@@ -92,7 +97,7 @@ const crawlDomain = async (
       }
 
       if (pagesCrawled === maxRequestsPerCrawl) {
-        urlsCrawled.invalid.push(request.url);
+        urlsCrawled.exceededRequests.push(request.url);
         return;
       }
       pagesCrawled++;
@@ -103,17 +108,40 @@ const crawlDomain = async (
         isBasicAuth = false;
       } else if (location.host.includes(host)) {
         const results = await runAxeScript(page);
+
         // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
         if (request.loadedUrl !== request.url) {
-          urlsCrawled.scanned.push({
-            url: request.url,
-            pageTitle: results.pageTitle,
-            actualUrl: request.loadedUrl, // i.e. actualUrl
-          });
-          urlsCrawled.redirects.push({
-            fromUrl: request.url,
-            toUrl: request.loadedUrl, // i.e. actualUrl
-          });
+
+          const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
+            (item) => {
+              if (item.hasOwnProperty(actualUrl)){
+                return item.actualUrl === request.loadedUrl
+              } else {
+                return item.url === request.loadedUrl
+              }
+            }
+          );
+
+          if (isLoadedUrlInCrawledUrls){
+            fs.appendFileSync("urlsCrawled.txt", `url ${request.url} redirected to ${request.loadedUrl} alr scanned\n`)
+            urlsCrawled.notScannedRedirects.push({
+              fromUrl: request.url,
+              toUrl: request.loadedUrl, // i.e. actualUrl              
+            })
+            return;
+          }  else {
+            urlsCrawled.scanned.push({
+              url: request.url,
+              pageTitle: results.pageTitle,
+              actualUrl: request.loadedUrl, // i.e. actualUrl
+            });
+  
+            urlsCrawled.scannedRedirects.push({
+              fromUrl: request.url,
+              toUrl: request.loadedUrl, // i.e. actualUrl
+            });
+          }
+
           results.url = request.url;
           results.actualUrl = request.loadedUrl;
         } else {
@@ -121,13 +149,18 @@ const crawlDomain = async (
         }
         await dataset.pushData(results);
 
+
         await enqueueLinks({
           // set selector matches anchor elements with href but not contains # or starting with mailto:
           selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
+          //selector: '*', 
           strategy,
           requestQueue,
           transformRequestFunction(req) {
-            // ignore all links ending with `.pdf`
+            if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)){
+              urlsCrawled.blacklisted.push(req.url)
+            }
+
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
             return req;
           },
@@ -139,11 +172,16 @@ const crawlDomain = async (
           // IS role='link' or button onclick
           // enqueue new page URL
           selector: ':not(a):is(*[role="link"], button[onclick])',
+          //selector: '*',
           transformRequestFunction(req) {
             // ignore all links ending with `.pdf`
+            if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)){
+              urlsCrawled.blacklisted.push(req.url)
+            }            
+            
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
             return req;
-          },
+         },
         });
       } else {
         urlsCrawled.outOfDomain.push(request.url);

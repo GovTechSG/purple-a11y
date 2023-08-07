@@ -102,8 +102,13 @@ export const sortAlphaAttributes = htmlString => {
 };
 
 export const isBlacklistedFileExtensions = (url, blacklistedFileExtensions) => {
-  const urlExtension = url.split('.').pop();
-  return blacklistedFileExtensions.includes(urlExtension);
+  const urlExtension = url.split('.').pop(); 
+
+  const isBlacklisted = blacklistedFileExtensions.some(extension =>
+    urlExtension.includes(extension)
+  );
+
+  return isBlacklisted;
 };
 
 const document = new JSDOM('').window;
@@ -403,7 +408,6 @@ export const checkUrl = async (
       res.status = constants.urlCheckStatuses.notASitemap.code;
     }
   }
-
   return res;
 };
 
