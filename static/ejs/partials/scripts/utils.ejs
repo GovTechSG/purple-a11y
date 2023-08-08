@@ -176,6 +176,8 @@
     // });
   };
 
+  const uniqueUserUuid = localStorage.getItem(`${storagePath}-uuid`)
+
   const undoAiFeedback = (buttonDiv, ruleId, basicHtml) => {
     try {
       var aiVoteFeedback = JSON.parse(localStorage.getItem(storagePath));
@@ -186,9 +188,12 @@
       } else {
         var finalUrl = `${aiResponseFeedbackDataFields.formUrl}?${aiResponseFeedbackDataFields.uuidField}=${uniqueUserUuid}&${aiResponseFeedbackDataFields.websiteUrlField}=${websiteUrl}&${aiResponseFeedbackDataFields.ruleIdField}=${ruleId}&${aiResponseFeedbackDataFields.basicHtmlField}=${basicHtml}&${aiResponseFeedbackDataFields.usefulCount}=0&${aiResponseFeedbackDataFields.notUsefulCount}=-1`;
       }
-      console.log('finalUrl in undo: ', finalUrl);
 
-      fetch(finalUrl, { mode: 'no-cors' });
+      try{
+        fetch(finalUrl, { mode: 'no-cors' });
+      } catch(err){
+        console.log("Error undoing AI feedback: ", err)
+      }
 
       delete aiVoteFeedback[buttonDiv];
       localStorage.setItem(storagePath, JSON.stringify(aiVoteFeedback));
@@ -225,7 +230,7 @@
           Not useful
         </button>`;
     } catch (err) {
-      console.log('Error', err);
+      console.log('Error undoing AI feedback: ', err);
       return;
     }
   };
@@ -349,7 +354,7 @@
         }
       });
     } catch (err) {
-      console.log('Error fetching', err);
+      console.log('Error fetching AI response', err);
       document.getElementById(buttonsDiv).disabled = false;
       document.getElementById(buttonsDiv).style = `border: 1px solid #6E52EF;color: #6E52EF;`;
       document.getElementById(buttonsDiv).textContent = 'Generate response';
@@ -443,10 +448,9 @@
         }
       })
       .catch(error => {
-        console.log(error);
+        console.log("Error fetching cached AI responses: ", error);
         return '';
       });
-    console.log('needs query: ', needsQuery);
     return needsQuery;
   };
 
