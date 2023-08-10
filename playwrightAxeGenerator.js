@@ -262,7 +262,27 @@ const processPage = async page => {
   }
   
 
-};`;
+};
+
+const clickFunc = async (elem) => {
+
+  let parent = elem;
+
+  if (! await elem.isVisible()) {
+   let attempts = 20;
+   while (attempts > 0) {
+    parent = parent.locator('xpath=..');
+    if (await parent.isVisible()) {
+     await parent.hover({force: true});
+     break;
+    }
+    attempts--;
+   }
+
+  }
+  elem.click();
+};
+`;
 
   const block2 = `  return urlsCrawled;
         })().then(async (urlsCrawled) => {
@@ -533,19 +553,27 @@ const processPage = async page => {
         appendToGeneratedScript(`await processPage(page);`);
         nextStepNeedsProcessPage = false;
       }
+
+      if (line.trim().includes('getByRole')) {
+        const paramsStartIdx = line.indexOf('getByRole(') + 'getByRole('.length; 
+        const paramsEndIdx = line.indexOf(')', paramsStartIdx);
+        const params = line.substring(paramsStartIdx, paramsEndIdx).split(',');
+        let newOptions = params[1].trim();
+        if (newOptions) {
+          newOptions = newOptions.replace('}', ', includeHidden: true }');
+        }
+        line = line.replace(`getByRole(${params})`, `getByRole(${params[0]}, ${newOptions})`);
+      }
+
       const isClick = line.trim().includes('click()');
+      
       if (
         (line.trim().includes('getBy') && !line.trim().includes('getByPlaceholder')) ||
-        line.trim().includes('click()')
+        isClick
       ) {
         const lastIndex = line.lastIndexOf('.');
         const locator = line.substring(0, lastIndex);
-        appendToGeneratedScript(
-          ` (${locator}.count()>1)? [console.log('Please re-click the intended DOM element'), page.setDefaultTimeout(0)]:
-          ${locator}.hover({ force: true });
-          ${line}
-        `,
-        );
+        appendToGeneratedScript(isClick ? `await clickFunc(${locator})` : line); 
 
         nextStepNeedsProcessPage = true;
         continue;
