@@ -265,10 +265,20 @@ const processPage = async page => {
 };
 
 const clickFunc = async (elem) => {
+  const numElems = await elem.count(); 
+  if (numElems > 1) {
+    for (let index = 0; index < numElems; index++) {
+      const nth = await elem.nth(index); 
+      if (await nth.isVisible()) {
+        elem = nth;
+        break;
+      }
+    }
+  }
 
   let parent = elem;
 
-  if (! await elem.isVisible()) {
+  if (! await parent.isVisible()) {
    let attempts = 20;
    while (attempts > 0) {
     parent = parent.locator('xpath=..');
@@ -467,6 +477,7 @@ const clickFunc = async (elem) => {
 
       if (line.trim() === `(async () => {`) {
         appendToGeneratedScript(`await (async () => {`);
+        appendToGeneratedScript(`let elem;`)
         continue;
       }
       if (line.trim() === `const page = await context.newPage();`) {
@@ -582,7 +593,8 @@ const clickFunc = async (elem) => {
       ) {
         const lastIndex = line.lastIndexOf('.');
         const locator = line.substring(0, lastIndex);
-        appendToGeneratedScript(isClick ? `await clickFunc(${locator})` : line); 
+        isClick && appendToGeneratedScript(`elem = ${locator}`);
+        appendToGeneratedScript(isClick ? `await clickFunc(elem)` : line); 
 
         nextStepNeedsProcessPage = true;
         continue;
