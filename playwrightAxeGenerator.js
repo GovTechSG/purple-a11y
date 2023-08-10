@@ -565,6 +565,15 @@ const clickFunc = async (elem) => {
         line = line.replace(`getByRole(${params})`, `getByRole(${params[0]}, ${newOptions})`);
       }
 
+      if (line.trim().includes('.fill')) {
+        const lastIndex = line.lastIndexOf('.');
+        const locator = line.substring(0, lastIndex);
+        appendToGeneratedScript(line);
+        appendToGeneratedScript(`await ${locator}.focus()`);
+        appendToGeneratedScript(`await page.keyboard.up('Shift')`);
+        continue;
+      }
+
       const isClick = line.trim().includes('click()');
       
       if (
