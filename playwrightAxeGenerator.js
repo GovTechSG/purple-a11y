@@ -568,12 +568,13 @@ const clickFunc = async (elem) => {
       if (line.trim().includes('getByRole')) {
         const paramsStartIdx = line.indexOf('getByRole(') + 'getByRole('.length; 
         const paramsEndIdx = line.indexOf(')', paramsStartIdx);
-        const params = line.substring(paramsStartIdx, paramsEndIdx).split(',');
+        const params = line.substring(paramsStartIdx, paramsEndIdx).split("',");
+        const firstParam = params[0] + "'";
         let newOptions = params[1].trim();
         if (newOptions) {
-          newOptions = newOptions.replace('}', ', includeHidden: true }');
+          newOptions = newOptions.replace('}', ', includeHidden: true, disabled: true }');
         }
-        line = line.replace(`getByRole(${params})`, `getByRole(${params[0]}, ${newOptions})`);
+        line = line.replace(`getByRole(${params})`, `getByRole(${firstParam}, ${newOptions})`);
       }
 
       if (line.trim().includes('.fill')) {
