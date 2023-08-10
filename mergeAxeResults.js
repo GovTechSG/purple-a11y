@@ -200,7 +200,7 @@ const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
 
 const pushResults = async (rPath, allIssues) => {
   const pageResults = await parseContentToJson(rPath);
-  const { url, pageTitle, actualUrl } = pageResults;
+  const { url, pageTitle } = pageResults;
 
   allIssues.totalPagesScanned += 1;
 

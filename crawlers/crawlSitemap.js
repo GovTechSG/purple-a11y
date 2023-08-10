@@ -14,7 +14,7 @@ import {
   isBlacklistedFileExtensions,
   messageOptions,
 } from '../constants/common.js';
-import { isWhitelistedContentType } from '../utils.js';
+import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
 
 const crawlSitemap = async (
   sitemapUrl,
@@ -87,7 +87,9 @@ const crawlSitemap = async (
 
       if (status === 200 && isWhitelistedContentType(contentType)) {
         const results = await runAxeScript(needsReview, page);
-        if (request.loadedUrl !== request.url) {
+
+        const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
+        if (isRedirected) {
           const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(item => {
             (item.actualUrl || item.url) === request.loadedUrl;
           });
@@ -98,18 +100,18 @@ const crawlSitemap = async (
               toUrl: request.loadedUrl, // i.e. actualUrl
             });
             return;
-          } else {
-            urlsCrawled.scanned.push({
-              url: request.url,
-              pageTitle: results.pageTitle,
-              actualUrl: request.loadedUrl, // i.e. actualUrl
-            });
-
-            urlsCrawled.scannedRedirects.push({
-              fromUrl: request.url,
-              toUrl: request.loadedUrl, // i.e. actualUrl
-            });
           }
+
+          urlsCrawled.scanned.push({
+            url: request.url,
+            pageTitle: results.pageTitle,
+            actualUrl: request.loadedUrl, // i.e. actualUrl
+          });
+
+          urlsCrawled.scannedRedirects.push({
+            fromUrl: request.url,
+            toUrl: request.loadedUrl, // i.e. actualUrl
+          });
 
           results.url = request.url;
           results.actualUrl = request.loadedUrl;

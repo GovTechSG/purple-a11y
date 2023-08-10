@@ -7,6 +7,7 @@ import {
 } from './commonCrawlerFunc.js';
 import constants, { basicAuthRegex, blackListedFileExtensions } from '../constants/constants.js';
 import { getPlaywrightLaunchOptions, isBlacklistedFileExtensions } from '../constants/common.js';
+import { areLinksEqual } from '../utils.js';
 
 const crawlDomain = async (
   url,
@@ -112,7 +113,8 @@ const crawlDomain = async (
         const results = await runAxeScript(needsReview, page);
 
         // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
-        if (request.loadedUrl !== request.url) {
+        const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
+        if (isRedirected) {
           const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(item => {
             (item.actualUrl || item.url) === request.loadedUrl;
           });
@@ -123,18 +125,18 @@ const crawlDomain = async (
               toUrl: request.loadedUrl, // i.e. actualUrl
             });
             return;
-          } else {
-            urlsCrawled.scanned.push({
-              url: request.url,
-              pageTitle: results.pageTitle,
-              actualUrl: request.loadedUrl, // i.e. actualUrl
-            });
-
-            urlsCrawled.scannedRedirects.push({
-              fromUrl: request.url,
-              toUrl: request.loadedUrl, // i.e. actualUrl
-            });
           }
+
+          urlsCrawled.scanned.push({
+            url: request.url,
+            pageTitle: results.pageTitle,
+            actualUrl: request.loadedUrl, // i.e. actualUrl
+          });
+
+          urlsCrawled.scannedRedirects.push({
+            fromUrl: request.url,
+            toUrl: request.loadedUrl, // i.e. actualUrl
+          });
 
           results.url = request.url;
           results.actualUrl = request.loadedUrl;
