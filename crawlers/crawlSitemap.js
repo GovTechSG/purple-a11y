@@ -25,7 +25,10 @@ const crawlSitemap = async (
   browser,
   userDataDirectory,
   specifiedMaxConcurrency,
+  needsReviewItems,
 ) => {
+  let needsReview = needsReviewItems;
+
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { playwrightDeviceDetailsObject } = viewportSettings;
   const { maxConcurrency } = constants;
@@ -60,12 +63,12 @@ const crawlSitemap = async (
     },
     requestList,
     preNavigationHooks,
-    requestHandler: async ({ page, request, response}) => {
+    requestHandler: async ({ page, request, response }) => {
       const actualUrl = request.loadedUrl || request.url;
       const contentType = response.headers()['content-type'];
       const status = response.status();
 
-      if (status === 403){
+      if (status === 403) {
         urlsCrawled.forbidden.push(request.url);
         return;
       }
@@ -85,29 +88,23 @@ const crawlSitemap = async (
       if (status === 200 && isWhitelistedContentType(contentType)) {
         const results = await runAxeScript(page);
         if (request.loadedUrl !== request.url) {
-          const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
-            (item) => {
-              if (item.hasOwnProperty(actualUrl)){
-                return item.actualUrl === request.loadedUrl
-              } else {
-                return item.url === request.loadedUrl
-              }
-            }
-          );
+          const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(item => {
+            (item.actualUrl || item.url) === request.loadedUrl;
+          });
 
-          if (isLoadedUrlInCrawledUrls){
+          if (isLoadedUrlInCrawledUrls) {
             urlsCrawled.notScannedRedirects.push({
               fromUrl: request.url,
-              toUrl: request.loadedUrl, // i.e. actualUrl              
-            })
+              toUrl: request.loadedUrl, // i.e. actualUrl
+            });
             return;
-          }  else {
+          } else {
             urlsCrawled.scanned.push({
               url: request.url,
               pageTitle: results.pageTitle,
               actualUrl: request.loadedUrl, // i.e. actualUrl
             });
-  
+
             urlsCrawled.scannedRedirects.push({
               fromUrl: request.url,
               toUrl: request.loadedUrl, // i.e. actualUrl
@@ -123,7 +120,6 @@ const crawlSitemap = async (
       } else {
         urlsCrawled.invalid.push(actualUrl);
       }
-
     },
     failedRequestHandler,
     maxRequestsPerCrawl,

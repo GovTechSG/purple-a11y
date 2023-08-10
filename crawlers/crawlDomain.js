@@ -18,7 +18,9 @@ const crawlDomain = async (
   userDataDirectory,
   strategy,
   specifiedMaxConcurrency,
+  needsReviewItems,
 ) => {
+  let needsReview = needsReviewItems;
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { maxConcurrency } = constants;
   const { playwrightDeviceDetailsObject } = viewportSettings;
@@ -86,7 +88,7 @@ const crawlDomain = async (
         return;
       }
 
-      if (response.status() === 403){
+      if (response.status() === 403) {
         urlsCrawled.forbidden.push(request.url);
         return;
       }
@@ -107,35 +109,27 @@ const crawlDomain = async (
       if (isBasicAuth) {
         isBasicAuth = false;
       } else if (location.host.includes(host)) {
-        const results = await runAxeScript(page);
+        const results = await runAxeScript(needsReview, page);
 
         // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
         if (request.loadedUrl !== request.url) {
+          const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(item => {
+            (item.actualUrl || item.url) === request.loadedUrl;
+          });
 
-          const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
-            (item) => {
-              if (item.hasOwnProperty(actualUrl)){
-                return item.actualUrl === request.loadedUrl
-              } else {
-                return item.url === request.loadedUrl
-              }
-            }
-          );
-
-          if (isLoadedUrlInCrawledUrls){
-            fs.appendFileSync("urlsCrawled.txt", `url ${request.url} redirected to ${request.loadedUrl} alr scanned\n`)
+          if (isLoadedUrlInCrawledUrls) {
             urlsCrawled.notScannedRedirects.push({
               fromUrl: request.url,
-              toUrl: request.loadedUrl, // i.e. actualUrl              
-            })
+              toUrl: request.loadedUrl, // i.e. actualUrl
+            });
             return;
-          }  else {
+          } else {
             urlsCrawled.scanned.push({
               url: request.url,
               pageTitle: results.pageTitle,
               actualUrl: request.loadedUrl, // i.e. actualUrl
             });
-  
+
             urlsCrawled.scannedRedirects.push({
               fromUrl: request.url,
               toUrl: request.loadedUrl, // i.e. actualUrl
@@ -149,16 +143,14 @@ const crawlDomain = async (
         }
         await dataset.pushData(results);
 
-
         await enqueueLinks({
           // set selector matches anchor elements with href but not contains # or starting with mailto:
           selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
-          //selector: '*', 
           strategy,
           requestQueue,
           transformRequestFunction(req) {
-            if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)){
-              urlsCrawled.blacklisted.push(req.url)
+            if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
+              urlsCrawled.blacklisted.push(req.url);
             }
 
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
@@ -172,16 +164,15 @@ const crawlDomain = async (
           // IS role='link' or button onclick
           // enqueue new page URL
           selector: ':not(a):is(*[role="link"], button[onclick])',
-          //selector: '*',
           transformRequestFunction(req) {
             // ignore all links ending with `.pdf`
-            if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)){
-              urlsCrawled.blacklisted.push(req.url)
-            }            
-            
+            if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
+              urlsCrawled.blacklisted.push(req.url);
+            }
+
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
             return req;
-         },
+          },
         });
       } else {
         urlsCrawled.outOfDomain.push(request.url);

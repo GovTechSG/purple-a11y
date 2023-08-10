@@ -341,8 +341,6 @@ const checkUrlConnectivityWithBrowser = async (
 
       res.content = await page.content();
     } catch (error) {
-      // not sure what errors are thrown
-      console.log(error);
       silentLogger.error(error);
       res.status = constants.urlCheckStatuses.systemError.code;
     } finally {
@@ -433,6 +431,7 @@ export const prepareData = argv => {
     nameEmail,
     customFlowLabel,
     specifiedMaxConcurrency,
+    needsReviewItems
   } = argv;
 
   return {
@@ -450,6 +449,7 @@ export const prepareData = argv => {
     nameEmail,
     customFlowLabel,
     specifiedMaxConcurrency,
+    needsReviewItems
   };
 };
 
@@ -972,8 +972,6 @@ export const submitFormViaPlaywright = async (
       silentLogger.info('Unable to detect networkidle');
     }
   } catch (error) {
-    // not sure what errors are thrown
-    console.log(error);
     silentLogger.error(error);
   } finally {
     await browserContext.close();
