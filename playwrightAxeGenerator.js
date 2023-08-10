@@ -572,7 +572,7 @@ const clickFunc = async (elem) => {
         const firstParam = params[0] + "'";
         let newOptions = params[1].trim();
         if (newOptions) {
-          newOptions = newOptions.replace('}', ', includeHidden: true, disabled: true }');
+          newOptions = newOptions.replace('}', ', includeHidden: true }');
         }
         line = line.replace(`getByRole(${params})`, `getByRole(${firstParam}, ${newOptions})`);
       }
