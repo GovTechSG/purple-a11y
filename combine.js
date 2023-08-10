@@ -30,6 +30,7 @@ const combineRun = async (details, deviceToScan) => {
     needsReviewItems
   } = envDetails;
 
+  process.env.CRAWLEE_LOG_LEVEL = "ERROR"
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
   const host = type === constants.scannerTypes.sitemap && isLocalSitemap ? '' : getHost(url);

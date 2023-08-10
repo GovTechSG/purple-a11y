@@ -86,7 +86,7 @@ const crawlSitemap = async (
       pagesCrawled++;
 
       if (status === 200 && isWhitelistedContentType(contentType)) {
-        const results = await runAxeScript(page);
+        const results = await runAxeScript(needsReview, page);
         if (request.loadedUrl !== request.url) {
           const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(item => {
             (item.actualUrl || item.url) === request.loadedUrl;
