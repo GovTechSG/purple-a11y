@@ -323,10 +323,6 @@ const scanInit = async argvs => {
       break;
   }
 
-  const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
-
-  const domain = argvs.isLocalSitemap ? 'custom' : new URL(argvs.url).hostname;
-
   const data = prepareData(argvs);
 
   setHeadlessMode(data.isHeadless);
@@ -342,11 +338,6 @@ const scanInit = async argvs => {
   } else {
     screenToScan = 'Desktop';
   }
-
-  data.randomToken = `PHScan_${domain}_${date}_${time}_${argvs.scanner.replaceAll(
-    ' ',
-    '_',
-  )}_${screenToScan.replaceAll(' ', '_')}`;
 
   /**
    * Cloning a second time with random token for parallel browser sessions

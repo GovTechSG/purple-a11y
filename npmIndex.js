@@ -19,8 +19,10 @@ export const init = async (entryUrl, customFlowLabelTestString, name, email) => 
 
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
   const domain = new URL(entryUrl).hostname;
-
-  const randomToken = `PHScan_${domain}_${date}_${time}_IntegratedScan`;
+  const sanitisedLabel = customFlowLabelTestString
+    ? `_${customFlowLabelTestString.replaceAll(' ', '_')}`
+    : '';
+  const randomToken = `${date}_${time}${sanitisedLabel}_${domain}`;
 
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 

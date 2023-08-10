@@ -73,15 +73,6 @@ if (userData) {
 
     setHeadlessMode(data.isHeadless);
 
-    const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
-
-    const domain = answers.isLocalSitemap ? 'custom' : new URL(answers.url).hostname;
-
-    data.randomToken = `PHScan_${domain}_${date}_${time}_${answers.scanner.replaceAll(
-      ' ',
-      '_',
-    )}_${screenToScan.replaceAll(' ', '_')}`;
-
     printMessage(['Scanning website...'], messageOptions);
 
     if (answers.scanner === constants.scannerTypes.custom) {
@@ -156,15 +147,6 @@ if (userData) {
     const data = prepareData(answers);
 
     setHeadlessMode(data.isHeadless);
-
-    const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
-
-    const domain = answers.isLocalSitemap ? 'custom' : new URL(answers.url).hostname;
-
-    data.randomToken = `PHScan_${domain}_${date}_${time}_${answers.scanner.replaceAll(
-      ' ',
-      '_',
-    )}_${screenToScan.replaceAll(' ', '_')}`;
 
     printMessage(['Scanning website...'], messageOptions);
 
