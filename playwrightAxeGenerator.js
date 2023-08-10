@@ -577,8 +577,11 @@ const clickFunc = async (elem) => {
         line = line.replace(`getByRole(${params})`, `getByRole(${firstParam}, ${newOptions})`);
       }
 
-      if (line.trim().includes('.fill')) {
-        const lastIndex = line.lastIndexOf('.');
+      if (line.trim().includes('.fill(')) {
+        let lastIndex = line.lastIndexOf('.');
+        if (line.trim().includes('getByPlaceholder')) {
+          lastIndex = line.lastIndexOf('.fill(');
+        }
         const locator = line.substring(0, lastIndex);
         appendToGeneratedScript(line);
         appendToGeneratedScript(`await ${locator}.focus()`);
