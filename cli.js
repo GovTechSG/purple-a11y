@@ -160,8 +160,7 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return nameEmail;
   })
   .coerce('f', option => {
-    console.log('f option: ', option);
-    if (typeof option !== 'boolean') {
+    if (option !== 'true' && value !== 'false') {
       printMessage(
         [`Invalid value for needsReviewItems. Please provide boolean value(true/false).`],
         messageOptions,
