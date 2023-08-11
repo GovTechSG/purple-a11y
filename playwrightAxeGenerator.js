@@ -566,15 +566,17 @@ const clickFunc = async (elem) => {
       }
 
       if (line.trim().includes('getByRole')) {
+        // add includeHidden: true to locator options
         const paramsStartIdx = line.indexOf('getByRole(') + 'getByRole('.length; 
         const paramsEndIdx = line.indexOf(')', paramsStartIdx);
-        const params = line.substring(paramsStartIdx, paramsEndIdx).split("',");
+        const paramsStr = line.substring(paramsStartIdx, paramsEndIdx);
+        const params = paramsStr.split("',");
         const firstParam = params[0] + "'";
-        let newOptions = params[1].trim();
+        let newOptions = params[1];
         if (newOptions) {
-          newOptions = newOptions.replace('}', ', includeHidden: true }');
+          newOptions = newOptions.trim().replace('}', ', includeHidden: true }');
         }
-        line = line.replace(`getByRole(${params})`, `getByRole(${firstParam}, ${newOptions})`);
+        line = line.replace(`getByRole(${paramsStr})`, `getByRole(${firstParam}, ${newOptions})`);
       }
 
       if (line.trim().includes('.fill(')) {
