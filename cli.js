@@ -159,6 +159,16 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     }
     return nameEmail;
   })
+  .coerce('f', option => {
+    if (!cliOptions.f.choices.includes(option)) {
+      printMessage(
+        [`Invalid value for needsReviewItems. Please provide boolean value(true/false).`],
+        messageOptions,
+      );
+      process.exit(1);
+    }
+    return option;
+  })
   .check(argvs => {
     if (argvs.scanner === 'custom' && argvs.maxpages) {
       throw new Error('-p or --maxpages is only available in website and sitemap scans.');
@@ -298,8 +308,8 @@ const scanInit = async argvs => {
         process.exit(res.status);
       }
       /* if sitemap scan is selected, treat this URL as a filepath
-        isFileSitemap will tell whether the filepath exists, and if it does, whether the
-        file is a sitemap */
+          isFileSitemap will tell whether the filepath exists, and if it does, whether the
+          file is a sitemap */
       if (isFileSitemap(argvs.url)) {
         argvs.isLocalSitemap = true;
         break;

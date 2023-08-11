@@ -257,6 +257,9 @@ Options:
   -t, --specifiedMaxConcurrency  Maximum number of pages to scan concurrently.
                                  Use for sites with throttling. Defaults to 25.
                                                                           [number]
+  -f, --needsReviewItems  Whether to display rule items requiring manual review in
+                          report. Defaults to false.
+                                                        [choices: "true", "false"]
 Examples:
   To scan sitemap of website:', 'node cli.js -c [ 1 | Sitemap ] -d <device> -u
    <url_link> -w <viewportWidth>

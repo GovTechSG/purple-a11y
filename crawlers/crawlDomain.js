@@ -1,4 +1,4 @@
-import crawlee, { playwrightUtils } from 'crawlee';
+import crawlee from 'crawlee';
 import {
   createCrawleeSubFolders,
   preNavigationHooks,
@@ -7,6 +7,7 @@ import {
 } from './commonCrawlerFunc.js';
 import constants, { basicAuthRegex, blackListedFileExtensions } from '../constants/constants.js';
 import { getPlaywrightLaunchOptions, isBlacklistedFileExtensions } from '../constants/common.js';
+import { areLinksEqual } from '../utils.js';
 
 const crawlDomain = async (
   url,
@@ -18,7 +19,9 @@ const crawlDomain = async (
   userDataDirectory,
   strategy,
   specifiedMaxConcurrency,
+  needsReviewItems,
 ) => {
+  let needsReview = needsReviewItems;
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { maxConcurrency } = constants;
   const { playwrightDeviceDetailsObject } = viewportSettings;
@@ -78,10 +81,16 @@ const crawlDomain = async (
       enqueueLinks,
       enqueueLinksByClickingElements,
     }) => {
-      const currentUrl = request.url;
+      // loadedUrl is the URL after redirects
+      const actualUrl = request.loadedUrl || request.url;
 
-      if (isBlacklistedFileExtensions(currentUrl, blackListedFileExtensions)) {
-        urlsCrawled.invalid.push(currentUrl);
+      if (isBlacklistedFileExtensions(actualUrl, blackListedFileExtensions)) {
+        urlsCrawled.blacklisted.push(request.url);
+        return;
+      }
+
+      if (response.status() === 403) {
+        urlsCrawled.forbidden.push(request.url);
         return;
       }
 
@@ -91,7 +100,7 @@ const crawlDomain = async (
       }
 
       if (pagesCrawled === maxRequestsPerCrawl) {
-        urlsCrawled.invalid.push(request.url);
+        urlsCrawled.exceededRequests.push(request.url);
         return;
       }
       pagesCrawled++;
@@ -101,9 +110,40 @@ const crawlDomain = async (
       if (isBasicAuth) {
         isBasicAuth = false;
       } else if (location.host.includes(host)) {
-        const results = await runAxeScript(page);
+        const results = await runAxeScript(needsReview, page);
+
+        // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
+        const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
+        if (isRedirected) {
+          const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
+            item => (item.actualUrl || item.url) === request.loadedUrl,
+          );
+
+          if (isLoadedUrlInCrawledUrls) {
+            urlsCrawled.notScannedRedirects.push({
+              fromUrl: request.url,
+              toUrl: request.loadedUrl, // i.e. actualUrl
+            });
+            return;
+          }
+
+          urlsCrawled.scanned.push({
+            url: request.url,
+            pageTitle: results.pageTitle,
+            actualUrl: request.loadedUrl, // i.e. actualUrl
+          });
+
+          urlsCrawled.scannedRedirects.push({
+            fromUrl: request.url,
+            toUrl: request.loadedUrl, // i.e. actualUrl
+          });
+
+          results.url = request.url;
+          results.actualUrl = request.loadedUrl;
+        } else {
+          urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
+        }
         await dataset.pushData(results);
-        urlsCrawled.scanned.push({ url: currentUrl, pageTitle: results.pageTitle });
 
         await enqueueLinks({
           // set selector matches anchor elements with href but not contains # or starting with mailto:
@@ -111,7 +151,10 @@ const crawlDomain = async (
           strategy,
           requestQueue,
           transformRequestFunction(req) {
-            // ignore all links ending with `.pdf`
+            if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
+              urlsCrawled.blacklisted.push(req.url);
+            }
+
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
             return req;
           },
@@ -125,12 +168,16 @@ const crawlDomain = async (
           selector: ':not(a):is(*[role="link"], button[onclick])',
           transformRequestFunction(req) {
             // ignore all links ending with `.pdf`
+            if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
+              urlsCrawled.blacklisted.push(req.url);
+            }
+
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
             return req;
           },
         });
       } else {
-        urlsCrawled.outOfDomain.push(currentUrl);
+        urlsCrawled.outOfDomain.push(request.url);
       }
     },
     failedRequestHandler,

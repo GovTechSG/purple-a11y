@@ -33,7 +33,9 @@ export const isWhitelistedContentType = contentType => {
 };
 
 export const getStoragePath = randomToken =>
-  `results/${randomToken}_${constants.urlsCrawledObj.scanned.length}pages`;
+  `results/${randomToken}_${
+    constants.urlsCrawledObj.scanned.length
+  }pages`;
 
 export const createDetailsAndLogs = async (scanDetails, randomToken) => {
   const storagePath = getStoragePath(randomToken);
@@ -187,5 +189,24 @@ export const zipResults = (zipName, resultsPath) => {
     } catch (err) {
       throw err;
     }
+  }
+};
+
+// areLinksEqual compares 2 string URLs and ignores comparison of 'www.' and url protocol
+// i.e. 'http://google.com' and 'https://www.google.com' returns true
+export const areLinksEqual = (link1, link2) => {
+  try {
+    const format = link => {
+      return new URL(link.replace(/www\./, ''));
+    };
+    const l1 = format(link1);
+    const l2 = format(link2);
+
+    const areHostEqual = l1.host === l2.host;
+    const arePathEqual = l1.pathname === l2.pathname;
+
+    return areHostEqual && arePathEqual;
+  } catch (error) {
+    return l1 === l2;
   }
 };
