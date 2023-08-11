@@ -4,15 +4,15 @@ import crawlee, { playwrightUtils } from 'crawlee';
 import axe from 'axe-core';
 import { axeScript, saflyIconSelector } from '../constants/constants.js';
 
-export const filterAxeResults = (results, pageTitle) => {
-  const { violations, passes, url } = results;
+export const filterAxeResults = (needsReview, results, pageTitle) => {
+  const { violations, passes, incomplete, url } = results;
 
   let totalItems = 0;
   const mustFix = { totalItems: 0, rules: {} };
   const goodToFix = { totalItems: 0, rules: {} };
   const passed = { totalItems: 0, rules: {} };
 
-  const process = (item) => {
+  const process = (item, displayNeedsReview) => {
     const { id: rule, help: description, helpUrl, tags, nodes } = item;
 
     if (rule === 'frame-tested') return;
@@ -24,9 +24,11 @@ export const filterAxeResults = (results, pageTitle) => {
       if (!(rule in category.rules)) {
         category.rules[rule] = { description, helpUrl, conformance, totalItems: 0, items: [] };
       }
-      const message = failureSummary;
+      const message = displayNeedsReview
+        ? failureSummary.slice(failureSummary.indexOf('\n') + 1).trim()
+        : failureSummary;
       category.rules[rule].items.push(
-        { html, message },
+        displayNeedsReview ? { html, message, displayNeedsReview } : { html, message },
       );
       category.rules[rule].totalItems += 1;
       category.totalItems += 1;
@@ -43,7 +45,10 @@ export const filterAxeResults = (results, pageTitle) => {
     });
   };
 
-  violations.forEach(item => process(item));
+  violations.forEach(item => process(item, false));
+  if (needsReview){
+    incomplete.forEach(item => process(item, true));
+  }
 
   passes.forEach(item => {
     const { id: rule, help: description, helpUrl, tags, nodes } = item;
@@ -74,11 +79,11 @@ export const filterAxeResults = (results, pageTitle) => {
   };
 };
 
-export const runAxeScript = async (page, selectors = []) => {
+export const runAxeScript = async (needsReview, page, selectors = []) => {  
   await crawlee.playwrightUtils.injectFile(page, axeScript);
-
+  
   const results = await page.evaluate(
-    async ({ selectors, saflyIconSelector }) => {
+    async ({ selectors, saflyIconSelector, needsReview}) => {
       // remove so that axe does not scan
       document.querySelector(saflyIconSelector)?.remove();
 
@@ -87,15 +92,18 @@ export const runAxeScript = async (page, selectors = []) => {
           application: 'purple-hats',
         },
       });
+
+      isReturnReviewItems = needsReview ? ['violations', 'passes', 'incomplete'] : ['violations', 'passes']
+
       return axe.run(selectors, {
-        resultTypes: ['violations', 'passes'],
+        resultTypes: isReturnReviewItems,
       });
     },
     { selectors, saflyIconSelector },
   );
 
   const pageTitle = await page.evaluate(() => document.title);
-  return filterAxeResults(results, pageTitle);
+  return filterAxeResults(needsReview, results, pageTitle);
 };
 
 export const createCrawleeSubFolders = async randomToken => {
