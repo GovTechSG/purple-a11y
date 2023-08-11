@@ -96,7 +96,7 @@ export const cliOptions = {
   },
   f: {
     alias: 'needsReviewItems',
-    describe: 'Whether to display items requiring manual review in report.',
+    describe: 'Whether to display items requiring manual review in report. Defaults to false.',
     type: 'string',
     choices: ['true', 'false'],
     demandOption: false,
