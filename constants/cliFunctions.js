@@ -100,7 +100,7 @@ export const cliOptions = {
     type: 'string',
     choices: ['true', 'false'],
     demandOption: false,
-  }
+  },
 };
 
 export const configureReportSetting = isEnabled => {

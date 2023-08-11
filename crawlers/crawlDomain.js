@@ -1,4 +1,4 @@
-import crawlee, { playwrightUtils } from 'crawlee';
+import crawlee from 'crawlee';
 import {
   createCrawleeSubFolders,
   preNavigationHooks,

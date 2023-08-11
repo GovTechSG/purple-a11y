@@ -7,11 +7,10 @@ import {
   failedRequestHandler,
 } from './commonCrawlerFunc.js';
 
-import constants, { blackListedFileExtensions } from '../constants/constants.js';
+import constants from '../constants/constants.js';
 import {
   getLinksFromSitemap,
   getPlaywrightLaunchOptions,
-  isBlacklistedFileExtensions,
   messageOptions,
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
