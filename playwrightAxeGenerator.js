@@ -53,7 +53,7 @@ const playwrightAxeGenerator = async data => {
     }
   }
 
-  let { isHeadless, randomToken, deviceChosen, customDevice, viewportWidth, customFlowLabel } = data;
+  let { isHeadless, randomToken, deviceChosen, customDevice, viewportWidth, customFlowLabel, needsReviewItems } = data;
   // these will be appended to the generated script if the scan is run from CLI/index.
   // this is so as the final generated script can be rerun after the scan.
   const importStatements = `
@@ -236,8 +236,8 @@ if (!urlImageDictionary[pageUrl]) {
 }
 };
 
-const runAxeScan = async page => {
-  const result = await runAxeScript(page);
+const runAxeScan = async (${needsReviewItems}, page) => {
+  const result = await runAxeScript(${needsReviewItems}, page);
   await dataset.pushData(result);
   urlsCrawled.scanned.push({ url: page.url(), pageTitle: result.pageTitle });
 }
@@ -257,7 +257,7 @@ const processPage = async page => {
 	const scanRequired = await checkIfScanRequired(page);
 	
 	if (scanRequired) {
-		await runAxeScan(page);
+		await runAxeScan(${needsReviewItems}, page);
 	}
   }
   
