@@ -18,6 +18,7 @@
           <%= scanType === 'Customized' ? totalPagesScanned + ' pages' : ''%>
         </h6>
         <ul class="unbulleted-list">
+          <% pagesScanned.forEach((page, index) => { %> 
           <li>
             <a href="<%= page.url %>" target="_blank"><%= page.pageTitle %></a>
             <span><%= page.url %></span>
