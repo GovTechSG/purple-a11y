@@ -115,9 +115,9 @@ const crawlDomain = async (
         // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
         const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
         if (isRedirected) {
-          const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(item => {
-            (item.actualUrl || item.url) === request.loadedUrl;
-          });
+          const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
+            item => (item.actualUrl || item.url) === request.loadedUrl,
+          );
 
           if (isLoadedUrlInCrawledUrls) {
             urlsCrawled.notScannedRedirects.push({
