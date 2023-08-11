@@ -264,34 +264,59 @@ const processPage = async page => {
 
 };
 
-const clickFunc = async (elem) => {
+const clickFunc = async (elem,page) => {
   const numElems = await elem.count(); 
-  if (numElems > 1) {
-    for (let index = 0; index < numElems; index++) {
-      const nth = await elem.nth(index); 
-      if (await nth.isVisible()) {
-        elem = nth;
-        break;
+
+  const waitForElemIsVisible = async (elem, duration) => {
+    try {
+      await elem.waitFor({state: "visible", timeout: duration});
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  const hoverParentAndClickElem = async (nth,page) => {
+    
+    let attempts = 20;
+    let parent = nth;
+
+    if (! await parent.isVisible()) {
+
+      while (attempts > 0) {
+        parent = parent.locator('xpath=..');
+        if (await parent.isVisible()) {
+          await parent.hover({force: true});
+
+          if (await waitForElemIsVisible(nth, 500)) {
+            await processPage(page);
+            await nth.click();
+            return;
+          }
+
+        }
+        attempts--;
       }
     }
   }
 
-  let parent = elem;
+  if (numElems === 0 && ! await waitForElemIsVisible(elem, 60000)) {
+    await hoverParentAndClickElem(elem, page);
+  
+  } else if (numElems === 0) {
+      await elem.click();
 
-  if (! await parent.isVisible()) {
-   let attempts = 20;
-   while (attempts > 0) {
-    parent = parent.locator('xpath=..');
-    if (await parent.isVisible()) {
-     await parent.hover({force: true});
-     break;
-    }
-    attempts--;
-   }
-
+  } else for (let index = 0; index < numElems; index++) {
+      const nth = await elem.nth(index); 
+      if (! await nth.isVisible()) {
+        await hoverParentAndClickElem(nth, page);
+      } else {
+        await nth.click();
+      }
   }
-  elem.click();
+
 };
+
 `;
 
   const block2 = `  return urlsCrawled;
@@ -565,7 +590,7 @@ const clickFunc = async (elem) => {
         nextStepNeedsProcessPage = false;
       }
 
-      if (line.trim().includes('getByRole')) {
+      if (line.trim().includes('.getByRole(') && line.trim().includes('.click()') ) {
         // add includeHidden: true to locator options
         const paramsStartIdx = line.indexOf('getByRole(') + 'getByRole('.length; 
         const paramsEndIdx = line.indexOf(')', paramsStartIdx);
@@ -600,7 +625,7 @@ const clickFunc = async (elem) => {
         const lastIndex = line.lastIndexOf('.');
         const locator = line.substring(0, lastIndex);
         isClick && appendToGeneratedScript(`elem = ${locator}`);
-        appendToGeneratedScript(isClick ? `await clickFunc(elem)` : line); 
+        appendToGeneratedScript(isClick ? `await clickFunc(elem, page)` : line); 
 
         nextStepNeedsProcessPage = true;
         continue;
