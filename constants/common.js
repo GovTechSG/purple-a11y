@@ -104,9 +104,7 @@ export const sortAlphaAttributes = htmlString => {
 export const isBlacklistedFileExtensions = (url, blacklistedFileExtensions) => {
   const urlExtension = url.split('.').pop(); 
 
-  const isBlacklisted = blacklistedFileExtensions.some(extension =>
-    urlExtension.includes(extension)
-  );
+  const isBlacklisted = blacklistedFileExtensions.includes(urlExtension);
 
   return isBlacklisted;
 };
