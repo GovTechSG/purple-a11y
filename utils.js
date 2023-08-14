@@ -2,7 +2,7 @@ import { execFileSync, execSync } from 'child_process';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
-import { intermediateScreenshotsPath, destinationPath } from './constants/constants.js';
+import { destinationPath, getIntermediateScreenshotsPath } from './constants/constants.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -103,6 +103,7 @@ export const createAndUpdateResultsFolders = async randomToken => {
 
 export const createScreenshotsFolder = randomToken => {
   const storagePath = getStoragePath(randomToken);
+  const intermediateScreenshotsPath = getIntermediateScreenshotsPath(randomToken);
   if (fs.existsSync(intermediateScreenshotsPath)) {
     fs.readdir(intermediateScreenshotsPath, (err, files) => {
       if (err) {

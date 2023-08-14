@@ -77,7 +77,7 @@ export const blackListedFileExtensions = [
   'webp',
 ];
 
-export const intermediateScreenshotsPath = './screenshots';
+export const getIntermediateScreenshotsPath = datasetsPath => `${datasetsPath}/screenshots`;
 export const destinationPath = storagePath => `${storagePath}/screenshots`;
 
 /**  Get the path to Default Profile in the Chrome Data Directory
