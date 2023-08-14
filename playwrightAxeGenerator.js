@@ -605,8 +605,9 @@ const clickFunc = async (elem,page) => {
 
         if (options) { // falsy if there are no options
           options = options.trim().replace('}', ', includeHidden: true }');
+          line = line.replace(`getByRole(${paramsStr})`, `getByRole(${firstParam}, ${options})`);
         }
-        line = line.replace(`getByRole(${paramsStr})`, `getByRole(${firstParam}, ${options})`);
+        
       }
 
       if (line.trim().includes('.fill(')) {
