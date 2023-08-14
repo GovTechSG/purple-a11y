@@ -192,7 +192,7 @@ const urlsCrawledObj = {
   outOfDomain: [],
   blacklisted: [],
   exceededRequests: [],
-  forbidden: []
+  forbidden: [],
 };
 
 const scannerTypes = {
@@ -265,6 +265,7 @@ export const formDataFields = {
   emailField: 'entry.52161304',
   nameField: 'entry.1787318910',
   resultsField: 'entry.904051439',
+  numberOfPagesScannedField: 'entry.238043773',
 };
 
 const urlCheckStatuses = {

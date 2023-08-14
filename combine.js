@@ -27,10 +27,10 @@ const combineRun = async (details, deviceToScan) => {
     userDataDirectory,
     strategy,
     specifiedMaxConcurrency,
-    needsReviewItems
+    needsReviewItems,
   } = envDetails;
 
-  process.env.CRAWLEE_LOG_LEVEL = "ERROR"
+  process.env.CRAWLEE_LOG_LEVEL = 'ERROR';
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
   const host = type === constants.scannerTypes.sitemap && isLocalSitemap ? '' : getHost(url);
@@ -66,7 +66,7 @@ const combineRun = async (details, deviceToScan) => {
         browser,
         userDataDirectory,
         specifiedMaxConcurrency,
-        needsReviewItems
+        needsReviewItems,
       );
       break;
 
@@ -81,7 +81,7 @@ const combineRun = async (details, deviceToScan) => {
         userDataDirectory,
         strategy,
         specifiedMaxConcurrency,
-        needsReviewItems
+        needsReviewItems,
       );
       break;
 
@@ -111,6 +111,7 @@ const combineRun = async (details, deviceToScan) => {
       email,
       name,
       JSON.stringify(basicFormHTMLSnippet),
+      urlsCrawled.scanned.length,
     );
   } else {
     printMessage([`No pages were scanned.`], constants.alertMessageOptions);
