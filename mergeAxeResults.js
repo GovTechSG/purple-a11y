@@ -134,11 +134,7 @@ const writeHTML = async (
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
 
-  if (
-    !process.env.RUNNING_FROM_PH_GUI &&
-    scanType === 'Customized' &&
-    customFlowLabel !== 'undefined'
-  ) {
+  if (!process.env.RUNNING_FROM_PH_GUI && scanType === 'Customized' && customFlowLabel) {
     addCustomFlowLabel(`${storagePath}/reports/${htmlFilename}.html`, customFlowLabel);
   }
 };
