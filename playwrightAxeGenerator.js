@@ -19,7 +19,7 @@ import {
   createScreenshotsFolder,
 } from '#root/utils.js';
 import constants, {
-  intermediateScreenshotsPath,
+  getIntermediateScreenshotsPath,
   getExecutablePath,
   removeQuarantineFlag,
 } from '#root/constants/constants.js';
@@ -69,8 +69,11 @@ const playwrightAxeGenerator = async data => {
     import { getComparator } from 'playwright-core/lib/utils';
     import { createCrawleeSubFolders, runAxeScript } from '#root/crawlers/commonCrawlerFunc.js';
     import { generateArtifacts } from '#root/mergeAxeResults.js';
-    import { createAndUpdateResultsFolders, createDetailsAndLogs, createScreenshotsFolder } from '#root/utils.js';
-    import constants, { intermediateScreenshotsPath, getExecutablePath, removeQuarantineFlag } from '#root/constants/constants.js';
+    import { createAndUpdateResultsFolders, createDetailsAndLogs, createScreenshotsFolder, cleanUp } from '#root/utils.js';
+    import constants, {
+        getIntermediateScreenshotsPath,
+        getExecutablePath, removeQuarantineFlag
+    } from '#root/constants/constants.js';
     import fs from 'fs';
     import path from 'path';
     import { isSkippedUrl, submitFormViaPlaywright } from '#root/constants/common.js';
@@ -80,6 +83,9 @@ const playwrightAxeGenerator = async data => {
 
   `;
   const block1 = `const blacklistedPatternsFilename = 'exclusions.txt';
+
+// checks and delete datasets path if it already exists
+await cleanUp('${randomToken}');
 
 process.env.CRAWLEE_STORAGE_DIR = '${randomToken}';
 
@@ -119,8 +125,10 @@ var index = 1;
 var urlImageDictionary = {};
 let pageUrl;
 
+const intermediateScreenshotsPath = getIntermediateScreenshotsPath('${randomToken}');
+
 const checkIfScanRequired = async page => {
-  const imgPath = './screenshots/PHScan-screenshot' + index.toString() + '.png';
+  const imgPath = intermediateScreenshotsPath + '/PHScan-screenshot' + index.toString() + '.png';
 
 index += 1;
 
@@ -329,20 +337,6 @@ const clickFunc = async (elem,page) => {
 
   const block2 = `  return urlsCrawled;
         })().then(async (urlsCrawled) => {
-            fs.readdir(intermediateScreenshotsPath, (err, files) => {
-                if (err) {
-                  console.error(\`Error reading directory: \${err}\`);
-                  return;
-                }
-                const filteredFiles = files.filter(file => file.includes('canny'));
-            
-                filteredFiles.forEach(file => {
-                  fs.unlink(\`./screenshots/\${file}\`,  err => {
-                    if (err) throw err;
-                  });
-                });
-              });
-
             scanDetails.endTime = new Date().getTime();
             scanDetails.urlsCrawled = urlsCrawled;
             await createDetailsAndLogs(scanDetails, '${randomToken}');
