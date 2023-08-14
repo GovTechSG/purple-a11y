@@ -33,52 +33,6 @@ export const ruleIdsWithHtml = [
   'aria-allowed-role',
 ];
 
-// Whitelisted attributes (to not drop)
-// i.e. any other attribute will be dropped
-export const whitelistedAttributes = [
-  `type`,
-  `tabindex`,
-  `lang`,
-  `scope`,
-  `alt`,
-  `role`,
-  `charset`,
-  `for`,
-  `content`,
-  `name`,
-  `onclick`,
-  `aria*`,
-  `src`,
-  `value`,
-  `href`,
-  `title`,
-  `style`,
-];
-
-// Attributes to mute, to be replace with "..."
-export const mutedAttributeValues = [
-  `name`,
-  `data`,
-  `src`,
-  `value`,
-  `href`,
-  `title`,
-  `aria-describedby`,
-  `aria-label`,
-  `aria-labelledby`,
-];
-
-export const ruleIdsWithHtml = [
-  'aria-hidden-focus',
-  'aria-input-field-name',
-  'aria-roles',
-  'aria-toggle-field-name',
-  'aria-valid-attr-value',
-  'aria-valid-attr',
-  'nested-interactive',
-  'avoid-inline-spacing',
-  'aria-allowed-role',
-];
 
 // Whitelisted attributes (to not drop)
 // i.e. any other attribute will be dropped
