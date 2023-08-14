@@ -5,7 +5,7 @@ echo "================================================================"
 echo ""
 
 CURR_FOLDERNAME=$(basename "$PWD")
-if [ $CURR_FOLDERNAME = "scripts" ]; then
+if [[ $CURR_FOLDERNAME = "scripts" ]]; then
   cd ..
   CURR_FOLDERNAME=$(basename $PWD)
 fi
