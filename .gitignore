@@ -17,3 +17,5 @@ bin/
 ImageMagick-*
 nodejs-*
 ms-playwright/
+a11y-scan-results*.zip
+PHScan_*/

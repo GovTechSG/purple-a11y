@@ -120,20 +120,36 @@ const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResu
   }
 };
 
-const writeHTML = async (allIssues, storagePath, scanType, customFlowLabel, htmlFilename = 'report') => {
+const writeHTML = async (
+  allIssues,
+  storagePath,
+  scanType,
+  customFlowLabel,
+  htmlFilename = 'report',
+) => {
   const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/report.ejs'), 'utf-8');
   const template = ejs.compile(ejsString, {
     filename: path.join(__dirname, './static/ejs/report.ejs'),
   });
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
-  
-  if (!process.env.RUNNING_FROM_PH_GUI && scanType === 'Customized' && customFlowLabel) {
+
+  if (
+    !process.env.RUNNING_FROM_PH_GUI &&
+    scanType === 'Customized' &&
+    customFlowLabel !== 'undefined'
+  ) {
     addCustomFlowLabel(`${storagePath}/reports/${htmlFilename}.html`, customFlowLabel);
   }
 };
 
-const writeSummaryHTML = async (allIssues, storagePath, scanType, customFlowLabel, htmlFilename = 'summary') => {
+const writeSummaryHTML = async (
+  allIssues,
+  storagePath,
+  scanType,
+  customFlowLabel,
+  htmlFilename = 'summary',
+) => {
   const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/summary.ejs'), 'utf-8');
   const template = ejs.compile(ejsString, {
     filename: path.join(__dirname, './static/ejs/summary.ejs'),
@@ -194,6 +210,8 @@ const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
 
   await context.close();
   await browser.close();
+
+  fs.unlinkSync(htmlFilePath);
 };
 
 const pushResults = async (rPath, allIssues) => {
@@ -222,6 +240,7 @@ const pushResults = async (rPath, allIssues) => {
           helpUrl,
           conformance,
           totalItems: 0,
+          // numberOfPagesAffectedAfterRedirects: 0,
           pagesAffected: {},
         };
       }
@@ -238,9 +257,21 @@ const pushResults = async (rPath, allIssues) => {
 
       if (!(url in currRuleFromAllIssues.pagesAffected)) {
         currRuleFromAllIssues.pagesAffected[url] = { pageTitle, items: [] };
+        /*if (actualUrl) {
+          currRuleFromAllIssues.pagesAffected[url].actualUrl = actualUrl;
+          // Deduct duplication count from totalItems
+          currRuleFromAllIssues.totalItems -= 1;
+          // Previously using pagesAffected.length to display no. of pages affected
+          // However, since pagesAffected array contains duplicates, we need to deduct the duplicates
+          // Hence, start with negative offset, will add pagesAffected.length later
+          currRuleFromAllIssues.numberOfPagesAffectedAfterRedirects -= 1;
+          currCategoryFromAllIssues.totalItems -= 1;
+        }*/
       }
 
       currRuleFromAllIssues.pagesAffected[url].items.push(...items);
+      // currRuleFromAllIssues.numberOfPagesAffectedAfterRedirects +=
+      //   currRuleFromAllIssues.pagesAffected.length;
     });
   });
 };
@@ -331,7 +362,14 @@ const createRuleIdJson = allIssues => {
   return compiledRuleJson;
 };
 
-export const generateArtifacts = async (randomToken, urlScanned, scanType, viewport, pagesScanned, customFlowLabel) => {
+export const generateArtifacts = async (
+  randomToken,
+  urlScanned,
+  scanType,
+  viewport,
+  pagesScanned,
+  customFlowLabel,
+) => {
   const storagePath = getStoragePath(randomToken);
   const directory = `${storagePath}/${constants.allIssueFileName}`;
   const allIssues = {

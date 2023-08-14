@@ -22,6 +22,7 @@ import constants, {
   formDataFields,
   whitelistedAttributes,
   mutedAttributeValues,
+  blackListedFileExtensions,
 } from './constants.js';
 import { silentLogger } from '../logs.js';
 
@@ -98,6 +99,11 @@ export const sortAlphaAttributes = htmlString => {
     entireHtml += sortedHtmlTag;
   });
   return entireHtml;
+};
+
+export const isBlacklistedFileExtensions = (url, blacklistedFileExtensions) => {
+  const urlExtension = url.split('.').pop();
+  return blacklistedFileExtensions.includes(urlExtension);
 };
 
 const document = new JSDOM('').window;
@@ -330,8 +336,6 @@ const checkUrlConnectivityWithBrowser = async (
 
       res.content = await page.content();
     } catch (error) {
-      // not sure what errors are thrown
-      console.log(error);
       silentLogger.error(error);
       res.status = constants.urlCheckStatuses.systemError.code;
     } finally {
@@ -397,7 +401,6 @@ export const checkUrl = async (
       res.status = constants.urlCheckStatuses.notASitemap.code;
     }
   }
-
   return res;
 };
 
@@ -422,6 +425,8 @@ export const prepareData = argv => {
     browserToRun,
     nameEmail,
     customFlowLabel,
+    specifiedMaxConcurrency,
+    needsReviewItems
   } = argv;
 
   return {
@@ -437,7 +442,9 @@ export const prepareData = argv => {
     isLocalSitemap,
     browser: browserToRun,
     nameEmail,
-    customFlowLabel
+    customFlowLabel,
+    specifiedMaxConcurrency,
+    needsReviewItems
   };
 };
 
@@ -960,8 +967,6 @@ export const submitFormViaPlaywright = async (
       silentLogger.info('Unable to detect networkidle');
     }
   } catch (error) {
-    // not sure what errors are thrown
-    console.log(error);
     silentLogger.error(error);
   } finally {
     await browserContext.close();

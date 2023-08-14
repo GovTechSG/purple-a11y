@@ -2,7 +2,7 @@
 FROM node:lts-alpine
 
 # Installation of packages for purple-hats and chromium
-RUN apk add build-base gcompat g++ make python3 chromium zip bash git imagemagick
+RUN apk add build-base gcompat g++ make python3 chromium zip bash git
  
 WORKDIR /app
 

@@ -68,6 +68,70 @@ export const mutedAttributeValues = [
   `aria-labelledby`,
 ];
 
+export const ruleIdsWithHtml = [
+  'aria-hidden-focus',
+  'aria-input-field-name',
+  'aria-roles',
+  'aria-toggle-field-name',
+  'aria-valid-attr-value',
+  'aria-valid-attr',
+  'nested-interactive',
+  'avoid-inline-spacing',
+  'aria-allowed-role',
+];
+
+// Whitelisted attributes (to not drop)
+// i.e. any other attribute will be dropped
+export const whitelistedAttributes = [
+  `type`,
+  `tabindex`,
+  `lang`,
+  `scope`,
+  `alt`,
+  `role`,
+  `charset`,
+  `for`,
+  `content`,
+  `name`,
+  `onclick`,
+  `aria*`,
+  `src`,
+  `value`,
+  `href`,
+  `title`,
+  `style`,
+];
+
+// Attributes to mute
+export const mutedAttributeValues = [
+  `name`,
+  `data`,
+  `src`,
+  `value`,
+  `href`,
+  `title`,
+  `aria-describedby`,
+  `aria-label`,
+  `aria-labelledby`,
+];
+
+export const blackListedFileExtensions = [
+  'css',
+  'js',
+  'txt',
+  'mp3',
+  'mp4',
+  'jpg',
+  'jpeg',
+  'png',
+  'svg',
+  'gif',
+  'woff',
+  'pdf',
+  'zip',
+  'webp',
+];
+
 export const intermediateScreenshotsPath = './screenshots';
 export const destinationPath = storagePath => `${storagePath}/screenshots`;
 
@@ -178,7 +242,12 @@ const urlsCrawledObj = {
   toScan: [],
   scanned: [],
   invalid: [],
+  scannedRedirects: [],
+  notScannedRedirects: [],
   outOfDomain: [],
+  blacklisted: [],
+  exceededRequests: [],
+  forbidden: []
 };
 
 const scannerTypes = {
@@ -292,7 +361,7 @@ export default {
   allIssueFileName: 'all_issues',
   cliZipFileName: 'a11y-scan-results.zip',
   maxRequestsPerCrawl,
-  maxConcurrency: 50,
+  maxConcurrency: 25,
   scannerTypes,
   browserTypes,
   urlsCrawledObj,

@@ -8,7 +8,7 @@ Purple HATS is a customisable, automated accessibility testing tool that allows 
 2. [Axe-core](https://github.com/dequelabs/axe-core)
 3. [Node.js](https://Node.js.org/en/)
 4. [Playwright](https://playwright.dev/)
-5. [ImageMagick](https://github.com/ImageMagick/ImageMagick)
+5. [Pixelmatch](https://github.com/mapbox/pixelmatch)
 
 ## Using Purple HATS as a NodeJS module
 
@@ -254,6 +254,12 @@ Options:
                                         [string] [required]
   -j, --customFlowLabel  Give Custom Flow Scan a label for easier reference in t
                          he report                                      [string]
+  -t, --specifiedMaxConcurrency  Maximum number of pages to scan concurrently.
+                                 Use for sites with throttling. Defaults to 25.
+                                                                          [number]
+  -f, --needsReviewItems  Whether to display rule items requiring manual review in
+                          report. Defaults to false.
+                                                        [choices: "true", "false"]
 Examples:
   To scan sitemap of website:', 'node cli.js -c [ 1 | Sitemap ] -d <device> -u
    <url_link> -w <viewportWidth>
@@ -469,4 +475,4 @@ You can edit the userData.txt which is located at %AppData%/Purple HATS on Windo
 
 Purple HATS uses third-party open-source tools that may be downloaded over the Internet during the installation process of Purple HATS. Users should be aware of the libraries used by examining `package.json`.
 
-Purple HATS may send information to the website or URL where the user chooses to initiate a Purple HATS scan. By default, data collected by Purple HATS is processed and stored locally on the machine where the tool is run.
+Purple HATS may send information to the website, URL and HTML code snippets where the user chooses to initiate a Purple HATS scan for telemetry purposes.

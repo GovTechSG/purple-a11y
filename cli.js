@@ -123,6 +123,16 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
 
     return option;
   })
+  .coerce('t', option => {
+    if (!Number.isInteger(option) || Number(option) <= 0) {
+      printMessage(
+        [`Invalid number for max concurrency. Please provide a positive integer.`],
+        messageOptions,
+      );
+      process.exit(1);
+    }
+    return option;
+  })
   .coerce('k', nameEmail => {
     if (nameEmail.indexOf(':') === -1) {
       printMessage(
@@ -148,6 +158,16 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
       process.exit(1);
     }
     return nameEmail;
+  })
+  .coerce('f', option => {
+    if (!cliOptions.f.choices.includes(option)) {
+      printMessage(
+        [`Invalid value for needsReviewItems. Please provide boolean value(true/false).`],
+        messageOptions,
+      );
+      process.exit(1);
+    }
+    return option;
   })
   .check(argvs => {
     if (argvs.scanner === 'custom' && argvs.maxpages) {
@@ -288,8 +308,8 @@ const scanInit = async argvs => {
         process.exit(res.status);
       }
       /* if sitemap scan is selected, treat this URL as a filepath
-        isFileSitemap will tell whether the filepath exists, and if it does, whether the
-        file is a sitemap */
+          isFileSitemap will tell whether the filepath exists, and if it does, whether the
+          file is a sitemap */
       if (isFileSitemap(argvs.url)) {
         argvs.isLocalSitemap = true;
         break;

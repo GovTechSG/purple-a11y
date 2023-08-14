@@ -10,7 +10,9 @@ variables:
   A11Y_SCAN_MAX_NUM_PAGES: 100
   # A11Y_SCAN_ARTIFACT_NAME: "a11y-scan-results.zip"
   A11Y_SCAN_ARTIFACT_NAME: "a11y-scan-results.zip"
-  
+  # A11Y_SCAN_NAME_EMAIL: "John Doe:john@domain.com"
+  A11Y_SCAN_NAME_EMAIL: "John Doe:john@domain.com"
+
 a11y-scan:
   stage: test
   tags:
@@ -20,7 +22,7 @@ a11y-scan:
     entrypoint: [ "/bin/bash", "-lc" ] 
   script:
     - cd /app
-    - node cli.js -c "$A11Y_SCAN_TYPE" -d "$A11Y_SCAN_DEVICE" -o "$CI_PROJECT_DIR/$A11Y_SCAN_ARTIFACT_NAME" -u "$A11Y_SCAN_URL" -p "$A11Y_SCAN_MAX_NUM_PAGES" || true
+    - node cli.js -c "$A11Y_SCAN_TYPE" -d "$A11Y_SCAN_DEVICE" -o "$CI_PROJECT_DIR/$A11Y_SCAN_ARTIFACT_NAME" -u "$A11Y_SCAN_URL" -p "$A11Y_SCAN_MAX_NUM_PAGES" -k "$A11Y_SCAN_NAME_EMAIL" || true
   artifacts:
     name: "$CI_JOB_NAME"
     paths:

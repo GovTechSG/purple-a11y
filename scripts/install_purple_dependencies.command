@@ -20,21 +20,6 @@ if ! [ -f nodejs-mac-x64/bin/node ]; then
   mkdir nodejs-mac-x64 && tar -xzf nodejs-mac-x64.tar.gz -C nodejs-mac-x64 --strip-components=1 && rm ./nodejs-mac-x64.tar.gz
 fi
 
-if ! ls ImageMagick-*/bin/compare 1> /dev/null 2>&1; then
-  echo "Downloading ImageMagick"
-
-  curl -sSLJ -O "https://imagemagick.org/archive/binaries/ImageMagick-x86_64-apple-darwin20.1.0.tar.gz"
-  tar -xf "ImageMagick-x86_64-apple-darwin20.1.0.tar.gz"
-  
-  if ls ImageMagick-*.tar.gz 1> /dev/null 2>&1; then
-    rm ImageMagick-*.tar.gz
-  fi
-
-  echo "Removing com.apple.quarantine attribute for ImageMagick Binaries"
-  find ./bin/Image*/bin -exec xattr -d com.apple.quarantine {} \;&>/dev/null
-  find ./bin/Image*/lib/*.dylib -exec xattr -d com.apple.quarantine {} \;&>/dev/null
-fi
-
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source ${__dir}/hats_shell.sh
 
