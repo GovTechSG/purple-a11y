@@ -371,6 +371,7 @@ const clickFunc = async (elem,page) => {
     "${data.nameEmail.split(':')[1]}", 
     "${data.nameEmail.split(':')[0]}",
     JSON.stringify(basicFormHTMLSnippet),
+    urlsCrawled.scanned.length,
   );
         });
         `;
