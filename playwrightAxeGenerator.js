@@ -591,17 +591,19 @@ const clickFunc = async (elem,page) => {
       }
 
       if (line.trim().includes('.getByRole(') && line.trim().includes('.click()') ) {
-        // add includeHidden: true to locator options
+        // add includeHidden: true to getByRole options
         const paramsStartIdx = line.indexOf('getByRole(') + 'getByRole('.length; 
         const paramsEndIdx = line.indexOf(')', paramsStartIdx);
         const paramsStr = line.substring(paramsStartIdx, paramsEndIdx);
-        const params = paramsStr.split("',");
-        const firstParam = params[0] + "'";
-        let newOptions = params[1];
-        if (newOptions) {
-          newOptions = newOptions.trim().replace('}', ', includeHidden: true }');
+        
+        let [firstParam, ...options] = paramsStr.split("',");
+        firstParam = firstParam + "'"; 
+        options = options.join("',");
+
+        if (options) { // falsy if there are no options
+          options = options.trim().replace('}', ', includeHidden: true }');
         }
-        line = line.replace(`getByRole(${paramsStr})`, `getByRole(${firstParam}, ${newOptions})`);
+        line = line.replace(`getByRole(${paramsStr})`, `getByRole(${firstParam}, ${options})`);
       }
 
       if (line.trim().includes('.fill(')) {
