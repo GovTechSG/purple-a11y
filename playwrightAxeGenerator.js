@@ -17,6 +17,7 @@ import {
   createAndUpdateResultsFolders,
   createDetailsAndLogs,
   createScreenshotsFolder,
+  cleanUp
 } from '#root/utils.js';
 import constants, {
   getIntermediateScreenshotsPath,
