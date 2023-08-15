@@ -282,9 +282,62 @@ const processPage = async page => {
 		await runAxeScan(${needsReviewItems}, page);
 	}
   }
-  
 
-};`;
+};
+
+const clickFunc = async (elem,page) => {
+  const numElems = await elem.count(); 
+
+  const waitForElemIsVisible = async (elem, duration) => {
+    try {
+      await elem.waitFor({state: "visible", timeout: duration});
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  const hoverParentAndClickElem = async (nth,page) => {
+    
+    let attempts = 20;
+    let parent = nth;
+
+    if (! await parent.isVisible()) {
+
+      while (attempts > 0) {
+        parent = parent.locator('xpath=..');
+        if (await parent.isVisible()) {
+          await parent.hover({force: true});
+
+          if (await waitForElemIsVisible(nth, 500)) {
+            await processPage(page);
+            await nth.click();
+            return;
+          }
+
+        }
+        attempts--;
+      }
+    }
+  }
+
+  if (numElems === 0 && ! await waitForElemIsVisible(elem, 60000)) {
+    await hoverParentAndClickElem(elem, page);
+  
+  } else if (numElems === 0) {
+      await elem.click();
+
+  } else for (let index = 0; index < numElems; index++) {
+      const nth = await elem.nth(index); 
+      if (! await nth.isVisible()) {
+        await hoverParentAndClickElem(nth, page);
+      } else {
+        await nth.click();
+      }
+  }
+
+};
+`;
 
   const block2 = ` 
     if (process.env.RUNNING_FROM_PH_GUI) {

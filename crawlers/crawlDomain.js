@@ -1,5 +1,4 @@
 import crawlee from 'crawlee';
-import crawlee from 'crawlee';
 import {
   createCrawleeSubFolders,
   preNavigationHooks,
@@ -8,7 +7,6 @@ import {
 } from './commonCrawlerFunc.js';
 import constants, { basicAuthRegex, blackListedFileExtensions } from '../constants/constants.js';
 import { getPlaywrightLaunchOptions, isBlacklistedFileExtensions } from '../constants/common.js';
-import { areLinksEqual } from '../utils.js';
 import { areLinksEqual } from '../utils.js';
 
 const crawlDomain = async (
