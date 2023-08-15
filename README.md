@@ -8,7 +8,7 @@ Purple HATS is a customisable, automated accessibility testing tool that allows 
 2. [Axe-core](https://github.com/dequelabs/axe-core)
 3. [Node.js](https://Node.js.org/en/)
 4. [Playwright](https://playwright.dev/)
-5. [ImageMagick](https://github.com/ImageMagick/ImageMagick)
+5. [Pixelmatch](https://github.com/mapbox/pixelmatch)
 
 ## Using Purple HATS as a NodeJS module
 
@@ -257,6 +257,9 @@ Options:
   -t, --specifiedMaxConcurrency  Maximum number of pages to scan concurrently.
                                  Use for sites with throttling. Defaults to 25.
                                                                           [number]
+  -f, --needsReviewItems  Whether to display rule items requiring manual review in
+                          report. Defaults to false.
+                                                        [choices: "true", "false"]
 Examples:
   To scan sitemap of website:', 'node cli.js -c [ 1 | Sitemap ] -d <device> -u
    <url_link> -w <viewportWidth>

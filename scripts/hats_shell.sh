@@ -5,7 +5,7 @@ echo "================================================================"
 echo ""
 
 CURR_FOLDERNAME=$(basename "$PWD")
-if [ $CURR_FOLDERNAME = "scripts" ]; then
+if [[ $CURR_FOLDERNAME = "scripts" ]]; then
   cd ..
   CURR_FOLDERNAME=$(basename $PWD)
 fi
@@ -36,22 +36,6 @@ fi
 
 echo "INFO: Set path to Playwright cache for this session"
 export PLAYWRIGHT_BROWSERS_PATH="$PWD/ms-playwright"
-
-if $(ls ImageMagick-*/bin/compare 1> /dev/null 2>&1) && [ -d purple-hats ]; then
-	echo "INFO: Set symbolic link to ImageMagick"
-   
-    if find ./purple-hats -name "ImageMagick*" -maxdepth 1 -type l -ls &> /dev/null; then
-        unlink ./purple-hats/ImageMagick* &>/dev/null
-    fi
-
-    export IMAGEMAGICK_FOLDERNAME=$(ls -d ImageMagick-*)
-    export PATH_TO_IMAGEMAGICK="$PWD/$IMAGEMAGICK_FOLDERNAME"
-    ln -sf "$PATH_TO_IMAGEMAGICK" "./purple-hats/$IMAGEMAGICK_FOLDERNAME"
-
-    echo "INFO: Set path to ImageMagick binaries"
-    export PATH="$PATH_TO_IMAGEMAGICK/bin:$PATH"
-
-fi
 
 echo "INFO: Removing com.apple.quarantine attributes for required binaries to run"
 xattr -rd com.apple.quarantine . &>/dev/null

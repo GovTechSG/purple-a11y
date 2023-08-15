@@ -336,8 +336,6 @@ const checkUrlConnectivityWithBrowser = async (
 
       res.content = await page.content();
     } catch (error) {
-      // not sure what errors are thrown
-      console.log(error);
       silentLogger.error(error);
       res.status = constants.urlCheckStatuses.systemError.code;
     } finally {
@@ -403,7 +401,6 @@ export const checkUrl = async (
       res.status = constants.urlCheckStatuses.notASitemap.code;
     }
   }
-
   return res;
 };
 
@@ -429,6 +426,7 @@ export const prepareData = argv => {
     nameEmail,
     customFlowLabel,
     specifiedMaxConcurrency,
+    needsReviewItems
   } = argv;
 
   return {
@@ -446,6 +444,7 @@ export const prepareData = argv => {
     nameEmail,
     customFlowLabel,
     specifiedMaxConcurrency,
+    needsReviewItems
   };
 };
 
@@ -931,6 +930,7 @@ export const submitFormViaPlaywright = async (
   email,
   name,
   scanResultsJson,
+  numberOfPagesScanned,
 ) => {
   const dirName = `clone-${Date.now()}`;
   let clonedDir = null;
@@ -946,7 +946,8 @@ export const submitFormViaPlaywright = async (
     `${formDataFields.scanTypeField}=${scanType}&` +
     `${formDataFields.emailField}=${email}&` +
     `${formDataFields.nameField}=${name}&` +
-    `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}`;
+    `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}&` +
+    `${formDataFields.numberOfPagesScannedField}=${numberOfPagesScanned}`;
 
   const browserContext = await chromium.launchPersistentContext(clonedDir || userDataDirectory, {
     ...getPlaywrightLaunchOptions(browserToRun),
@@ -968,8 +969,6 @@ export const submitFormViaPlaywright = async (
       silentLogger.info('Unable to detect networkidle');
     }
   } catch (error) {
-    // not sure what errors are thrown
-    console.log(error);
     silentLogger.error(error);
   } finally {
     await browserContext.close();
