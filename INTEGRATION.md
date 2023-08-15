@@ -65,7 +65,7 @@ Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm i
     npm install
     cd ../../..
 
-Create <code>cypress.config.js</code> with the following contents, and change your Name and E-mail address below:
+Create <code>cypress.config.js</code> with the following contents, and change your Name, E-mail address, and boolean value for whether rule items requiring manual review in the report should be displayed below:
 
     import { defineConfig } from "cypress";
     import purpleHatsInit from "@govtechsg/purple-hats";
@@ -74,7 +74,8 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
         "https://govtechsg.github.io",
         "Demo Cypress Scan",
         "Your Name",
-        "email@domain.com"
+        "email@domain.com",
+        false
     );
     
     export default defineConfig({
