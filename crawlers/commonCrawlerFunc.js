@@ -119,5 +119,8 @@ export const preNavigationHooks = [
 ];
 
 export const failedRequestHandler = async ({ request }) => {
+  if (process.env.RUNNING_FROM_PH_GUI) {
+    console.log(`Electron crawling::error::${request.url}`);
+  }
   crawlee.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
 };

@@ -85,16 +85,25 @@ const crawlDomain = async (
       const actualUrl = request.loadedUrl || request.url;
 
       if (isBlacklistedFileExtensions(actualUrl, blackListedFileExtensions)) {
+        if (process.env.RUNNING_FROM_PH_GUI) {
+          console.log(`Electron crawling::skipped::${request.url}`);
+        }
         urlsCrawled.blacklisted.push(request.url);
         return;
       }
 
       if (response.status() === 403) {
+        if (process.env.RUNNING_FROM_PH_GUI) {
+          console.log(`Electron crawling::skipped::${request.url}`)
+        }
         urlsCrawled.forbidden.push(request.url);
         return;
       }
 
       if (response.status() !== 200) {
+        if (process.env.RUNNING_FROM_PH_GUI) {
+          console.log(`Electron crawling::skipped::${request.url}`);
+        }
         urlsCrawled.invalid.push(request.url);
         return;
       }
@@ -110,7 +119,7 @@ const crawlDomain = async (
       pagesCrawled++;
 
       if (process.env.RUNNING_FROM_PH_GUI) {
-        console.log(`Electron crawling: ${currentUrl}`);
+        console.log(`Electron crawling::scanned::${request.url}`);
       }
 
       const location = await page.evaluate('location');

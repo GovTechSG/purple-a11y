@@ -66,26 +66,36 @@ const crawlSitemap = async (
       const actualUrl = request.loadedUrl || request.url;
       const contentType = response.headers()['content-type'];
       const status = response.status();
-      if (process.env.RUNNING_FROM_PH_GUI) {
-        console.log(`Electron crawling: ${currentUrl}`);
-      }
 
       if (status === 403) {
+        if (process.env.RUNNING_FROM_PH_GUI) {
+          console.log(`Electron crawling::skipped::${request.url}`)
+        }
         urlsCrawled.forbidden.push(request.url);
         return;
       }
 
       if (status !== 200) {
+        if (process.env.RUNNING_FROM_PH_GUI) {
+          console.log(`Electron crawling::skipped::${request.url}`)
+        }
         urlsCrawled.invalid.push(request.url);
         return;
       }
 
       if (pagesCrawled === maxRequestsPerCrawl) {
+        if (process.env.RUNNING_FROM_PH_GUI) {
+          console.log(`Electron crawling::skipped::${request.url}`)
+        }
         urlsCrawled.exceededRequests.push(request.url);
         return;
       }
 
       pagesCrawled++;
+
+      if (process.env.RUNNING_FROM_PH_GUI) {
+        console.log(`Electron crawling::scanned::${currentUrl}`);
+      }
 
       if (status === 200 && isWhitelistedContentType(contentType)) {
         const results = await runAxeScript(needsReview, page);
