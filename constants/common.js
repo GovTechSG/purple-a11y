@@ -930,6 +930,7 @@ export const submitFormViaPlaywright = async (
   email,
   name,
   scanResultsJson,
+  numberOfPagesScanned,
 ) => {
   const dirName = `clone-${Date.now()}`;
   let clonedDir = null;
@@ -945,7 +946,8 @@ export const submitFormViaPlaywright = async (
     `${formDataFields.scanTypeField}=${scanType}&` +
     `${formDataFields.emailField}=${email}&` +
     `${formDataFields.nameField}=${name}&` +
-    `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}`;
+    `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}&` +
+    `${formDataFields.numberOfPagesScannedField}=${numberOfPagesScanned}`;
 
   const browserContext = await chromium.launchPersistentContext(clonedDir || userDataDirectory, {
     ...getPlaywrightLaunchOptions(browserToRun),

@@ -74,9 +74,10 @@ export const blackListedFileExtensions = [
   'woff',
   'pdf',
   'zip',
+  'webp',
 ];
 
-export const intermediateScreenshotsPath = './screenshots';
+export const getIntermediateScreenshotsPath = datasetsPath => `${datasetsPath}/screenshots`;
 export const destinationPath = storagePath => `${storagePath}/screenshots`;
 
 /**  Get the path to Default Profile in the Chrome Data Directory
@@ -191,7 +192,7 @@ const urlsCrawledObj = {
   outOfDomain: [],
   blacklisted: [],
   exceededRequests: [],
-  forbidden: []
+  forbidden: [],
 };
 
 const scannerTypes = {
@@ -264,6 +265,7 @@ export const formDataFields = {
   emailField: 'entry.52161304',
   nameField: 'entry.1787318910',
   resultsField: 'entry.904051439',
+  numberOfPagesScannedField: 'entry.238043773',
 };
 
 const urlCheckStatuses = {

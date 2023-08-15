@@ -1,4 +1,5 @@
 import crawlee from 'crawlee';
+import crawlee from 'crawlee';
 import {
   createCrawleeSubFolders,
   preNavigationHooks,
@@ -7,6 +8,7 @@ import {
 } from './commonCrawlerFunc.js';
 import constants, { basicAuthRegex, blackListedFileExtensions } from '../constants/constants.js';
 import { getPlaywrightLaunchOptions, isBlacklistedFileExtensions } from '../constants/common.js';
+import { areLinksEqual } from '../utils.js';
 import { areLinksEqual } from '../utils.js';
 
 const crawlDomain = async (
@@ -111,8 +113,8 @@ const crawlDomain = async (
       if (pagesCrawled >= maxRequestsPerCrawl) {
         if (process.env.RUNNING_FROM_PH_GUI) {
           console.log('Electron scan completed'); 
-        }
-        pagesCrawled++; 
+          pagesCrawled++; 
+        }  
         urlsCrawled.exceededRequests.push(request.url);
         return;
       }
@@ -194,6 +196,10 @@ const crawlDomain = async (
           },
         });
       } else {
+        if (process.env.RUNNING_FROM_PH_GUI) {
+          console.log(`Electron crawling::skipped::${currentUrl}`);
+        }
+  
         urlsCrawled.outOfDomain.push(request.url);
       }
     },

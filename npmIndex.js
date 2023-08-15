@@ -14,7 +14,7 @@ import { generateArtifacts } from './mergeAxeResults.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const init = async (entryUrl, customFlowLabelTestString, name, email) => {
+export const init = async (entryUrl, customFlowLabelTestString, name = "Your Name", email = "email@domain.com", needsReview = false ) => {
   console.log('Starting Purple HATS');
 
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
@@ -70,7 +70,7 @@ export const init = async (entryUrl, customFlowLabelTestString, name, email) => 
 
   const pushScanResults = async res => {
     throwErrorIfTerminated();
-    const filteredResults = filterAxeResults(res.axeScanResults, res.pageTitle);
+    const filteredResults = filterAxeResults(needsReview, res.axeScanResults, res.pageTitle);
     urlsCrawled.scanned.push({ url: res.pageUrl, pageTitle: res.pageTitle });
     await dataset.pushData(filteredResults);
   };
@@ -104,6 +104,7 @@ export const init = async (entryUrl, customFlowLabelTestString, name, email) => 
         email,
         name,
         JSON.stringify(basicFormHTMLSnippet),
+        urlsCrawled.scanned.length,
       )
 
     }

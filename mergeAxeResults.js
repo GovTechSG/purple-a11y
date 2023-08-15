@@ -120,20 +120,32 @@ const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResu
   }
 };
 
-const writeHTML = async (allIssues, storagePath, scanType, customFlowLabel, htmlFilename = 'report') => {
+const writeHTML = async (
+  allIssues,
+  storagePath,
+  scanType,
+  customFlowLabel,
+  htmlFilename = 'report',
+) => {
   const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/report.ejs'), 'utf-8');
   const template = ejs.compile(ejsString, {
     filename: path.join(__dirname, './static/ejs/report.ejs'),
   });
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
-  
+
   if (!process.env.RUNNING_FROM_PH_GUI && scanType === 'Customized' && customFlowLabel) {
     addCustomFlowLabel(`${storagePath}/reports/${htmlFilename}.html`, customFlowLabel);
   }
 };
 
-const writeSummaryHTML = async (allIssues, storagePath, scanType, customFlowLabel, htmlFilename = 'summary') => {
+const writeSummaryHTML = async (
+  allIssues,
+  storagePath,
+  scanType,
+  customFlowLabel,
+  htmlFilename = 'summary',
+) => {
   const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/summary.ejs'), 'utf-8');
   const template = ejs.compile(ejsString, {
     filename: path.join(__dirname, './static/ejs/summary.ejs'),
@@ -146,10 +158,10 @@ const writeSummaryHTML = async (allIssues, storagePath, scanType, customFlowLabe
 };
 
 const addCustomFlowLabel = (path, customFlowLabel) => {
-    const data = fs.readFileSync(path, {encoding: "utf-8"}); 
-    const result = data.replaceAll(/Custom Flow/g, customFlowLabel); 
-    fs.writeFileSync(path, result);
-}
+  const data = fs.readFileSync(path, { encoding: 'utf-8' });
+  const result = data.replaceAll(/Custom Flow/g, customFlowLabel);
+  fs.writeFileSync(path, result);
+};
 
 let browserChannel = 'chrome';
 
@@ -195,7 +207,7 @@ const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
   await context.close();
   await browser.close();
 
-  fs.unlinkSync(htmlFilePath)
+  fs.unlinkSync(htmlFilePath);
 };
 
 const pushResults = async (rPath, allIssues) => {
@@ -346,7 +358,14 @@ const createRuleIdJson = allIssues => {
   return compiledRuleJson;
 };
 
-export const generateArtifacts = async (randomToken, urlScanned, scanType, viewport, pagesScanned, customFlowLabel) => {
+export const generateArtifacts = async (
+  randomToken,
+  urlScanned,
+  scanType,
+  viewport,
+  pagesScanned,
+  customFlowLabel,
+) => {
   const storagePath = getStoragePath(randomToken);
   const directory = `${storagePath}/${constants.allIssueFileName}`;
   const allIssues = {

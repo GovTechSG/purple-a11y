@@ -81,6 +81,7 @@ describe('test validateUrl', () => {
     expect(validateUrl('https://www.bbc.ppt')).toEqual(false);
     expect(validateUrl('https://www.bbc.ico')).toEqual(false);
     expect(validateUrl('https://www.bbc.woff')).toEqual(false);
+    expect(validateURL('https://www.bbc.webp')).toEqual(false);
   });
 });
 
