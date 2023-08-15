@@ -14,7 +14,7 @@ import { generateArtifacts } from './mergeAxeResults.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const init = async (entryUrl, customFlowLabelTestString, name = "testuser", email = "testuser@gmail.com", needsReview = false ) => {
+export const init = async (entryUrl, customFlowLabelTestString, name = "Your Name", email = "email@domain.com", needsReview = false ) => {
   console.log('Starting Purple HATS');
 
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
