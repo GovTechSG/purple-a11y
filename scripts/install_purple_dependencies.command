@@ -21,6 +21,15 @@ if ! [ -f nodejs-mac-x64/bin/node ]; then
   mkdir nodejs-mac-x64 && tar -xzf nodejs-mac-x64.tar.gz -C nodejs-mac-x64 --strip-components=1 && rm ./nodejs-mac-x64.tar.gz
 fi
 
+if ! [ -f verapdf/verapdf ]; then
+  echo "Downloading VeraPDF"
+  curl -L -o ./verapdf-installer.zip http://downloads.verapdf.org/rel/verapdf-installer.zip
+  unzip -j verapdf-installer.zip -d ./verapdf-installer
+  ./verapdf-installer/verapdf-install ../auto-install.xml
+  cp -r /tmp/verapdf .
+fi
+
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source ${__dir}/hats_shell.sh
 
 if [ -d "/Applications/Cloudflare WARP.app" ]; then
