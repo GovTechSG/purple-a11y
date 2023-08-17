@@ -21,18 +21,22 @@ if ! [ -f nodejs-mac-x64/bin/node ]; then
   mkdir nodejs-mac-x64 && tar -xzf nodejs-mac-x64.tar.gz -C nodejs-mac-x64 --strip-components=1 && rm ./nodejs-mac-x64.tar.gz
 fi
 
-if ! [ -f coretto-8-jdk/Contents/Home ]; then 
-  echo "Downloading Java" 
-  curl -L -o ./coretto-8-jdk.tar.gz --create-dirs https://corretto.aws/downloads/latest/amazon-corretto-8-x64-macos-jdk.tar.gz
-  mkdir coretto-8-jdk && tar -xzf coretto-8-jdk.tar.gz -C coretto-8-jdk --strip-components=1 && rm ./coretto-8-jdk.tar.gz
+if ! [ -f amazon-corretto-11.jdk/Contents/Home/bin/java ]; then
+  curl -L -o ./corretto-11.tar.gz "https://corretto.aws/downloads/latest/amazon-corretto-11-x64-macos-jdk.tar.gz"
+  tar -zxvf ./corretto-11.tar.gz
+  rm -f ./corretto-11.tar.gz
 fi
 
 if ! [ -f verapdf/verapdf ]; then
   echo "Downloading VeraPDF"
   curl -L -o ./verapdf-installer.zip http://downloads.verapdf.org/rel/verapdf-installer.zip
-  unzip -j verapdf-installer.zip -d ./verapdf-installer
-  ./verapdf-installer/verapdf-install ../auto-install.xml
+  unzip -j ./verapdf-installer.zip -d ./verapdf-installer
+  export JAVA_HOME="$PWD/amazon-corretto-11.jdk/Contents/Home"
+  export PATH="$JAVA_HOME/bin:$PATH"
+  ./verapdf-installer/verapdf-install "${__dir}/verapdf-auto-install-macos.xml"
   cp -r /tmp/verapdf .
+  rm -rf ./verapdf-installer.zip ./verapdf-installer /tmp/verapdf
+  
 fi
 
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
