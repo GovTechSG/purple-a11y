@@ -320,7 +320,11 @@ export default {
   launchOptionsArgs: launchOptionsArgs,
   xmlSitemapTypes,
   urlCheckStatuses,
+<<<<<<< HEAD
   launcher: chromium
+=======
+  pdfScanResultFileName: 'pdf-scan-results.json',
+>>>>>>> 6101fbe (Add logic for scanning pdf directory)
 };
 
 export const rootPath = __dirname;

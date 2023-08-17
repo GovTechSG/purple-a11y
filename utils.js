@@ -109,6 +109,12 @@ export const createAndUpdateResultsFolders = async randomToken => {
     `${randomToken}/datasets/${randomToken}`,
     `${storagePath}/${constants.allIssueFileName}`,
   );
+
+  // transfer pdf scan results
+  // await fs.copy(
+  //   `${randomToken}/${constants.pdfScanResultFileName}`,
+  //   `${storagePath}/${constants.pdfScanResultFileName}`,
+  // );
 };
 
 export const createScreenshotsFolder = randomToken => {
