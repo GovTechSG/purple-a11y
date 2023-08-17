@@ -109,10 +109,10 @@ const crawlDomain = async (
       }
 
       if (pagesCrawled >= maxRequestsPerCrawl) {
-        if (process.env.RUNNING_FROM_PH_GUI) {
+        if (pagesCrawled === maxRequestsPerCrawl && process.env.RUNNING_FROM_PH_GUI) {
           console.log('Electron scan completed'); 
           pagesCrawled++; 
-        }  
+        }
         urlsCrawled.exceededRequests.push(request.url);
         return;
       }
@@ -169,6 +169,9 @@ const crawlDomain = async (
           requestQueue,
           transformRequestFunction(req) {
             if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
+              if (process.env.RUNNING_FROM_PH_GUI) {
+                console.log(`Electron crawling::skipped::${req.url}`);
+              }
               urlsCrawled.blacklisted.push(req.url);
             }
 
@@ -186,6 +189,9 @@ const crawlDomain = async (
           transformRequestFunction(req) {
             // ignore all links ending with `.pdf`
             if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
+              if (process.env.RUNNING_FROM_PH_GUI) {
+                console.log(`Electron crawling::skipped::${req.url}`);
+              }
               urlsCrawled.blacklisted.push(req.url);
             }
 

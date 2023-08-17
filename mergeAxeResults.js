@@ -182,9 +182,11 @@ const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
 
   const page = await context.newPage();
 
-  fs.readFile(htmlFilePath, 'utf8', async (err, data) => {
-    await page.setContent(data);
-  });
+  const data = fs.readFileSync(htmlFilePath, { encoding: 'utf-8'});
+  await page.setContent(data);
+  // fs.readFile(htmlFilePath, 'utf8', async (err, data) => {
+  //   await page.setContent(data);
+  // });
 
   await page.waitForLoadState('networkidle', { timeout: 10000 });
 

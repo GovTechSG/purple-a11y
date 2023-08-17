@@ -118,6 +118,14 @@ export const preNavigationHooks = [
   },
 ];
 
+export const postNavigationHooks = [
+  async (_crawlingContext) => {
+    if (process.env.RUNNING_FROM_PH_GUI) {
+      console.log('Electron scan completed');
+    }
+  }
+]
+
 export const failedRequestHandler = async ({ request }) => {
   if (process.env.RUNNING_FROM_PH_GUI) {
     console.log(`Electron crawling::error::${request.url}`);
