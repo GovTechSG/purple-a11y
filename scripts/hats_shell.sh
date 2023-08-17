@@ -34,6 +34,11 @@ else
     export PATH="$PWD/node_modules/.bin:$PATH"
 fi
 
+echo "INFO: Set path to Java for this session" 
+export JAVA_HOME="$(pwd)/coretto-8-jdk/Contents/Home"
+export PATH="$JAVA_HOME:$PATH"
+
+
 echo "INFO: Set path to Playwright cache for this session"
 export PLAYWRIGHT_BROWSERS_PATH="$PWD/ms-playwright"
 export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD="true"
