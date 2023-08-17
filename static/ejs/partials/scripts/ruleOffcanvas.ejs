@@ -434,6 +434,7 @@ category summary is clicked %>
             elementCardsList.appendChild(itemCard);
           }
         }
+        hljs.configure({ignoreUnescapedHTML: true});
         hljs.highlightAll();
       });
       accordionBody.appendChild(elementCardsList);
