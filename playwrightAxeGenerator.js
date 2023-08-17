@@ -485,13 +485,14 @@ const clickFunc = async (elem,page) => {
           continue;
         }
       }
+      //for Mac/Win website/sitemap custom flow scan 
       if ( !(viewportWidth || customDevice) && line.trim() === `const browser = await webkit.launch({` || line.trim() ===  `const browser = await chromium.launch({`) {
         appendToGeneratedScript(`
   const browser = await chromium.launch({
     args:['--window-size=1920,1040'],`);
         continue;
       }
-      
+      //for MAC custom flow scan with custom viewport width 
       if ( line.trim() === `const browser = await webkit.launch({`) {
         appendToGeneratedScript(`  const browser = await chromium.launch({`);
         continue;
