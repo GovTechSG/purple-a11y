@@ -22,6 +22,9 @@ if (Test-Path purple-hats) {
     Write-Output "Installing node dependencies"
     & ".\hats_shell_ps.ps1" "cd purple-hats;npm ci --force"
 
+    Write-Output "Install Playwright browsers"
+    & "npx playwright install chromium"
+
     if (Test-Path purple-hats\.git) {
         Write-Output "Unhide .git folder"
         attrib -s -h purple-hats\.git
@@ -32,8 +35,11 @@ if (Test-Path purple-hats) {
 
     if (Test-Path package.json) {
         Write-Output "Installing node dependencies"
-        & ".\hats_shell_ps.ps1" "npm ci --force"   
-    
+        & ".\hats_shell_ps.ps1" "npm ci --force" 
+
+        Write-Output "Install Playwright browsers"
+        & "npx playwright install chromium"
+        
         if (Test-Path .git) {
             Write-Output "Unhide .git folder"
             attrib -s -h .git
