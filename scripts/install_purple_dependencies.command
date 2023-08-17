@@ -39,8 +39,7 @@ if ! [ -f verapdf/verapdf ]; then
   
 fi
 
-__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source ${__dir}/hats_shell.sh
+source "${__dir}/hats_shell.sh"
 
 if [ -d "/Applications/Cloudflare WARP.app" ]; then
   curl -sSLJ -o "/tmp/Cloudflare_CA.pem" "https://developers.cloudflare.com/cloudflare-one/static/documentation/connections/Cloudflare_CA.pem"
