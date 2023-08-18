@@ -27,7 +27,8 @@ const crawlDomain = async (
   const { maxConcurrency } = constants;
   const { playwrightDeviceDetailsObject } = viewportSettings;
 
-  const { dataset, requestQueue } = await createCrawleeSubFolders(randomToken);
+  const { dataset, requestQueue, pdfStore } = await createCrawleeSubFolders(randomToken);
+  const pdfDownloads = [];
 
   let finalUrl;
   let scanCompleted = false;
@@ -81,6 +82,7 @@ const crawlDomain = async (
       page,
       request,
       response,
+      sendRequest,
       enqueueLinks,
       enqueueLinksByClickingElements,
     }) => {
@@ -92,6 +94,20 @@ const crawlDomain = async (
           console.log(`Electron crawling::skipped::${request.url}`);
         }
         urlsCrawled.blacklisted.push(request.url);
+        return;
+      }
+
+      // handle pdfs
+      if (request.skipNavigation && actualUrl.split('.').pop() === 'pdf') {
+        pdfDownloads.push(new Promise(async (resolve, rej) => {
+          console.log('download')
+          const pdfResponse = await sendRequest({ responseType: 'buffer' });
+          // Save the pdf in the key-value store
+          const urlObj = new URL(request.url);
+          const pdfFileName = `${urlObj.hostname}${urlObj.pathname.replace('/', '_').replace('.pdf', '')}`; 
+          await pdfStore.setValue(pdfFileName, pdfResponse.body, { contentType: 'application/pdf'});
+          resolve(); 
+        }));
         return;
       }
 
@@ -174,6 +190,11 @@ const crawlDomain = async (
             }
 
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+            if (req.url.split('.').pop() === 'pdf') {
+              // playwright headless mode does not support navigation to pdf document
+              req.skipNavigation = true;
+            }
+            
             return req;
           },
         });
@@ -185,7 +206,6 @@ const crawlDomain = async (
           // enqueue new page URL
           selector: ':not(a):is(*[role="link"], button[onclick])',
           transformRequestFunction(req) {
-            // ignore all links ending with `.pdf`
             if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
               if (process.env.RUNNING_FROM_PH_GUI) {
                 console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${req.url}`);
@@ -194,6 +214,11 @@ const crawlDomain = async (
             }
 
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+            
+            if (req.url.split('.').pop() === 'pdf') {
+              // playwright headless mode does not support navigation to pdf document
+              req.skipNavigation = true;
+            }
             return req;
           },
         });
@@ -210,6 +235,7 @@ const crawlDomain = async (
   });
 
   await crawler.run();
+  await Promise.all(pdfDownloads);
   if (process.env.RUNNING_FROM_PH_GUI) {
     console.log('Electron scan completed');
   }

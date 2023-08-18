@@ -73,7 +73,6 @@ export const blackListedFileExtensions = [
   'svg',
   'gif',
   'woff',
-  'pdf',
   'zip',
   'webp',
 ];
