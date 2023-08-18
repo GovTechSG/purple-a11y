@@ -682,8 +682,6 @@ const clickFunc = async (elem,page) => {
     }
 
     fileStream.destroy();
-    console.log(` Browser closed. Replaying steps and running accessibility scan...\n`);
-
     if (process.env.RUNNING_FROM_PH_GUI) {
       console.log(generatedScriptName);
       // printMessage([generatedScriptName]);
@@ -701,6 +699,7 @@ const clickFunc = async (elem,page) => {
       // });
       // await genScriptCompleted;
     } else {
+      console.log(` Browser closed. Replaying steps and running accessibility scan...\n`);
       await import(generatedScript);
     }
   } catch (e) {
