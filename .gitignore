@@ -19,11 +19,8 @@ nodejs-*
 ms-playwright/
 a11y-scan-results*.zip
 PHScan_*/
-<<<<<<< HEAD
 
 # match YYYYMMDD_HHMMSS_* pattern for dataset files
 [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]_*/
-=======
 verapdf*
-coretto-8-jdk/
->>>>>>> d6e0a49 (Add auto install xml, java installation, update gitignore)
+amazon-corretto-11.jdk/

@@ -4,6 +4,7 @@ import {
   preNavigationHooks,
   runAxeScript,
   failedRequestHandler,
+  isUrlPdf,
 } from './commonCrawlerFunc.js';
 import constants, { basicAuthRegex, blackListedFileExtensions } from '../constants/constants.js';
 import { getPlaywrightLaunchOptions, isBlacklistedFileExtensions } from '../constants/common.js';
@@ -50,10 +51,10 @@ const crawlDomain = async (
 
     // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
     finalUrl = `${url.split('://')[0]}://${url.split('@')[1]}`;
-    await requestQueue.addRequest({ url: finalUrl });
+    await requestQueue.addRequest({ url: finalUrl, skipNavigation: isUrlPdf(finalUrl) });
     pagesCrawled = -1;
   } else {
-    await requestQueue.addRequest({ url });
+    await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
     pagesCrawled = 0;
   }
 
@@ -98,14 +99,14 @@ const crawlDomain = async (
       }
 
       // handle pdfs
-      if (request.skipNavigation && actualUrl.split('.').pop() === 'pdf') {
+      if (request.skipNavigation && isUrlPdf(actualUrl)) {
         pdfDownloads.push(new Promise(async (resolve, rej) => {
           const pdfResponse = await sendRequest({ responseType: 'buffer' });
           // Save the pdf in the key-value store
           const urlObj = new URL(request.url);
-          const pdfFileName = `${urlObj.hostname}${urlObj.pathname.replace('/', '_').replace('.pdf', '')}`; 
+          const pdfFileName = `${urlObj.hostname}${urlObj.pathname.replaceAll('/', '_').replace('.pdf', '')}`; 
           await pdfStore.setValue(pdfFileName, pdfResponse.body, { contentType: 'application/pdf'});
-          resolve(); 
+          resolve({ url: request.url }); 
         }));
         return;
       }
@@ -189,7 +190,7 @@ const crawlDomain = async (
             }
 
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-            if (req.url.split('.').pop() === 'pdf') {
+            if (isUrlPdf(req.url)) {
               // playwright headless mode does not support navigation to pdf document
               req.skipNavigation = true;
             }
@@ -214,7 +215,7 @@ const crawlDomain = async (
 
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
             
-            if (req.url.split('.').pop() === 'pdf') {
+            if (isUrlPdf(req.url)) {
               // playwright headless mode does not support navigation to pdf document
               req.skipNavigation = true;
             }
@@ -234,7 +235,10 @@ const crawlDomain = async (
   });
 
   await crawler.run();
-  await Promise.all(pdfDownloads);
+
+  const pdfsScanned = await Promise.all(pdfDownloads); 
+  pdfsScanned.forEach(pdf => urlsCrawled.pdfScanned.push(pdf));
+
   await runPdfScan(randomToken);
   if (process.env.RUNNING_FROM_PH_GUI) {
     console.log('Electron scan completed');

@@ -133,3 +133,7 @@ export const failedRequestHandler = async ({ request }) => {
   }
   crawlee.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
 };
+
+export const isUrlPdf = (url) => {
+  return url.split('.').pop() === 'pdf'; 
+}

@@ -93,8 +93,11 @@ const combineRun = async (details, deviceToScan) => {
   scanDetails.urlsCrawled = urlsCrawled;
   await createDetailsAndLogs(scanDetails, randomToken);
 
-  if (scanDetails.urlsCrawled.scanned.length > 0) {
+  if (scanDetails.urlsCrawled.scanned.length > 0 || scanDetails.urlsCrawled.pdfScanned.length > 0) {
     await createAndUpdateResultsFolders(randomToken);
+  }
+
+  if (scanDetails.urlsCrawled.scanned.length > 0) {
     const basicFormHTMLSnippet = await generateArtifacts(
       randomToken,
       url,

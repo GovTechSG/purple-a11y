@@ -39,12 +39,10 @@ export const runPdfScan = async (randomToken) => {
     process.exit(1);
   }
 
-  // const pdfDirPath = '/Users/jodichoo/testpdfs'; // hardcoded test dir for now
   const intermediateFolder = randomToken; // NOTE: assumes this folder is already created for crawlee
 
   // store in a intermediate folder as we transfer final results later
   const intermediateResultPath = `${intermediateFolder}/${constants.pdfScanResultFileName}`;
-  const directResultPath = constants.pdfScanResultFileName; // for testing
 
   const veraPdfCmdArgs = [
     '-p',
@@ -59,5 +57,3 @@ export const runPdfScan = async (randomToken) => {
 
   spawnSync(veraPdfExe, veraPdfCmdArgs, { shell: true });
 };
-
-runPdfScan('0000000');

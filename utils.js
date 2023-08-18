@@ -105,16 +105,20 @@ export const writeToUserDataTxt = async (key, value) => {
 export const createAndUpdateResultsFolders = async randomToken => {
   const storagePath = getStoragePath(randomToken);
   await fs.ensureDir(`${storagePath}/reports`);
-  await fs.copy(
-    `${randomToken}/datasets/${randomToken}`,
-    `${storagePath}/${constants.allIssueFileName}`,
-  );
 
-  // transfer pdf scan results
-  await fs.copy(
-    `${randomToken}/${constants.pdfScanResultFileName}`,
-    `${storagePath}/${constants.pdfScanResultFileName}`,
-  );
+  const intermediateDatasetsPath = `${randomToken}/datasets/${randomToken}`;
+  const intermediatePdfResultsPath = `${randomToken}/${constants.pdfScanResultFileName}`; 
+
+  const transferResults = async (intermPath, resultFile) => {
+    if (fs.existsSync(intermPath)) {
+      await fs.copy(intermPath, `${storagePath}/${resultFile}`);
+    }
+  };
+
+  await Promise.all([
+    transferResults(intermediateDatasetsPath, constants.allIssueFileName),
+    transferResults(intermediatePdfResultsPath, constants.pdfScanResultFileName),
+  ]);
 };
 
 export const createScreenshotsFolder = randomToken => {
