@@ -8,7 +8,7 @@ import {
 import constants, { basicAuthRegex, blackListedFileExtensions } from '../constants/constants.js';
 import { getPlaywrightLaunchOptions, isBlacklistedFileExtensions } from '../constants/common.js';
 import { areLinksEqual } from '../utils.js';
-import fs from 'fs';
+import { runPdfScan } from './pdfScanFunc.js';
 
 const crawlDomain = async (
   url,
@@ -100,7 +100,6 @@ const crawlDomain = async (
       // handle pdfs
       if (request.skipNavigation && actualUrl.split('.').pop() === 'pdf') {
         pdfDownloads.push(new Promise(async (resolve, rej) => {
-          console.log('download')
           const pdfResponse = await sendRequest({ responseType: 'buffer' });
           // Save the pdf in the key-value store
           const urlObj = new URL(request.url);
@@ -236,6 +235,7 @@ const crawlDomain = async (
 
   await crawler.run();
   await Promise.all(pdfDownloads);
+  await runPdfScan(randomToken);
   if (process.env.RUNNING_FROM_PH_GUI) {
     console.log('Electron scan completed');
   }
