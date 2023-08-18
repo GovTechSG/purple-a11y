@@ -216,6 +216,54 @@ export const sanitizeUrlInput = url => {
   return data;
 };
 
+const requestToUrl = async (url, res) => {
+  // User-Agent is modified to emulate a browser to handle cases where some sites ban non browser agents, resulting in a 403 error
+  await axios
+    .get(data.url, {
+      headers: { 'User-Agent': devices['Desktop Chrome HiDPI'].userAgent },
+      httpsAgent,
+      timeout: 10,
+    })
+    .then(async response => {
+      const redirectUrl = response.request.res.responseUrl;
+      res.status = constants.urlCheckStatuses.success.code;
+
+      if (redirectUrl != null) {
+        res.url = redirectUrl;
+      } else {
+        res.url = url;
+      }
+
+      res.content = response.data;
+    })
+    .catch(async error => {
+      if (error.code === 'ECONNABORTED') {
+        res.status = constants.urlCheckStatuses.axiosTimeout.code; 
+        return res;
+      }
+      if (error.response) {
+        if (error.response.status === 401) {
+          // enters here if URL is protected by basic auth
+          res.status = constants.urlCheckStatuses.unauthorised.code;
+        } else {
+          // enters here if server responds with a status other than 2xx
+          // the scan should still proceed even if error codes are received, so that accessibility scans for error pages can be done too
+          res.status = constants.urlCheckStatuses.success.code;
+        }
+        res.url = url;
+        res.content = error.response.data;
+        return res;
+      }
+      if (error.request) {
+        // enters here if URL cannot be accessed
+        res.status = constants.urlCheckStatuses.cannotBeResolved.code;
+      } else {
+        res.status = constants.urlCheckStatuses.systemError.code;
+      }
+      silentLogger.error(error);
+    });
+};
+
 const checkUrlConnectivity = async url => {
   const res = {};
 
@@ -223,51 +271,7 @@ const checkUrlConnectivity = async url => {
 
   if (data.isValid) {
     // Validate the connectivity of URL if the string format is url format
-    // User-Agent is modified to emulate a browser to handle cases where some sites ban non browser agents, resulting in a 403 error
-    await axios
-      .get(data.url, {
-        headers: { 'User-Agent': devices['Desktop Chrome HiDPI'].userAgent },
-        httpsAgent,
-        timeout: 10,
-      })
-      .then(async response => {
-        const redirectUrl = response.request.res.responseUrl;
-        res.status = constants.urlCheckStatuses.success.code;
-
-        if (redirectUrl != null) {
-          res.url = redirectUrl;
-        } else {
-          res.url = url;
-        }
-
-        res.content = response.data;
-      })
-      .catch(async error => {
-        if (error.code === 'ECONNABORTED') {
-          res.status = constants.urlCheckStatuses.axiosTimeout.code; 
-          return res;
-        }
-        if (error.response) {
-          if (error.response.status === 401) {
-            // enters here if URL is protected by basic auth
-            res.status = constants.urlCheckStatuses.unauthorised.code;
-          } else {
-            // enters here if server responds with a status other than 2xx
-            // the scan should still proceed even if error codes are received, so that accessibility scans for error pages can be done too
-            res.status = constants.urlCheckStatuses.success.code;
-          }
-          res.url = url;
-          res.content = error.response.data;
-          return res;
-        }
-        if (error.request) {
-          // enters here if URL cannot be accessed
-          res.status = constants.urlCheckStatuses.cannotBeResolved.code;
-        } else {
-          res.status = constants.urlCheckStatuses.systemError.code;
-        }
-        silentLogger.error(error);
-      });
+    await requestToUrl(data.url, res);
   } else {
     // enters here if input is not a URL or not using http/https protocols
     res.status = constants.urlCheckStatuses.invalidUrl.code;
@@ -326,6 +330,14 @@ const checkUrlConnectivityWithBrowser = async (
     // method will not throw an error when any valid HTTP status code is returned by the remote server, including 404 "Not Found" and 500 "Internal Server Error".
     // navigation to about:blank or navigation to the same URL with a different hash, which would succeed and return null.
     try {
+      // playwright headless mode does not support navigation to pdf document
+      if (url.split('.').pop() === 'pdf') {
+        // make http request to url to check
+        const res = {}; 
+        await requestToUrl(url, res);
+        return res;
+      }
+
       const response = await page.goto(url, {
         timeout: 30000,
         ...(proxy && { waitUntil: 'commit' }),
