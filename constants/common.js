@@ -6,7 +6,7 @@ import validator from 'validator';
 import axios from 'axios';
 import { JSDOM } from 'jsdom';
 import * as cheerio from 'cheerio';
-import crawlee, { constructRegExpObjectsFromPseudoUrls } from 'crawlee';
+import crawlee, { Request, constructRegExpObjectsFromPseudoUrls } from 'crawlee';
 import { parseString } from 'xml2js';
 import fs from 'fs';
 import path from 'path';
@@ -25,6 +25,7 @@ import constants, {
   blackListedFileExtensions,
 } from './constants.js';
 import { silentLogger } from '../logs.js';
+import { isUrlPdf } from '../crawlers/commonCrawlerFunc.js';
 
 // Drop all attributes from the HTML snippet except whitelisted
 export const dropAllExceptWhitelisted = htmlSnippet => {
@@ -331,7 +332,7 @@ const checkUrlConnectivityWithBrowser = async (
     // navigation to about:blank or navigation to the same URL with a different hash, which would succeed and return null.
     try {
       // playwright headless mode does not support navigation to pdf document
-      if (url.split('.').pop() === 'pdf') {
+      if (isUrlPdf(url)) {
         // make http request to url to check
         const res = {}; 
         await requestToUrl(url, res);
@@ -502,9 +503,17 @@ export const getLinksFromSitemap = async (
   browser,
   userDataDirectory,
 ) => {
-  const urls = new Set(); // for HTML documents
+  const urls = {}; // dictionary of requests to urls to be scanned 
 
   const isLimitReached = () => urls.size >= maxLinksCount;
+
+  const addToUrlList = (url) => {
+    const request = new Request({ url }); 
+    if (isUrlPdf(url)) {
+      request.skipNavigation = true; 
+    }
+    urls[url] = request; 
+  };
 
   const processXmlSitemap = async ($, sitemapType, selector) => {
     for (const urlElement of $(selector)) {
@@ -517,13 +526,13 @@ export const getLinksFromSitemap = async (
       } else {
         url = $(urlElement).text();
       }
-      urls.add(url);
+      addToUrlList(url);
     }
   };
 
   const processNonStandardSitemap = data => {
     const urlsFromData = crawlee.extractUrls({ string: data }).slice(0, maxLinksCount);
-    urlsFromData.forEach(url => urls.add(url));
+    urlsFromData.forEach(url => addToUrlList(url)); 
   };
 
   let finalUserDataDirectory = userDataDirectory;
@@ -570,6 +579,10 @@ export const getLinksFromSitemap = async (
     }
 
     if (validator.isURL(url, urlOptions)) {
+      if (isUrlPdf(url)) {
+        addToUrlList(url)
+        return; 
+      }
       if (proxy) {
         await getDataUsingPlaywright();
       } else {
@@ -644,7 +657,8 @@ export const getLinksFromSitemap = async (
   };
 
   await fetchUrls(sitemapUrl);
-  return Array.from(urls);
+  const requestList = Object.values(urls);
+  return requestList;
 };
 
 export const validEmail = email => {

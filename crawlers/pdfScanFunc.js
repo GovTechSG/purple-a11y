@@ -2,6 +2,7 @@ import constants, { getExecutablePath } from '../constants/constants.js';
 import { spawnSync } from 'child_process';
 import { globSync } from 'glob';
 import { consoleLogger, silentLogger } from '../logs.js';
+import fs from 'fs'; 
 
 const getVeraExecutable = () => {
   const veraPdfExe = getExecutablePath('**/verapdf', 'verapdf');
@@ -31,6 +32,27 @@ const getVeraProfile = () => {
   }
   return veraPdfProfile[0];
 }
+
+export const handlePdfDownload = (randomToken, pdfDownloads, request, sendRequest) => {
+  pdfDownloads.push(new Promise(async (resolve, rej) => {
+    const pdfResponse = await sendRequest({ responseType: 'buffer', isStream: true });
+    pdfResponse.setEncoding('binary');
+
+    const urlObj = new URL(request.url);
+    const pdfFileName = `${urlObj.hostname}${decodeURI(urlObj.pathname).replace(/[^A-Z0-9]+/ig, '_').replace('_pdf', '')}`;
+
+    const downloadFile = fs.createWriteStream(`${randomToken}/${pdfFileName}.pdf`, { flags: 'a' }); 
+    pdfResponse.on('data', (chunk) => {
+      downloadFile.write(chunk, 'binary'); 
+    });
+    pdfResponse.on('end', () => {
+      downloadFile.end();
+    });
+
+    resolve({ url: request.url }); 
+  }));
+  return;
+};
 
 export const runPdfScan = async (randomToken) => {
   const veraPdfExe = getVeraExecutable();

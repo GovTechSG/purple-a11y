@@ -5,6 +5,7 @@ import {
   preNavigationHooks,
   runAxeScript,
   failedRequestHandler,
+  isUrlPdf,
 } from './commonCrawlerFunc.js';
 
 import constants from '../constants/constants.js';
@@ -14,6 +15,8 @@ import {
   messageOptions,
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
+import { handlePdfDownload, runPdfScan } from './pdfScanFunc.js';
+import fs from 'fs'; 
 
 const crawlSitemap = async (
   sitemapUrl,
@@ -31,6 +34,7 @@ const crawlSitemap = async (
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { playwrightDeviceDetailsObject } = viewportSettings;
   const { maxConcurrency } = constants;
+  const pdfDownloads = [];
 
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
   const requestList = new crawlee.RequestList({
@@ -41,6 +45,10 @@ const crawlSitemap = async (
 
   const { dataset } = await createCrawleeSubFolders(randomToken);
   let pagesCrawled;
+
+  if (!fs.existsSync(randomToken)) {
+    fs.mkdirSync(randomToken);
+  }
 
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
@@ -63,8 +71,13 @@ const crawlSitemap = async (
     },
     requestList,
     preNavigationHooks,
-    requestHandler: async ({ page, request, response }) => {
+    requestHandler: async ({ page, request, response, sendRequest }) => {
       const actualUrl = request.loadedUrl || request.url;
+
+      if (isUrlPdf(actualUrl)) {
+        return handlePdfDownload(randomToken, pdfDownloads, request, sendRequest);
+      }
+
       const contentType = response.headers()['content-type'];
       const status = response.status();
 
@@ -145,10 +158,16 @@ const crawlSitemap = async (
   });
 
   await crawler.run();
+
+  const pdfsScanned = await Promise.all(pdfDownloads); 
+  pdfsScanned.forEach(pdf => urlsCrawled.pdfScanned.push(pdf));
+
   await requestList.isFinished();
+  await runPdfScan(randomToken);
   if (process.env.RUNNING_FROM_PH_GUI) {
     console.log('Electron scan completed');
   }
+
   return urlsCrawled;
 };
 

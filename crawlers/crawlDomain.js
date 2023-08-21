@@ -9,8 +9,8 @@ import {
 import constants, { basicAuthRegex, blackListedFileExtensions } from '../constants/constants.js';
 import { getPlaywrightLaunchOptions, isBlacklistedFileExtensions } from '../constants/common.js';
 import { areLinksEqual } from '../utils.js';
-import { runPdfScan } from './pdfScanFunc.js';
-import { createWriteStream } from 'fs'; 
+import { handlePdfDownload, runPdfScan } from './pdfScanFunc.js';
+import fs from 'fs'; 
 
 const crawlDomain = async (
   url,
@@ -31,6 +31,10 @@ const crawlDomain = async (
 
   const { dataset, requestQueue, pdfStore } = await createCrawleeSubFolders(randomToken);
   const pdfDownloads = [];
+
+  if (!fs.existsSync(randomToken)) {
+    fs.mkdirSync(randomToken);
+  }
 
   let finalUrl;
   let scanCompleted = false;
@@ -101,26 +105,7 @@ const crawlDomain = async (
 
       // handle pdfs
       if (request.skipNavigation && isUrlPdf(actualUrl)) {
-        pdfDownloads.push(new Promise(async (resolve, rej) => {
-          const pdfResponse = await sendRequest({ responseType: 'buffer', isStream: true });
-          pdfResponse.setEncoding('binary');
-          let dlprogress = 0; 
-
-          // Save the pdf in the key-value store
-          const urlObj = new URL(request.url);
-          const pdfFileName = `${urlObj.hostname}${decodeURI(urlObj.pathname).replace(/[^A-Z0-9]+/ig, '_').replace('_pdf', '')}`;
-          const downloadFile = createWriteStream(`${randomToken}/${pdfFileName}.pdf`, { flags: 'a' }); 
-          pdfResponse.on('data', (chunk) => {
-            downloadFile.write(chunk, 'binary'); 
-          });
-          pdfResponse.on('end', () => {
-            downloadFile.end();
-          })
-          // await pdfStore.setValue(pdfFileName, pdfResponse.body, { contentType: 'application/pdf'});
-          console.log('stored', pdfFileName);
-          resolve({ url: request.url }); 
-        }));
-        return;
+        return handlePdfDownload(randomToken, pdfDownloads, request, sendRequest);
       }
 
       if (response.status() === 403) {
