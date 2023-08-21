@@ -366,7 +366,7 @@ const clickFunc = async (elem,page) => {
       : 'Desktop'
   }', 
   urlsCrawled.scanned, 
-  ${customFlowLabel ? `'${customFlowLabel}'` : customFlowLabel});
+  ${customFlowLabel ? `'${customFlowLabel}'` : `'Custom Flow'`});
 
   await submitFormViaPlaywright(
     "${data.browser}",

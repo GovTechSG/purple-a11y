@@ -133,10 +133,6 @@ const writeHTML = async (
   });
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
-
-  if (!process.env.RUNNING_FROM_PH_GUI && scanType === 'Customized' && customFlowLabel) {
-    addCustomFlowLabel(`${storagePath}/reports/${htmlFilename}.html`, customFlowLabel);
-  }
 };
 
 const writeSummaryHTML = async (
@@ -152,15 +148,6 @@ const writeSummaryHTML = async (
   });
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
-  if (!process.env.RUNNING_FROM_PH_GUI && scanType === 'Customized' && customFlowLabel) {
-    addCustomFlowLabel(`${storagePath}/reports/${htmlFilename}.html`, customFlowLabel);
-  }
-};
-
-const addCustomFlowLabel = (path, customFlowLabel) => {
-  const data = fs.readFileSync(path, { encoding: 'utf-8' });
-  const result = data.replaceAll(/Custom Flow/g, customFlowLabel);
-  fs.writeFileSync(path, result);
 };
 
 let browserChannel = 'chrome';
@@ -380,6 +367,7 @@ export const generateArtifacts = async (
     totalItems: 0,
     topFiveMostIssues: [],
     wcagViolations: new Set(),
+    customFlowLabel,
     items: {
       mustFix: { description: itemTypeDescription.mustFix, totalItems: 0, rules: {} },
       goodToFix: { description: itemTypeDescription.goodToFix, totalItems: 0, rules: {} },
