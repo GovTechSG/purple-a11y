@@ -395,7 +395,7 @@ const clickFunc = async (elem,page) => {
   const appPrefix = 'purple-hats';
 
   let customFlowScripts; 
-  if (process.env.RUNNING_FROM_PH_GUI) {
+  if (process.env.RUNNING_FROM_PH_GUI && os.platform() === 'darwin') {
     customFlowScripts = './Purple HATS Backend/purple-hats/custom_flow_scripts'; 
   } else {
     customFlowScripts = './custom_flow_scripts'
@@ -440,6 +440,7 @@ const clickFunc = async (elem,page) => {
       channel = 'chrome';
     }
 
+
     let codegenCmd = `npx playwright codegen --target javascript -o "${tmpDir}/intermediateScript.js" "${data.url}"`;
     let extraCodegenOpts = `${userAgentOpts} --browser ${browser} --block-service-workers --ignore-https-errors ${
       channel && `--channel ${channel}`
@@ -476,8 +477,13 @@ const clickFunc = async (elem,page) => {
     let awaitingProxyLogin = false;
     let secondGotoMicrosoftLoginSeen = false;
 
-    // if (!process.env.RUNNING_FROM_PH_GUI) {
-    appendToGeneratedScript(importStatements);
+    if (!process.env.RUNNING_FROM_PH_GUI) {
+      appendToGeneratedScript(importStatements);
+    }
+    // if (!process.env.RUNNING_FROM_PH_GUI || (process.env.RUNNING_FROM_PH_GUI && os.platform() === 'darwin')) {
+    // appendToGeneratedScript(importStatements);
+    // } else {
+    //   appendToGeneratedScript(importStatementsForWin);
     // }
 
     for await (let line of rl) {

@@ -96,7 +96,7 @@ const crawlSitemap = async (
       if (status === 200 && isWhitelistedContentType(contentType)) {
         const results = await runAxeScript(needsReview, page);
         if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::scanned::${currentUrl}`);
+          console.log(`Electron crawling::scanned::${request.url}`);
         }  
 
         const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
@@ -132,7 +132,7 @@ const crawlSitemap = async (
         await dataset.pushData(results);
       } else {
         if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::skipped::${currentUrl}`);
+          console.log(`Electron crawling::skipped::${actualUrl}`);
         }
   
         urlsCrawled.invalid.push(actualUrl);
