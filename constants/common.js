@@ -297,7 +297,7 @@ const checkUrlConnectivityWithBrowser = async (
   const data = sanitizeUrlInput(url);
   
   if (data.isValid) {
-    console.log("checking browser context")
+    console.log("checking browser context: ", browserToRun)
     let browserContext;
 
     try{

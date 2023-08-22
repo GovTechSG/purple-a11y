@@ -110,6 +110,7 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     if (typeof option === 'number') {
       if (Number.isInteger(option) && option > 0 && option <= choices.length) {
         option = choices[option - 1];
+        console.log("b option: ", option)
       } else {
         printMessage(
           [

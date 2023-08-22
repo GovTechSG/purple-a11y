@@ -290,9 +290,10 @@ const urlCheckStatuses = {
 };
 
 const browserTypes = {
+  //order affects cliFunctions '-b'
+  chromium: 'chromium',
   chrome: 'chrome',
   edge: 'msedge',
-  chromium: 'chromium',
 };
 
 const xmlSitemapTypes = {

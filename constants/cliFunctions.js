@@ -63,7 +63,7 @@ export const cliOptions = {
     describe: 'Browser to run the scan on: 1) Chromium, 2) Chrome, 3) Edge. Defaults to Chromium.',
     choices: Object.keys(constants.browserTypes),
     requiresArg: true,
-    default: 'chromium',
+    default: 'chrome',
     demandOption: false,
   },
   s: {
