@@ -41,19 +41,19 @@
         <li>
           <button aria-label="${rule.description}, ${
           rule.totalItems
-        } occurrences" class="rule-item" data-bs-toggle="offcanvas" data-bs-target="#expandedRule" aria-controls="expandedRule" onfocus="document.getElementById('${category}-${
+        } occurrences" aria-describedby="containsAISuggestions" class="rule-item" data-bs-toggle="offcanvas" data-bs-target="#expandedRule" aria-controls="expandedRule" onfocus="document.getElementById('${category}-${
           rule.rule
         }-${index}').dispatchEvent(new MouseEvent('mouseover'))" onblur="document.getElementById('${category}-${
           rule.rule
         }-${index}').dispatchEvent(new MouseEvent('mouseout'))" onmousedown="event.preventDefault()">
-            <div class="text-start" style="align-items:center; display:flex;">
+            <div class="text-start" style="align-items:center">
               <div class="rule-items-count ${category}">
                 ${formatItemsCount(rule.totalItems)}
               </div>
               ${htmlEscapeString(rule.description)}
               <svg id="${category}-${
           rule.rule
-        }-${index}" class="ai-tooltip" width="16" height="16" viewBox="0 0 16 16" data-bs-toggle="tooltip" data-bs-placement="top" title="Contains AI suggestions." fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:9px" aria-label="Contains AI suggestions.">
+        }-${index}" tabindex="-1" class="ai-tooltip" width="16" height="16" viewBox="0 0 16 16" data-bs-toggle="tooltip" data-bs-placement="top" title="Contains AI suggestions." fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:9px" aria-label="Contains AI suggestions.">
                   <path d="M7.72981 3.34063C6.9595 2.57003 6.43225 1.22438 6.1706 0C5.90853 1.22462 5.38185 2.57056 4.61125 3.34116C3.84094 4.11122 2.49488 4.63847 1.27075 4.90066C2.49538 5.16231 3.84119 5.68925 4.6115 6.45988C5.38181 7.23019 5.90906 8.57613 6.17113 9.8005C6.43278 8.57588 6.95988 7.22994 7.73006 6.45934C8.50038 5.68903 9.84644 5.16203 11.0706 4.89984C9.84622 4.63819 8.50041 4.11097 7.72981 3.34063Z" fill="#785EF0"></path>
                   <path d="M12.7335 9.5106C12.2737 9.05057 11.9582 8.24622 11.8018 7.51485C11.6453 8.24622 11.3308 9.05053 10.8705 9.51085C10.4102 9.97066 9.60601 10.2859 8.87476 10.4425C9.60626 10.599 10.4102 10.9138 10.8705 11.3741C11.3308 11.8341 11.6458 12.6384 11.8024 13.3698C11.9587 12.6382 12.2737 11.8341 12.7337 11.3738C13.1938 10.9138 13.9981 10.5988 14.7292 10.4419C13.9981 10.2856 13.1938 9.97066 12.7335 9.5106Z" fill="#785EF0"></path>
                   <path d="M4.57346 11.0844C4.44199 11.6984 4.17799 12.3739 3.79162 12.7603C3.4053 13.1463 2.73012 13.4109 2.11621 13.5423C2.73012 13.6741 3.4053 13.9378 3.79162 14.3244C4.17799 14.7108 4.44252 15.3857 4.57399 16C4.70534 15.3857 4.96946 14.7108 5.35596 14.3242C5.74202 13.9379 6.41734 13.6736 7.03112 13.5418C6.41737 13.4106 5.74202 13.1463 5.35571 12.76C4.96946 12.3739 4.7048 11.6985 4.57346 11.0844Z" fill="#785EF0"></path>
@@ -99,7 +99,7 @@
     const aiSvg = document.querySelectorAll('svg.ai-tooltip');
 
     Array.from(aiSvg).forEach(element => {
-      element.setAttribute('title', 'Contains AI suggestion.');
+      element.setAttribute('title', 'Contains AI suggestions.');
       element.setAttribute('data-bs-toggle', 'tooltip');
       element.setAttribute('data-bs-placement', 'top');
     });

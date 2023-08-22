@@ -176,7 +176,7 @@
     // });
   };
 
-  const uniqueUserUuid = localStorage.getItem(`${storagePath}-uuid`)
+  const uniqueUserUuid = localStorage.getItem(`${storagePath}-uuid`);
 
   const undoAiFeedback = (buttonDiv, ruleId, basicHtml) => {
     try {
@@ -189,10 +189,10 @@
         var finalUrl = `${aiResponseFeedbackDataFields.formUrl}?${aiResponseFeedbackDataFields.uuidField}=${uniqueUserUuid}&${aiResponseFeedbackDataFields.websiteUrlField}=${websiteUrl}&${aiResponseFeedbackDataFields.ruleIdField}=${ruleId}&${aiResponseFeedbackDataFields.basicHtmlField}=${basicHtml}&${aiResponseFeedbackDataFields.usefulCount}=0&${aiResponseFeedbackDataFields.notUsefulCount}=-1`;
       }
 
-      try{
+      try {
         fetch(finalUrl, { mode: 'no-cors' });
-      } catch(err){
-        console.log("Error undoing AI feedback: ", err)
+      } catch (err) {
+        console.log('Error undoing AI feedback: ', err);
       }
 
       delete aiVoteFeedback[buttonDiv];
@@ -200,7 +200,7 @@
 
       document.getElementById(
         buttonDiv,
-      ).innerHTML = `<button id="aiUsefulButton" onClick="logAiResponseFeedback('useful', '${ruleId}', '${buttonDiv}', '${basicHtml}')">
+      ).innerHTML = `<button class="aiFeedbackButton" onClick="logAiResponseFeedback('useful', '${ruleId}', '${buttonDiv}', '${basicHtml}')">
           <svg
             width="16"
             height="16"
@@ -214,7 +214,7 @@
             />
           </svg>
           Useful</button
-        >    <button id="aiUsefulButton" style="margin-left:16px" onClick="logAiResponseFeedback('notUseful', '${ruleId}', '${buttonDiv}', '${basicHtml}')">
+        >    <button class="aiFeedbackButton" style="margin-left:16px" onClick="logAiResponseFeedback('notUseful', '${ruleId}', '${buttonDiv}', '${basicHtml}')">
           <svg
             width="16"
             height="16"
@@ -235,10 +235,10 @@
     }
   };
 
-  const generateQuery = async (ruleId, accordionDiv, ruleHtmlLabel, buttonsDiv) => {
+  const generateQuery = async (ruleId, accordionDiv, ruleHtmlLabel, buttonsDiv, aiErrorDiv) => {
     document.getElementById(buttonsDiv).disabled = true;
     document.getElementById(buttonsDiv).style =
-      'background-color: #ffffff;border: 1px solid #B5C5CA;color:#B5C5CA;border-radius: 4px;height: 44px;padding-left: 16px;padding-right: 16px;width: 100%';
+      'background-color: #ffffff;border: 1px solid #B5C5CA;color:#B5C5CA;border-radius: 4px;width: 100%;padding: .5rem 1rem;';
     document.getElementById(buttonsDiv).textContent = 'Generating...';
 
     try {
@@ -248,14 +248,10 @@
         if (response.status === 200) {
           const ruleIdData = await response.json();
           const escapedHtml = escapeHtmlForAI(ruleIdData[ruleHtmlLabel]);
-          // const fEscapedHtml = escapedHtml.match(/```([\s\S]*?)```/g)[0]
-          // console.log("fescapedhtml: ", fEscapedHtml)
-
           const replacedString = escapedHtml.replaceAll(
             /```([\s\S]*?)```/g,
             `<code class="codeForAiResponse language-html hljs">$1</code>`,
           );
-
           const replacedRuleHtmlLabel = escapeHtmlForAI(ruleHtmlLabel);
 
           if (
@@ -267,21 +263,16 @@
             var typeOfVote = aiVoteFeedback[buttonsDiv];
             var voteString =
               typeOfVote === 'useful'
-                ? `<div style="color:#4A6168" >You rated this AI suggestion useful. <a style="cursor: pointer;" href="#" onclick="undoAiFeedback(\'${buttonsDiv}\', \'${ruleId}\', \'${escapeHtmlForAI(
+                ? `<p class="aiFeedbackResponse">You rated this AI suggestion useful. <a class="undoAiFeedback" href="#" onclick="undoAiFeedback(\'${buttonsDiv}\', \'${ruleId}\', \'${escapeHtmlForAI(
                     ruleHtmlLabel,
-                  )}\')">Undo</a></div>`
-                : `<div style="color:#4A6168" >You rated this AI suggestion not useful. <a style="cursor: pointer;" href="#" onclick="undoAiFeedback(\'${buttonsDiv}\', \'${ruleId}\', \'${escapeHtmlForAI(
+                  )}\')">Undo</a></p>`
+                : `<p class="aiFeedbackResponse">You rated this AI suggestion not useful. <a class="undoAiFeedback" href="#" onclick="undoAiFeedback(\'${buttonsDiv}\', \'${ruleId}\', \'${escapeHtmlForAI(
                     ruleHtmlLabel,
-                  )}\')">Undo</a></div>`;
-            document.getElementById(accordionDiv).innerHTML = `<div style="
-            padding: 16px;
-          border: 1px solid #b5c5ca;
-          width: 100%;
-          background-color: #f7f6fe;
-          border-radius: 4px;
-          margin-left: 1rem;
-          ">
-          <p class="mb-0" style="--n:${replacedString.length}">
+                  )}\')">Undo</a></p>`;
+            document.getElementById(accordionDiv).innerHTML = `<div
+            class="ai-response-card"
+          >
+          <p class="mb-0">
             ${replacedString.replace(/\n/g, '<br />')}
           </p>
           <div id=${buttonsDiv} style="display: flex;justify-content: flex-end;margin-top: 16px;">
@@ -289,19 +280,12 @@
           </div>
           </div>`;
           } else {
-            document.getElementById(accordionDiv).innerHTML = `<div style="
-            padding: 16px;
-          border: 1px solid #b5c5ca;
-          width: 100%;
-          background-color: #f7f6fe;
-          border-radius: 4px;
-          margin-left: 1rem;
-          ">
-          <p class="mb-0" style="--n:${replacedString.length}">
+            document.getElementById(accordionDiv).innerHTML = `<div class="ai-response-card">
+          <p class="mb-0">
             ${replacedString.replace(/\n/g, '<br />')}
           </p>
-      <div id=${buttonsDiv} style="display: flex;justify-content: flex-end;margin-top: 16px;">
-        <button id="aiUsefulButton" onClick="logAiResponseFeedback('useful', '${ruleId}', '${buttonsDiv}', '${replacedRuleHtmlLabel}')">
+      <div id=${buttonsDiv} class="feedbackButtons">
+        <button class="aiFeedbackButton" onClick="logAiResponseFeedback('useful', '${ruleId}', '${buttonsDiv}', '${replacedRuleHtmlLabel}')">
           <svg
             width="16"
             height="16"
@@ -315,7 +299,7 @@
             />
           </svg>
           Useful</button
-        >    <button id="aiUsefulButton" style="margin-left:16px" onClick="logAiResponseFeedback('notUseful', '${ruleId}', '${buttonsDiv}', '${replacedRuleHtmlLabel}')">
+        >    <button class="aiFeedbackButton" style="margin-left:16px" onClick="logAiResponseFeedback('notUseful', '${ruleId}', '${buttonsDiv}', '${replacedRuleHtmlLabel}')">
           <svg
             width="16"
             height="16"
@@ -345,7 +329,7 @@
           document.getElementById(buttonsDiv).style = `border: 1px solid #6E52EF;color: #6E52EF;`;
           document.getElementById(buttonsDiv).textContent = 'Generate response';
           document
-            .getElementById('aiGenerateResponseError')
+            .getElementById(aiErrorDiv)
             .replaceChildren(
               createElementFromString(
                 `<div style="color:#D7260F">Something went wrong. Please try again.</div>`,
@@ -359,7 +343,7 @@
       document.getElementById(buttonsDiv).style = `border: 1px solid #6E52EF;color: #6E52EF;`;
       document.getElementById(buttonsDiv).textContent = 'Generate response';
       document
-        .getElementById('aiGenerateResponseError')
+        .getElementById(aiErrorDiv)
         .replaceChildren(
           createElementFromString(
             `<div style="color:#D7260F">Something went wrong. Please try again.</div>`,
@@ -448,7 +432,7 @@
         }
       })
       .catch(error => {
-        console.log("Error fetching cached AI responses: ", error);
+        console.log('Error fetching cached AI responses: ', error);
         return '';
       });
     return needsQuery;
