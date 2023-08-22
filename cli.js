@@ -215,11 +215,10 @@ const scanInit = async argvs => {
           argvs.browserToRun = constants.browserTypes.edge;
         } else {
           printMessage(
-            ['Unable to use both Chrome and Edge, falling back to Chromium...'],
+            ['Unable to use both Chrome and Edge. Please try again.'],
             messageOptions,
           );
-          argvs.browserToRun = constants.browserTypes.chromium;
-          clonedDataDir = '';
+          process.exit(statuses.browserError.code)
         }
       } else {
         //mac user who specified -b chrome but does not have chrome
@@ -246,12 +245,10 @@ const scanInit = async argvs => {
         argvs.browserToRun = constants.browserTypes.chrome;
       } else {
         printMessage(
-          [
-            'Unable to use both Chrome and Edge. Please install the specified browser before running the scan.',
-          ],
+          ['Unable to use both Chrome and Edge. Please try again.'],
           messageOptions,
         );
-        process.exit(statuses.browserError.code);
+        process.exit(statuses.browserError.code)
       }
     }
   } else {
