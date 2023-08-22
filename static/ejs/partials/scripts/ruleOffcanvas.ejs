@@ -306,7 +306,7 @@ category summary is clicked %>
                       : ``
                   }
                   <div class="p-3">
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between g-one">
                       <div class="fw-bold page-item-card-section-title">HTML element</div>
                       <pre class="page-item-card-section-content"><code class="language-html">${escapeHtmlForAI(
                         item.html,
@@ -358,7 +358,7 @@ category summary is clicked %>
                     <div class="d-flex g-one">
                       <div class="fw-bold page-item-card-section-title">AI suggestion</div>
                       <div id="${accordionDivToAppendAI}" class="page-item-card-section-content">
-                        <button id=${buttonDivForAiFeedback} class="page-item-card-section-content aiGenerateResponseButton" onClick="generateQuery('${
+                        <button id=${buttonDivForAiFeedback} class="aiGenerateResponseButton" onClick="generateQuery('${
               ruleInCategory.rule
             }','${accordionDivToAppendAI}', '${checkQueryLabel}', '${buttonDivForAiFeedback}', '${aiErrorDiv}')">Generate response</button>
                         <div id=${aiErrorDiv}></div>
@@ -379,7 +379,7 @@ category summary is clicked %>
                       : ``
                   }
                   <div class="p-3">
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between g-one">
                       <div class="fw-bold page-item-card-section-title">HTML element</div>
                       <pre class="page-item-card-section-content"><code class="language-html">${escapeHtmlForAI(
                         item.html,
@@ -394,7 +394,7 @@ category summary is clicked %>
                       </div>
                     </div>
                     <hr />
-                    <div class="d-flex justify-content-between" id="${accordionDivToAppendAI}">
+                    <div class="d-flex justify-content-between g-one" id="${accordionDivToAppendAI}">
                       <div class="fw-bold page-item-card-section-title">AI suggestion</div>
                       <div class="page-item-card-section-content processAI" id="${accordionDivToAppendAI}">
                         Processing AI suggestions, please check back later.
