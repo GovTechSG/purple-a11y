@@ -440,8 +440,15 @@ const clickFunc = async (elem,page) => {
       channel = 'chrome';
     }
 
+    let escapedUrl; 
+    if (os.platform() === 'win32' && data.url.includes('&')) {
+      escapedUrl = data.url.replaceAll('&', '^&');
+    } else {
+      escapedUrl = data.url;
+    }
 
-    let codegenCmd = `npx playwright codegen --target javascript -o "${tmpDir}/intermediateScript.js" "${data.url}"`;
+
+    let codegenCmd = `npx playwright codegen --target javascript -o "${tmpDir}/intermediateScript.js" "${escapedUrl}"`;
     let extraCodegenOpts = `${userAgentOpts} --browser ${browser} --block-service-workers --ignore-https-errors ${
       channel && `--channel ${channel}`
     }`;
