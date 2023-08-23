@@ -3,6 +3,7 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-param-reassign */
 import fs from 'fs-extra';
+import path from 'path';
 import _yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import printMessage from 'print-message';
@@ -170,6 +171,27 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     }
     return option;
   })
+  .coerce('e', option => {
+    try {
+      if (typeof option === 'string') {
+        let dirPath = option;
+        if (!path.isAbsolute(dirPath)) {
+          dirPath = path.resolve(process.cwd(), dirPath);
+        }
+        fs.accessSync(dirPath);
+        return option;  
+      } else {
+        throw Error('Invalid path');
+      }
+    } catch (e) {
+      printMessage(
+        [`Invalid directory path. Please ensure path provided exists.`],
+        messageOptions,
+      );
+      process.exit(1);
+    }
+  })
+
   .check(argvs => {
     if (argvs.scanner === 'custom' && argvs.maxpages) {
       throw new Error('-p or --maxpages is only available in website and sitemap scans.');
@@ -324,10 +346,9 @@ const scanInit = async argvs => {
       break;
   }
 
-  const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
-
-  const domain = argvs.isLocalSitemap ? 'custom' : new URL(argvs.url).hostname;
-
+  if (argvs.exportDirectory) {
+    constants.exportDirectory = argvs.exportDirectory;
+  }
   const data = prepareData(argvs);
 
   setHeadlessMode(data.isHeadless);
@@ -343,11 +364,6 @@ const scanInit = async argvs => {
   } else {
     screenToScan = 'Desktop';
   }
-
-  data.randomToken = `PHScan_${domain}_${date}_${time}_${argvs.scanner.replaceAll(
-    ' ',
-    '_',
-  )}_${screenToScan.replaceAll(' ', '_')}`;
 
   /**
    * Cloning a second time with random token for parallel browser sessions

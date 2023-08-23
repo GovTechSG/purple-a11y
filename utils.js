@@ -32,11 +32,17 @@ export const isWhitelistedContentType = contentType => {
   return whitelist.filter(type => contentType.trim().startsWith(type)).length === 1;
 };
 
-export const getStoragePath = randomToken =>
-  `results/${randomToken}_${
-    constants.urlsCrawledObj.scanned.length
-  }pages`;
-
+export const getStoragePath = (randomToken) => {
+  if (constants.exportDirectory === process.cwd()) {
+    return `results/${randomToken}`; 
+  } else {
+    if (!path.isAbsolute(constants.exportDirectory)) {
+      constants.exportDirectory = path.resolve(process.cwd(), constants.exportDirectory);
+    }
+    return `${constants.exportDirectory}/${randomToken}`;
+  }
+}
+  
 export const createDetailsAndLogs = async (scanDetails, randomToken) => {
   const storagePath = getStoragePath(randomToken);
   const logPath = `logs/${randomToken}`;
@@ -88,6 +94,10 @@ export const writeToUserDataTxt = async (key, value) => {
     userData[key] = value;
     await fs.writeFile(textFilePath, JSON.stringify(userData, 0, 2));
   } else {
+    const textFilePathDir = path.dirname(textFilePath);
+    if (!fs.existsSync(textFilePathDir)) {
+      fs.mkdirSync(textFilePathDir, { recursive: true });
+    }
     fs.appendFileSync(textFilePath, JSON.stringify({ [key]: value }, 0, 2));
   }
 };

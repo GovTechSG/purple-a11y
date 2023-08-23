@@ -74,6 +74,13 @@ export const cliOptions = {
     requiresArg: true,
     demandOption: false,
   },
+  e: {
+    alias: 'exportDirectory',
+    describe: 'Preferred directory to store scan results. Path is relative to your home directory.',
+    type: 'string',
+    requiresArg: true,
+    demandOption: false
+  },
   j: {
     alias: 'customFlowLabel',
     describe: 'Give Custom Flow Scan a label for easier reference in the report',
