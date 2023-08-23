@@ -110,7 +110,6 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     if (typeof option === 'number') {
       if (Number.isInteger(option) && option > 0 && option <= choices.length) {
         option = choices[option - 1];
-        console.log("b option: ", option)
       } else {
         printMessage(
           [
@@ -214,11 +213,8 @@ const scanInit = async argvs => {
           useEdge = true;
           argvs.browserToRun = constants.browserTypes.edge;
         } else {
-          printMessage(
-            ['Unable to use both Chrome and Edge. Please try again.'],
-            messageOptions,
-          );
-          process.exit(statuses.browserError.code)
+          printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
+          process.exit(statuses.browserError.code);
         }
       } else {
         //mac user who specified -b chrome but does not have chrome
@@ -230,7 +226,6 @@ const scanInit = async argvs => {
       }
     }
   } else if (argvs.browserToRun === constants.browserTypes.edge) {
-    console.log('user chose browserToRun: edge');
     edgeDataDir = getDefaultEdgeDataDir();
     clonedDataDir = cloneEdgeProfiles();
     if (edgeDataDir && clonedDataDir) {
@@ -244,15 +239,11 @@ const scanInit = async argvs => {
         useChrome = true;
         argvs.browserToRun = constants.browserTypes.chrome;
       } else {
-        printMessage(
-          ['Unable to use both Chrome and Edge. Please try again.'],
-          messageOptions,
-        );
-        process.exit(statuses.browserError.code)
+        printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
+        process.exit(statuses.browserError.code);
       }
     }
   } else {
-    console.log('user chose browserToRun: CHROMIUM');
     argvs.browserToRun = constants.browserTypes.chromium;
     clonedDataDir = '';
   }

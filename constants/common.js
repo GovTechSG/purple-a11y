@@ -295,24 +295,25 @@ const checkUrlConnectivityWithBrowser = async (
 
   // Validate the connectivity of URL if the string format is url format
   const data = sanitizeUrlInput(url);
-  
+
   if (data.isValid) {
-    console.log("checking browser context: ", browserToRun)
     let browserContext;
 
-    try{
+    try {
       browserContext = await chromium.launchPersistentContext(clonedDataDir, {
         ...getPlaywrightLaunchOptions(browserToRun),
         ...(viewport && { viewport }),
         ...(userAgent && { userAgent }),
       });
-    } catch(err){
+    } catch (err) {
       printMessage(
-        ['Unable to use chromium. Please install Chromium by running `npx playwright install chromium` before running the scan.'],
+        [
+          'Unable to use chromium. Please install Chromium by running `npx playwright install chromium` before running the scan.',
+        ],
         messageOptions,
       );
       res.status = constants.urlCheckStatuses.browserError.code;
-      return res
+      return res;
     }
 
     // const context = await browser.newContext();
@@ -439,7 +440,7 @@ export const prepareData = argv => {
     nameEmail,
     customFlowLabel,
     specifiedMaxConcurrency,
-    needsReviewItems
+    needsReviewItems,
   } = argv;
 
   return {
@@ -457,7 +458,7 @@ export const prepareData = argv => {
     nameEmail,
     customFlowLabel,
     specifiedMaxConcurrency,
-    needsReviewItems
+    needsReviewItems,
   };
 };
 
