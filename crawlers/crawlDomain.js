@@ -29,6 +29,7 @@ const crawlDomain = async (
   const { dataset, requestQueue } = await createCrawleeSubFolders(randomToken);
 
   let finalUrl;
+  let scanCompleted = false;
   let pagesCrawled;
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth = false;
@@ -94,7 +95,7 @@ const crawlDomain = async (
 
       if (response.status() === 403) {
         if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::skipped::${request.url}`)
+          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`)
         }
         urlsCrawled.forbidden.push(request.url);
         return;
@@ -102,25 +103,17 @@ const crawlDomain = async (
 
       if (response.status() !== 200) {
         if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::skipped::${request.url}`);
+          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`);
         }
         urlsCrawled.invalid.push(request.url);
         return;
       }
-
-      if (pagesCrawled >= maxRequestsPerCrawl) {
-        if (pagesCrawled === maxRequestsPerCrawl && process.env.RUNNING_FROM_PH_GUI) {
-          console.log('Electron scan completed'); 
-          pagesCrawled++; 
-        }
+      
+      if (pagesCrawled === maxRequestsPerCrawl) {
         urlsCrawled.exceededRequests.push(request.url);
         return;
       }
       pagesCrawled++;
-
-      if (process.env.RUNNING_FROM_PH_GUI) {
-        console.log(`Electron crawling::scanned::${request.url}`);
-      }
 
       const location = await page.evaluate('location');
 
@@ -128,6 +121,9 @@ const crawlDomain = async (
         isBasicAuth = false;
       } else if (location.host.includes(host)) {
         const results = await runAxeScript(needsReview, page);
+        if (process.env.RUNNING_FROM_PH_GUI) {
+          console.log(`Electron crawling::${urlsCrawled.scanned.length}::scanned::${request.url}`);
+        }
 
         // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
         const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
@@ -143,7 +139,7 @@ const crawlDomain = async (
             });
             return;
           }
-
+         
           urlsCrawled.scanned.push({
             url: request.url,
             pageTitle: results.pageTitle,
@@ -170,7 +166,7 @@ const crawlDomain = async (
           transformRequestFunction(req) {
             if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
               if (process.env.RUNNING_FROM_PH_GUI) {
-                console.log(`Electron crawling::skipped::${req.url}`);
+                console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${req.url}`);
               }
               urlsCrawled.blacklisted.push(req.url);
             }
@@ -190,7 +186,7 @@ const crawlDomain = async (
             // ignore all links ending with `.pdf`
             if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
               if (process.env.RUNNING_FROM_PH_GUI) {
-                console.log(`Electron crawling::skipped::${req.url}`);
+                console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${req.url}`);
               }
               urlsCrawled.blacklisted.push(req.url);
             }
@@ -201,9 +197,8 @@ const crawlDomain = async (
         });
       } else {
         if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::skipped::${currentUrl}`);
+          console.log(`Electron crawling::${pagesCrawled}::${urlsCrawled.scanned.length}::skipped::${currentUrl}`);
         }
-  
         urlsCrawled.outOfDomain.push(request.url);
       }
     },
@@ -213,6 +208,9 @@ const crawlDomain = async (
   });
 
   await crawler.run();
+  if (process.env.RUNNING_FROM_PH_GUI) {
+    console.log('Electron scan completed');
+  }
   return urlsCrawled;
 };
 

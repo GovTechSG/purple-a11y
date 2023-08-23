@@ -128,7 +128,7 @@ export const postNavigationHooks = [
 
 export const failedRequestHandler = async ({ request }) => {
   if (process.env.RUNNING_FROM_PH_GUI) {
-    console.log(`Electron crawling::error::${request.url}`);
+    console.log(`Electron crawling::0::error::${request.url}`);
   }
   crawlee.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
 };

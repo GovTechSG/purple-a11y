@@ -269,16 +269,15 @@ const processPage = async page => {
     silentLogger.info('Unable to detect networkidle');
   }
   
-  if (process.env.RUNNING_FROM_PH_GUI) {
-    console.log("Electron crawling::scanned::", page.url());
-  }
-  
   if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
 	return;
   } else {
 	const scanRequired = await checkIfScanRequired(page);
 	
 	if (scanRequired) {
+    if (process.env.RUNNING_FROM_PH_GUI) {
+      console.log("Electron crawling::", urlsCrawled.scanned.length, "::scanned::", page.url());
+    }
 		await runAxeScan(${needsReviewItems}, page);
 	}
   }
