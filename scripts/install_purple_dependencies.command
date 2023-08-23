@@ -41,7 +41,7 @@ echo "Installing Node dependencies to $PWD"
 npm ci --force
 
 echo "Installing Playwright browsers"
-npx playwright install chromium webkit
+npx playwright install webkit
 
 
 
