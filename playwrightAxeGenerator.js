@@ -70,13 +70,14 @@ const playwrightAxeGenerator = async data => {
     import { getComparator } from 'playwright-core/lib/utils';
     import { createCrawleeSubFolders, runAxeScript } from '#root/crawlers/commonCrawlerFunc.js';
     import { generateArtifacts } from '#root/mergeAxeResults.js';
-    import { createAndUpdateResultsFolders, createDetailsAndLogs, createScreenshotsFolder, cleanUp } from '#root/utils.js';
+    import { createAndUpdateResultsFolders, createDetailsAndLogs, createScreenshotsFolder, cleanUp, getStoragePath } from '#root/utils.js';
     import constants, {
         getIntermediateScreenshotsPath,
         getExecutablePath, removeQuarantineFlag
     } from '#root/constants/constants.js';
     import fs from 'fs';
     import path from 'path';
+    import printMessage from 'print-message';
     import { isSkippedUrl, submitFormViaPlaywright } from '#root/constants/common.js';
     import { spawnSync } from 'child_process';
     import safe from 'safe-regex';
@@ -274,10 +275,12 @@ const processPage = async page => {
 	const scanRequired = await checkIfScanRequired(page);
 	
 	if (scanRequired) {
+    if (process.env.RUNNING_FROM_PH_GUI) {
+      console.log("Electron crawling::", urlsCrawled.scanned.length, "::scanned::", page.url());
+    }
 		await runAxeScan(${needsReviewItems}, page);
 	}
   }
-  
 
 };
 
@@ -333,10 +336,17 @@ const clickFunc = async (elem,page) => {
   }
 
 };
-
 `;
 
-  const block2 = `  return urlsCrawled;
+  const block2 = ` 
+    if (process.env.RUNNING_FROM_PH_GUI) {
+      console.log('Electron scan completed');
+    }
+    return urlsCrawled
+      } catch (e) {
+        console.error('Error: ', e);
+        process.exit(1);
+      }
         })().then(async (urlsCrawled) => {
             scanDetails.endTime = new Date().getTime();
             scanDetails.urlsCrawled = urlsCrawled;
@@ -355,7 +365,7 @@ const clickFunc = async (elem,page) => {
       : 'Desktop'
   }', 
   urlsCrawled.scanned, 
-  ${customFlowLabel ? `'${customFlowLabel}'` : customFlowLabel});
+  ${customFlowLabel ? `'${customFlowLabel}'` : `'Custom Flow'`});
 
   await submitFormViaPlaywright(
     "${data.browser}",
@@ -368,17 +378,34 @@ const clickFunc = async (elem,page) => {
     JSON.stringify(basicFormHTMLSnippet),
     urlsCrawled.scanned.length,
   );
-        });
-        `;
+
+  if (process.env.RUNNING_FROM_PH_GUI) {
+    printMessage([getStoragePath('${randomToken}')]); 
+    process.exit(0);
+  }
+});
+`;
+
+  // const block2 = process.env.RUNNING_FROM_PH_GUI 
+  //   ? block2Code + `\nprintMessage([getStoragePath('${randomToken}')])\nprocess.exit(0);\n});`
+  //   : block2Code + `\n});`
 
   let tmpDir;
   const appPrefix = 'purple-hats';
 
-  if (!fs.existsSync('./custom_flow_scripts')) {
-    fs.mkdirSync('./custom_flow_scripts');
+  let customFlowScripts = './custom_flow_scripts'; 
+  // if (process.env.RUNNING_FROM_PH_GUI && os.platform() === 'darwin') {
+  //   customFlowScripts = './Purple HATS Backend/purple-hats/custom_flow_scripts'; 
+  // } else {
+  //   customFlowScripts = './custom_flow_scripts'
+  // }
+
+  if (!fs.existsSync(`${customFlowScripts}`)) {
+    fs.mkdirSync(`${customFlowScripts}`);
   }
 
-  const generatedScript = `./custom_flow_scripts/generatedScript-${randomToken}.js`;
+  const generatedScriptName = `generatedScript-${randomToken}.js`;
+  const generatedScript = `${customFlowScripts}/${generatedScriptName}`;
 
   console.log(
     ` ℹ️  A new browser will be launched shortly.\n Navigate and record custom steps for ${data.url} in the new browser.\n Close the browser when you are done recording your steps.`,
@@ -408,7 +435,19 @@ const clickFunc = async (elem,page) => {
       userAgentOpts = `--user-agent \"${devices[customDevice].userAgent}\"`;
     }
 
-    let codegenCmd = `npx playwright codegen --target javascript -o "${tmpDir}/intermediateScript.js" "${data.url}"`;
+    if (os.platform() === 'win32' && getDefaultChromeDataDir()) {
+      channel = 'chrome';
+    }
+
+    let escapedUrl; 
+    if (os.platform() === 'win32' && data.url.includes('&')) {
+      escapedUrl = data.url.replaceAll('&', '^&');
+    } else {
+      escapedUrl = data.url;
+    }
+
+
+    let codegenCmd = `npx playwright codegen --target javascript -o "${tmpDir}/intermediateScript.js" "${escapedUrl}"`;
     let extraCodegenOpts = `${userAgentOpts} --browser ${browser} --block-service-workers --ignore-https-errors ${
       channel && `--channel ${channel}`
     }`;
@@ -447,6 +486,11 @@ const clickFunc = async (elem,page) => {
     if (!process.env.RUNNING_FROM_PH_GUI) {
       appendToGeneratedScript(importStatements);
     }
+    // if (!process.env.RUNNING_FROM_PH_GUI || (process.env.RUNNING_FROM_PH_GUI && os.platform() === 'darwin')) {
+    // appendToGeneratedScript(importStatements);
+    // } else {
+    //   appendToGeneratedScript(importStatementsForWin);
+    // }
 
     for await (let line of rl) {
       // remove invalid characters 
@@ -506,6 +550,7 @@ const clickFunc = async (elem,page) => {
 
       if (line.trim() === `(async () => {`) {
         appendToGeneratedScript(`await (async () => {`);
+        appendToGeneratedScript(`try {`)
         appendToGeneratedScript(`let elem;`)
         continue;
       }
@@ -593,7 +638,6 @@ const clickFunc = async (elem,page) => {
         appendToGeneratedScript(`await processPage(page);`);
         nextStepNeedsProcessPage = false;
       }
-
       if (line.trim().includes('.getByRole(') && line.trim().includes('.click()') ) {
         // add includeHidden: true to getByRole options
         const paramsStartIdx = line.indexOf('getByRole(') + 'getByRole('.length; 
@@ -650,22 +694,24 @@ const clickFunc = async (elem,page) => {
     }
 
     fileStream.destroy();
-    console.log(` Browser closed. Replaying steps and running accessibility scan...\n`);
-
     if (process.env.RUNNING_FROM_PH_GUI) {
-      const genScriptString = fs.readFileSync(generatedScript, 'utf-8');
-      const genScriptCompleted = new Promise((resolve, reject) => {
-        eval(`(async () => {
-            try {
-              ${genScriptString} 
-              resolve(); 
-            } catch (e) {
-              reject(e)
-            }
-          })();`);
-      });
-      await genScriptCompleted;
+      console.log(generatedScriptName);
+      // printMessage([generatedScriptName]);
+      process.exit(0);
+      // const genScriptString = fs.readFileSync(generatedScript, 'utf-8');
+      // const genScriptCompleted = new Promise((resolve, reject) => {
+      //   eval(`(async () => {
+      //       try {
+      //         ${genScriptString} 
+      //         resolve(); 
+      //       } catch (e) {
+      //         reject(e)
+      //       }
+      //     })();`);
+      // });
+      // await genScriptCompleted;
     } else {
+      console.log(` Browser closed. Replaying steps and running accessibility scan...\n`);
       await import(generatedScript);
     }
   } catch (e) {

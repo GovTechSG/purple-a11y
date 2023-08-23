@@ -154,7 +154,7 @@ export const isValidXML = async content => {
   return { status, parsedContent };
 };
 
-export const isSkippedUrl = (page, whitelistedDomains) => {
+export const isSkippedUrl = (page, whitelistedDomains) => {	
   const isWhitelisted = whitelistedDomains.filter(pattern => {
     pattern = pattern.replace(/[\n\r]+/g, '');
 
@@ -429,6 +429,14 @@ export const prepareData = argv => {
     needsReviewItems
   } = argv;
 
+  // construct filename for scan results
+  const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
+  const domain = argv.isLocalSitemap ? 'custom' : new URL(argv.url).hostname;
+  const sanitisedLabel = customFlowLabel
+    ? `_${customFlowLabel.replaceAll(' ', '_')}`
+    : '';
+  const resultFilename = `${date}_${time}${sanitisedLabel}_${domain}`;
+
   return {
     type: scanner,
     url: isLocalSitemap ? url : finalUrl,
@@ -444,7 +452,8 @@ export const prepareData = argv => {
     nameEmail,
     customFlowLabel,
     specifiedMaxConcurrency,
-    needsReviewItems
+    needsReviewItems,
+    randomToken: resultFilename,
   };
 };
 

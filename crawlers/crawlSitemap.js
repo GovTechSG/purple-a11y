@@ -68,16 +68,25 @@ const crawlSitemap = async (
       const status = response.status();
 
       if (status === 403) {
+        if (process.env.RUNNING_FROM_PH_GUI) {
+          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`)
+        }
         urlsCrawled.forbidden.push(request.url);
         return;
       }
 
       if (status !== 200) {
+        if (process.env.RUNNING_FROM_PH_GUI) {
+          console.log(`Electron crawling::${urlsCrawled.scanned.length}::${request.url}`)
+        }
         urlsCrawled.invalid.push(request.url);
         return;
       }
 
       if (pagesCrawled === maxRequestsPerCrawl) {
+        if (process.env.RUNNING_FROM_PH_GUI) {
+          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`)
+        }
         urlsCrawled.exceededRequests.push(request.url);
         return;
       }
@@ -86,6 +95,9 @@ const crawlSitemap = async (
 
       if (status === 200 && isWhitelistedContentType(contentType)) {
         const results = await runAxeScript(needsReview, page);
+        if (process.env.RUNNING_FROM_PH_GUI) {
+          console.log(`Electron crawling::${urlsCrawled.scanned.length}::scanned::${request.url}`);
+        }  
 
         const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
         if (isRedirected) {
@@ -119,6 +131,10 @@ const crawlSitemap = async (
         }
         await dataset.pushData(results);
       } else {
+        if (process.env.RUNNING_FROM_PH_GUI) {
+          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${actualUrl}`);
+        }
+  
         urlsCrawled.invalid.push(actualUrl);
       }
     },
@@ -129,6 +145,9 @@ const crawlSitemap = async (
 
   await crawler.run();
   await requestList.isFinished();
+  if (process.env.RUNNING_FROM_PH_GUI) {
+    console.log('Electron scan completed');
+  }
   return urlsCrawled;
 };
 
