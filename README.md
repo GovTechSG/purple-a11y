@@ -470,10 +470,6 @@ If you find a scan takes too long to complete due to large website, or there are
 
 To do this, open `constants\constants.js` with a text editor. Change the value for `maxRequestsPerCrawl` to a smaller number like 10, e.g. `export let maxRequestsPerCrawl = 10;` and save the file. Start a new purple-hats scan.
 
-## How do I change the name and email address used for node index scans?
-
-You can edit the userData.txt which is located at %AppData%/Purple HATS on Windows and ~/.Library/Application Support/Purple HATS on Mac.
-
 ## Additional Information on Data
 
 Purple HATS uses third-party open-source tools that may be downloaded over the Internet during the installation process of Purple HATS. Users should be aware of the libraries used by examining `package.json`.
