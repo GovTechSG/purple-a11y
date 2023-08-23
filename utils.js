@@ -88,6 +88,10 @@ export const writeToUserDataTxt = async (key, value) => {
     userData[key] = value;
     await fs.writeFile(textFilePath, JSON.stringify(userData, 0, 2));
   } else {
+    const textFilePathDir = path.dirname(textFilePath);
+    if (!fs.existsSync(textFilePathDir)) {
+      fs.mkdirSync(textFilePathDir, { recursive: true });
+    }
     fs.appendFileSync(textFilePath, JSON.stringify({ [key]: value }, 0, 2));
   }
 };
