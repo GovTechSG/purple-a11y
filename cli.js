@@ -28,6 +28,7 @@ import constants, {
 import combineRun from './combine.js';
 import playwrightAxeGenerator from './playwrightAxeGenerator.js';
 import { silentLogger } from './logs.js';
+import os from 'os';
 
 const appVersion = getVersion();
 const yargs = _yargs(hideBin(process.argv));
@@ -110,6 +111,7 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     if (typeof option === 'number') {
       if (Number.isInteger(option) && option > 0 && option <= choices.length) {
         option = choices[option - 1];
+        console.log("b option: ", option)
       } else {
         printMessage(
           [
@@ -217,6 +219,7 @@ const scanInit = async argvs => {
   let edgeDataDir = null;
   // Empty string for profile directory will use incognito mode in playwright
   let clonedDataDir = '';
+  const statuses = constants.urlCheckStatuses;
 
   if (argvs.browserToRun === constants.browserTypes.chrome) {
     chromeDataDir = getDefaultChromeDataDir();
@@ -225,22 +228,31 @@ const scanInit = async argvs => {
       argvs.browserToRun = constants.browserTypes.chrome;
       useChrome = true;
     } else {
-      printMessage(['Unable to use Chrome, falling back to Edge browser...'], messageOptions);
-      edgeDataDir = getDefaultEdgeDataDir();
-      clonedDataDir = cloneEdgeProfiles();
-      if (edgeDataDir && clonedDataDir) {
-        useEdge = true;
-        argvs.browserToRun = constants.browserTypes.edge;
+      if (os.platform() !== 'darwin') {
+        printMessage(['Unable to use Chrome, falling back to Edge browser...'], messageOptions);
+        edgeDataDir = getDefaultEdgeDataDir();
+        clonedDataDir = cloneEdgeProfiles();
+        if (edgeDataDir && clonedDataDir) {
+          useEdge = true;
+          argvs.browserToRun = constants.browserTypes.edge;
+        } else {
+          printMessage(
+            ['Unable to use both Chrome and Edge. Please try again.'],
+            messageOptions,
+          );
+          process.exit(statuses.browserError.code)
+        }
       } else {
+        //mac user who specified -b chrome but does not have chrome
         printMessage(
-          ['Unable to use both Chrome and Edge, falling back to Chromium...'],
+          ['Unable to use Chrome. Please install Chrome before running the scan.'],
           messageOptions,
         );
-        argvs.browserToRun = constants.browserTypes.chromium;
-        clonedDataDir = '';
+        process.exit(statuses.browserError.code);
       }
     }
   } else if (argvs.browserToRun === constants.browserTypes.edge) {
+    console.log('user chose browserToRun: edge');
     edgeDataDir = getDefaultEdgeDataDir();
     clonedDataDir = cloneEdgeProfiles();
     if (edgeDataDir && clonedDataDir) {
@@ -255,14 +267,14 @@ const scanInit = async argvs => {
         argvs.browserToRun = constants.browserTypes.chrome;
       } else {
         printMessage(
-          ['Unable to use both Chrome and Edge, falling back to Chromium...'],
+          ['Unable to use both Chrome and Edge. Please try again.'],
           messageOptions,
         );
-        argvs.browserToRun = constants.browserTypes.chromium;
-        clonedDataDir = '';
+        process.exit(statuses.browserError.code)
       }
     }
   } else {
+    console.log('user chose browserToRun: CHROMIUM');
     argvs.browserToRun = constants.browserTypes.chromium;
     clonedDataDir = '';
   }
@@ -299,8 +311,6 @@ const scanInit = async argvs => {
   if (argvs.scanner === constants.scannerTypes.website && !argvs.strategy) {
     argvs.strategy = 'same-domain';
   }
-
-  const statuses = constants.urlCheckStatuses;
 
   // File clean up after url check
   // files will clone a second time below if url check passes
