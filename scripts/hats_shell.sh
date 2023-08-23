@@ -36,9 +36,7 @@ fi
 
 echo "INFO: Set path to Playwright cache for this session"
 export PLAYWRIGHT_BROWSERS_PATH="$PWD/ms-playwright"
-
-echo "INFO: Installing Playwright browsers"
-npx playwright install chromium webkit
+export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD="true"
 
 echo "INFO: Removing com.apple.quarantine attributes for required binaries to run"
 xattr -rd com.apple.quarantine . &>/dev/null
