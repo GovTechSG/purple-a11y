@@ -423,6 +423,11 @@ const clickFunc = async (elem,page) => {
     if (os.platform() === 'darwin') {
       browser = 'webkit';
       channel = '';
+    } else {
+      // Windows
+      if (!getDefaultChromeDataDir()) {
+        channel = 'msedge';
+      }
     }
     
     if (deviceChosen === 'Mobile') {
@@ -529,16 +534,17 @@ const clickFunc = async (elem,page) => {
           continue;
         }
       }
-      //for Mac/Win website/sitemap custom flow scan 
-      if ( !(viewportWidth || customDevice) && line.trim() === `const browser = await webkit.launch({` || line.trim() ===  `const browser = await chromium.launch({`) {
+      //for Mac/Win custom flow scan 
+      if ( !(viewportWidth || customDevice) && (line.trim() === `const browser = await webkit.launch({` || line.trim() ===  `const browser = await chromium.launch({`)) {
         appendToGeneratedScript(`
-  const browser = await webkit.launch({
+  const browser = await ${browser}.launch({
     args:['--window-size=1920,1040'],`);
         continue;
       }
-      //for MAC custom flow scan with custom viewport width 
-      if ( line.trim() === `const browser = await webkit.launch({`) {
-        appendToGeneratedScript(`  const browser = await webkit.launch({`);
+      //for Mac/Win custom flow scan 
+      if ( line.trim() === `const browser = await ${browser}.launch({`) {
+        appendToGeneratedScript(`  const browser = await ${browser}.launch({`);
+        
         continue;
       }
 
