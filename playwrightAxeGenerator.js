@@ -393,12 +393,12 @@ const clickFunc = async (elem,page) => {
   let tmpDir;
   const appPrefix = 'purple-hats';
 
-  let customFlowScripts; 
-  if (process.env.RUNNING_FROM_PH_GUI && os.platform() === 'darwin') {
-    customFlowScripts = './Purple HATS Backend/purple-hats/custom_flow_scripts'; 
-  } else {
-    customFlowScripts = './custom_flow_scripts'
-  }
+  let customFlowScripts = './custom_flow_scripts'; 
+  // if (process.env.RUNNING_FROM_PH_GUI && os.platform() === 'darwin') {
+  //   customFlowScripts = './Purple HATS Backend/purple-hats/custom_flow_scripts'; 
+  // } else {
+  //   customFlowScripts = './custom_flow_scripts'
+  // }
 
   if (!fs.existsSync(`${customFlowScripts}`)) {
     fs.mkdirSync(`${customFlowScripts}`);
