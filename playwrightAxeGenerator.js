@@ -66,7 +66,7 @@ const playwrightAxeGenerator = async data => {
   // these will be appended to the generated script if the scan is run from CLI/index.
   // this is so as the final generated script can be rerun after the scan.
   const importStatements = `
-    import { chromium, devices } from 'playwright';
+    import { chromium, devices, webkit } from 'playwright';
     import { getComparator } from 'playwright-core/lib/utils';
     import { createCrawleeSubFolders, runAxeScript } from '#root/crawlers/commonCrawlerFunc.js';
     import { generateArtifacts } from '#root/mergeAxeResults.js';
@@ -529,15 +529,16 @@ const clickFunc = async (elem,page) => {
           continue;
         }
       }
+      //for Mac/Win website/sitemap custom flow scan 
       if ( !(viewportWidth || customDevice) && line.trim() === `const browser = await webkit.launch({` || line.trim() ===  `const browser = await chromium.launch({`) {
         appendToGeneratedScript(`
-  const browser = await chromium.launch({
+  const browser = await webkit.launch({
     args:['--window-size=1920,1040'],`);
         continue;
       }
-      
+      //for MAC custom flow scan with custom viewport width 
       if ( line.trim() === `const browser = await webkit.launch({`) {
-        appendToGeneratedScript(`  const browser = await chromium.launch({`);
+        appendToGeneratedScript(`  const browser = await webkit.launch({`);
         continue;
       }
 

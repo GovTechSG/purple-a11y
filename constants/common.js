@@ -297,11 +297,25 @@ const checkUrlConnectivityWithBrowser = async (
   const data = sanitizeUrlInput(url);
 
   if (data.isValid) {
-    const browserContext = await chromium.launchPersistentContext(clonedDataDir, {
-      ...getPlaywrightLaunchOptions(browserToRun),
-      ...(viewport && { viewport }),
-      ...(userAgent && { userAgent }),
-    });
+    let browserContext;
+
+    try {
+      browserContext = await chromium.launchPersistentContext(clonedDataDir, {
+        ...getPlaywrightLaunchOptions(browserToRun),
+        ...(viewport && { viewport }),
+        ...(userAgent && { userAgent }),
+      });
+    } catch (err) {
+      printMessage(
+        [
+          'Unable to use chromium. Please install Chromium by running `npx playwright install chromium` before running the scan.',
+        ],
+        messageOptions,
+      );
+      res.status = constants.urlCheckStatuses.browserError.code;
+      return res;
+    }
+
     // const context = await browser.newContext();
     const page = await browserContext.newPage();
 
@@ -426,7 +440,7 @@ export const prepareData = argv => {
     nameEmail,
     customFlowLabel,
     specifiedMaxConcurrency,
-    needsReviewItems
+    needsReviewItems,
   } = argv;
 
   // construct filename for scan results
@@ -780,7 +794,6 @@ export const cloneChromeProfiles = randomToken => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
-    console.warn('Unable to find Chrome data directory in the system.');
     return;
   }
 
@@ -826,7 +839,6 @@ export const cloneEdgeProfiles = randomToken => {
   const baseDir = getDefaultEdgeDataDir();
 
   if (!baseDir) {
-    console.warn('Unable to find Edge data directory in the system.');
     return;
   }
 
@@ -869,7 +881,6 @@ export const deleteClonedChromeProfiles = () => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
-    console.warn(`Unable to find Chrome data directory in the system.`);
     return;
   }
 
