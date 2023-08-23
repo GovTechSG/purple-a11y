@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd "$(dirname "${BASH_SOURCE[0]}")"
+cd "https://github.com/GovTechSG/purple-hats/tree/fix/playwright-install-actions$(dirname "${BASH_SOURCE[0]}")"
 
 CURR_FOLDERNAME=$(basename $PWD)
 if [ $CURR_FOLDERNAME = "scripts" ]; then
@@ -39,6 +39,9 @@ fi
 
 echo "Installing Node dependencies to $PWD"
 npm ci --force
+
+echo "Installing Playwright browsers"
+npx playwright install chromium webkit
 
 
 
