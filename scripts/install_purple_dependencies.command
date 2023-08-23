@@ -1,6 +1,7 @@
 #!/bin/bash
 
-cd "https://github.com/GovTechSG/purple-hats/tree/fix/playwright-install-actions$(dirname "${BASH_SOURCE[0]}")"
+cd "$(dirname "${BASH_SOURCE[0]}")"
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 CURR_FOLDERNAME=$(basename $PWD)
 if [ $CURR_FOLDERNAME = "scripts" ]; then
@@ -20,7 +21,6 @@ if ! [ -f nodejs-mac-x64/bin/node ]; then
   mkdir nodejs-mac-x64 && tar -xzf nodejs-mac-x64.tar.gz -C nodejs-mac-x64 --strip-components=1 && rm ./nodejs-mac-x64.tar.gz
 fi
 
-__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source ${__dir}/hats_shell.sh
 
 if [ -d "/Applications/Cloudflare WARP.app" ]; then
