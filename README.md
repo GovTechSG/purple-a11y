@@ -2,6 +2,8 @@
 
 Purple HATS is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).
 
+This is the engine and command-line interface (CLI) for Purple HATS.  For a desktop graphical user interface (GUI), check out [Purple HATS Desktop](https://github.com/GovTechSG/purple-hats-desktop).
+
 ## Technology Stack
 
 1. [Crawlee](https://crawlee.dev/)
