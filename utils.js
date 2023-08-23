@@ -34,12 +34,12 @@ export const isWhitelistedContentType = contentType => {
 
 export const getStoragePath = (randomToken) => {
   if (constants.exportDirectory === process.cwd()) {
-    return `results/${randomToken}_${constants.urlsCrawledObj.scanned.length}pages`; 
+    return `results/${randomToken}`; 
   } else {
     if (!path.isAbsolute(constants.exportDirectory)) {
       constants.exportDirectory = path.resolve(process.cwd(), constants.exportDirectory);
     }
-    return `${constants.exportDirectory}/${randomToken}_${constants.urlsCrawledObj.scanned.length}pages`;
+    return `${constants.exportDirectory}/${randomToken}`;
   }
 }
   
