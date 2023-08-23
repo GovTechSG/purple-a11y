@@ -20,6 +20,7 @@ $env:Path = "$path_to_hats\node_modules\.bin;./node_modules/.bin;$env:Path";
 
 echo "INFO: Set path to Playwright cache for this session"
 $env:PLAYWRIGHT_BROWSERS_PATH = "$path_to_hats\ms-playwright"
+$env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "true"
 
 if (Test-Path purple-hats) {
    echo "INFO: Set path to purple-hats for this session"
