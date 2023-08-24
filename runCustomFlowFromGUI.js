@@ -1,4 +1,4 @@
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 import { getComparator } from 'playwright-core/lib/utils';
 import { createCrawleeSubFolders, runAxeScript } from '#root/crawlers/commonCrawlerFunc.js';
 import { generateArtifacts } from '#root/mergeAxeResults.js';
