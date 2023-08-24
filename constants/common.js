@@ -308,7 +308,7 @@ const checkUrlConnectivityWithBrowser = async (
     } catch (err) {
       printMessage(
         [
-          'Unable to use chromium. Please install Chromium by running `npx playwright install chromium` before running the scan.',
+          `Unable to launch browser\n${err}`,
         ],
         messageOptions,
       );
