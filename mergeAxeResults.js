@@ -355,6 +355,7 @@ export const generateArtifacts = async (
   pagesScanned,
   customFlowLabel,
 ) => {
+  const phAppVersion = constants.appVersion;
   const storagePath = getStoragePath(randomToken);
   const directory = `${storagePath}/${constants.allIssueFileName}`;
   const allIssues = {
@@ -368,6 +369,7 @@ export const generateArtifacts = async (
     topFiveMostIssues: [],
     wcagViolations: new Set(),
     customFlowLabel,
+    phAppVersion,
     items: {
       mustFix: { description: itemTypeDescription.mustFix, totalItems: 0, rules: {} },
       goodToFix: { description: itemTypeDescription.goodToFix, totalItems: 0, rules: {} },

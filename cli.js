@@ -387,7 +387,8 @@ const scanInit = async argvs => {
   }
 
   printMessage([`Purple HATS version: ${appVersion}`, 'Starting scan...'], messageOptions);
-
+  constants.appVersion = appVersion; 
+  
   if (argvs.scanner === constants.scannerTypes.custom) {
     try {
       await playwrightAxeGenerator(data);
