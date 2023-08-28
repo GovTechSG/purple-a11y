@@ -237,18 +237,19 @@ const crawlDomain = async (
   await crawler.run();
 
   // wait for pdf downloads to complete
-  const pdfsScanned = await Promise.all(pdfDownloads); 
-  pdfsScanned.forEach(pdf => urlsCrawled.scanned.push(pdf));
+  await Promise.all(pdfDownloads); 
 
   // scan and process pdf documents
   await runPdfScan(randomToken);
-
+  
   // transform result format
-  const pdfResults = mapPdfScanResults(randomToken, uuidToPdfMapping);
-
+  const [pdfResults, invalidUrls] = mapPdfScanResults(randomToken, uuidToPdfMapping);
+  
   // push results for each pdf document to key value store 
   await Promise.all(pdfResults.map(result => dataset.pushData(result)));
-  
+  pdfResults.forEach(result => urlsCrawled.scanned.push({ url: result.url, pageTitle: result.pageTitle }));
+  invalidUrls.forEach(url => urlsCrawled.invalid.push(url));
+
   if (process.env.RUNNING_FROM_PH_GUI) {
     console.log('Electron scan completed');
   }

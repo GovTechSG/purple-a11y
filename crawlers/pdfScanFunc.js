@@ -4,6 +4,7 @@ import { globSync } from 'glob';
 import { consoleLogger, silentLogger } from '../logs.js';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
+import { pipeline } from 'stream/promises';
 
 // CONSTANTS 
 
@@ -64,8 +65,7 @@ const getVeraProfile = () => {
 export const handlePdfDownload = (randomToken, pdfDownloads, request, sendRequest) => {
   const pdfFileName = randomUUID();
   const trimmedUrl = request.url.trim(); 
-  const pageTitle = decodeURI(trimmedUrl).split('/').pop();
-
+  
   pdfDownloads.push(
     new Promise(async (resolve, rej) => {
       const pdfResponse = await sendRequest({ responseType: 'buffer', isStream: true });
@@ -79,9 +79,8 @@ export const handlePdfDownload = (randomToken, pdfDownloads, request, sendReques
       });
       pdfResponse.on('end', () => {
         downloadFile.end();
+        resolve();
       });
-
-      resolve({ url: trimmedUrl, pageTitle });
     }),
   );
 
@@ -128,6 +127,7 @@ export const mapPdfScanResults = (randomToken, uuidToUrlMapping) => {
   const errorMeta = JSON.parse(errorMetaRaw);
 
   const resultsList = [];
+  const invalidUrls = []; 
 
   // jobs: files that are scanned
   const {
@@ -160,6 +160,7 @@ export const mapPdfScanResults = (randomToken, uuidToUrlMapping) => {
     if (!validationResult) { // check for error in scan
       consoleLogger.error(`Unable to scan ${pageTitle}, skipping`);
       silentLogger.error(`Exception type: ${taskResult.type}, message: ${taskResult.exceptionMessage}`);
+      invalidUrls.push(url);
       continue; // skip this job
     }
 
@@ -186,7 +187,7 @@ export const mapPdfScanResults = (randomToken, uuidToUrlMapping) => {
 
     resultsList.push(translated); 
   }
-  return resultsList;
+  return [resultsList, invalidUrls];
 };
 
 const getPageFromContext = (context) => {
@@ -222,7 +223,7 @@ const transformRule = (rule) => {
     const { errorMessage, context } = checks[checkIdx];
     transformed.items.push({ message: errorMessage, page: getPageFromContext(context) });
   }
-  const ruleId = `pdf-${specification}-${clause}-${testNumber}`.replaceAll(' ', '_'); // TODO: rule id
+  const ruleId = `pdf-${specification}-${clause}-${testNumber}`.replaceAll(' ', '_');
   
   return [ruleId, transformed]; 
 };
