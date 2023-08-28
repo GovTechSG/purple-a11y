@@ -165,19 +165,21 @@ const crawlSitemap = async (
 
   await requestList.isFinished();
 
-  // wait for pdf downloads to complete
-  await Promise.all(pdfDownloads); 
+  if (pdfDownloads.length > 0) {
+    // wait for pdf downloads to complete
+    await Promise.all(pdfDownloads); 
 
-  // scan and process pdf documents
-  await runPdfScan(randomToken);
-  
-  // transform result format
-  const [pdfResults, invalidUrls] = mapPdfScanResults(randomToken, uuidToPdfMapping);
-  
-  // push results for each pdf document to key value store 
-  await Promise.all(pdfResults.map(result => dataset.pushData(result)));
-  pdfResults.forEach(result => urlsCrawled.scanned.push({ url: result.url, pageTitle: result.pageTitle }));
-  invalidUrls.forEach(url => urlsCrawled.invalid.push(url)); 
+    // scan and process pdf documents
+    await runPdfScan(randomToken);
+    
+    // transform result format
+    const [pdfResults, invalidUrls] = mapPdfScanResults(randomToken, uuidToPdfMapping);
+    
+    // push results for each pdf document to key value store 
+    await Promise.all(pdfResults.map(result => dataset.pushData(result)));
+    pdfResults.forEach(result => urlsCrawled.scanned.push({ url: result.url, pageTitle: result.pageTitle }));
+    invalidUrls.forEach(url => urlsCrawled.invalid.push(url)); 
+  }
 
   if (process.env.RUNNING_FROM_PH_GUI) {
     console.log('Electron scan completed');

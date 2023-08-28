@@ -109,8 +109,7 @@ export const runAxeScript = async (needsReview, page, selectors = []) => {
 export const createCrawleeSubFolders = async randomToken => {
   const dataset = await crawlee.Dataset.open(randomToken);
   const requestQueue = await crawlee.RequestQueue.open(randomToken);
-  const pdfStore = await crawlee.KeyValueStore.open('pdfs');
-  return { dataset, requestQueue, pdfStore };
+  return { dataset, requestQueue };
 };
 
 export const preNavigationHooks = [

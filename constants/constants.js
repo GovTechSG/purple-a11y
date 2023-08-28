@@ -193,7 +193,6 @@ const urlsCrawledObj = {
   blacklisted: [],
   exceededRequests: [],
   forbidden: [],
-  pdfScanned: [],
 };
 
 const scannerTypes = {
