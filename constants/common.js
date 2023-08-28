@@ -242,7 +242,11 @@ const checkUrlConnectivity = async url => {
 
         res.content = response.data;
       })
-      .catch(error => {
+      .catch(async error => {
+        if (error.code === 'ECONNABORTED') {
+          res.status = constants.urlCheckStatuses.axiosTimeout.code; 
+          return res;
+        }
         if (error.response) {
           if (error.response.status === 401) {
             // enters here if URL is protected by basic auth
@@ -401,19 +405,18 @@ export const checkUrl = async (
       playwrightDeviceDetailsObject
     );
   } else {
-    try {
       res = await checkUrlConnectivity(url);
       console.log('checking url connectivity using axios: ', res.status);
-    } catch (error) {
-      res = await checkUrlConnectivityWithBrowser(
-        url, 
-        browser, 
-        clonedDataDir, 
-        playwrightDeviceDetailsObject
-      )
-      console.log('fall back to check url connectivity using browser: ', res.status);
+      if (res.status === constants.urlCheckStatuses.axiosTimeout.code) {
+        res = await checkUrlConnectivityWithBrowser(
+          url,
+          browser, 
+          clonedDataDir, 
+          playwrightDeviceDetailsObject
+        )
+        console.log('fall back to checking connectivity using browser: ', res.status);
     }
-  }
+  } 
 
   if (
     res.status === constants.urlCheckStatuses.success.code &&
@@ -548,9 +551,8 @@ export const getLinksFromSitemap = async (
       await browserContext.close();
     }
     if (validator.isURL(url, urlOptions)) {
-      const useAxios = os.platform() === 'win32' && browser === constants.browserTypes.edge && !proxy;
       if (proxy) {
-        getDataUsingPlaywright();
+        await getDataUsingPlaywright();
       } else {
         try {
           const instance = axios.create({
@@ -561,8 +563,10 @@ export const getLinksFromSitemap = async (
           data = await (await instance.get(url, {timeout: 2000})).data;
           console.log('fetching url using axios'); 
         } catch (error) {
-          console.log('fall back to fetching url using playwright');
-          getDataUsingPlaywright();
+          if (error.code === 'ECONNABORTED') {
+            console.log('fall back to fetching url using playwright');
+            await getDataUsingPlaywright();
+          }
         }
       }
     } else {
@@ -1039,8 +1043,10 @@ export const submitForm = async (
       await axios.get(finalUrl, {timeout: 2000}); 
       console.log('submitting form via axios');
     } catch (error) {
-      await submitFormViaPlaywright(browserToRun, userDataDirectory, finalUrl); 
-      console.log('fallback to submitting form via playwright');
+      if (error.code === 'ECONNABORTED') {
+        await submitFormViaPlaywright(browserToRun, userDataDirectory, finalUrl); 
+        console.log('fallback to submitting form via playwright');
+      }
     }
   }
 }
