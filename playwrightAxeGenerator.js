@@ -24,7 +24,7 @@ import constants, {
   getExecutablePath,
   removeQuarantineFlag,
 } from '#root/constants/constants.js';
-import { isSkippedUrl, submitFormViaPlaywright } from '#root/constants/common.js';
+import { isSkippedUrl, submitForm } from '#root/constants/common.js';
 import { spawnSync } from 'child_process';
 import { getDefaultChromeDataDir, getDefaultEdgeDataDir } from './constants/constants.js';
 
@@ -88,7 +88,7 @@ const playwrightAxeGenerator = async data => {
     import fs from 'fs';
     import path from 'path';
     import printMessage from 'print-message';
-    import { isSkippedUrl, submitFormViaPlaywright } from '#root/constants/common.js';
+    import { isSkippedUrl, submitForm } from '#root/constants/common.js';
     import { spawnSync } from 'child_process';
     import safe from 'safe-regex';
     import { consoleLogger, silentLogger } from '#root/logs.js';
@@ -376,7 +376,7 @@ const clickFunc = async (elem,page) => {
               ${formatScriptStringVar(customFlowLabel)}
             );
 
-  await submitFormViaPlaywright(
+  await submitForm(
     ${formatScriptStringVar(data.browser)},
     ${formatScriptStringVar(data.userDataDirectory)},
     ${formatScriptStringVar(data.url)},

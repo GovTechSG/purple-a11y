@@ -394,7 +394,9 @@ export const checkUrl = async (
 ) => {
   let res;
 
-  if (browser) {
+  const isWindowsOSAndEdgeBrowser = os.platform() === 'win32' && browser === constants.browserTypes.edge; 
+
+  if (browser && !isWindowsOSAndEdgeBrowser) {
     res = await checkUrlConnectivityWithBrowser(
       url,
       browser,
@@ -945,12 +947,7 @@ export const deleteClonedEdgeProfiles = () => {
 export const submitFormViaPlaywright = async (
   browserToRun,
   userDataDirectory,
-  websiteUrl,
-  scanType,
-  email,
-  name,
-  scanResultsJson,
-  numberOfPagesScanned,
+  finalUrl
 ) => {
   const dirName = `clone-${Date.now()}`;
   let clonedDir = null;
@@ -959,15 +956,6 @@ export const submitFormViaPlaywright = async (
   } else if (proxy && browserToRun === constants.browserTypes.chrome) {
     clonedDir = cloneChromeProfiles(dirName);
   }
-
-  const finalUrl =
-    `${formDataFields.formUrl}?` +
-    `${formDataFields.websiteUrlField}=${websiteUrl}&` +
-    `${formDataFields.scanTypeField}=${scanType}&` +
-    `${formDataFields.emailField}=${email}&` +
-    `${formDataFields.nameField}=${name}&` +
-    `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}&` +
-    `${formDataFields.numberOfPagesScannedField}=${numberOfPagesScanned}`;
 
   const browserContext = await chromium.launchPersistentContext(clonedDir || userDataDirectory, {
     ...getPlaywrightLaunchOptions(browserToRun),
@@ -1006,6 +994,32 @@ export const submitFormViaPlaywright = async (
   // await context.close();
 };
 
+export const submitForm = async (
+  browserToRun,
+  userDataDirectory,
+  websiteUrl,
+  scanType,
+  email,
+  name,
+  scanResultsJson,
+  numberOfPagesScanned,
+) => {
+  const finalUrl =
+    `${formDataFields.formUrl}?` +
+    `${formDataFields.websiteUrlField}=${websiteUrl}&` +
+    `${formDataFields.scanTypeField}=${scanType}&` +
+    `${formDataFields.emailField}=${email}&` +
+    `${formDataFields.nameField}=${name}&` +
+    `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}&` +
+    `${formDataFields.numberOfPagesScannedField}=${numberOfPagesScanned}`;
+
+  const isWindowsOSAndEdgeBrowser = os.platform() === 'win32' && browserToRun === constants.browserTypes.edge;
+  if (isWindowsOSAndEdgeBrowser) {
+    await axios.get(finalUrl); 
+  } else {
+    await submitFormViaPlaywright(browserToRun, userDataDirectory, finalUrl); 
+  }
+}
 /**
  * @param {string} browser browser name ("chrome" or "edge", null for chromium, the default Playwright browser)
  * @returns playwright launch options object. For more details: https://playwright.dev/docs/api/class-browsertype#browser-type-launch

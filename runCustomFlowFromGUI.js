@@ -14,7 +14,7 @@ import constants, {
   getExecutablePath,
   removeQuarantineFlag,
 } from '#root/constants/constants.js';
-import { isSkippedUrl, submitFormViaPlaywright } from '#root/constants/common.js';
+import { isSkippedUrl, submitForm } from '#root/constants/common.js';
 import { spawnSync } from 'child_process';
 import { getDefaultChromeDataDir, getDefaultEdgeDataDir } from './constants/constants.js';
 import { argv } from 'process';

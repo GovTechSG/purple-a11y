@@ -351,7 +351,11 @@ const scanInit = async argvs => {
   }
   const data = prepareData(argvs);
 
-  setHeadlessMode(data.isHeadless);
+  if (os.platform() === 'win32' && argvs.browserToRun === constants.browserTypes.edge) {
+    setHeadlessMode(false);
+  } else {
+    setHeadlessMode(data.isHeadless);
+  }
 
   let screenToScan;
 

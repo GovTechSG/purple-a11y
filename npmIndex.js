@@ -3,7 +3,7 @@ import path from 'path';
 import printMessage from 'print-message';
 import { fileURLToPath } from 'url';
 import constants from './constants/constants.js';
-import { submitFormViaPlaywright } from './constants/common.js'
+import { submitForm } from './constants/common.js'
 import { createCrawleeSubFolders, filterAxeResults } from './crawlers/commonCrawlerFunc.js';
 import {
   createAndUpdateResultsFolders,
@@ -98,7 +98,7 @@ export const init = async (entryUrl, customFlowLabelTestString, name = "Your Nam
         customFlowLabelTestString,
       );
 
-      await submitFormViaPlaywright(
+      await submitForm(
         constants.browserTypes.chromium,
         '',
         scanDetails.requestUrl,

@@ -6,7 +6,7 @@ import crawlDomain from './crawlers/crawlDomain.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
 import constants, { basicAuthRegex } from './constants/constants.js';
-import { submitFormViaPlaywright } from './constants/common.js';
+import { submitForm } from './constants/common.js';
 
 const combineRun = async (details, deviceToScan) => {
   const envDetails = { ...details };
@@ -103,7 +103,7 @@ const combineRun = async (details, deviceToScan) => {
       urlsCrawled.scanned,
     );
     const [name, email] = nameEmail.split(':');
-    await submitFormViaPlaywright(
+    await submitForm(
       browser,
       userDataDirectory,
       url,
