@@ -228,7 +228,7 @@ const checkUrlConnectivity = async url => {
       .get(data.url, {
         headers: { 'User-Agent': devices['Desktop Chrome HiDPI'].userAgent },
         httpsAgent,
-        timeout: 15000,
+        timeout: 2000,
       })
       .then(async response => {
         const redirectUrl = response.request.res.responseUrl;
@@ -393,17 +393,26 @@ export const checkUrl = async (
   playwrightDeviceDetailsObject,
 ) => {
   let res;
-
-  const useAxios = os.platform() === 'win32' && browser === constants.browserTypes.edge && !proxy; 
-  if (browser && !useAxios) {
+  if (proxy) {
     res = await checkUrlConnectivityWithBrowser(
       url,
-      browser,
-      clonedDataDir,
-      playwrightDeviceDetailsObject,
+      browser, 
+      clonedDataDir, 
+      playwrightDeviceDetailsObject
     );
   } else {
-    res = await checkUrlConnectivity(url);
+    try {
+      res = await checkUrlConnectivity(url);
+      console.log('checking url connectivity using axios: ', res.status);
+    } catch (error) {
+      res = await checkUrlConnectivityWithBrowser(
+        url, 
+        browser, 
+        clonedDataDir, 
+        playwrightDeviceDetailsObject
+      )
+      console.log('fall back to check url connectivity using browser: ', res.status);
+    }
   }
 
   if (
@@ -510,41 +519,51 @@ export const getLinksFromSitemap = async (
   const fetchUrls = async url => {
     let data;
     let sitemapType;
+
+    const getDataUsingPlaywright = async () => {
+      const browserContext = await chromium.launchPersistentContext(
+        finalUserDataDirectory,
+        getPlaywrightLaunchOptions(browser),
+      );
+      const page = await browserContext.newPage();
+      await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+
+      const urlSet = page.locator('urlset');
+      const sitemapIndex = page.locator('sitemapindex');
+      const rss = page.locator('rss');
+      const feed = page.locator('feed');
+
+      const isRoot = async locator => (await locator.count()) > 0;
+
+      if (await isRoot(urlSet)) {
+        data = await urlSet.evaluate(elem => elem.outerHTML);
+      } else if (await isRoot(sitemapIndex)) {
+        data = await sitemapIndex.evaluate(elem => elem.outerHTML);
+      } else if (await isRoot(rss)) {
+        data = await rss.evaluate(elem => elem.outerHTML);
+      } else if (await isRoot(feed)) {
+        data = await feed.evaluate(elem => elem.outerHTML);
+      }
+
+      await browserContext.close();
+    }
     if (validator.isURL(url, urlOptions)) {
       const useAxios = os.platform() === 'win32' && browser === constants.browserTypes.edge && !proxy;
-      if (browser && !useAxios) {
-        const browserContext = await chromium.launchPersistentContext(
-          finalUserDataDirectory,
-          getPlaywrightLaunchOptions(browser),
-        );
-        const page = await browserContext.newPage();
-        await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
-
-        const urlSet = page.locator('urlset');
-        const sitemapIndex = page.locator('sitemapindex');
-        const rss = page.locator('rss');
-        const feed = page.locator('feed');
-
-        const isRoot = async locator => (await locator.count()) > 0;
-
-        if (await isRoot(urlSet)) {
-          data = await urlSet.evaluate(elem => elem.outerHTML);
-        } else if (await isRoot(sitemapIndex)) {
-          data = await sitemapIndex.evaluate(elem => elem.outerHTML);
-        } else if (await isRoot(rss)) {
-          data = await rss.evaluate(elem => elem.outerHTML);
-        } else if (await isRoot(feed)) {
-          data = await feed.evaluate(elem => elem.outerHTML);
-        }
-
-        await browserContext.close();
+      if (proxy) {
+        getDataUsingPlaywright();
       } else {
-        const instance = axios.create({
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false,
-          }),
-        });
-        data = await (await instance.get(url)).data;
+        try {
+          const instance = axios.create({
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false,
+            }),
+          });
+          data = await (await instance.get(url, {timeout: 2000})).data;
+          console.log('fetching url using axios'); 
+        } catch (error) {
+          console.log('fall back to fetching url using playwright');
+          getDataUsingPlaywright();
+        }
       }
     } else {
       data = fs.readFileSync(url, 'utf8');
@@ -1013,11 +1032,16 @@ export const submitForm = async (
     `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}&` +
     `${formDataFields.numberOfPagesScannedField}=${numberOfPagesScanned}`;
 
-  const useAxios = os.platform() === 'win32' && browserToRun === constants.browserTypes.edge && !proxy;
-  if (useAxios) {
-    await axios.get(finalUrl); 
-  } else {
+  if (proxy) {
     await submitFormViaPlaywright(browserToRun, userDataDirectory, finalUrl); 
+  } else {
+    try {
+      await axios.get(finalUrl, {timeout: 2000}); 
+      console.log('submitting form via axios');
+    } catch (error) {
+      await submitFormViaPlaywright(browserToRun, userDataDirectory, finalUrl); 
+      console.log('fallback to submitting form via playwright');
+    }
   }
 }
 /**
@@ -1041,6 +1065,9 @@ export const getPlaywrightLaunchOptions = browser => {
   if (proxy) {
     options.headless = false;
     options.slowMo = 1000; // To ensure server-side rendered proxy page is loaded
+  } else if (browser === constants.browserTypes.edge) {
+    // edge should be in non-headless mode
+    options.headless = false; 
   }
   return options;
 };
