@@ -406,7 +406,6 @@ export const checkUrl = async (
     );
   } else {
       res = await checkUrlConnectivity(url);
-      console.log('checking url connectivity using axios: ', res.status);
       if (res.status === constants.urlCheckStatuses.axiosTimeout.code) {
         res = await checkUrlConnectivityWithBrowser(
           url,
@@ -414,7 +413,6 @@ export const checkUrl = async (
           clonedDataDir, 
           playwrightDeviceDetailsObject
         )
-        console.log('fall back to checking connectivity using browser: ', res.status);
     }
   } 
 
@@ -561,10 +559,8 @@ export const getLinksFromSitemap = async (
             }),
           });
           data = await (await instance.get(url, {timeout: 2000})).data;
-          console.log('fetching url using axios'); 
         } catch (error) {
           if (error.code === 'ECONNABORTED') {
-            console.log('fall back to fetching url using playwright');
             await getDataUsingPlaywright();
           }
         }
@@ -1041,11 +1037,9 @@ export const submitForm = async (
   } else {
     try {
       await axios.get(finalUrl, {timeout: 2000}); 
-      console.log('submitting form via axios');
     } catch (error) {
       if (error.code === 'ECONNABORTED') {
         await submitFormViaPlaywright(browserToRun, userDataDirectory, finalUrl); 
-        console.log('fallback to submitting form via playwright');
       }
     }
   }
