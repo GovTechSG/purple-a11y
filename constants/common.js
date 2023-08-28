@@ -35,6 +35,21 @@ export const dropAllExceptWhitelisted = htmlSnippet => {
   return htmlSnippet.replace(regex, ``);
 };
 
+export const checkForValidPath = dirPath => {
+  if (typeof dirPath === 'string') {
+    const absolutePath = path.isAbsolute(dirPath) ? dirPath : path.resolve(process.cwd(), dirPath);
+
+    try {
+      fs.accessSync(absolutePath);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  } else {
+    return false;
+  }
+};
+
 // For all attributes within mutedAttributeValues array
 // replace their values with "something" while maintaining the attribute
 export const muteAttributeValues = htmlSnippet => {
@@ -154,14 +169,14 @@ export const isValidXML = async content => {
   return { status, parsedContent };
 };
 
-export const isSkippedUrl = (page, whitelistedDomains) => {	
+export const isSkippedUrl = (pageUrl, whitelistedDomains) => {
   const isWhitelisted = whitelistedDomains.filter(pattern => {
     pattern = pattern.replace(/[\n\r]+/g, '');
-
-    if (pattern) {
-      return new RegExp(pattern).test(page.url());
+    if (!pattern.startsWith('http')) {
+      return new RegExp(pattern).test(pageUrl);
+    } else {
+      return pattern === pageUrl;
     }
-    return false;
   });
 
   const noMatch = Object.keys(isWhitelisted).every(key => isWhitelisted[key].length === 0);
@@ -310,12 +325,7 @@ const checkUrlConnectivityWithBrowser = async (
         ...(userAgent && { userAgent }),
       });
     } catch (err) {
-      printMessage(
-        [
-          `Unable to launch browser\n${err}`,
-        ],
-        messageOptions,
-      );
+      printMessage([`Unable to launch browser\n${err}`], messageOptions);
       res.status = constants.urlCheckStatuses.browserError.code;
       return res;
     }
@@ -454,14 +464,13 @@ export const prepareData = argv => {
     customFlowLabel,
     specifiedMaxConcurrency,
     needsReviewItems,
+    blacklistedPatternsFilename,
   } = argv;
 
   // construct filename for scan results
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
   const domain = argv.isLocalSitemap ? 'custom' : new URL(argv.url).hostname;
-  const sanitisedLabel = customFlowLabel
-    ? `_${customFlowLabel.replaceAll(' ', '_')}`
-    : '';
+  const sanitisedLabel = customFlowLabel ? `_${customFlowLabel.replaceAll(' ', '_')}` : '';
   const resultFilename = `${date}_${time}${sanitisedLabel}_${domain}`;
 
   return {
@@ -481,6 +490,7 @@ export const prepareData = argv => {
     specifiedMaxConcurrency,
     needsReviewItems,
     randomToken: resultFilename,
+    blacklistedPatternsFilename,
   };
 };
 

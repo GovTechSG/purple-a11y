@@ -194,6 +194,7 @@ const urlsCrawledObj = {
   blacklisted: [],
   exceededRequests: [],
   forbidden: [],
+  userExcluded: [],
 };
 
 const scannerTypes = {
@@ -288,8 +289,12 @@ const urlCheckStatuses = {
   },
   notASitemap: { code: 15, message: 'Provided URL or filepath is not a sitemap.' },
   unauthorised: { code: 16, message: 'Provided URL needs basic authorisation.' },
-  browserError: { code: 17, message: "No browser available to run scans. Please ensure you have Chrome or Edge (for Windows only) installed."},
-  axiosTimeout: { code: 18, message: 'Axios timeout exceeded. Falling back on browser checks.'}
+  browserError: {
+    code: 17,
+    message:
+      'No browser available to run scans. Please ensure you have Chrome or Edge (for Windows only) installed.',
+  },
+  axiosTimeout: { code: 18, message: 'Axios timeout exceeded. Falling back on browser checks.' },
 };
 
 const browserTypes = {
@@ -310,7 +315,7 @@ const xmlSitemapTypes = {
 export default {
   allIssueFileName: 'all_issues',
   cliZipFileName: 'a11y-scan-results.zip',
-  exportDirectory: `${process.cwd()}`, 
+  exportDirectory: `${process.cwd()}`,
   maxRequestsPerCrawl,
   maxConcurrency: 25,
   scannerTypes,
@@ -320,7 +325,7 @@ export default {
   launchOptionsArgs: launchOptionsArgs,
   xmlSitemapTypes,
   urlCheckStatuses,
-  launcher: chromium
+  launcher: chromium,
 };
 
 export const rootPath = __dirname;

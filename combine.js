@@ -1,8 +1,8 @@
 import printMessage from 'print-message';
-
+import fs from 'fs-extra';
+import safe from 'safe-regex';
 import crawlSitemap from './crawlers/crawlSitemap.js';
 import crawlDomain from './crawlers/crawlDomain.js';
-
 import { generateArtifacts } from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
 import constants, { basicAuthRegex } from './constants/constants.js';
@@ -28,12 +28,31 @@ const combineRun = async (details, deviceToScan) => {
     strategy,
     specifiedMaxConcurrency,
     needsReviewItems,
+    blacklistedPatternsFilename,
   } = envDetails;
 
   process.env.CRAWLEE_LOG_LEVEL = 'ERROR';
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
   const host = type === constants.scannerTypes.sitemap && isLocalSitemap ? '' : getHost(url);
+
+  let blacklistedPatterns = null;
+  if (blacklistedPatternsFilename) {
+    const rawPatterns = fs.readFileSync(blacklistedPatternsFilename).toString();
+    blacklistedPatterns = rawPatterns.split('\n').filter(pattern => pattern.trim() !== '');
+
+    let unsafe = blacklistedPatterns.filter(function (pattern) {
+      return !safe(pattern);
+    });
+
+    if (unsafe.length > 0) {
+      let unsafeExpressionsError =
+        'Unsafe expressions detected: ' + unsafe + ' Please revise ' + blacklistedPatternsFilename;
+      consoleLogger.error(unsafeExpressionsError);
+      silentLogger.error(unsafeExpressionsError);
+      process.exit(1);
+    }
+  }
 
   // remove basic-auth credentials from URL
   let finalUrl = url;
@@ -67,6 +86,7 @@ const combineRun = async (details, deviceToScan) => {
         userDataDirectory,
         specifiedMaxConcurrency,
         needsReviewItems,
+        blacklistedPatterns,
       );
       break;
 
@@ -82,6 +102,7 @@ const combineRun = async (details, deviceToScan) => {
         strategy,
         specifiedMaxConcurrency,
         needsReviewItems,
+        blacklistedPatterns,
       );
       break;
 

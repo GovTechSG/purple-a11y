@@ -7,23 +7,20 @@ import path from 'path';
 import _yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import printMessage from 'print-message';
-import { devices, webkit } from 'playwright';
+import { devices } from 'playwright';
 import { cleanUp, zipResults, setHeadlessMode, getVersion, getStoragePath } from './utils.js';
 import {
   checkUrl,
   prepareData,
   isFileSitemap,
-  cloneChromeProfiles,
-  cloneEdgeProfiles,
-  deleteClonedChromeProfiles,
-  deleteClonedEdgeProfiles,
   validEmail,
   validName,
   getBrowserToRun,
   getPlaywrightDeviceDetailsObject,
   deleteClonedProfiles,
   getScreenToScan,
-  getClonedProfilesWithRandomToken
+  getClonedProfilesWithRandomToken,
+  checkForValidPath,
 } from './constants/common.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
 import constants, {
@@ -184,19 +181,22 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
           dirPath = path.resolve(process.cwd(), dirPath);
         }
         fs.accessSync(dirPath);
-        return option;  
+        return option;
       } else {
         throw Error('Invalid path');
       }
     } catch (e) {
-      printMessage(
-        [`Invalid directory path. Please ensure path provided exists.`],
-        messageOptions,
-      );
+      printMessage([`Invalid directory path. Please ensure path provided exists.`], messageOptions);
       process.exit(1);
     }
   })
-
+  .coerce('x', option => {
+    if (!checkForValidPath(option)) {
+      printMessage([`Invalid directory path. Please ensure path provided exists.`], messageOptions);
+      process.exit(1);
+    }
+    return option;
+  })
   .check(argvs => {
     if (argvs.scanner === 'custom' && argvs.maxpages) {
       throw new Error('-p or --maxpages is only available in website and sitemap scans.');
@@ -223,8 +223,8 @@ const scanInit = async argvs => {
   let clonedDataDir = '';
   const statuses = constants.urlCheckStatuses;
 
-  const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(argvs.browserToRun, true); 
-  argvs.browserToRun = browserToRun; 
+  const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(argvs.browserToRun, true);
+  argvs.browserToRun = browserToRun;
   clonedDataDir = clonedBrowserDataDir;
 
   if (argvs.customDevice === 'Desktop' || argvs.customDevice === 'Mobile') {
@@ -234,7 +234,11 @@ const scanInit = async argvs => {
 
   // Creating the playwrightDeviceDetailObject
   // for use in crawlDomain & crawlSitemap's preLaunchHook
-  argvs.playwrightDeviceDetailsObject = getPlaywrightDeviceDetailsObject(argvs.deviceChosen, argvs.customDevice, argvs.viewportWidth);
+  argvs.playwrightDeviceDetailsObject = getPlaywrightDeviceDetailsObject(
+    argvs.deviceChosen,
+    argvs.customDevice,
+    argvs.viewportWidth,
+  );
 
   const res = await checkUrl(
     argvs.scanner,
@@ -284,7 +288,7 @@ const scanInit = async argvs => {
       printMessage([statuses.notASitemap.message], messageOptions);
       process.exit(res.status);
     case statuses.browserError.code:
-      printMessage([statuses.browserError.message], messageOptions); 
+      printMessage([statuses.browserError.message], messageOptions);
       process.exit(res.status);
     default:
       break;
@@ -293,19 +297,20 @@ const scanInit = async argvs => {
   if (argvs.exportDirectory) {
     constants.exportDirectory = argvs.exportDirectory;
   }
+
   const data = prepareData(argvs);
 
   setHeadlessMode(data.browser, data.isHeadless);
 
-  const screenToScan = getScreenToScan(argvs.deviceChosen, argvs.customDevice, argvs.viewportWidth); 
+  const screenToScan = getScreenToScan(argvs.deviceChosen, argvs.customDevice, argvs.viewportWidth);
 
-  // Clone profiles a second time 
+  // Clone profiles a second time
   clonedDataDir = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
-  data.userDataDirectory = clonedDataDir; 
+  data.userDataDirectory = clonedDataDir;
 
   printMessage([`Purple HATS version: ${appVersion}`, 'Starting scan...'], messageOptions);
-  constants.appVersion = appVersion; 
-  
+  constants.appVersion = appVersion;
+
   if (argvs.scanner === constants.scannerTypes.custom) {
     try {
       await playwrightAxeGenerator(data);

@@ -108,6 +108,12 @@ export const cliOptions = {
     choices: ['true', 'false'],
     demandOption: false,
   },
+  x: {
+    alias: 'blacklistedPatternsFilename',
+    describe: 'Txt file that has a list of pattern of domains to exclude from accessibility scan',
+    type: 'string',
+    demandOption: false,
+  }
 };
 
 export const configureReportSetting = isEnabled => {
