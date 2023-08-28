@@ -512,7 +512,8 @@ export const getLinksFromSitemap = async (
     let data;
     let sitemapType;
     if (validator.isURL(url, urlOptions)) {
-      if (browser) {
+      const isWindowsOSAndEdgeBrowser = os.platform() === 'win32' && browser === constants.browserTypes.edge;
+      if (browser && !isWindowsOSAndEdgeBrowser) {
         const browserContext = await chromium.launchPersistentContext(
           finalUserDataDirectory,
           getPlaywrightLaunchOptions(browser),
