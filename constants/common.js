@@ -526,13 +526,15 @@ export const getLinksFromSitemap = async (
       } else {
         url = $(urlElement).text();
       }
-      addToUrlList(url);
+      url && addToUrlList(url);
     }
   };
 
   const processNonStandardSitemap = data => {
     const urlsFromData = crawlee.extractUrls({ string: data }).slice(0, maxLinksCount);
-    urlsFromData.forEach(url => addToUrlList(url)); 
+    urlsFromData.forEach(url => {
+      addToUrlList(url)
+    }); 
   };
 
   let finalUserDataDirectory = userDataDirectory;

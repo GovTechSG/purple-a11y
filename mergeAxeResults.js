@@ -211,6 +211,7 @@ const pushResults = async (rPath, allIssues) => {
   allIssues.topFiveMostIssues.push({ url, pageTitle, totalIssues: totalIssuesInPage.size });
 
   ['mustFix', 'goodToFix', 'passed'].forEach(category => {
+    if (!pageResults[category]) return; 
     const { totalItems, rules } = pageResults[category];
     const currCategoryFromAllIssues = allIssues.items[category];
 

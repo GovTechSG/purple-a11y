@@ -15,7 +15,7 @@ import {
   messageOptions,
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
-import { handlePdfDownload, runPdfScan } from './pdfScanFunc.js';
+import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
 import fs from 'fs'; 
 
 const crawlSitemap = async (
@@ -35,6 +35,7 @@ const crawlSitemap = async (
   const { playwrightDeviceDetailsObject } = viewportSettings;
   const { maxConcurrency } = constants;
   const pdfDownloads = [];
+  const uuidToPdfMapping = {}; 
 
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
   const requestList = new crawlee.RequestList({
@@ -75,7 +76,10 @@ const crawlSitemap = async (
       const actualUrl = request.loadedUrl || request.url;
 
       if (isUrlPdf(actualUrl)) {
-        return handlePdfDownload(randomToken, pdfDownloads, request, sendRequest);
+        // pushes download promise into pdfDownloads 
+        const appendMapping = handlePdfDownload(randomToken, pdfDownloads, request, sendRequest);
+        appendMapping(uuidToPdfMapping); 
+        return;
       }
 
       const contentType = response.headers()['content-type'];
@@ -159,11 +163,21 @@ const crawlSitemap = async (
 
   await crawler.run();
 
-  const pdfsScanned = await Promise.all(pdfDownloads); 
-  pdfsScanned.forEach(pdf => urlsCrawled.pdfScanned.push(pdf));
-
   await requestList.isFinished();
+
+  // wait for pdf downloads to complete
+  const pdfsScanned = await Promise.all(pdfDownloads); 
+  pdfsScanned.forEach(pdf => urlsCrawled.scanned.push(pdf));
+
+  // scan and process pdf documents
   await runPdfScan(randomToken);
+  
+  // transform result format
+  const pdfResults = mapPdfScanResults(randomToken, uuidToPdfMapping);
+  
+  // push results for each pdf document to key value store 
+  await Promise.all(pdfResults.map(result => dataset.pushData(result)));
+  
   if (process.env.RUNNING_FROM_PH_GUI) {
     console.log('Electron scan completed');
   }

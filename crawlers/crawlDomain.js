@@ -9,7 +9,7 @@ import {
 import constants, { basicAuthRegex, blackListedFileExtensions } from '../constants/constants.js';
 import { getPlaywrightLaunchOptions, isBlacklistedFileExtensions } from '../constants/common.js';
 import { areLinksEqual } from '../utils.js';
-import { handlePdfDownload, runPdfScan } from './pdfScanFunc.js';
+import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
 import fs from 'fs'; 
 
 const crawlDomain = async (
@@ -31,6 +31,7 @@ const crawlDomain = async (
 
   const { dataset, requestQueue, pdfStore } = await createCrawleeSubFolders(randomToken);
   const pdfDownloads = [];
+  const uuidToPdfMapping = {}; 
 
   if (!fs.existsSync(randomToken)) {
     fs.mkdirSync(randomToken);
@@ -105,7 +106,9 @@ const crawlDomain = async (
 
       // handle pdfs
       if (request.skipNavigation && isUrlPdf(actualUrl)) {
-        return handlePdfDownload(randomToken, pdfDownloads, request, sendRequest);
+        const appendMapping = handlePdfDownload(randomToken, pdfDownloads, request, sendRequest);
+        appendMapping(uuidToPdfMapping); 
+        return;
       }
 
       if (response.status() === 403) {
@@ -233,10 +236,19 @@ const crawlDomain = async (
 
   await crawler.run();
 
+  // wait for pdf downloads to complete
   const pdfsScanned = await Promise.all(pdfDownloads); 
-  pdfsScanned.forEach(pdf => urlsCrawled.pdfScanned.push(pdf));
+  pdfsScanned.forEach(pdf => urlsCrawled.scanned.push(pdf));
 
+  // scan and process pdf documents
   await runPdfScan(randomToken);
+
+  // transform result format
+  const pdfResults = mapPdfScanResults(randomToken, uuidToPdfMapping);
+
+  // push results for each pdf document to key value store 
+  await Promise.all(pdfResults.map(result => dataset.pushData(result)));
+  
   if (process.env.RUNNING_FROM_PH_GUI) {
     console.log('Electron scan completed');
   }
