@@ -394,9 +394,8 @@ export const checkUrl = async (
 ) => {
   let res;
 
-  const isWindowsOSAndEdgeBrowser = os.platform() === 'win32' && browser === constants.browserTypes.edge; 
-
-  if (browser && !isWindowsOSAndEdgeBrowser) {
+  const useAxios = os.platform() === 'win32' && browser === constants.browserTypes.edge && !proxy; 
+  if (browser && !useAxios) {
     res = await checkUrlConnectivityWithBrowser(
       url,
       browser,
@@ -512,8 +511,8 @@ export const getLinksFromSitemap = async (
     let data;
     let sitemapType;
     if (validator.isURL(url, urlOptions)) {
-      const isWindowsOSAndEdgeBrowser = os.platform() === 'win32' && browser === constants.browserTypes.edge;
-      if (browser && !isWindowsOSAndEdgeBrowser) {
+      const useAxios = os.platform() === 'win32' && browser === constants.browserTypes.edge && !proxy;
+      if (browser && !useAxios) {
         const browserContext = await chromium.launchPersistentContext(
           finalUserDataDirectory,
           getPlaywrightLaunchOptions(browser),
@@ -1014,8 +1013,8 @@ export const submitForm = async (
     `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}&` +
     `${formDataFields.numberOfPagesScannedField}=${numberOfPagesScanned}`;
 
-  const isWindowsOSAndEdgeBrowser = os.platform() === 'win32' && browserToRun === constants.browserTypes.edge;
-  if (isWindowsOSAndEdgeBrowser) {
+  const useAxios = os.platform() === 'win32' && browserToRun === constants.browserTypes.edge && !proxy;
+  if (useAxios) {
     await axios.get(finalUrl); 
   } else {
     await submitFormViaPlaywright(browserToRun, userDataDirectory, finalUrl); 
