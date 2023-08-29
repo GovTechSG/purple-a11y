@@ -77,7 +77,7 @@ const crawlSitemap = async (
 
       if (isUrlPdf(actualUrl)) {
         // pushes download promise into pdfDownloads 
-        const appendMapping = handlePdfDownload(randomToken, pdfDownloads, request, sendRequest);
+        const appendMapping = handlePdfDownload(randomToken, pdfDownloads, request, sendRequest, urlsCrawled);
         appendMapping(uuidToPdfMapping); 
         return;
       }
@@ -173,12 +173,10 @@ const crawlSitemap = async (
     await runPdfScan(randomToken);
     
     // transform result format
-    const [pdfResults, invalidUrls] = mapPdfScanResults(randomToken, uuidToPdfMapping);
+    const pdfResults = mapPdfScanResults(randomToken, uuidToPdfMapping);
     
     // push results for each pdf document to key value store 
     await Promise.all(pdfResults.map(result => dataset.pushData(result)));
-    pdfResults.forEach(result => urlsCrawled.scanned.push({ url: result.url, pageTitle: result.pageTitle }));
-    invalidUrls.forEach(url => urlsCrawled.invalid.push(url)); 
   }
 
   if (process.env.RUNNING_FROM_PH_GUI) {

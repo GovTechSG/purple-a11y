@@ -4,7 +4,9 @@ import { globSync } from 'glob';
 import { consoleLogger, silentLogger } from '../logs.js';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
-import { pipeline } from 'stream/promises';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url); 
 
 // CONSTANTS 
 
@@ -62,23 +64,44 @@ const getVeraProfile = () => {
   return veraPdfProfile[0];
 };
 
-export const handlePdfDownload = (randomToken, pdfDownloads, request, sendRequest) => {
+const isPDF = (buffer) => {
+  return (
+    Buffer.isBuffer(buffer) && buffer.lastIndexOf("%PDF-") === 0 && buffer.lastIndexOf("%%EOF") > -1
+  );
+}
+
+export const handlePdfDownload = (randomToken, pdfDownloads, request, sendRequest, urlsCrawled) => {
   const pdfFileName = randomUUID();
   const trimmedUrl = request.url.trim(); 
+  const pageTitle = decodeURI(trimmedUrl).split('/').pop();
   
   pdfDownloads.push(
-    new Promise(async (resolve, rej) => {
+    new Promise(async (resolve) => {
       const pdfResponse = await sendRequest({ responseType: 'buffer', isStream: true });
       pdfResponse.setEncoding('binary');
-
+    
+      const bufs = []; // to check for pdf validity
       const downloadFile = fs.createWriteStream(`${randomToken}/${pdfFileName}.pdf`, {
         flags: 'a',
       });
+
       pdfResponse.on('data', chunk => {
         downloadFile.write(chunk, 'binary');
+        bufs.push(Buffer.from(chunk)); 
       });
+
       pdfResponse.on('end', () => {
         downloadFile.end();
+        const buf = Buffer.concat(bufs);
+        if (isPDF(buf)) {
+          process.env.RUNNING_FROM_PH_GUI
+            && console.log(`Electron crawling::${urlsCrawled.scanned.length}::scanned::${trimmedUrl}`); 
+          urlsCrawled.scanned.push({ url: trimmedUrl, pageTitle }); 
+        } else {
+          process.env.RUNNING_FROM_PH_GUI
+            && console.log(`Electron crawling::${urlsCrawled.scanned.length}::${request.url}`); 
+          urlsCrawled.invalid.push(trimmedUrl);
+        }
         resolve();
       });
     }),
@@ -108,11 +131,10 @@ export const runPdfScan = async (randomToken) => {
     'json',
     '-r', // recurse through directory
     intermediateFolder,
-    '>', // pipe output into a result file
-    intermediateResultPath,
   ];
 
-  spawnSync(veraPdfExe, veraPdfCmdArgs, { shell: true });
+  const ls = spawnSync(veraPdfExe, veraPdfCmdArgs);
+  fs.writeFileSync(intermediateResultPath, ls.stdout, { encoding: 'utf-8' });
 };
 
 // transform results from veraPDF to desired format for report 
@@ -123,11 +145,9 @@ export const mapPdfScanResults = (randomToken, uuidToUrlMapping) => {
   const rawdata = fs.readFileSync(intermediateResultPath);
   const output = JSON.parse(rawdata);
 
-  const errorMetaRaw = fs.readFileSync('constants/errorMeta.json');
-  const errorMeta = JSON.parse(errorMetaRaw);
+  const errorMeta = require('../constants/errorMeta.json');
 
   const resultsList = [];
-  const invalidUrls = []; 
 
   // jobs: files that are scanned
   const {
@@ -147,7 +167,7 @@ export const mapPdfScanResults = (randomToken, uuidToUrlMapping) => {
       }
     };
 
-    const { itemDetails, validationResult, taskResult } = jobs[jobIdx];
+    const { itemDetails, validationResult } = jobs[jobIdx];
     const { name: fileName } = itemDetails;
 
     const uuid = fileName.split('/').pop().split('.')[0];
@@ -159,8 +179,6 @@ export const mapPdfScanResults = (randomToken, uuidToUrlMapping) => {
 
     if (!validationResult) { // check for error in scan
       consoleLogger.error(`Unable to scan ${pageTitle}, skipping`);
-      silentLogger.error(`Exception type: ${taskResult.type}, message: ${taskResult.exceptionMessage}`);
-      invalidUrls.push(url);
       continue; // skip this job
     }
 
@@ -187,7 +205,7 @@ export const mapPdfScanResults = (randomToken, uuidToUrlMapping) => {
 
     resultsList.push(translated); 
   }
-  return [resultsList, invalidUrls];
+  return resultsList;
 };
 
 const getPageFromContext = (context) => {

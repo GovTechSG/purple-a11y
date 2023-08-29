@@ -21,7 +21,6 @@ category summary is clicked %>
       wcag241: 'https://www.w3.org/TR/WCAG21/#bypass-blocks',
       wcag242: 'https://www.w3.org/TR/WCAG21/#page-titled',
       wcag244: 'https://www.w3.org/TR/WCAG21/#link-purpose-in-context',
-      wcag249: 'https://www.w3.org/TR/WCAG21/#link-purpose-link-only',
       wcag311: 'https://www.w3.org/TR/WCAG21/#language-of-page',
       wcag312: 'https://www.w3.org/TR/WCAG21/#language-of-parts',
       wcag332: 'https://www.w3.org/TR/WCAG21/#labels-or-instructions',
@@ -284,7 +283,7 @@ category summary is clicked %>
                       : `
                       <div class="fw-bold">Location</div>
                         <div class="page-item-card-section-content">
-                            Page ${item.page > 0 ? item.page : 'Document'}
+                            ${item.page > 0 ? `Page ${item.page}` : 'Document'}
                         </div>
                       `
                   }
