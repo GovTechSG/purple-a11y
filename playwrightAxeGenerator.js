@@ -91,11 +91,17 @@ const urlsCrawled = { ...constants.urlsCrawledObj };
 const { dataset } = await createCrawleeSubFolders(${formatScriptStringVar(randomToken)});
 
 let blacklistedPatterns = null;
+let exclusionsFile = null;
 
-if ("${blacklistedPatternsFilename}") {
-  const rawPatterns = fs.readFileSync("${blacklistedPatternsFilename}").toString();
+if (fs.existsSync('exclusions.txt')){
+  exclusionsFile = 'exclusions.txt'
+} else if ("${blacklistedPatternsFilename}"){
+  exclusionsFile = "${blacklistedPatternsFilename}"
+}
+
+if (exclusionsFile) {
+  const rawPatterns = fs.readFileSync(exclusionsFile).toString();
   blacklistedPatterns = rawPatterns.split('\\n').filter(pattern => pattern.trim() !== '');
-  console.log("blacklistedPatterns: ", blacklistedPatterns)
 
   let unsafe = blacklistedPatterns.filter(function (pattern) {
     return !safe(pattern);
@@ -106,7 +112,7 @@ if ("${blacklistedPatternsFilename}") {
       "Unsafe expressions detected: " +
       unsafe +
       " Please revise " +
-      "${blacklistedPatternsFilename}";
+      exclusionsFile;
     consoleLogger.error(unsafeExpressionsError);
     silentLogger.error(unsafeExpressionsError);
     process.exit(1);

@@ -37,8 +37,18 @@ const combineRun = async (details, deviceToScan) => {
   const host = type === constants.scannerTypes.sitemap && isLocalSitemap ? '' : getHost(url);
 
   let blacklistedPatterns = null;
-  if (blacklistedPatternsFilename) {
-    const rawPatterns = fs.readFileSync(blacklistedPatternsFilename).toString();
+  let exclusionsFile = null;
+
+  if (fs.existsSync('exclusions.txt')){
+    exclusionsFile = 'exclusions.txt'
+  } else if (blacklistedPatternsFilename){
+    exclusionsFile = blacklistedPatternsFilename
+  }
+
+  console.log("combine.js exclusionsFile: ", exclusionsFile)
+
+  if (exclusionsFile) {
+    const rawPatterns = fs.readFileSync(exclusionsFile).toString();
     blacklistedPatterns = rawPatterns.split('\n').filter(pattern => pattern.trim() !== '');
 
     let unsafe = blacklistedPatterns.filter(function (pattern) {
@@ -47,7 +57,7 @@ const combineRun = async (details, deviceToScan) => {
 
     if (unsafe.length > 0) {
       let unsafeExpressionsError =
-        'Unsafe expressions detected: ' + unsafe + ' Please revise ' + blacklistedPatternsFilename;
+        'Unsafe expressions detected: ' + unsafe + ' Please revise ' + exclusionsFile;
       consoleLogger.error(unsafeExpressionsError);
       silentLogger.error(unsafeExpressionsError);
       process.exit(1);
