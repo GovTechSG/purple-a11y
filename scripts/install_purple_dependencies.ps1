@@ -17,6 +17,17 @@ if (-Not (Test-Path nodejs-win\node.exe)) {
     Remove-Item -Force .\nodejs-win.zip
 }
 
+# Install Coretto-11
+if (-Not (Test-Path jdk\bin\java.exe)) {
+    Write-Output "Downloading Corretto-11"
+    Invoke-WebRequest -o ./corretto-11.zip "https://corretto.aws/downloads/latest/amazon-corretto-11-x64-windows-jdk.zip"     
+    
+    Write-Output "Unzip Corretto-11"
+    Expand-Archive .\corretto-11.zip -DestinationPath .
+    Get-ChildItem ./jdk* -Directory | Rename-Item -NewName jdk
+    Remove-Item -Force .\corretto-11.zip
+}
+
 # Install Node dependencies
 if (Test-Path purple-hats) {
     Write-Output "Installing node dependencies"
