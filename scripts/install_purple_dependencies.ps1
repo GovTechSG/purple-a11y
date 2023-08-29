@@ -28,6 +28,24 @@ if (-Not (Test-Path jdk\bin\java.exe)) {
     Remove-Item -Force .\corretto-11.zip
 }
 
+# Install VeraPDF
+if (-Not (Test-Path verapdf\verapdf.bat)) {
+    echo "INFO: Downloading VeraPDF"
+    Invoke-WebRequest -o .\verapdf-installer.zip "http://downloads.verapdf.org/rel/verapdf-installer.zip"
+    Expand-Archive .\verapdf-installer.zip -DestinationPath .
+    Get-ChildItem ./verapdf-greenfield-* -Directory | Rename-Item -NewName verapdf-installer
+
+    echo "INFO: Set path to JDK for this session"
+    $env:JAVA_HOME = "$PWD\jdk"
+    $env:Path = "$env:JAVA_HOME\bin;$env:Path"
+
+    echo "INFO: Installing VeraPDF"
+    .\verapdf-installer\verapdf-install "$PWD\verapdf-auto-install-windows.xml"
+    Move-Item -Path C:\Windows\Temp\verapdf -Destination verapdf
+    Remove-Item -Force -Path .\verapdf-installer.zip 
+    Remove-Item -Force -Path .\verapdf-installer -recurse
+}
+
 # Install Node dependencies
 if (Test-Path purple-hats) {
     Write-Output "Installing node dependencies"
