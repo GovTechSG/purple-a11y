@@ -23,8 +23,11 @@ const crawlDomain = async (
   strategy,
   specifiedMaxConcurrency,
   needsReviewItems,
+  fileTypes,
 ) => {
   let needsReview = needsReviewItems;
+  const isScanHtml = ['all', 'html-only'].includes(fileTypes); 
+  const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { maxConcurrency } = constants;
   const { playwrightDeviceDetailsObject } = viewportSettings;
@@ -106,6 +109,10 @@ const crawlDomain = async (
 
       // handle pdfs
       if (request.skipNavigation && isUrlPdf(actualUrl)) {
+        if (!isScanPdfs) {
+          return process.env.RUNNING_FROM_PH_GUI
+            && console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`)
+        }
         const appendMapping = handlePdfDownload(randomToken, pdfDownloads, request, sendRequest, urlsCrawled);
         appendMapping(uuidToPdfMapping); 
         return;
@@ -138,43 +145,47 @@ const crawlDomain = async (
       if (isBasicAuth) {
         isBasicAuth = false;
       } else if (location.host.includes(host)) {
-        const results = await runAxeScript(needsReview, page);
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::scanned::${request.url}`);
-        }
+        if (isScanHtml) {
+          const results = await runAxeScript(needsReview, page);
+          if (process.env.RUNNING_FROM_PH_GUI) {
+            console.log(`Electron crawling::${urlsCrawled.scanned.length}::scanned::${request.url}`);
+          }
 
-        // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
-        const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
-        if (isRedirected) {
-          const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
-            item => (item.actualUrl || item.url) === request.loadedUrl,
-          );
+          // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
+          const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
+          if (isRedirected) {
+            const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
+              item => (item.actualUrl || item.url) === request.loadedUrl,
+            );
 
-          if (isLoadedUrlInCrawledUrls) {
-            urlsCrawled.notScannedRedirects.push({
+            if (isLoadedUrlInCrawledUrls) {
+              urlsCrawled.notScannedRedirects.push({
+                fromUrl: request.url,
+                toUrl: request.loadedUrl, // i.e. actualUrl
+              });
+              return;
+            }
+          
+            urlsCrawled.scanned.push({
+              url: request.url,
+              pageTitle: results.pageTitle,
+              actualUrl: request.loadedUrl, // i.e. actualUrl
+            });
+
+            urlsCrawled.scannedRedirects.push({
               fromUrl: request.url,
               toUrl: request.loadedUrl, // i.e. actualUrl
             });
-            return;
+
+            results.url = request.url;
+            results.actualUrl = request.loadedUrl;
+          } else {
+            urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
           }
-         
-          urlsCrawled.scanned.push({
-            url: request.url,
-            pageTitle: results.pageTitle,
-            actualUrl: request.loadedUrl, // i.e. actualUrl
-          });
-
-          urlsCrawled.scannedRedirects.push({
-            fromUrl: request.url,
-            toUrl: request.loadedUrl, // i.e. actualUrl
-          });
-
-          results.url = request.url;
-          results.actualUrl = request.loadedUrl;
-        } else {
-          urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
+          await dataset.pushData(results);
+        } else if (process.env.RUNNING_FROM_PH_GUI) {
+          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`);
         }
-        await dataset.pushData(results);
 
         await enqueueLinks({
           // set selector matches anchor elements with href but not contains # or starting with mailto:

@@ -467,6 +467,7 @@ export const prepareData = argv => {
     customFlowLabel,
     specifiedMaxConcurrency,
     needsReviewItems,
+    fileTypes,
   } = argv;
 
   // construct filename for scan results
@@ -494,6 +495,7 @@ export const prepareData = argv => {
     specifiedMaxConcurrency,
     needsReviewItems,
     randomToken: resultFilename,
+    fileTypes,
   };
 };
 

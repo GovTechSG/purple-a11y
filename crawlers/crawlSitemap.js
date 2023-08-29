@@ -28,8 +28,11 @@ const crawlSitemap = async (
   userDataDirectory,
   specifiedMaxConcurrency,
   needsReviewItems,
+  fileTypes,
 ) => {
   let needsReview = needsReviewItems;
+  const isScanHtml = ['all', 'html-only'].includes(fileTypes); 
+  const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
 
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { playwrightDeviceDetailsObject } = viewportSettings;
@@ -76,6 +79,10 @@ const crawlSitemap = async (
       const actualUrl = request.loadedUrl || request.url;
 
       if (isUrlPdf(actualUrl)) {
+        if (!isScanPdfs) {
+          return process.env.RUNNING_FROM_PH_GUI
+            && console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`)
+        }
         // pushes download promise into pdfDownloads 
         const appendMapping = handlePdfDownload(randomToken, pdfDownloads, request, sendRequest, urlsCrawled);
         appendMapping(uuidToPdfMapping); 
@@ -111,7 +118,7 @@ const crawlSitemap = async (
 
       pagesCrawled++;
 
-      if (status === 200 && isWhitelistedContentType(contentType)) {
+      if (isScanHtml && status === 200 && isWhitelistedContentType(contentType)) {
         const results = await runAxeScript(needsReview, page);
         if (process.env.RUNNING_FROM_PH_GUI) {
           console.log(`Electron crawling::${urlsCrawled.scanned.length}::scanned::${request.url}`);

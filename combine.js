@@ -28,6 +28,7 @@ const combineRun = async (details, deviceToScan) => {
     strategy,
     specifiedMaxConcurrency,
     needsReviewItems,
+    fileTypes,
   } = envDetails;
 
   process.env.CRAWLEE_LOG_LEVEL = 'ERROR';
@@ -67,6 +68,7 @@ const combineRun = async (details, deviceToScan) => {
         userDataDirectory,
         specifiedMaxConcurrency,
         needsReviewItems,
+        fileTypes,
       );
       break;
 
@@ -82,6 +84,7 @@ const combineRun = async (details, deviceToScan) => {
         strategy,
         specifiedMaxConcurrency,
         needsReviewItems,
+        fileTypes,
       );
       break;
 
@@ -93,7 +96,7 @@ const combineRun = async (details, deviceToScan) => {
   scanDetails.urlsCrawled = urlsCrawled;
   await createDetailsAndLogs(scanDetails, randomToken);
 
-  if (scanDetails.urlsCrawled.scanned.length > 0 || scanDetails.urlsCrawled.pdfScanned.length > 0) {
+  if (scanDetails.urlsCrawled.scanned.length > 0) {
     await createAndUpdateResultsFolders(randomToken);
   }
 

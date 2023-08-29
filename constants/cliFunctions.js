@@ -108,6 +108,15 @@ export const cliOptions = {
     choices: ['true', 'false'],
     demandOption: false,
   },
+  i: {
+    alias: 'fileTypes',
+    describe: 'File types to include in the scan. Defaults to html-only.',
+    type: 'string',
+    choices: ['all', 'pdf-only', 'html-only'],
+    demandOption: false,
+    requiresArg: true,
+    default: 'html-only',
+  }
 };
 
 export const configureReportSetting = isEnabled => {

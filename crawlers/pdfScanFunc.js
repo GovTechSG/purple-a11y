@@ -5,6 +5,7 @@ import { consoleLogger, silentLogger } from '../logs.js';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
 import { createRequire } from 'module';
+import os from 'os'; 
 
 const require = createRequire(import.meta.url); 
 
@@ -36,7 +37,7 @@ const metaToCategoryMap = {
 };
 
 const getVeraExecutable = () => {
-  const veraPdfExe = getExecutablePath('**/verapdf', 'verapdf');
+  const veraPdfExe = getExecutablePath('../**/verapdf', 'verapdf');
   if (!veraPdfExe) {
     let veraPdfExeNotFoundError =
       'Could not find veraPDF executable.  Please ensure veraPDF is installed at current directory.';
@@ -48,7 +49,7 @@ const getVeraExecutable = () => {
 
 // get validation profile
 const getVeraProfile = () => {
-  const veraPdfProfile = globSync('**/verapdf/**/WCAG-21.xml', {
+  const veraPdfProfile = globSync('../**/verapdf/**/WCAG-21.xml', {
     absolute: true,
     recursive: true,
     nodir: true,
@@ -170,7 +171,8 @@ export const mapPdfScanResults = (randomToken, uuidToUrlMapping) => {
     const { itemDetails, validationResult } = jobs[jobIdx];
     const { name: fileName } = itemDetails;
 
-    const uuid = fileName.split('/').pop().split('.')[0];
+    const uuid = fileName.split(os.platform('win32') ? '\\' : '/')
+      .pop().split('.')[0];
     const url = uuidToUrlMapping[uuid]
     const pageTitle = decodeURI(url).split('/').pop();
 

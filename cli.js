@@ -196,7 +196,17 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
       process.exit(1);
     }
   })
-
+  .coerce('i', option => {
+    const choices = cliOptions.i.choices
+    if (!choices.includes(option)) {
+      printMessage(
+        [`Invalid value for fileTypes. Please provide valid keywords: ${choices.join(', ')}.`],
+        messageOptions,
+      );
+      process.exit(1);
+    }
+    return option; 
+  })
   .check(argvs => {
     if (argvs.scanner === 'custom' && argvs.maxpages) {
       throw new Error('-p or --maxpages is only available in website and sitemap scans.');
