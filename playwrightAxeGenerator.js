@@ -42,28 +42,6 @@ const formatScriptStringVar = val => {
 };
 
 const playwrightAxeGenerator = async data => {
-  const blacklistedPatternsFilename = 'exclusions.txt';
-  let blacklistedPatterns = null;
-
-  if (fs.existsSync(blacklistedPatternsFilename)) {
-    blacklistedPatterns = fs.readFileSync(blacklistedPatternsFilename).toString().split('\n');
-
-    let unsafe = blacklistedPatterns.filter(function (pattern) {
-      return !safe(pattern);
-    });
-
-    if (unsafe.length > 0) {
-      let unsafeExpressionsError =
-        "Unsafe expressions detected: '" +
-        unsafe +
-        "' Please revise " +
-        blacklistedPatternsFilename;
-      consoleLogger.error(unsafeExpressionsError);
-      silentLogger.error(unsafeExpressionsError);
-      process.exit(1);
-    }
-  }
-
   let {
     isHeadless,
     randomToken,
@@ -72,7 +50,9 @@ const playwrightAxeGenerator = async data => {
     viewportWidth,
     customFlowLabel,
     needsReviewItems,
+    blacklistedPatternsFilename,
   } = data;
+
   // these will be appended to the generated script if the scan is run from CLI/index.
   // this is so as the final generated script can be rerun after the scan.
   const importStatements = `
@@ -94,7 +74,7 @@ const playwrightAxeGenerator = async data => {
     import { consoleLogger, silentLogger } from '#root/logs.js';
 
   `;
-  const block1 = `const blacklistedPatternsFilename = 'exclusions.txt';
+  const block1 = `
 
 // checks and delete datasets path if it already exists
 await cleanUp(${formatScriptStringVar(randomToken)});
@@ -112,19 +92,21 @@ const { dataset } = await createCrawleeSubFolders(${formatScriptStringVar(random
 
 let blacklistedPatterns = null;
 
-if (fs.existsSync(blacklistedPatternsFilename)) {
-  blacklistedPatterns = fs.readFileSync(blacklistedPatternsFilename).toString().split('\\n');
+if ("${blacklistedPatternsFilename}") {
+  const rawPatterns = fs.readFileSync("${blacklistedPatternsFilename}").toString();
+  blacklistedPatterns = rawPatterns.split('\\n').filter(pattern => pattern.trim() !== '');
+  console.log("blacklistedPatterns: ", blacklistedPatterns)
 
   let unsafe = blacklistedPatterns.filter(function (pattern) {
     return !safe(pattern);
   });
-  
+
   if (unsafe.length > 0) {
-    let unsafeExpressionsError =
-      "Unsafe expressions detected: '" +
+  let unsafeExpressionsError =
+      "Unsafe expressions detected: " +
       unsafe +
-      "' Please revise " +
-      blacklistedPatternsFilename;
+      " Please revise " +
+      "${blacklistedPatternsFilename}";
     consoleLogger.error(unsafeExpressionsError);
     silentLogger.error(unsafeExpressionsError);
     process.exit(1);
@@ -274,24 +256,30 @@ const runAxeScan = async (needsReviewItems, page) => {
 const processPage = async page => {
   try {
 		await page.waitForLoadState('networkidle', {'timeout': 10000 });
+    await page.waitForLoadState('domcontentloaded'); 
   } catch (e) {
     consoleLogger.info('Unable to detect networkidle');
     silentLogger.info('Unable to detect networkidle');
   }
   
-  if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
-	return;
-  } else {
-	const scanRequired = await checkIfScanRequired(page);
-	
-	if (scanRequired) {
-    if (process.env.RUNNING_FROM_PH_GUI) {
-      console.log("Electron crawling::", urlsCrawled.scanned.length, "::scanned::", page.url());
-    }
-		await runAxeScan(${needsReviewItems}, page);
-	}
-  }
+  await new Promise(resolve => setTimeout(resolve, 2500));
+  // console.log("timeout url: ", page.url())
+  const pageUrl = page.url()
+  
 
+  if (blacklistedPatterns && isSkippedUrl(pageUrl, blacklistedPatterns)) {
+    urlsCrawled.userExcluded.push(pageUrl)
+    return;
+  } else {
+    const scanRequired = await checkIfScanRequired(page);
+    
+    if (scanRequired) {
+      if (process.env.RUNNING_FROM_PH_GUI) {
+        console.log("Electron crawling::", urlsCrawled.scanned.length, "::scanned::", pageUrl);
+      }
+      await runAxeScan(${needsReviewItems}, page);
+    }
+  }
 };
 
 const clickFunc = async (elem,page) => {

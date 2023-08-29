@@ -12,6 +12,7 @@ import {
   getLinksFromSitemap,
   getPlaywrightLaunchOptions,
   messageOptions,
+  isSkippedUrl,
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
 
@@ -25,6 +26,7 @@ const crawlSitemap = async (
   userDataDirectory,
   specifiedMaxConcurrency,
   needsReviewItems,
+  blacklistedPatterns,
 ) => {
   let needsReview = needsReviewItems;
 
@@ -68,9 +70,14 @@ const crawlSitemap = async (
       const contentType = response.headers()['content-type'];
       const status = response.status();
 
+      if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
+        urlsCrawled.userExcluded.push(request.url);
+        return;
+      }
+
       if (status === 403) {
         if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`)
+          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`);
         }
         urlsCrawled.forbidden.push(request.url);
         return;
@@ -78,7 +85,7 @@ const crawlSitemap = async (
 
       if (status !== 200) {
         if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::${request.url}`)
+          console.log(`Electron crawling::${urlsCrawled.scanned.length}::${request.url}`);
         }
         urlsCrawled.invalid.push(request.url);
         return;
@@ -86,7 +93,7 @@ const crawlSitemap = async (
 
       if (pagesCrawled === maxRequestsPerCrawl) {
         if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`)
+          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`);
         }
         urlsCrawled.exceededRequests.push(request.url);
         return;
@@ -98,12 +105,12 @@ const crawlSitemap = async (
         const results = await runAxeScript(needsReview, page);
         if (process.env.RUNNING_FROM_PH_GUI) {
           console.log(`Electron crawling::${urlsCrawled.scanned.length}::scanned::${request.url}`);
-        }  
+        }
 
         const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
         if (isRedirected) {
           const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
-            item =>  (item.actualUrl || item.url) === request.loadedUrl,
+            item => (item.actualUrl || item.url) === request.loadedUrl,
           );
 
           if (isLoadedUrlInCrawledUrls) {
@@ -135,7 +142,7 @@ const crawlSitemap = async (
         if (process.env.RUNNING_FROM_PH_GUI) {
           console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${actualUrl}`);
         }
-  
+
         urlsCrawled.invalid.push(actualUrl);
       }
     },

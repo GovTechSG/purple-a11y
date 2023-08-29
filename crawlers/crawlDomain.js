@@ -6,7 +6,7 @@ import {
   failedRequestHandler,
 } from './commonCrawlerFunc.js';
 import constants, { basicAuthRegex, blackListedFileExtensions } from '../constants/constants.js';
-import { getPlaywrightLaunchOptions, isBlacklistedFileExtensions } from '../constants/common.js';
+import { getPlaywrightLaunchOptions, isBlacklistedFileExtensions, isSkippedUrl } from '../constants/common.js';
 import { areLinksEqual } from '../utils.js';
 import fs from 'fs';
 
@@ -21,6 +21,7 @@ const crawlDomain = async (
   strategy,
   specifiedMaxConcurrency,
   needsReviewItems,
+  blacklistedPatterns
 ) => {
   let needsReview = needsReviewItems;
   const urlsCrawled = { ...constants.urlsCrawledObj };
@@ -94,6 +95,48 @@ const crawlDomain = async (
         urlsCrawled.blacklisted.push(request.url);
         return;
       }
+
+      if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
+        urlsCrawled.userExcluded.push(request.url)
+        await enqueueLinks({
+          // set selector matches anchor elements with href but not contains # or starting with mailto:
+          selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
+          strategy,
+          requestQueue,
+          transformRequestFunction(req) {
+            if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
+              if (process.env.RUNNING_FROM_PH_GUI) {
+                console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${req.url}`);
+              }
+              urlsCrawled.blacklisted.push(req.url);
+            }
+
+            req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+            return req;
+          },
+        });
+
+        await enqueueLinksByClickingElements({
+          // set selector matches
+          // NOT <a>
+          // IS role='link' or button onclick
+          // enqueue new page URL
+          selector: ':not(a):is(*[role="link"], button[onclick])',
+          transformRequestFunction(req) {
+            // ignore all links ending with `.pdf`
+            if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
+              if (process.env.RUNNING_FROM_PH_GUI) {
+                console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${req.url}`);
+              }
+              urlsCrawled.blacklisted.push(req.url);
+            }
+
+            req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+            return req;
+          },
+        });
+        return;
+      } 
 
       if (response.status() === 403) {
         if (process.env.RUNNING_FROM_PH_GUI) {
