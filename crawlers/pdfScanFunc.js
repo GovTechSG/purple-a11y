@@ -171,7 +171,7 @@ export const mapPdfScanResults = (randomToken, uuidToUrlMapping) => {
     const { itemDetails, validationResult } = jobs[jobIdx];
     const { name: fileName } = itemDetails;
 
-    const uuid = fileName.split(os.platform('win32') ? '\\' : '/')
+    const uuid = fileName.split(os.platform() === 'win32' ? '\\' : '/')
       .pop().split('.')[0];
     const url = uuidToUrlMapping[uuid]
     const pageTitle = decodeURI(url).split('/').pop();
