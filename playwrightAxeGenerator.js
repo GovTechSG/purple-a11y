@@ -311,7 +311,6 @@ const clickFunc = async (elem,page) => {
     let attempts = 20;
     let parent = nth;
 
-    if (! await parent.isVisible()) {
 
       while (attempts > 0) {
         parent = parent.locator('xpath=..');

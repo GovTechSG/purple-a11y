@@ -44,6 +44,7 @@ const crawlSitemap = async (
 
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
+      launcher: constants.launcher,
       launchOptions: getPlaywrightLaunchOptions(browser),
       userDataDir: userDataDirectory || '',
     },

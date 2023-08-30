@@ -13,7 +13,7 @@ import path from 'path';
 import * as https from 'https';
 import os from 'os';
 import { globSync } from 'glob';
-import { chromium, devices } from 'playwright';
+import { chromium, devices, webkit } from 'playwright';
 import printMessage from 'print-message';
 import constants, {
   getDefaultChromeDataDir,
@@ -228,7 +228,7 @@ const checkUrlConnectivity = async url => {
       .get(data.url, {
         headers: { 'User-Agent': devices['Desktop Chrome HiDPI'].userAgent },
         httpsAgent,
-        timeout: 2000,
+        timeout: 10,
       })
       .then(async response => {
         const redirectUrl = response.request.res.responseUrl;
@@ -304,10 +304,26 @@ const checkUrlConnectivityWithBrowser = async (
     let browserContext;
 
     try {
-      browserContext = await chromium.launchPersistentContext(clonedDataDir, {
+      // if (constants.launcher === webkit) {
+      //   console.log('launching webkit to check url')
+      //   browserContext = await webkit.launch({
+      //     ...getPlaywrightLaunchOptions(browserToRun), 
+      //     ...(viewport && {viewport}),
+      //     ...(userAgent && {userAgent}), 
+      //     headless: false
+      //   })
+      // } else {
+      //   browserContext = await chromium.launchPersistentContext(clonedDataDir, {
+      //     ...getPlaywrightLaunchOptions(browserToRun),
+      //     ...(viewport && { viewport }),
+      //     ...(userAgent && { userAgent }),
+      //   });
+      // }
+      browserContext = await constants.launcher.launchPersistentContext(clonedDataDir, {
         ...getPlaywrightLaunchOptions(browserToRun),
         ...(viewport && { viewport }),
         ...(userAgent && { userAgent }),
+        headless: false
       });
     } catch (err) {
       printMessage(
@@ -407,12 +423,14 @@ export const checkUrl = async (
   } else {
       res = await checkUrlConnectivity(url);
       if (res.status === constants.urlCheckStatuses.axiosTimeout.code) {
-        res = await checkUrlConnectivityWithBrowser(
-          url,
-          browser, 
-          clonedDataDir, 
-          playwrightDeviceDetailsObject
-        )
+        if (browser || constants.launcher === webkit) {
+          res = await checkUrlConnectivityWithBrowser(
+            url,
+            browser, 
+            clonedDataDir, 
+            playwrightDeviceDetailsObject
+          )
+        }
     }
   } 
 
@@ -522,35 +540,43 @@ export const getLinksFromSitemap = async (
     let sitemapType;
 
     const getDataUsingPlaywright = async () => {
-      const browserContext = await chromium.launchPersistentContext(
+      const browserContext = await constants.launcher.launchPersistentContext(
         finalUserDataDirectory,
-        getPlaywrightLaunchOptions(browser),
+        {
+          ...getPlaywrightLaunchOptions(browser),
+          headless: false
+        },
       );
+  
       const page = await browserContext.newPage();
       await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
-
-      const urlSet = page.locator('urlset');
-      const sitemapIndex = page.locator('sitemapindex');
-      const rss = page.locator('rss');
-      const feed = page.locator('feed');
-
-      const isRoot = async locator => (await locator.count()) > 0;
-
-      if (await isRoot(urlSet)) {
-        data = await urlSet.evaluate(elem => elem.outerHTML);
-      } else if (await isRoot(sitemapIndex)) {
-        data = await sitemapIndex.evaluate(elem => elem.outerHTML);
-      } else if (await isRoot(rss)) {
-        data = await rss.evaluate(elem => elem.outerHTML);
-      } else if (await isRoot(feed)) {
-        data = await feed.evaluate(elem => elem.outerHTML);
-      }
-
+      
+      if (constants.launcher === webkit) {
+        data = await page.locator('body').innerText(); 
+      } else {      
+        const urlSet = page.locator('urlset');
+        const sitemapIndex = page.locator('sitemapindex');
+        const rss = page.locator('rss');
+        const feed = page.locator('feed');
+        const isRoot = async locator => (await locator.count()) > 0;
+    
+        if (await isRoot(urlSet)) {
+          data = await urlSet.evaluate(elem => elem.outerHTML);
+        } else if (await isRoot(sitemapIndex)) {
+          data = await sitemapIndex.evaluate(elem => elem.outerHTML);
+        } else if (await isRoot(rss)) {
+          data = await rss.evaluate(elem => elem.outerHTML);
+        } else if (await isRoot(feed)) {
+          data = await feed.evaluate(elem => elem.outerHTML);
+        }
+      } 
+      
       await browserContext.close();
     }
+
     if (validator.isURL(url, urlOptions)) {
       if (proxy) {
-        await getDataUsingPlaywright();
+        await getDataUsingChromiumBrowser();
       } else {
         try {
           const instance = axios.create({
@@ -558,7 +584,7 @@ export const getLinksFromSitemap = async (
               rejectUnauthorized: false,
             }),
           });
-          data = await (await instance.get(url, {timeout: 2000})).data;
+          data = await (await instance.get(url, {timeout: 10})).data;
         } catch (error) {
           if (error.code === 'ECONNABORTED') {
             await getDataUsingPlaywright();
@@ -968,17 +994,36 @@ export const submitFormViaPlaywright = async (
   userDataDirectory,
   finalUrl
 ) => {
+  let browserContext; 
+  // if (constants.launcher === webkit) {
+  //   console.log('launching webkit to submit form')
+  //   browserContext = await webkit.launch({
+  //     ...getPlaywrightLaunchOptions(browserToRun), 
+  //     headless: false
+  //   })
+  // } else {
+  //   const dirName = `clone-${Date.now()}`;
+  //   let clonedDir = null;
+  //   if (proxy && browserToRun === constants.browserTypes.edge) {
+  //     clonedDir = cloneEdgeProfiles(dirName);
+  //   } else if (proxy && browserToRun === constants.browserTypes.chrome) {
+  //     clonedDir = cloneChromeProfiles(dirName);
+  //   }
+  //   browserContext = await chromium.launchPersistentContext(clonedDir || userDataDirectory, {
+  //     ...getPlaywrightLaunchOptions(browserToRun),
+  //   });
+  // }
   const dirName = `clone-${Date.now()}`;
-  let clonedDir = null;
-  if (proxy && browserToRun === constants.browserTypes.edge) {
-    clonedDir = cloneEdgeProfiles(dirName);
-  } else if (proxy && browserToRun === constants.browserTypes.chrome) {
-    clonedDir = cloneChromeProfiles(dirName);
-  }
-
-  const browserContext = await chromium.launchPersistentContext(clonedDir || userDataDirectory, {
-    ...getPlaywrightLaunchOptions(browserToRun),
-  });
+    let clonedDir = null;
+    if (proxy && browserToRun === constants.browserTypes.edge) {
+      clonedDir = cloneEdgeProfiles(dirName);
+    } else if (proxy && browserToRun === constants.browserTypes.chrome) {
+      clonedDir = cloneChromeProfiles(dirName);
+    }
+    browserContext = await constants.launcher.launchPersistentContext(clonedDir || userDataDirectory, {
+      ...getPlaywrightLaunchOptions(browserToRun),
+      headless: false
+    });
   // const context = await browser.newContext();
 
   const page = await browserContext.newPage();
@@ -1036,10 +1081,12 @@ export const submitForm = async (
     await submitFormViaPlaywright(browserToRun, userDataDirectory, finalUrl); 
   } else {
     try {
-      await axios.get(finalUrl, {timeout: 2000}); 
+      await axios.get(finalUrl, {timeout: 10}); 
     } catch (error) {
       if (error.code === 'ECONNABORTED') {
-        await submitFormViaPlaywright(browserToRun, userDataDirectory, finalUrl); 
+        if (browserToRun || constants.launcher === webkit) {
+          await submitFormViaPlaywright(browserToRun, userDataDirectory, finalUrl); 
+        }
       }
     }
   }
@@ -1050,11 +1097,9 @@ export const submitForm = async (
  */
 export const getPlaywrightLaunchOptions = browser => {
   let channel;
-  if (browser === constants.browserTypes.chromium) {
-    channel = null;
-  } else {
+  if (browser) {
     channel = browser;
-  }
+  } 
   const options = {
     // Drop the --use-mock-keychain flag to allow MacOS devices
     // to use the cloned cookies.
@@ -1068,6 +1113,8 @@ export const getPlaywrightLaunchOptions = browser => {
   } else if (browser === constants.browserTypes.edge) {
     // edge should be in non-headless mode
     options.headless = false; 
+  } else if (constants.launcher === webkit) {
+    options.slowMo = 1000;
   }
   return options;
 };

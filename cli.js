@@ -7,7 +7,7 @@ import path from 'path';
 import _yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import printMessage from 'print-message';
-import { devices } from 'playwright';
+import { devices, webkit } from 'playwright';
 import { cleanUp, zipResults, setHeadlessMode, getVersion, getStoragePath } from './utils.js';
 import {
   checkUrl,
@@ -240,11 +240,18 @@ const scanInit = async argvs => {
         }
       } else {
         //mac user who specified -b chrome but does not have chrome
+        // printMessage(
+        //   ['Unable to use Chrome. Please install Chrome before running the scan.'],
+        //   messageOptions,
+        // );
+        // process.exit(statuses.browserError.code);
+        argvs.browserToRun = null;
+        constants.launcher = webkit;
+        clonedDataDir = '';
         printMessage(
-          ['Unable to use Chrome. Please install Chrome before running the scan.'],
-          messageOptions,
-        );
-        process.exit(statuses.browserError.code);
+          ['Unable to use Chrome, falling back to webkit...']
+        )
+        console.log('using webkit');
       }
     }
   } else if (argvs.browserToRun === constants.browserTypes.edge) {
@@ -266,7 +273,7 @@ const scanInit = async argvs => {
       }
     }
   } else {
-    argvs.browserToRun = constants.browserTypes.chromium;
+    argvs.browserToRun = null;
     clonedDataDir = '';
   }
 
@@ -386,7 +393,7 @@ const scanInit = async argvs => {
   }
   // Defaults to chromium by not specifying channels in Playwright, if no browser is found
   else {
-    data.browser = constants.browserTypes.chromium;
+    data.browser = null;
     data.userDataDirectory = '';
   }
 

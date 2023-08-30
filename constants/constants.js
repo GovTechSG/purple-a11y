@@ -7,6 +7,7 @@ import os from 'os';
 import { spawnSync } from 'child_process';
 import { silentLogger } from '../logs.js';
 import { execSync } from 'child_process';
+import { chromium } from 'playwright';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -320,6 +321,7 @@ export default {
   launchOptionsArgs: launchOptionsArgs,
   xmlSitemapTypes,
   urlCheckStatuses,
+  launcher: chromium
 };
 
 export const rootPath = __dirname;

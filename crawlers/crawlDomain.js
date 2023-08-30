@@ -8,6 +8,7 @@ import {
 import constants, { basicAuthRegex, blackListedFileExtensions } from '../constants/constants.js';
 import { getPlaywrightLaunchOptions, isBlacklistedFileExtensions } from '../constants/common.js';
 import { areLinksEqual } from '../utils.js';
+import fs from 'fs';
 
 const crawlDomain = async (
   url,
@@ -57,6 +58,7 @@ const crawlDomain = async (
 
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
+      launcher: constants.launcher,
       launchOptions: getPlaywrightLaunchOptions(browser),
       userDataDir: userDataDirectory || '',
     },
@@ -116,6 +118,7 @@ const crawlDomain = async (
       pagesCrawled++;
 
       const location = await page.evaluate('location');
+      fs.writeFileSync('domainPageContent', await page.content());
 
       if (isBasicAuth) {
         isBasicAuth = false;
