@@ -100,7 +100,7 @@ export const handlePdfDownload = (randomToken, pdfDownloads, request, sendReques
           urlsCrawled.scanned.push({ url: trimmedUrl, pageTitle }); 
         } else {
           process.env.RUNNING_FROM_PH_GUI
-            && console.log(`Electron crawling::${urlsCrawled.scanned.length}::${request.url}`); 
+            && console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`); 
           urlsCrawled.invalid.push(trimmedUrl);
         }
         resolve();
@@ -180,7 +180,7 @@ export const mapPdfScanResults = (randomToken, uuidToUrlMapping) => {
     translated.pageTitle = pageTitle
 
     if (!validationResult) { // check for error in scan
-      consoleLogger.error(`Unable to scan ${pageTitle}, skipping`);
+      consoleLogger.info(`Unable to scan ${pageTitle}, skipping`);
       continue; // skip this job
     }
 

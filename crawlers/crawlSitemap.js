@@ -160,7 +160,7 @@ const crawlSitemap = async (
           console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${actualUrl}`);
         }
   
-        urlsCrawled.invalid.push(actualUrl);
+        isScanHtml && urlsCrawled.invalid.push(actualUrl);
       }
     },
     failedRequestHandler,
