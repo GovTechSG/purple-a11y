@@ -251,7 +251,6 @@ const scanInit = async argvs => {
         printMessage(
           ['Unable to use Chrome, falling back to webkit...']
         )
-        console.log('using webkit');
       }
     }
   } else if (argvs.browserToRun === constants.browserTypes.edge) {
@@ -268,8 +267,18 @@ const scanInit = async argvs => {
         useChrome = true;
         argvs.browserToRun = constants.browserTypes.chrome;
       } else {
-        printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
-        process.exit(statuses.browserError.code);
+        if (os.platform() === 'darwin') {
+          //  mac user who specified -b edge but does not have edge or chrome
+          printMessage(
+            ['Unable to use Chrome, falling back to webkit...']
+          )
+          argvs.browserToRun = null;
+          constants.launcher = webkit;
+          clonedDataDir = '';
+        } else {
+          printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
+          process.exit(statuses.browserError.code);
+        }
       }
     }
   } else {
@@ -348,6 +357,9 @@ const scanInit = async argvs => {
       }
     case statuses.notASitemap.code:
       printMessage([statuses.notASitemap.message], messageOptions);
+      process.exit(res.status);
+    case statuses.browserError.code:
+      printMessage([statuses.browserError.message], messageOptions); 
       process.exit(res.status);
     default:
       break;

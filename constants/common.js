@@ -228,7 +228,7 @@ const checkUrlConnectivity = async url => {
       .get(data.url, {
         headers: { 'User-Agent': devices['Desktop Chrome HiDPI'].userAgent },
         httpsAgent,
-        timeout: 10,
+        timeout: 2000,
       })
       .then(async response => {
         const redirectUrl = response.request.res.responseUrl;
@@ -304,26 +304,10 @@ const checkUrlConnectivityWithBrowser = async (
     let browserContext;
 
     try {
-      // if (constants.launcher === webkit) {
-      //   console.log('launching webkit to check url')
-      //   browserContext = await webkit.launch({
-      //     ...getPlaywrightLaunchOptions(browserToRun), 
-      //     ...(viewport && {viewport}),
-      //     ...(userAgent && {userAgent}), 
-      //     headless: false
-      //   })
-      // } else {
-      //   browserContext = await chromium.launchPersistentContext(clonedDataDir, {
-      //     ...getPlaywrightLaunchOptions(browserToRun),
-      //     ...(viewport && { viewport }),
-      //     ...(userAgent && { userAgent }),
-      //   });
-      // }
       browserContext = await constants.launcher.launchPersistentContext(clonedDataDir, {
         ...getPlaywrightLaunchOptions(browserToRun),
         ...(viewport && { viewport }),
         ...(userAgent && { userAgent }),
-        headless: false
       });
     } catch (err) {
       printMessage(
@@ -544,7 +528,6 @@ export const getLinksFromSitemap = async (
         finalUserDataDirectory,
         {
           ...getPlaywrightLaunchOptions(browser),
-          headless: false
         },
       );
   
@@ -584,7 +567,7 @@ export const getLinksFromSitemap = async (
               rejectUnauthorized: false,
             }),
           });
-          data = await (await instance.get(url, {timeout: 10})).data;
+          data = await (await instance.get(url, {timeout: 2000})).data;
         } catch (error) {
           if (error.code === 'ECONNABORTED') {
             await getDataUsingPlaywright();
@@ -995,24 +978,6 @@ export const submitFormViaPlaywright = async (
   finalUrl
 ) => {
   let browserContext; 
-  // if (constants.launcher === webkit) {
-  //   console.log('launching webkit to submit form')
-  //   browserContext = await webkit.launch({
-  //     ...getPlaywrightLaunchOptions(browserToRun), 
-  //     headless: false
-  //   })
-  // } else {
-  //   const dirName = `clone-${Date.now()}`;
-  //   let clonedDir = null;
-  //   if (proxy && browserToRun === constants.browserTypes.edge) {
-  //     clonedDir = cloneEdgeProfiles(dirName);
-  //   } else if (proxy && browserToRun === constants.browserTypes.chrome) {
-  //     clonedDir = cloneChromeProfiles(dirName);
-  //   }
-  //   browserContext = await chromium.launchPersistentContext(clonedDir || userDataDirectory, {
-  //     ...getPlaywrightLaunchOptions(browserToRun),
-  //   });
-  // }
   const dirName = `clone-${Date.now()}`;
     let clonedDir = null;
     if (proxy && browserToRun === constants.browserTypes.edge) {
@@ -1022,12 +987,9 @@ export const submitFormViaPlaywright = async (
     }
     browserContext = await constants.launcher.launchPersistentContext(clonedDir || userDataDirectory, {
       ...getPlaywrightLaunchOptions(browserToRun),
-      headless: false
     });
-  // const context = await browser.newContext();
 
   const page = await browserContext.newPage();
-  // const page = await context.newPage();
 
   try {
     const response = await page.goto(finalUrl, {
@@ -1050,12 +1012,6 @@ export const submitFormViaPlaywright = async (
       deleteClonedChromeProfiles();
     }
   }
-  // await page.goto(finalUrl, {
-  //   ...(proxy && { waitUntil: 'networkidle' }),
-  // });
-
-  // await page.close();
-  // await context.close();
 };
 
 export const submitForm = async (
@@ -1081,7 +1037,7 @@ export const submitForm = async (
     await submitFormViaPlaywright(browserToRun, userDataDirectory, finalUrl); 
   } else {
     try {
-      await axios.get(finalUrl, {timeout: 10}); 
+      await axios.get(finalUrl, {timeout: 2000}); 
     } catch (error) {
       if (error.code === 'ECONNABORTED') {
         if (browserToRun || constants.launcher === webkit) {
@@ -1110,11 +1066,9 @@ export const getPlaywrightLaunchOptions = browser => {
   if (proxy) {
     options.headless = false;
     options.slowMo = 1000; // To ensure server-side rendered proxy page is loaded
-  } else if (browser === constants.browserTypes.edge) {
+  } else if (browser === constants.browserTypes.edge && os.platform() === 'win32') {
     // edge should be in non-headless mode
     options.headless = false; 
-  } else if (constants.launcher === webkit) {
-    options.slowMo = 1000;
-  }
+  } 
   return options;
 };

@@ -118,7 +118,6 @@ const crawlDomain = async (
       pagesCrawled++;
 
       const location = await page.evaluate('location');
-      fs.writeFileSync('domainPageContent', await page.content());
 
       if (isBasicAuth) {
         isBasicAuth = false;
