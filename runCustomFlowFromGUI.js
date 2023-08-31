@@ -7,14 +7,14 @@ import {
   createDetailsAndLogs,
   createScreenshotsFolder,
   cleanUp,
-  getStoragePath
+  getStoragePath,
 } from '#root/utils.js';
 import constants, {
   getIntermediateScreenshotsPath,
   getExecutablePath,
   removeQuarantineFlag,
 } from '#root/constants/constants.js';
-import { isSkippedUrl, submitForm } from '#root/constants/common.js';
+import { isSkippedUrl, submitForm, isBlacklistedFileExtensions } from '#root/constants/common.js';
 import { spawnSync } from 'child_process';
 import { getDefaultChromeDataDir, getDefaultEdgeDataDir } from './constants/constants.js';
 import { argv } from 'process';
@@ -35,7 +35,7 @@ console.log(argv);
 console.log(generatedScript);
 const genScriptString = fs.readFileSync(generatedScript, 'utf-8');
 const genScriptCompleted = new Promise((resolve, reject) => {
-    eval(`(async () => {
+  eval(`(async () => {
         try {
             ${genScriptString} 
             resolve(); 
