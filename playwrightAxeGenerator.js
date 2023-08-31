@@ -326,7 +326,6 @@ const clickFunc = async (elem,page) => {
         }
         attempts--;
       }
-    }
   }
 
   if (numElems === 0 && ! await waitForElemIsVisible(elem, 60000)) {

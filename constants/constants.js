@@ -12,7 +12,7 @@ import { chromium } from 'playwright';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const maxRequestsPerCrawl = 100;
+const maxRequestsPerCrawl = 3;
 
 export const ruleIdsWithHtml = [
   'aria-hidden-focus',

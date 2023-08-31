@@ -1,6 +1,9 @@
 import { getUserDataTxt, writeToUserDataTxt } from '../utils.js';
 import {
   checkUrl,
+  deleteClonedProfiles,
+  getBrowserToRun,
+  getPlaywrightDeviceDetailsObject,
   getUrlMessage,
   isFileSitemap,
   sanitizeUrlInput,
@@ -67,9 +70,19 @@ const startScanQuestions = [
         process.exit(1);
       }
 
-      const res = await checkUrl(answers.scanner, url);
       const statuses = constants.urlCheckStatuses;
+      const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(constants.browserTypes.chrome);
+      const playwrightDeviceDetailsObject = getPlaywrightDeviceDetailsObject(answers.deviceChosen, answers.customDevice, answers.viewportWidth);
+      
+      const res = await checkUrl(
+        answers.scanner, 
+        url, 
+        browserToRun, 
+        clonedBrowserDataDir, 
+        playwrightDeviceDetailsObject
+      );
 
+      deleteClonedProfiles(browserToRun);
       switch (res.status) {
         case statuses.success.code:
           answers.finalUrl = res.url;

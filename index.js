@@ -10,9 +10,9 @@ import {
   setHeadlessMode,
   getUserDataTxt,
   writeToUserDataTxt,
+  getStoragePath,
 } from './utils.js';
-
-import { prepareData, messageOptions } from './constants/common.js';
+import { prepareData, messageOptions, getPlaywrightDeviceDetailsObject, getBrowserToRun, getScreenToScan, getClonedProfilesWithRandomToken, deleteClonedProfiles } from './constants/common.js';
 import questions from './constants/questions.js';
 import combineRun from './combine.js';
 import playwrightAxeGenerator from './playwrightAxeGenerator.js';
@@ -37,53 +37,7 @@ if (userData) {
   ); 
 
   inquirer.prompt(questions).then(async answers => {
-    let screenToScan;
-    let playwrightDeviceDetailsObject = {};
-
-    if (answers.deviceChosen !== 'Custom') {
-      screenToScan = answers.deviceChosen;
-      if (answers.deviceChosen === 'Mobile') {
-        playwrightDeviceDetailsObject = devices['iPhone 11'];
-      }
-    } else if (answers.customDevice !== 'Specify viewport') {
-      screenToScan = answers.customDevice;
-      // Only iPhone 11 & Samsung Galaxy S9+ are selectable
-      if (answers.customDevice === 'Samsung Galaxy S9+') {
-        playwrightDeviceDetailsObject = devices['Galaxy S9+'];
-      } else {
-        playwrightDeviceDetailsObject = devices[answers.customDevice];
-      }
-    } else if (answers.viewportWidth) {
-      screenToScan = `CustomWidth_${answers.viewportWidth}px`;
-      playwrightDeviceDetailsObject = {
-        viewport: { width: Number(answers.viewportWidth), height: 720 },
-      };
-    }
-
-    answers.playwrightDeviceDetailsObject = playwrightDeviceDetailsObject;
-
-    // TODO: Do not hard set browser to Chromium after
-    // index has option to choose browser
-    answers.browserToRun = constants.browserTypes.chromium;
-
-    answers.nameEmail = `${userData.name}:${userData.email}`;
-
-    const data = prepareData(answers);
-    data.userDataDirectory = '';
-
-    setHeadlessMode(data.isHeadless);
-
-    printMessage(['Scanning website...'], messageOptions);
-
-    if (answers.scanner === constants.scannerTypes.custom) {
-      await playwrightAxeGenerator(data);
-    } else {
-      await combineRun(data, screenToScan);
-    }
-
-    // Delete dataset and request queues
-    cleanUp(data.randomToken);
-    process.exit(0);
+    await runScan(answers);
   });
 } else {
   printMessage(
@@ -114,50 +68,42 @@ if (userData) {
     await writeToUserDataTxt('name', name);
     await writeToUserDataTxt('email', email);
 
-    let screenToScan;
-    let playwrightDeviceDetailsObject = {};
-
-    if (answers.deviceChosen !== 'Custom') {
-      screenToScan = answers.deviceChosen;
-      if (answers.deviceChosen === 'Mobile') {
-        playwrightDeviceDetailsObject = devices['iPhone 11'];
-      }
-    } else if (answers.customDevice !== 'Specify viewport') {
-      screenToScan = answers.customDevice;
-      // Only iPhone 11 & Samsung Galaxy S9+ are selectable
-      if (answers.customDevice === 'Samsung Galaxy S9+') {
-        playwrightDeviceDetailsObject = devices['Galaxy S9+'];
-      } else {
-        playwrightDeviceDetailsObject = devices[answers.customDevice];
-      }
-    } else if (answers.viewportWidth) {
-      screenToScan = `CustomWidth_${answers.viewportWidth}px`;
-      playwrightDeviceDetailsObject = {
-        viewport: { width: Number(answers.viewportWidth), height: 720 },
-      };
-    }
-
-    answers.nameEmail = `${name}:${email}`;
-    answers.playwrightDeviceDetailsObject = playwrightDeviceDetailsObject;
-
-    // TODO: Do not hard set browser to Chromium after
-    // index has option to choose browser
-    answers.browserToRun = constants.browserTypes.chromium;
-
-    const data = prepareData(answers);
-
-    setHeadlessMode(data.isHeadless);
-
-    printMessage(['Scanning website...'], messageOptions);
-
-    if (answers.scanner === constants.scannerTypes.custom) {
-      await playwrightAxeGenerator(data);
-    } else {
-      await combineRun(data, screenToScan);
-    }
-
-    // Delete dataset and request queues
-    cleanUp(data.randomToken);
-    process.exit(0);
+    await runScan(answers); 
   });
+}
+
+const runScan = async (answers) => {
+  const screenToScan = getScreenToScan(answers.deviceChosen, answers.customDevice, answers.viewportWidth);
+  answers.playwrightDeviceDetailsObject = getPlaywrightDeviceDetailsObject(answers.deviceChosen, answers.customDevice, answers.viewportWidth);
+  let { browserToRun, clonedDataDir } = getBrowserToRun(constants.browserTypes.chrome);
+  deleteClonedProfiles(browserToRun);
+  answers.browserToRun = browserToRun; 
+  answers.nameEmail = `${userData.name}:${userData.email}`;
+
+  const data = prepareData(answers);
+  clonedDataDir = getClonedProfilesWithRandomToken(data.browser, data.randomToken); 
+  data.userDataDirectory = clonedDataDir; 
+
+  setHeadlessMode(data.browser, data.isHeadless); 
+  printMessage(['Scanning website...'], messageOptions);
+
+  if (answers.scanner === constants.scannerTypes.custom) {
+    await playwrightAxeGenerator(data);
+  } else {
+    await combineRun(data, screenToScan);
+  }
+
+  // Delete cloned directory 
+  deleteClonedProfiles(data.browser);
+
+  // Delete dataset and request queues
+  cleanUp(data.randomToken);
+
+  const storagePath = getStoragePath(data.randomToken);
+  const messageToDisplay = [
+    `Report of this run is at ${constants.cliZipFileName}`,
+    `Results directory is at ${storagePath}`,
+  ];
+  printMessage(messageToDisplay);
+  process.exit(0);
 }

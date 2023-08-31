@@ -19,6 +19,11 @@ import {
   deleteClonedEdgeProfiles,
   validEmail,
   validName,
+  getBrowserToRun,
+  getPlaywrightDeviceDetailsObject,
+  deleteClonedProfiles,
+  getScreenToScan,
+  getClonedProfilesWithRandomToken
 } from './constants/common.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
 import constants, {
@@ -212,79 +217,15 @@ const scanInit = async argvs => {
   argvs.headless = argvs.headless === 'yes';
   argvs.browserToRun = constants.browserTypes[argvs.browserToRun];
 
-  let useChrome = false;
-  let useEdge = false;
-  let chromeDataDir = null;
-  let edgeDataDir = null;
+  // let chromeDataDir = null;
+  // let edgeDataDir = null;
   // Empty string for profile directory will use incognito mode in playwright
   let clonedDataDir = '';
   const statuses = constants.urlCheckStatuses;
 
-  if (argvs.browserToRun === constants.browserTypes.chrome) {
-    chromeDataDir = getDefaultChromeDataDir();
-    clonedDataDir = cloneChromeProfiles();
-    if (chromeDataDir && clonedDataDir) {
-      argvs.browserToRun = constants.browserTypes.chrome;
-      useChrome = true;
-    } else {
-      if (os.platform() !== 'darwin') {
-        printMessage(['Unable to use Chrome, falling back to Edge browser...'], messageOptions);
-        edgeDataDir = getDefaultEdgeDataDir();
-        clonedDataDir = cloneEdgeProfiles();
-        if (edgeDataDir && clonedDataDir) {
-          useEdge = true;
-          argvs.browserToRun = constants.browserTypes.edge;
-        } else {
-          printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
-          process.exit(statuses.browserError.code);
-        }
-      } else {
-        //mac user who specified -b chrome but does not have chrome
-        // printMessage(
-        //   ['Unable to use Chrome. Please install Chrome before running the scan.'],
-        //   messageOptions,
-        // );
-        // process.exit(statuses.browserError.code);
-        argvs.browserToRun = null;
-        constants.launcher = webkit;
-        clonedDataDir = '';
-        printMessage(
-          ['Unable to use Chrome, falling back to webkit...']
-        )
-      }
-    }
-  } else if (argvs.browserToRun === constants.browserTypes.edge) {
-    edgeDataDir = getDefaultEdgeDataDir();
-    clonedDataDir = cloneEdgeProfiles();
-    if (edgeDataDir && clonedDataDir) {
-      useEdge = true;
-      argvs.browserToRun = constants.browserTypes.edge;
-    } else {
-      printMessage(['Unable to use Edge, falling back to Chrome browser...'], messageOptions);
-      chromeDataDir = getDefaultChromeDataDir();
-      clonedDataDir = cloneChromeProfiles();
-      if (chromeDataDir && clonedDataDir) {
-        useChrome = true;
-        argvs.browserToRun = constants.browserTypes.chrome;
-      } else {
-        if (os.platform() === 'darwin') {
-          //  mac user who specified -b edge but does not have edge or chrome
-          printMessage(
-            ['Unable to use Chrome, falling back to webkit...']
-          )
-          argvs.browserToRun = null;
-          constants.launcher = webkit;
-          clonedDataDir = '';
-        } else {
-          printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
-          process.exit(statuses.browserError.code);
-        }
-      }
-    }
-  } else {
-    argvs.browserToRun = null;
-    clonedDataDir = '';
-  }
+  const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(argvs.browserToRun, true); 
+  argvs.browserToRun = browserToRun; 
+  clonedDataDir = clonedBrowserDataDir;
 
   if (argvs.customDevice === 'Desktop' || argvs.customDevice === 'Mobile') {
     argvs.deviceChosen = argvs.customDevice;
@@ -293,19 +234,7 @@ const scanInit = async argvs => {
 
   // Creating the playwrightDeviceDetailObject
   // for use in crawlDomain & crawlSitemap's preLaunchHook
-  if (argvs.deviceChosen === 'Mobile' || argvs.customDevice === 'iPhone 11') {
-    argvs.playwrightDeviceDetailsObject = devices['iPhone 11'];
-  } else if (argvs.customDevice === 'Samsung Galaxy S9+') {
-    argvs.playwrightDeviceDetailsObject = devices['Galaxy S9+'];
-  } else if (argvs.viewportWidth) {
-    argvs.playwrightDeviceDetailsObject = {
-      viewport: { width: Number(argvs.viewportWidth), height: 720 },
-    };
-  } else if (argvs.customDevice) {
-    argvs.playwrightDeviceDetailsObject = devices[argvs.customDevice.replace('_', / /g)];
-  } else {
-    argvs.playwrightDeviceDetailsObject = {};
-  }
+  argvs.playwrightDeviceDetailsObject = getPlaywrightDeviceDetailsObject(argvs.deviceChosen, argvs.customDevice, argvs.viewportWidth);
 
   const res = await checkUrl(
     argvs.scanner,
@@ -321,11 +250,7 @@ const scanInit = async argvs => {
 
   // File clean up after url check
   // files will clone a second time below if url check passes
-  if (useChrome) {
-    deleteClonedChromeProfiles();
-  } else if (useEdge) {
-    deleteClonedEdgeProfiles();
-  }
+  deleteClonedProfiles(argvs.browserToRun);
 
   // eslint-disable-next-line default-case
   switch (res.status) {
@@ -370,44 +295,13 @@ const scanInit = async argvs => {
   }
   const data = prepareData(argvs);
 
-  if (os.platform() === 'win32' && argvs.browserToRun === constants.browserTypes.edge) {
-    setHeadlessMode(false);
-  } else {
-    setHeadlessMode(data.isHeadless);
-  }
+  setHeadlessMode(data.browser, data.isHeadless);
 
-  let screenToScan;
+  const screenToScan = getScreenToScan(argvs.deviceChosen, argvs.customDevice, argvs.viewportWidth); 
 
-  if (argvs.deviceChosen) {
-    screenToScan = argvs.deviceChosen;
-  } else if (argvs.customDevice) {
-    screenToScan = argvs.customDevice;
-  } else if (argvs.viewportWidth) {
-    screenToScan = `CustomWidth_${argvs.viewportWidth}px`;
-  } else {
-    screenToScan = 'Desktop';
-  }
-
-  /**
-   * Cloning a second time with random token for parallel browser sessions
-   * Also To mitigate agaisnt known bug where cookies are
-   * overriden after each browser session - i.e. logs user out
-   * after checkingUrl and unable to utilise same cookie for scan
-   * */
-  if (useChrome) {
-    clonedDataDir = cloneChromeProfiles(data.randomToken);
-    data.browser = constants.browserTypes.chrome;
-    data.userDataDirectory = clonedDataDir;
-  } else if (useEdge) {
-    clonedDataDir = cloneEdgeProfiles(data.randomToken);
-    data.browser = constants.browserTypes.edge;
-    data.userDataDirectory = clonedDataDir;
-  }
-  // Defaults to chromium by not specifying channels in Playwright, if no browser is found
-  else {
-    data.browser = null;
-    data.userDataDirectory = '';
-  }
+  // Clone profiles a second time 
+  clonedDataDir = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
+  data.userDataDirectory = clonedDataDir; 
 
   printMessage([`Purple HATS version: ${appVersion}`, 'Starting scan...'], messageOptions);
 
@@ -426,11 +320,8 @@ const scanInit = async argvs => {
   }
 
   // Delete cloned directory
-  if (useChrome) {
-    deleteClonedChromeProfiles();
-  } else if (useEdge) {
-    deleteClonedEdgeProfiles();
-  }
+  deleteClonedProfiles(data.browser);
+
   // Delete dataset and request queues
   await cleanUp(data.randomToken);
 

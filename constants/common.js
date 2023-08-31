@@ -656,6 +656,94 @@ export const validName = name => {
 
   return true;
 };
+
+/**
+ * Check for browser available to run scan and clone data directory of the browser if needed. 
+ * @param {*} preferredBrowser string of user's preferred browser
+ * @param {*} isCli boolean flag to indicate if function is called from cli 
+ * @returns object consisting of browser to run and cloned data directory 
+ */
+export const getBrowserToRun = (preferredBrowser, isCli) => {
+  if (preferredBrowser === constants.browserTypes.chrome) {
+      const chromeData = getChromeData();
+      if (chromeData) return chromeData;
+
+      if (os.platform() === 'darwin') {
+          //mac user who specified -b chrome but does not have chrome
+          if (isCli) printMessage(['Unable to use Chrome, falling back to webkit...'], messageOptions);
+
+          constants.launcher = webkit; 
+          return { browserToRun: null, clonedBrowserDataDir: '' }
+      } else {
+          if (isCli) printMessage(['Unable to use Chrome, falling back to Edge browser...'], messageOptions);
+
+          const edgeData = getEdgeData();
+          if (edgeData) return edgeData; 
+
+          if (isCli) printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
+          process.exit(statuses.browserError.code);
+      } 
+  } else if (preferredBrowser === constants.browserTypes.edge) {
+      const edgeData = getEdgeData(); 
+      if (edgeData) return edgeData; 
+
+      if (isCli) printMessage(['Unable to use Edge, falling back to Chrome browser...'], messageOptions);
+      const chromeData = getChromeData();
+      if (chromeData) return chromeData;
+
+      if (os.platform() === 'darwin') {
+          //  mac user who specified -b edge but does not have edge or chrome
+          if (isCli) printMessage(['Unable to use Chrome and Edge, falling back to webkit...'], messageOptions);
+
+          constants.launcher = webkit; 
+          return { browserToRun: null, clonedBrowserDataDir: '' }
+      } else {
+          if (isCli) printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
+          process.exit(statuses.browserError.code);
+      }
+  } else {
+      // defaults to chromium
+      return { browserToRun: constants.browserTypes.chromium, clonedBrowserDataDir: ''};
+  }
+}
+/**
+ * Cloning a second time with random token for parallel browser sessions
+ * Also To mitigate agaisnt known bug where cookies are
+ * overriden after each browser session - i.e. logs user out
+ * after checkingUrl and unable to utilise same cookie for scan
+ * */
+export const getClonedProfilesWithRandomToken = (browser, randomToken) => {
+  let clonedDataDir; 
+  if (browser === constants.browserTypes.chrome) {
+    clonedDataDir = cloneChromeProfiles(randomToken); 
+  } else if (browser === constants.browserTypes.edge) {
+    clonedDataDir = cloneEdgeProfiles(randomToken); 
+  } else {
+    clonedDataDir = '';
+  }
+  return clonedDataDir; 
+}
+
+export const getChromeData = () => {
+  const browserDataDir = getDefaultChromeDataDir();
+  const clonedBrowserDataDir = cloneChromeProfiles();
+  if (browserDataDir && clonedBrowserDataDir) {
+      const browserToRun = constants.browserTypes.chrome;
+      return { browserToRun, clonedBrowserDataDir}
+  } else {
+      return null;
+  }
+}
+
+ export const getEdgeData = () => {
+  const browserDataDir = getDefaultEdgeDataDir(); 
+  const clonedBrowserDataDir = cloneEdgeProfiles();
+  if (browserDataDir && clonedBrowserDataDir) {
+      const browserToRun = constants.browserTypes.edge;
+      return { browserToRun, clonedBrowserDataDir}
+  }
+}
+
 /**
  * Clone the Chrome profile cookie files to the destination directory
  * @param {*} options glob options object
@@ -903,6 +991,14 @@ export const cloneEdgeProfiles = randomToken => {
   return null;
 };
 
+export const deleteClonedProfiles = (browser) => {
+  if (browser === constants.browserTypes.chrome) {
+    deleteClonedChromeProfiles();
+  } else if (browser === constants.browserTypes.edge) {
+    deleteClonedEdgeProfiles();
+  }
+}
+
 /**
  * Deletes all the cloned Purple-HATS directories in the Chrome data directory
  * @returns null
@@ -940,7 +1036,7 @@ export const deleteClonedChromeProfiles = () => {
 };
 
 /**
- * Deletes all the cloned Purple-HATS directories in the Chrome data directory
+ * Deletes all the cloned Purple-HATS directories in the Edge data directory
  * @returns null
  */
 export const deleteClonedEdgeProfiles = () => {
@@ -971,6 +1067,36 @@ export const deleteClonedEdgeProfiles = () => {
     });
   }
 };
+
+export const getPlaywrightDeviceDetailsObject = (deviceChosen, customDevice, viewportWidth) => {
+  let playwrightDeviceDetailsObject = {};
+  if (deviceChosen === 'Mobile' || customDevice === 'iPhone 11') {
+    playwrightDeviceDetailsObject = devices['iPhone 11'];
+  } else if (customDevice === 'Samsung Galaxy S9+') {
+    playwrightDeviceDetailsObject = devices['Galaxy S9+'];
+  } else if (viewportWidth) {
+    playwrightDeviceDetailsObject = {
+      viewport: { width: Number(viewportWidth), height: 720 },
+    };
+  } else if (customDevice) {
+    playwrightDeviceDetailsObject = devices[customDevice.replace('_', / /g)];
+  } 
+  return playwrightDeviceDetailsObject;
+}
+
+export const getScreenToScan = (deviceChosen, customDevice, viewportWidth) => {
+  let screenToScan;
+  if (deviceChosen) {
+    screenToScan = deviceChosen;
+  } else if (customDevice) {
+    screenToScan = customDevice;
+  } else if (viewportWidth) {
+    screenToScan = `CustomWidth_${viewportWidth}px`;
+  } else {
+    screenToScan = 'Desktop';
+  }
+  return screenToScan; 
+}
 
 export const submitFormViaPlaywright = async (
   browserToRun,
