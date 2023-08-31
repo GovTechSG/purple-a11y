@@ -4,6 +4,8 @@ echo "hats Shell - Created By younglim - NO WARRANTY PROVIDED"
 echo "================================================================"
 echo ""
 
+__dir="$PWD"
+
 CURR_FOLDERNAME=$(basename "$PWD")
 if [[ $CURR_FOLDERNAME = "scripts" ]]; then
   cd ..
@@ -34,13 +36,7 @@ else
     export PATH="$PWD/node_modules/.bin:$PATH"
 fi
 
-echo "INFO: Set path to Corretto-11 JDK"
-if [[ $(uname -m) == 'arm64' ]]; then
-    export JAVA_HOME="$PWD/amazon-corretto-11.jdk.aarch64/Contents/Home"
-else
-    export JAVA_HOME="$PWD/amazon-corretto-11.jdk.x64/Contents/Home"
-fi
-export PATH="$JAVA_HOME/bin:$PATH"
+source "$__dir/install_corretto.command"
 
 echo "INFO: Set path to Playwright cache for this session"
 export PLAYWRIGHT_BROWSERS_PATH="$PWD/ms-playwright"

@@ -21,22 +21,6 @@ if ! [ -f nodejs-mac-x64/bin/node ]; then
   mkdir nodejs-mac-x64 && tar -xzf nodejs-mac-x64.tar.gz -C nodejs-mac-x64 --strip-components=1 && rm ./nodejs-mac-x64.tar.gz
 fi
 
-if ! [ -f amazon-corretto-11.jdk.x64/Contents/Home/bin/java ]; then
-  echo "Downloading Corretto (x64)"
-  curl -L -o ./corretto-11.tar.gz "https://corretto.aws/downloads/latest/amazon-corretto-11-x64-macos-jdk.tar.gz"
-  tar -zxvf ./corretto-11.tar.gz
-  rm -f ./corretto-11.tar.gz
-  mv amazon-corretto-11.jdk amazon-corretto-11.jdk.x64
-fi
-
-if ! [ -f amazon-corretto-11.jdk.aarch64/Contents/Home/bin/java ]; then
-  echo "Downloading Corretto (aarch64)"
-  curl -L -o ./corretto-11.tar.gz "https://corretto.aws/downloads/latest/amazon-corretto-11-aarch64-macos-jdk.tar.gz"
-  tar -zxvf ./corretto-11.tar.gz
-  rm -f ./corretto-11.tar.gz
-  mv amazon-corretto-11.jdk amazon-corretto-11.jdk.aarch64
-fi
-
 source "${__dir}/hats_shell.sh"
 
 if ! [ -f verapdf/verapdf ]; then
