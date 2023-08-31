@@ -5,9 +5,9 @@ import path from 'path';
 import readline from 'readline';
 import safe from 'safe-regex';
 import { devices } from 'playwright';
-import { consoleLogger, silentLogger } from './logs.js';
+import { consoleLogger, silentLogger, guiInfoLog } from './logs.js';
 import { fileURLToPath } from 'url';
-import { proxy } from './constants/constants.js';
+import { proxy, guiInfoStatusTypes } from './constants/constants.js';
 
 // Do NOT remove. These import statements will be used when the custom flow scan is run from the GUI app
 import { chromium } from 'playwright';
@@ -63,7 +63,9 @@ const playwrightAxeGenerator = async data => {
     import { createAndUpdateResultsFolders, createDetailsAndLogs, createScreenshotsFolder, cleanUp, getStoragePath } from '#root/utils.js';
     import constants, {
         getIntermediateScreenshotsPath,
-        getExecutablePath, removeQuarantineFlag
+        getExecutablePath,
+        removeQuarantineFlag,
+        guiInfoStatusTypes,
     } from '#root/constants/constants.js';
     import fs from 'fs';
     import path from 'path';
@@ -71,7 +73,7 @@ const playwrightAxeGenerator = async data => {
     import { isSkippedUrl, submitForm, getBlackListedPatterns } from '#root/constants/common.js';
     import { spawnSync } from 'child_process';
     import safe from 'safe-regex';
-    import { consoleLogger, silentLogger } from '#root/logs.js';
+    import { consoleLogger, silentLogger, guiInfoLog } from '#root/logs.js';
 
   `;
   const block1 = `
@@ -260,9 +262,10 @@ const processPage = async page => {
     const scanRequired = await checkIfScanRequired(page);
     
     if (scanRequired) {
-      if (process.env.RUNNING_FROM_PH_GUI) {
-        console.log("Electron crawling::", urlsCrawled.scanned.length, "::scanned::", pageUrl);
-      }
+      guiInfoLog(guiInfoStatusTypes.SCANNED, {
+        numScanned: urlsCrawled.scanned.length,
+        urlScanned: pageUrl,
+      });
       await runAxeScan(${needsReviewItems}, page);
     }
   }
@@ -321,9 +324,7 @@ const clickFunc = async (elem,page) => {
 `;
 
   const block2 = ` 
-    if (process.env.RUNNING_FROM_PH_GUI) {
-      console.log('Electron scan completed');
-    }
+    guiInfoLog(guiInfoStatusTypes.COMPLETED);
     return urlsCrawled
       } catch (e) {
         console.error('Error: ', e);

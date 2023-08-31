@@ -203,6 +203,13 @@ const scannerTypes = {
   custom: 'Custom',
 };
 
+export const guiInfoStatusTypes = {
+  SCANNED: 'scanned',
+  SKIPPED: 'skipped',
+  COMPLETED: 'completed',
+  ERROR: 'error',
+};
+
 let launchOptionsArgs = [];
 
 // Check if running in docker container

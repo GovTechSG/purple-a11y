@@ -5,14 +5,18 @@ import {
   runAxeScript,
   failedRequestHandler,
 } from './commonCrawlerFunc.js';
-import constants, { basicAuthRegex, blackListedFileExtensions } from '../constants/constants.js';
+import constants, {
+  basicAuthRegex,
+  blackListedFileExtensions,
+  guiInfoStatusTypes,
+} from '../constants/constants.js';
 import {
   getPlaywrightLaunchOptions,
   isBlacklistedFileExtensions,
   isSkippedUrl,
 } from '../constants/common.js';
 import { areLinksEqual } from '../utils.js';
-import fs from 'fs';
+import { guiInfoLog } from '../logs.js';
 
 const crawlDomain = async (
   url,
@@ -117,9 +121,10 @@ const crawlDomain = async (
       const actualUrl = request.loadedUrl || request.url;
 
       if (isBlacklistedFileExtensions(actualUrl, blackListedFileExtensions)) {
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`);
-        }
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
         urlsCrawled.blacklisted.push(request.url);
         return;
       }
@@ -131,17 +136,19 @@ const crawlDomain = async (
       }
 
       if (response.status() === 403) {
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`);
-        }
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
         urlsCrawled.forbidden.push(request.url);
         return;
       }
 
       if (response.status() !== 200) {
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`);
-        }
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
         urlsCrawled.invalid.push(request.url);
         return;
       }
@@ -158,9 +165,10 @@ const crawlDomain = async (
         isBasicAuth = false;
       } else if (location.host.includes(host)) {
         const results = await runAxeScript(needsReview, page);
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::scanned::${request.url}`);
-        }
+        guiInfoLog(guiInfoStatusTypes.SCANNED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
 
         // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
         const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
@@ -197,11 +205,10 @@ const crawlDomain = async (
 
         await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);
       } else {
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(
-            `Electron crawling::${pagesCrawled}::${urlsCrawled.scanned.length}::skipped::${currentUrl}`,
-          );
-        }
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
         urlsCrawled.outOfDomain.push(request.url);
       }
     },
@@ -211,9 +218,7 @@ const crawlDomain = async (
   });
 
   await crawler.run();
-  if (process.env.RUNNING_FROM_PH_GUI) {
-    console.log('Electron scan completed');
-  }
+  guiInfoLog(guiInfoStatusTypes.COMPLETED);
   return urlsCrawled;
 };
 

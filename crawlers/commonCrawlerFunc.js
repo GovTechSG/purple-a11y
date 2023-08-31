@@ -2,7 +2,8 @@
 /* eslint-disable no-param-reassign */
 import crawlee, { playwrightUtils } from 'crawlee';
 import axe from 'axe-core';
-import { axeScript, saflyIconSelector } from '../constants/constants.js';
+import { axeScript, guiInfoStatusTypes, saflyIconSelector } from '../constants/constants.js';
+import { guiInfoLog } from '../logs.js';
 
 export const filterAxeResults = (needsReview, results, pageTitle) => {
   const { violations, passes, incomplete, url } = results;
@@ -46,7 +47,7 @@ export const filterAxeResults = (needsReview, results, pageTitle) => {
   };
 
   violations.forEach(item => process(item, false));
-  if (needsReview){
+  if (needsReview) {
     incomplete.forEach(item => process(item, true));
   }
 
@@ -79,11 +80,11 @@ export const filterAxeResults = (needsReview, results, pageTitle) => {
   };
 };
 
-export const runAxeScript = async (needsReview, page, selectors = []) => {  
+export const runAxeScript = async (needsReview, page, selectors = []) => {
   await crawlee.playwrightUtils.injectFile(page, axeScript);
-  
+
   const results = await page.evaluate(
-    async ({ selectors, saflyIconSelector, needsReview}) => {
+    async ({ selectors, saflyIconSelector, needsReview }) => {
       // remove so that axe does not scan
       document.querySelector(saflyIconSelector)?.remove();
 
@@ -93,7 +94,9 @@ export const runAxeScript = async (needsReview, page, selectors = []) => {
         },
       });
 
-      isReturnReviewItems = needsReview ? ['violations', 'passes', 'incomplete'] : ['violations', 'passes']
+      isReturnReviewItems = needsReview
+        ? ['violations', 'passes', 'incomplete']
+        : ['violations', 'passes'];
 
       return axe.run(selectors, {
         resultTypes: isReturnReviewItems,
@@ -119,16 +122,12 @@ export const preNavigationHooks = [
 ];
 
 export const postNavigationHooks = [
-  async (_crawlingContext) => {
-    if (process.env.RUNNING_FROM_PH_GUI) {
-      console.log('Electron scan completed');
-    }
-  }
-]
+  async _crawlingContext => {
+    guiInfoLog(guiInfoStatusTypes.COMPLETED);
+  },
+];
 
 export const failedRequestHandler = async ({ request }) => {
-  if (process.env.RUNNING_FROM_PH_GUI) {
-    console.log(`Electron crawling::0::error::${request.url}`);
-  }
+  guiInfoLog(guiInfoStatusTypes.ERROR, { numScanned: 0, urlScanned: request.url });
   crawlee.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
 };
