@@ -7,7 +7,7 @@ echo ""
 CURR_FOLDERNAME=$(basename "$PWD")
 if [[ $CURR_FOLDERNAME = "scripts" ]]; then
   cd ..
-  CURR_FOLDERNAME=$(basename $PWD)
+  CURR_FOLDERNAME=$(basename "$PWD")
 fi
 
 if [[ $(uname -m) == 'arm64' ]]; then
@@ -35,7 +35,11 @@ else
 fi
 
 echo "INFO: Set path to Corretto-11 JDK"
-export JAVA_HOME="$PWD/amazon-corretto-11.jdk/Contents/Home"
+if [[ $(uname -m) == 'arm64' ]]; then
+    export JAVA_HOME="$PWD/amazon-corretto-11.jdk.aarch64/Contents/Home"
+else
+    export JAVA_HOME="$PWD/amazon-corretto-11.jdk.x64/Contents/Home"
+fi
 export PATH="$JAVA_HOME/bin:$PATH"
 
 echo "INFO: Set path to Playwright cache for this session"

@@ -16,6 +16,8 @@ exclusions.txt
 bin/
 ImageMagick-*
 nodejs-*
+amazon-corretto-*
+verapdf*
 ms-playwright/
 a11y-scan-results*.zip
 PHScan_*/
