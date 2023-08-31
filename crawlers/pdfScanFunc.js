@@ -1,11 +1,12 @@
 import constants, { getExecutablePath } from '../constants/constants.js';
-import { spawnSync } from 'child_process';
+import { exec, spawnSync } from 'child_process';
 import { globSync } from 'glob';
 import { consoleLogger, silentLogger } from '../logs.js';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
 import { createRequire } from 'module';
-import os from 'os'; 
+import os from 'os';
+import path from 'path'; 
 
 const require = createRequire(import.meta.url); 
 
@@ -37,7 +38,12 @@ const metaToCategoryMap = {
 };
 
 const getVeraExecutable = () => {
-  const veraPdfExe = getExecutablePath('../**/verapdf', 'verapdf');
+  let veraPdfExe;
+  if (os.platform() === 'win32') {
+    veraPdfExe = getExecutablePath('**/verapdf', 'verapdf.bat');
+  } else {
+    veraPdfExe = getExecutablePath('**/verapdf', 'verapdf');
+  }
   if (!veraPdfExe) {
     let veraPdfExeNotFoundError =
       'Could not find veraPDF executable.  Please ensure veraPDF is installed at current directory.';
@@ -49,7 +55,7 @@ const getVeraExecutable = () => {
 
 // get validation profile
 const getVeraProfile = () => {
-  const veraPdfProfile = globSync('../**/verapdf/**/WCAG-21.xml', {
+  const veraPdfProfile = globSync('**/verapdf/**/WCAG-21.xml', {
     absolute: true,
     recursive: true,
     nodir: true,
@@ -114,8 +120,12 @@ export const handlePdfDownload = (randomToken, pdfDownloads, request, sendReques
 };
 
 export const runPdfScan = async (randomToken) => {
-  const veraPdfExe = getVeraExecutable();
-  const veraPdfProfile = getVeraProfile();
+  const execFile = getVeraExecutable();
+  const veraPdfExe = '"' + execFile + '"';
+  // const veraPdfProfile = getVeraProfile();
+  const veraPdfProfile = '"' 
+    + path.join(execFile, '..', 'profiles/veraPDF-validation-profiles-rel-1.24/PDF_UA/WCAG-21.xml')
+    + '"';
   if (!veraPdfExe || !veraPdfProfile) {
     process.exit(1);
   }
@@ -134,7 +144,7 @@ export const runPdfScan = async (randomToken) => {
     intermediateFolder,
   ];
 
-  const ls = spawnSync(veraPdfExe, veraPdfCmdArgs);
+  const ls = spawnSync(veraPdfExe, veraPdfCmdArgs, { shell: true });
   fs.writeFileSync(intermediateResultPath, ls.stdout, { encoding: 'utf-8' });
 };
 
