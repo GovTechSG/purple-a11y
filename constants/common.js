@@ -13,7 +13,7 @@ import path from 'path';
 import * as https from 'https';
 import os from 'os';
 import { globSync } from 'glob';
-import { chromium, devices } from 'playwright';
+import { chromium, devices, webkit } from 'playwright';
 import printMessage from 'print-message';
 import constants, {
   getDefaultChromeDataDir,
@@ -228,7 +228,7 @@ const checkUrlConnectivity = async url => {
       .get(data.url, {
         headers: { 'User-Agent': devices['Desktop Chrome HiDPI'].userAgent },
         httpsAgent,
-        timeout: 15000,
+        timeout: 10,
       })
       .then(async response => {
         const redirectUrl = response.request.res.responseUrl;
@@ -242,7 +242,11 @@ const checkUrlConnectivity = async url => {
 
         res.content = response.data;
       })
-      .catch(error => {
+      .catch(async error => {
+        if (error.code === 'ECONNABORTED') {
+          res.status = constants.urlCheckStatuses.axiosTimeout.code; 
+          return res;
+        }
         if (error.response) {
           if (error.response.status === 401) {
             // enters here if URL is protected by basic auth
@@ -300,7 +304,7 @@ const checkUrlConnectivityWithBrowser = async (
     let browserContext;
 
     try {
-      browserContext = await chromium.launchPersistentContext(clonedDataDir, {
+      browserContext = await constants.launcher.launchPersistentContext(clonedDataDir, {
         ...getPlaywrightLaunchOptions(browserToRun),
         ...(viewport && { viewport }),
         ...(userAgent && { userAgent }),
@@ -393,17 +397,26 @@ export const checkUrl = async (
   playwrightDeviceDetailsObject,
 ) => {
   let res;
-
-  if (browser) {
+  if (proxy) {
     res = await checkUrlConnectivityWithBrowser(
       url,
-      browser,
-      clonedDataDir,
-      playwrightDeviceDetailsObject,
+      browser, 
+      clonedDataDir, 
+      playwrightDeviceDetailsObject
     );
   } else {
-    res = await checkUrlConnectivity(url);
-  }
+      res = await checkUrlConnectivity(url);
+      if (res.status === constants.urlCheckStatuses.axiosTimeout.code) {
+        if (browser || constants.launcher === webkit) {
+          res = await checkUrlConnectivityWithBrowser(
+            url,
+            browser, 
+            clonedDataDir, 
+            playwrightDeviceDetailsObject
+          )
+        }
+    }
+  } 
 
   if (
     res.status === constants.urlCheckStatuses.success.code &&
@@ -509,22 +522,27 @@ export const getLinksFromSitemap = async (
   const fetchUrls = async url => {
     let data;
     let sitemapType;
-    if (validator.isURL(url, urlOptions)) {
-      if (browser) {
-        const browserContext = await chromium.launchPersistentContext(
-          finalUserDataDirectory,
-          getPlaywrightLaunchOptions(browser),
-        );
-        const page = await browserContext.newPage();
-        await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
 
+    const getDataUsingPlaywright = async () => {
+      const browserContext = await constants.launcher.launchPersistentContext(
+        finalUserDataDirectory,
+        {
+          ...getPlaywrightLaunchOptions(browser),
+        },
+      );
+  
+      const page = await browserContext.newPage();
+      await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+      
+      if (constants.launcher === webkit) {
+        data = await page.locator('body').innerText(); 
+      } else {      
         const urlSet = page.locator('urlset');
         const sitemapIndex = page.locator('sitemapindex');
         const rss = page.locator('rss');
         const feed = page.locator('feed');
-
         const isRoot = async locator => (await locator.count()) > 0;
-
+    
         if (await isRoot(urlSet)) {
           data = await urlSet.evaluate(elem => elem.outerHTML);
         } else if (await isRoot(sitemapIndex)) {
@@ -534,15 +552,27 @@ export const getLinksFromSitemap = async (
         } else if (await isRoot(feed)) {
           data = await feed.evaluate(elem => elem.outerHTML);
         }
+      } 
+      
+      await browserContext.close();
+    }
 
-        await browserContext.close();
+    if (validator.isURL(url, urlOptions)) {
+      if (proxy) {
+        await getDataUsingPlaywright();
       } else {
-        const instance = axios.create({
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false,
-          }),
-        });
-        data = await (await instance.get(url)).data;
+        try {
+          const instance = axios.create({
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false,
+            }),
+          });
+          data = await (await instance.get(url, {timeout: 10})).data;
+        } catch (error) {
+          if (error.code === 'ECONNABORTED') {
+            await getDataUsingPlaywright();
+          }
+        }
       }
     } else {
       data = fs.readFileSync(url, 'utf8');
@@ -626,6 +656,94 @@ export const validName = name => {
 
   return true;
 };
+
+/**
+ * Check for browser available to run scan and clone data directory of the browser if needed. 
+ * @param {*} preferredBrowser string of user's preferred browser
+ * @param {*} isCli boolean flag to indicate if function is called from cli 
+ * @returns object consisting of browser to run and cloned data directory 
+ */
+export const getBrowserToRun = (preferredBrowser, isCli) => {
+  if (preferredBrowser === constants.browserTypes.chrome) {
+      const chromeData = getChromeData();
+      if (chromeData) return chromeData;
+
+      if (os.platform() === 'darwin') {
+          //mac user who specified -b chrome but does not have chrome
+          if (isCli) printMessage(['Unable to use Chrome, falling back to webkit...'], messageOptions);
+
+          constants.launcher = webkit; 
+          return { browserToRun: null, clonedBrowserDataDir: '' }
+      } else {
+          if (isCli) printMessage(['Unable to use Chrome, falling back to Edge browser...'], messageOptions);
+
+          const edgeData = getEdgeData();
+          if (edgeData) return edgeData; 
+
+          if (isCli) printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
+          process.exit(statuses.browserError.code);
+      } 
+  } else if (preferredBrowser === constants.browserTypes.edge) {
+      const edgeData = getEdgeData(); 
+      if (edgeData) return edgeData; 
+
+      if (isCli) printMessage(['Unable to use Edge, falling back to Chrome browser...'], messageOptions);
+      const chromeData = getChromeData();
+      if (chromeData) return chromeData;
+
+      if (os.platform() === 'darwin') {
+          //  mac user who specified -b edge but does not have edge or chrome
+          if (isCli) printMessage(['Unable to use Chrome and Edge, falling back to webkit...'], messageOptions);
+
+          constants.launcher = webkit; 
+          return { browserToRun: null, clonedBrowserDataDir: '' }
+      } else {
+          if (isCli) printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
+          process.exit(statuses.browserError.code);
+      }
+  } else {
+      // defaults to chromium
+      return { browserToRun: constants.browserTypes.chromium, clonedBrowserDataDir: ''};
+  }
+}
+/**
+ * Cloning a second time with random token for parallel browser sessions
+ * Also To mitigate agaisnt known bug where cookies are
+ * overriden after each browser session - i.e. logs user out
+ * after checkingUrl and unable to utilise same cookie for scan
+ * */
+export const getClonedProfilesWithRandomToken = (browser, randomToken) => {
+  let clonedDataDir; 
+  if (browser === constants.browserTypes.chrome) {
+    clonedDataDir = cloneChromeProfiles(randomToken); 
+  } else if (browser === constants.browserTypes.edge) {
+    clonedDataDir = cloneEdgeProfiles(randomToken); 
+  } else {
+    clonedDataDir = '';
+  }
+  return clonedDataDir; 
+}
+
+export const getChromeData = () => {
+  const browserDataDir = getDefaultChromeDataDir();
+  const clonedBrowserDataDir = cloneChromeProfiles();
+  if (browserDataDir && clonedBrowserDataDir) {
+      const browserToRun = constants.browserTypes.chrome;
+      return { browserToRun, clonedBrowserDataDir}
+  } else {
+      return null;
+  }
+}
+
+ export const getEdgeData = () => {
+  const browserDataDir = getDefaultEdgeDataDir(); 
+  const clonedBrowserDataDir = cloneEdgeProfiles();
+  if (browserDataDir && clonedBrowserDataDir) {
+      const browserToRun = constants.browserTypes.edge;
+      return { browserToRun, clonedBrowserDataDir}
+  }
+}
+
 /**
  * Clone the Chrome profile cookie files to the destination directory
  * @param {*} options glob options object
@@ -873,6 +991,14 @@ export const cloneEdgeProfiles = randomToken => {
   return null;
 };
 
+export const deleteClonedProfiles = (browser) => {
+  if (browser === constants.browserTypes.chrome) {
+    deleteClonedChromeProfiles();
+  } else if (browser === constants.browserTypes.edge) {
+    deleteClonedEdgeProfiles();
+  }
+}
+
 /**
  * Deletes all the cloned Purple-HATS directories in the Chrome data directory
  * @returns null
@@ -910,7 +1036,7 @@ export const deleteClonedChromeProfiles = () => {
 };
 
 /**
- * Deletes all the cloned Purple-HATS directories in the Chrome data directory
+ * Deletes all the cloned Purple-HATS directories in the Edge data directory
  * @returns null
  */
 export const deleteClonedEdgeProfiles = () => {
@@ -942,40 +1068,54 @@ export const deleteClonedEdgeProfiles = () => {
   }
 };
 
+export const getPlaywrightDeviceDetailsObject = (deviceChosen, customDevice, viewportWidth) => {
+  let playwrightDeviceDetailsObject = {};
+  if (deviceChosen === 'Mobile' || customDevice === 'iPhone 11') {
+    playwrightDeviceDetailsObject = devices['iPhone 11'];
+  } else if (customDevice === 'Samsung Galaxy S9+') {
+    playwrightDeviceDetailsObject = devices['Galaxy S9+'];
+  } else if (viewportWidth) {
+    playwrightDeviceDetailsObject = {
+      viewport: { width: Number(viewportWidth), height: 720 },
+    };
+  } else if (customDevice) {
+    playwrightDeviceDetailsObject = devices[customDevice.replace('_', / /g)];
+  } 
+  return playwrightDeviceDetailsObject;
+}
+
+export const getScreenToScan = (deviceChosen, customDevice, viewportWidth) => {
+  let screenToScan;
+  if (deviceChosen) {
+    screenToScan = deviceChosen;
+  } else if (customDevice) {
+    screenToScan = customDevice;
+  } else if (viewportWidth) {
+    screenToScan = `CustomWidth_${viewportWidth}px`;
+  } else {
+    screenToScan = 'Desktop';
+  }
+  return screenToScan; 
+}
+
 export const submitFormViaPlaywright = async (
   browserToRun,
   userDataDirectory,
-  websiteUrl,
-  scanType,
-  email,
-  name,
-  scanResultsJson,
-  numberOfPagesScanned,
+  finalUrl
 ) => {
+  let browserContext; 
   const dirName = `clone-${Date.now()}`;
-  let clonedDir = null;
-  if (proxy && browserToRun === constants.browserTypes.edge) {
-    clonedDir = cloneEdgeProfiles(dirName);
-  } else if (proxy && browserToRun === constants.browserTypes.chrome) {
-    clonedDir = cloneChromeProfiles(dirName);
-  }
-
-  const finalUrl =
-    `${formDataFields.formUrl}?` +
-    `${formDataFields.websiteUrlField}=${websiteUrl}&` +
-    `${formDataFields.scanTypeField}=${scanType}&` +
-    `${formDataFields.emailField}=${email}&` +
-    `${formDataFields.nameField}=${name}&` +
-    `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}&` +
-    `${formDataFields.numberOfPagesScannedField}=${numberOfPagesScanned}`;
-
-  const browserContext = await chromium.launchPersistentContext(clonedDir || userDataDirectory, {
-    ...getPlaywrightLaunchOptions(browserToRun),
-  });
-  // const context = await browser.newContext();
+    let clonedDir = null;
+    if (proxy && browserToRun === constants.browserTypes.edge) {
+      clonedDir = cloneEdgeProfiles(dirName);
+    } else if (proxy && browserToRun === constants.browserTypes.chrome) {
+      clonedDir = cloneChromeProfiles(dirName);
+    }
+    browserContext = await constants.launcher.launchPersistentContext(clonedDir || userDataDirectory, {
+      ...getPlaywrightLaunchOptions(browserToRun),
+    });
 
   const page = await browserContext.newPage();
-  // const page = await context.newPage();
 
   try {
     const response = await page.goto(finalUrl, {
@@ -998,25 +1138,50 @@ export const submitFormViaPlaywright = async (
       deleteClonedChromeProfiles();
     }
   }
-  // await page.goto(finalUrl, {
-  //   ...(proxy && { waitUntil: 'networkidle' }),
-  // });
-
-  // await page.close();
-  // await context.close();
 };
 
+export const submitForm = async (
+  browserToRun,
+  userDataDirectory,
+  websiteUrl,
+  scanType,
+  email,
+  name,
+  scanResultsJson,
+  numberOfPagesScanned,
+) => {
+  const finalUrl =
+    `${formDataFields.formUrl}?` +
+    `${formDataFields.websiteUrlField}=${websiteUrl}&` +
+    `${formDataFields.scanTypeField}=${scanType}&` +
+    `${formDataFields.emailField}=${email}&` +
+    `${formDataFields.nameField}=${name}&` +
+    `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}&` +
+    `${formDataFields.numberOfPagesScannedField}=${numberOfPagesScanned}`;
+
+  if (proxy) {
+    await submitFormViaPlaywright(browserToRun, userDataDirectory, finalUrl); 
+  } else {
+    try {
+      await axios.get(finalUrl, {timeout: 10}); 
+    } catch (error) {
+      if (error.code === 'ECONNABORTED') {
+        if (browserToRun || constants.launcher === webkit) {
+          await submitFormViaPlaywright(browserToRun, userDataDirectory, finalUrl); 
+        }
+      }
+    }
+  }
+}
 /**
  * @param {string} browser browser name ("chrome" or "edge", null for chromium, the default Playwright browser)
  * @returns playwright launch options object. For more details: https://playwright.dev/docs/api/class-browsertype#browser-type-launch
  */
 export const getPlaywrightLaunchOptions = browser => {
   let channel;
-  if (browser === constants.browserTypes.chromium) {
-    channel = null;
-  } else {
+  if (browser) {
     channel = browser;
-  }
+  } 
   const options = {
     // Drop the --use-mock-keychain flag to allow MacOS devices
     // to use the cloned cookies.
@@ -1027,6 +1192,9 @@ export const getPlaywrightLaunchOptions = browser => {
   if (proxy) {
     options.headless = false;
     options.slowMo = 1000; // To ensure server-side rendered proxy page is loaded
-  }
+  } else if (browser === constants.browserTypes.edge && os.platform() === 'win32') {
+    // edge should be in non-headless mode
+    options.headless = false; 
+  } 
   return options;
 };

@@ -163,8 +163,9 @@ export const getCurrentTime = () =>
     minute: '2-digit',
   });
 
-export const setHeadlessMode = isHeadless => {
-  if (isHeadless) {
+export const setHeadlessMode = (browser, isHeadless) => {
+  const isWindowsOSAndEdgeBrowser = browser === constants.browserTypes.edge && os.platform() === 'win32';
+  if (isHeadless || isWindowsOSAndEdgeBrowser) {
     process.env.CRAWLEE_HEADLESS = 1;
   } else {
     process.env.CRAWLEE_HEADLESS = 0;
