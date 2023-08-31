@@ -28,8 +28,7 @@ const crawlSitemap = async (
   needsReviewItems,
   blacklistedPatterns,
 ) => {
-  let needsReview = needsReviewItems;
-
+  const needsReview = needsReviewItems;
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { playwrightDeviceDetailsObject } = viewportSettings;
   const { maxConcurrency } = constants;
@@ -99,7 +98,7 @@ const crawlSitemap = async (
         return;
       }
 
-      pagesCrawled++;
+      pagesCrawled += 1;
 
       if (status === 200 && isWhitelistedContentType(contentType)) {
         const results = await runAxeScript(needsReview, page);

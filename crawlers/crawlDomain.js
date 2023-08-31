@@ -6,7 +6,11 @@ import {
   failedRequestHandler,
 } from './commonCrawlerFunc.js';
 import constants, { basicAuthRegex, blackListedFileExtensions } from '../constants/constants.js';
-import { getPlaywrightLaunchOptions, isBlacklistedFileExtensions, isSkippedUrl } from '../constants/common.js';
+import {
+  getPlaywrightLaunchOptions,
+  isBlacklistedFileExtensions,
+  isSkippedUrl,
+} from '../constants/common.js';
 import { areLinksEqual } from '../utils.js';
 import fs from 'fs';
 
@@ -21,9 +25,9 @@ const crawlDomain = async (
   strategy,
   specifiedMaxConcurrency,
   needsReviewItems,
-  blacklistedPatterns
+  blacklistedPatterns,
 ) => {
-  let needsReview = needsReviewItems;
+  const needsReview = needsReviewItems;
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { maxConcurrency } = constants;
   const { playwrightDeviceDetailsObject } = viewportSettings;
@@ -31,7 +35,6 @@ const crawlDomain = async (
   const { dataset, requestQueue } = await createCrawleeSubFolders(randomToken);
 
   let finalUrl;
-  let scanCompleted = false;
   let pagesCrawled;
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth = false;
@@ -57,6 +60,31 @@ const crawlDomain = async (
     pagesCrawled = 0;
   }
 
+  const enqueueProcess = async (enqueueLinks, enqueueLinksByClickingElements) => {
+    await enqueueLinks({
+      // set selector matches anchor elements with href but not contains # or starting with mailto:
+      selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
+      strategy,
+      requestQueue,
+      transformRequestFunction(req) {
+        req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+        return req;
+      },
+    });
+
+    await enqueueLinksByClickingElements({
+      // set selector matches
+      // NOT <a>
+      // IS role='link' or button onclick
+      // enqueue new page URL
+      selector: ':not(a):is(*[role="link"], button[onclick])',
+      transformRequestFunction(req) {
+        req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+        return req;
+      },
+    });
+  };
+
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
       launcher: constants.launcher,
@@ -66,7 +94,7 @@ const crawlDomain = async (
     browserPoolOptions: {
       useFingerprints: false,
       preLaunchHooks: [
-        async (pageId, launchContext) => {
+        async (_pageId, launchContext) => {
           launchContext.launchOptions = {
             ...launchContext.launchOptions,
             bypassCSP: true,
@@ -90,57 +118,21 @@ const crawlDomain = async (
 
       if (isBlacklistedFileExtensions(actualUrl, blackListedFileExtensions)) {
         if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::skipped::${request.url}`);
+          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`);
         }
         urlsCrawled.blacklisted.push(request.url);
         return;
       }
 
       if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
-        urlsCrawled.userExcluded.push(request.url)
-        await enqueueLinks({
-          // set selector matches anchor elements with href but not contains # or starting with mailto:
-          selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
-          strategy,
-          requestQueue,
-          transformRequestFunction(req) {
-            if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
-              if (process.env.RUNNING_FROM_PH_GUI) {
-                console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${req.url}`);
-              }
-              urlsCrawled.blacklisted.push(req.url);
-            }
-
-            req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-            return req;
-          },
-        });
-
-        await enqueueLinksByClickingElements({
-          // set selector matches
-          // NOT <a>
-          // IS role='link' or button onclick
-          // enqueue new page URL
-          selector: ':not(a):is(*[role="link"], button[onclick])',
-          transformRequestFunction(req) {
-            // ignore all links ending with `.pdf`
-            if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
-              if (process.env.RUNNING_FROM_PH_GUI) {
-                console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${req.url}`);
-              }
-              urlsCrawled.blacklisted.push(req.url);
-            }
-
-            req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-            return req;
-          },
-        });
+        urlsCrawled.userExcluded.push(request.url);
+        await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);
         return;
-      } 
+      }
 
       if (response.status() === 403) {
         if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`)
+          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`);
         }
         urlsCrawled.forbidden.push(request.url);
         return;
@@ -153,12 +145,12 @@ const crawlDomain = async (
         urlsCrawled.invalid.push(request.url);
         return;
       }
-      
+
       if (pagesCrawled === maxRequestsPerCrawl) {
         urlsCrawled.exceededRequests.push(request.url);
         return;
       }
-      pagesCrawled++;
+      pagesCrawled += 1;
 
       const location = await page.evaluate('location');
 
@@ -184,7 +176,7 @@ const crawlDomain = async (
             });
             return;
           }
-         
+
           urlsCrawled.scanned.push({
             url: request.url,
             pageTitle: results.pageTitle,
@@ -203,46 +195,12 @@ const crawlDomain = async (
         }
         await dataset.pushData(results);
 
-        await enqueueLinks({
-          // set selector matches anchor elements with href but not contains # or starting with mailto:
-          selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
-          strategy,
-          requestQueue,
-          transformRequestFunction(req) {
-            if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
-              if (process.env.RUNNING_FROM_PH_GUI) {
-                console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${req.url}`);
-              }
-              urlsCrawled.blacklisted.push(req.url);
-            }
-
-            req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-            return req;
-          },
-        });
-
-        await enqueueLinksByClickingElements({
-          // set selector matches
-          // NOT <a>
-          // IS role='link' or button onclick
-          // enqueue new page URL
-          selector: ':not(a):is(*[role="link"], button[onclick])',
-          transformRequestFunction(req) {
-            // ignore all links ending with `.pdf`
-            if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
-              if (process.env.RUNNING_FROM_PH_GUI) {
-                console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${req.url}`);
-              }
-              urlsCrawled.blacklisted.push(req.url);
-            }
-
-            req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-            return req;
-          },
-        });
+        await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);
       } else {
         if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${pagesCrawled}::${urlsCrawled.scanned.length}::skipped::${currentUrl}`);
+          console.log(
+            `Electron crawling::${pagesCrawled}::${urlsCrawled.scanned.length}::skipped::${currentUrl}`,
+          );
         }
         urlsCrawled.outOfDomain.push(request.url);
       }

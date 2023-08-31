@@ -24,7 +24,7 @@ import constants, {
   getExecutablePath,
   removeQuarantineFlag,
 } from '#root/constants/constants.js';
-import { isSkippedUrl, submitForm } from '#root/constants/common.js';
+import { isSkippedUrl, submitForm, getBlackListedPatterns } from '#root/constants/common.js';
 import { spawnSync } from 'child_process';
 import { getDefaultChromeDataDir, getDefaultEdgeDataDir } from './constants/constants.js';
 
@@ -68,7 +68,7 @@ const playwrightAxeGenerator = async data => {
     import fs from 'fs';
     import path from 'path';
     import printMessage from 'print-message';
-    import { isSkippedUrl, submitForm } from '#root/constants/common.js';
+    import { isSkippedUrl, submitForm, getBlackListedPatterns } from '#root/constants/common.js';
     import { spawnSync } from 'child_process';
     import safe from 'safe-regex';
     import { consoleLogger, silentLogger } from '#root/logs.js';
@@ -91,32 +91,14 @@ const urlsCrawled = { ...constants.urlsCrawledObj };
 const { dataset } = await createCrawleeSubFolders(${formatScriptStringVar(randomToken)});
 
 let blacklistedPatterns = null;
-let exclusionsFile = null;
-
-if (fs.existsSync('exclusions.txt')){
-  exclusionsFile = 'exclusions.txt'
-} else if ("${blacklistedPatternsFilename}"){
-  exclusionsFile = "${blacklistedPatternsFilename}"
-}
-
-if (exclusionsFile) {
-  const rawPatterns = fs.readFileSync(exclusionsFile).toString();
-  blacklistedPatterns = rawPatterns.split('\\n').filter(pattern => pattern.trim() !== '');
-
-  let unsafe = blacklistedPatterns.filter(function (pattern) {
-    return !safe(pattern);
-  });
-
-  if (unsafe.length > 0) {
-  let unsafeExpressionsError =
-      "Unsafe expressions detected: " +
-      unsafe +
-      " Please revise " +
-      exclusionsFile;
-    consoleLogger.error(unsafeExpressionsError);
-    silentLogger.error(unsafeExpressionsError);
-    process.exit(1);
-  }
+try {
+  blacklistedPatterns = getBlackListedPatterns(
+    ${formatScriptStringVar(blacklistedPatternsFilename)}
+  );
+} catch (error) {
+  consoleLogger.error(error);
+  silentLogger.error(error);
+  process.exit(1);
 }
 
 var index = 1;
@@ -268,8 +250,6 @@ const processPage = async page => {
     silentLogger.info('Unable to detect networkidle');
   }
   
-  await new Promise(resolve => setTimeout(resolve, 2500));
-  // console.log("timeout url: ", page.url())
   const pageUrl = page.url()
   
 

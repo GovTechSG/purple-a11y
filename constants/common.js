@@ -6,10 +6,11 @@ import validator from 'validator';
 import axios from 'axios';
 import { JSDOM } from 'jsdom';
 import * as cheerio from 'cheerio';
-import crawlee, { constructRegExpObjectsFromPseudoUrls } from 'crawlee';
+import crawlee from 'crawlee';
 import { parseString } from 'xml2js';
 import fs from 'fs';
 import path from 'path';
+import safe from 'safe-regex';
 import * as https from 'https';
 import os from 'os';
 import { globSync } from 'glob';
@@ -22,7 +23,6 @@ import constants, {
   formDataFields,
   whitelistedAttributes,
   mutedAttributeValues,
-  blackListedFileExtensions,
 } from './constants.js';
 import { silentLogger } from '../logs.js';
 
@@ -143,6 +143,33 @@ export const sortAlphaAttributes = htmlString => {
   return entireHtml;
 };
 
+export const getBlackListedPatterns = blacklistedPatternsFilename => {
+  let exclusionsFile = null;
+  if (blacklistedPatternsFilename) {
+    exclusionsFile = blacklistedPatternsFilename;
+  } else if (fs.existsSync('exclusions.txt')) {
+    exclusionsFile = 'exclusions.txt';
+  }
+
+  if (!exclusionsFile) {
+    return null;
+  }
+
+  const rawPatterns = fs.readFileSync(exclusionsFile).toString();
+  const blacklistedPatterns = rawPatterns
+    .split('\n')
+    .map(p => p.trim())
+    .filter(p => p !== '');
+
+  const unsafe = blacklistedPatterns.filter(pattern => !safe(pattern));
+  if (unsafe.length > 0) {
+    const unsafeExpressionsError = `Unsafe expressions detected: ${unsafe} Please revise ${exclusionsFile}`;
+    throw new Error(unsafeExpressionsError);
+  }
+
+  return blacklistedPatterns;
+};
+
 export const isBlacklistedFileExtensions = (url, blacklistedFileExtensions) => {
   const urlExtension = url.split('.').pop();
   return blacklistedFileExtensions.includes(urlExtension);
@@ -197,18 +224,20 @@ export const isValidXML = async content => {
 };
 
 export const isSkippedUrl = (pageUrl, whitelistedDomains) => {
-  const isWhitelisted = whitelistedDomains.filter(pattern => {
-    pattern = pattern.replace(/[\n\r]+/g, '');
-    if (!pattern.startsWith('http')) {
+  const matched =
+    whitelistedDomains.filter(p => {
+      const pattern = p.replace(/[\n\r]+/g, '');
+
+      // is url
+      if (pattern.startsWith('http') && pattern === pageUrl) {
+        return true;
+      }
+
+      // is regex (default)
       return new RegExp(pattern).test(pageUrl);
-    } else {
-      return pattern === pageUrl;
-    }
-  });
+    }).length > 0;
 
-  const noMatch = Object.keys(isWhitelisted).every(key => isWhitelisted[key].length === 0);
-
-  return !noMatch;
+  return matched;
 };
 
 export const isFileSitemap = filePath => {

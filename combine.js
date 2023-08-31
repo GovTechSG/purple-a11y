@@ -1,12 +1,11 @@
 import printMessage from 'print-message';
-import fs from 'fs-extra';
-import safe from 'safe-regex';
 import crawlSitemap from './crawlers/crawlSitemap.js';
 import crawlDomain from './crawlers/crawlDomain.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
 import constants, { basicAuthRegex } from './constants/constants.js';
-import { submitForm } from './constants/common.js';
+import { getBlackListedPatterns, submitForm } from './constants/common.js';
+import { consoleLogger, silentLogger } from './logs.js';
 
 const combineRun = async (details, deviceToScan) => {
   const envDetails = { ...details };
@@ -37,31 +36,12 @@ const combineRun = async (details, deviceToScan) => {
   const host = type === constants.scannerTypes.sitemap && isLocalSitemap ? '' : getHost(url);
 
   let blacklistedPatterns = null;
-  let exclusionsFile = null;
-
-  if (fs.existsSync('exclusions.txt')){
-    exclusionsFile = 'exclusions.txt'
-  } else if (blacklistedPatternsFilename){
-    exclusionsFile = blacklistedPatternsFilename
-  }
-
-  console.log("combine.js exclusionsFile: ", exclusionsFile)
-
-  if (exclusionsFile) {
-    const rawPatterns = fs.readFileSync(exclusionsFile).toString();
-    blacklistedPatterns = rawPatterns.split('\n').filter(pattern => pattern.trim() !== '');
-
-    let unsafe = blacklistedPatterns.filter(function (pattern) {
-      return !safe(pattern);
-    });
-
-    if (unsafe.length > 0) {
-      let unsafeExpressionsError =
-        'Unsafe expressions detected: ' + unsafe + ' Please revise ' + exclusionsFile;
-      consoleLogger.error(unsafeExpressionsError);
-      silentLogger.error(unsafeExpressionsError);
-      process.exit(1);
-    }
+  try {
+    blacklistedPatterns = getBlackListedPatterns(blacklistedPatternsFilename);
+  } catch (error) {
+    consoleLogger.error(error);
+    silentLogger.error(error);
+    process.exit(1);
   }
 
   // remove basic-auth credentials from URL
