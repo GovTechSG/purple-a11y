@@ -220,7 +220,7 @@ export const sanitizeUrlInput = url => {
 const requestToUrl = async (url, res) => {
   // User-Agent is modified to emulate a browser to handle cases where some sites ban non browser agents, resulting in a 403 error
   await axios
-    .get(data.url, {
+    .get(url, {
       headers: { 'User-Agent': devices['Desktop Chrome HiDPI'].userAgent },
       httpsAgent,
       timeout: 10,
