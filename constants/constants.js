@@ -12,7 +12,7 @@ import { chromium } from 'playwright';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const maxRequestsPerCrawl = 3;
+const maxRequestsPerCrawl = 100;
 
 export const ruleIdsWithHtml = [
   'aria-hidden-focus',
@@ -260,8 +260,8 @@ export const impactOrder = {
 };
 
 export const formDataFields = {
-  // formUrl: `https://docs.google.com/forms/d/e/1FAIpQLSem5C8fyNs5TiU5Vv2Y63-SH7CHN86f-LEPxeN_1u_ldUbgUA/formResponse`,
-  formUrl: `https://docs.google.com/forms/d/e/1FAIpQLScNldkNEajZbAiXK5TmMy4DfMERC2Sd7aJJrD76vBNz4pm05g/formResponse`,
+  formUrl: `https://docs.google.com/forms/d/e/1FAIpQLSem5C8fyNs5TiU5Vv2Y63-SH7CHN86f-LEPxeN_1u_ldUbgUA/formResponse`, // prod form 
+  // formUrl: `https://docs.google.com/forms/d/e/1FAIpQLScNldkNEajZbAiXK5TmMy4DfMERC2Sd7aJJrD76vBNz4pm05g/formResponse`, // dev form
   websiteUrlField: 'entry.1562345227',
   scanTypeField: 'entry.1148680657',
   emailField: 'entry.52161304',

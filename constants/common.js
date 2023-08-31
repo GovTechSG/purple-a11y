@@ -228,7 +228,7 @@ const checkUrlConnectivity = async url => {
       .get(data.url, {
         headers: { 'User-Agent': devices['Desktop Chrome HiDPI'].userAgent },
         httpsAgent,
-        timeout: 2000,
+        timeout: 10,
       })
       .then(async response => {
         const redirectUrl = response.request.res.responseUrl;
@@ -559,7 +559,7 @@ export const getLinksFromSitemap = async (
 
     if (validator.isURL(url, urlOptions)) {
       if (proxy) {
-        await getDataUsingChromiumBrowser();
+        await getDataUsingPlaywright();
       } else {
         try {
           const instance = axios.create({
@@ -567,7 +567,7 @@ export const getLinksFromSitemap = async (
               rejectUnauthorized: false,
             }),
           });
-          data = await (await instance.get(url, {timeout: 2000})).data;
+          data = await (await instance.get(url, {timeout: 10})).data;
         } catch (error) {
           if (error.code === 'ECONNABORTED') {
             await getDataUsingPlaywright();
@@ -1163,7 +1163,7 @@ export const submitForm = async (
     await submitFormViaPlaywright(browserToRun, userDataDirectory, finalUrl); 
   } else {
     try {
-      await axios.get(finalUrl, {timeout: 2000}); 
+      await axios.get(finalUrl, {timeout: 10}); 
     } catch (error) {
       if (error.code === 'ECONNABORTED') {
         if (browserToRun || constants.launcher === webkit) {
