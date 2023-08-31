@@ -3,11 +3,11 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-param-reassign */
 import fs from 'fs-extra';
-import path from 'path';
 import _yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import printMessage from 'print-message';
 import { devices } from 'playwright';
+import os from 'os';
 import { cleanUp, zipResults, setHeadlessMode, getVersion, getStoragePath } from './utils.js';
 import {
   checkUrl,
@@ -20,17 +20,14 @@ import {
   deleteClonedProfiles,
   getScreenToScan,
   getClonedProfilesWithRandomToken,
-  checkForValidPath,
+  validateDirPath,
+  validateFilePath,
 } from './constants/common.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
-import constants, {
-  getDefaultChromeDataDir,
-  getDefaultEdgeDataDir,
-} from './constants/constants.js';
+import constants from './constants/constants.js';
 import combineRun from './combine.js';
 import playwrightAxeGenerator from './playwrightAxeGenerator.js';
 import { silentLogger } from './logs.js';
-import os from 'os';
 
 const appVersion = getVersion();
 const yargs = _yargs(hideBin(process.argv));
@@ -174,25 +171,20 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return option;
   })
   .coerce('e', option => {
-    try {
-      if (typeof option === 'string') {
-        let dirPath = option;
-        if (!path.isAbsolute(dirPath)) {
-          dirPath = path.resolve(process.cwd(), dirPath);
-        }
-        fs.accessSync(dirPath);
-        return option;
-      } else {
-        throw Error('Invalid path');
-      }
-    } catch (e) {
-      printMessage([`Invalid directory path. Please ensure path provided exists.`], messageOptions);
+    const validationErrors = validateDirPath(option);
+    if (validationErrors) {
+      printMessage([`Invalid exportDirectory directory path. ${validationErrors}`], messageOptions);
       process.exit(1);
     }
+    return option;
   })
   .coerce('x', option => {
-    if (!checkForValidPath(option)) {
-      printMessage([`Invalid directory path. Please ensure path provided exists.`], messageOptions);
+    const validationErrors = validateFilePath(option);
+    if (validationErrors) {
+      printMessage(
+        [`Invalid blacklistedPatternsFilename file path. ${validationErrors}`],
+        messageOptions,
+      );
       process.exit(1);
     }
     return option;

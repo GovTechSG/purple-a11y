@@ -35,18 +35,45 @@ export const dropAllExceptWhitelisted = htmlSnippet => {
   return htmlSnippet.replace(regex, ``);
 };
 
-export const checkForValidPath = dirPath => {
-  if (typeof dirPath === 'string') {
-    const absolutePath = path.isAbsolute(dirPath) ? dirPath : path.resolve(process.cwd(), dirPath);
+// validateDirPath validates a provided directory path
+// returns null if no error
+export const validateDirPath = dirPath => {
+  if (typeof dirPath !== 'string') {
+    return 'Please provide string value of directory path.';
+  }
 
-    try {
-      fs.accessSync(absolutePath);
-      return true;
-    } catch (error) {
-      return false;
+  try {
+    fs.accessSync(dirPath);
+    if (!fs.statSync(dirPath).isDirectory()) {
+      return 'Please provide a directory path.';
     }
-  } else {
-    return false;
+
+    return null;
+  } catch (error) {
+    return 'Please ensure path provided exists.';
+  }
+};
+
+// validateFilePath validates a provided file path
+// returns null if no error
+export const validateFilePath = filePath => {
+  if (typeof filePath !== 'string') {
+    return 'Please provide string value of file path.';
+  }
+
+  try {
+    fs.accessSync(filePath);
+    if (!fs.statSync(filePath).isFile()) {
+      return 'Please provide a file path.';
+    }
+
+    if (path.extname(filePath) !== '.txt') {
+      return 'Please provide a file with txt extension.';
+    }
+
+    return null;
+  } catch (error) {
+    return 'Please ensure path provided exists.';
   }
 };
 
