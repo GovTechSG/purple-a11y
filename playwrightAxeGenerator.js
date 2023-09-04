@@ -343,7 +343,7 @@ const clickFunc = async (elem,page) => {
                   : customDevice || deviceChosen || 'Desktop',
               )}, 
               urlsCrawled.scanned, 
-              ${formatScriptStringVar(customFlowLabel)}
+              ${formatScriptStringVar(customFlowLabel || 'Custom Flow')}
             );
 
   await submitForm(
