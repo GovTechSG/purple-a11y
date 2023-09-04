@@ -5,10 +5,18 @@ import {
   runAxeScript,
   failedRequestHandler,
 } from './commonCrawlerFunc.js';
-import constants, { basicAuthRegex, blackListedFileExtensions } from '../constants/constants.js';
-import { getPlaywrightLaunchOptions, isBlacklistedFileExtensions } from '../constants/common.js';
+import constants, {
+  basicAuthRegex,
+  blackListedFileExtensions,
+  guiInfoStatusTypes,
+} from '../constants/constants.js';
+import {
+  getPlaywrightLaunchOptions,
+  isBlacklistedFileExtensions,
+  isSkippedUrl,
+} from '../constants/common.js';
 import { areLinksEqual } from '../utils.js';
-import fs from 'fs';
+import { guiInfoLog } from '../logs.js';
 
 const crawlDomain = async (
   url,
@@ -21,8 +29,9 @@ const crawlDomain = async (
   strategy,
   specifiedMaxConcurrency,
   needsReviewItems,
+  blacklistedPatterns,
 ) => {
-  let needsReview = needsReviewItems;
+  const needsReview = needsReviewItems;
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { maxConcurrency } = constants;
   const { playwrightDeviceDetailsObject } = viewportSettings;
@@ -30,7 +39,6 @@ const crawlDomain = async (
   const { dataset, requestQueue } = await createCrawleeSubFolders(randomToken);
 
   let finalUrl;
-  let scanCompleted = false;
   let pagesCrawled;
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth = false;
@@ -56,6 +64,31 @@ const crawlDomain = async (
     pagesCrawled = 0;
   }
 
+  const enqueueProcess = async (enqueueLinks, enqueueLinksByClickingElements) => {
+    await enqueueLinks({
+      // set selector matches anchor elements with href but not contains # or starting with mailto:
+      selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
+      strategy,
+      requestQueue,
+      transformRequestFunction(req) {
+        req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+        return req;
+      },
+    });
+
+    await enqueueLinksByClickingElements({
+      // set selector matches
+      // NOT <a>
+      // IS role='link' or button onclick
+      // enqueue new page URL
+      selector: ':not(a):is(*[role="link"], button[onclick])',
+      transformRequestFunction(req) {
+        req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+        return req;
+      },
+    });
+  };
+
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
       launcher: constants.launcher,
@@ -65,7 +98,7 @@ const crawlDomain = async (
     browserPoolOptions: {
       useFingerprints: false,
       preLaunchHooks: [
-        async (pageId, launchContext) => {
+        async (_pageId, launchContext) => {
           launchContext.launchOptions = {
             ...launchContext.launchOptions,
             bypassCSP: true,
@@ -88,34 +121,43 @@ const crawlDomain = async (
       const actualUrl = request.loadedUrl || request.url;
 
       if (isBlacklistedFileExtensions(actualUrl, blackListedFileExtensions)) {
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::skipped::${request.url}`);
-        }
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
         urlsCrawled.blacklisted.push(request.url);
         return;
       }
 
+      if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
+        urlsCrawled.userExcluded.push(request.url);
+        await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);
+        return;
+      }
+
       if (response.status() === 403) {
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`)
-        }
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
         urlsCrawled.forbidden.push(request.url);
         return;
       }
 
       if (response.status() !== 200) {
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`);
-        }
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
         urlsCrawled.invalid.push(request.url);
         return;
       }
-      
+
       if (pagesCrawled === maxRequestsPerCrawl) {
         urlsCrawled.exceededRequests.push(request.url);
         return;
       }
-      pagesCrawled++;
+      pagesCrawled += 1;
 
       const location = await page.evaluate('location');
 
@@ -123,9 +165,10 @@ const crawlDomain = async (
         isBasicAuth = false;
       } else if (location.host.includes(host)) {
         const results = await runAxeScript(needsReview, page);
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::scanned::${request.url}`);
-        }
+        guiInfoLog(guiInfoStatusTypes.SCANNED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
 
         // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
         const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
@@ -141,7 +184,7 @@ const crawlDomain = async (
             });
             return;
           }
-         
+
           urlsCrawled.scanned.push({
             url: request.url,
             pageTitle: results.pageTitle,
@@ -160,47 +203,12 @@ const crawlDomain = async (
         }
         await dataset.pushData(results);
 
-        await enqueueLinks({
-          // set selector matches anchor elements with href but not contains # or starting with mailto:
-          selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
-          strategy,
-          requestQueue,
-          transformRequestFunction(req) {
-            if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
-              if (process.env.RUNNING_FROM_PH_GUI) {
-                console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${req.url}`);
-              }
-              urlsCrawled.blacklisted.push(req.url);
-            }
-
-            req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-            return req;
-          },
-        });
-
-        await enqueueLinksByClickingElements({
-          // set selector matches
-          // NOT <a>
-          // IS role='link' or button onclick
-          // enqueue new page URL
-          selector: ':not(a):is(*[role="link"], button[onclick])',
-          transformRequestFunction(req) {
-            // ignore all links ending with `.pdf`
-            if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
-              if (process.env.RUNNING_FROM_PH_GUI) {
-                console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${req.url}`);
-              }
-              urlsCrawled.blacklisted.push(req.url);
-            }
-
-            req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-            return req;
-          },
-        });
+        await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);
       } else {
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${pagesCrawled}::${urlsCrawled.scanned.length}::skipped::${currentUrl}`);
-        }
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
         urlsCrawled.outOfDomain.push(request.url);
       }
     },
@@ -210,9 +218,7 @@ const crawlDomain = async (
   });
 
   await crawler.run();
-  if (process.env.RUNNING_FROM_PH_GUI) {
-    console.log('Electron scan completed');
-  }
+  guiInfoLog(guiInfoStatusTypes.COMPLETED);
   return urlsCrawled;
 };
 

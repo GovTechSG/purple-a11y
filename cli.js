@@ -3,37 +3,30 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-param-reassign */
 import fs from 'fs-extra';
-import path from 'path';
 import _yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import printMessage from 'print-message';
-import { devices, webkit } from 'playwright';
+import { devices } from 'playwright';
 import { cleanUp, zipResults, setHeadlessMode, getVersion, getStoragePath } from './utils.js';
 import {
   checkUrl,
   prepareData,
   isFileSitemap,
-  cloneChromeProfiles,
-  cloneEdgeProfiles,
-  deleteClonedChromeProfiles,
-  deleteClonedEdgeProfiles,
   validEmail,
   validName,
   getBrowserToRun,
   getPlaywrightDeviceDetailsObject,
   deleteClonedProfiles,
   getScreenToScan,
-  getClonedProfilesWithRandomToken
+  getClonedProfilesWithRandomToken,
+  validateDirPath,
+  validateFilePath,
 } from './constants/common.js';
+import constants from './constants/constants.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
-import constants, {
-  getDefaultChromeDataDir,
-  getDefaultEdgeDataDir,
-} from './constants/constants.js';
 import combineRun from './combine.js';
 import playwrightAxeGenerator from './playwrightAxeGenerator.js';
 import { silentLogger } from './logs.js';
-import os from 'os';
 
 const appVersion = getVersion();
 const yargs = _yargs(hideBin(process.argv));
@@ -177,26 +170,24 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return option;
   })
   .coerce('e', option => {
-    try {
-      if (typeof option === 'string') {
-        let dirPath = option;
-        if (!path.isAbsolute(dirPath)) {
-          dirPath = path.resolve(process.cwd(), dirPath);
-        }
-        fs.accessSync(dirPath);
-        return option;  
-      } else {
-        throw Error('Invalid path');
-      }
-    } catch (e) {
+    const validationErrors = validateDirPath(option);
+    if (validationErrors) {
+      printMessage([`Invalid exportDirectory directory path. ${validationErrors}`], messageOptions);
+      process.exit(1);
+    }
+    return option;
+  })
+  .coerce('x', option => {
+    const validationErrors = validateFilePath(option);
+    if (validationErrors) {
       printMessage(
-        [`Invalid directory path. Please ensure path provided exists.`],
+        [`Invalid blacklistedPatternsFilename file path. ${validationErrors}`],
         messageOptions,
       );
       process.exit(1);
     }
+    return option;
   })
-
   .check(argvs => {
     if (argvs.scanner === 'custom' && argvs.maxpages) {
       throw new Error('-p or --maxpages is only available in website and sitemap scans.');
@@ -223,8 +214,8 @@ const scanInit = async argvs => {
   let clonedDataDir = '';
   const statuses = constants.urlCheckStatuses;
 
-  const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(argvs.browserToRun, true); 
-  argvs.browserToRun = browserToRun; 
+  const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(argvs.browserToRun, true);
+  argvs.browserToRun = browserToRun;
   clonedDataDir = clonedBrowserDataDir;
 
   if (argvs.customDevice === 'Desktop' || argvs.customDevice === 'Mobile') {
@@ -234,7 +225,11 @@ const scanInit = async argvs => {
 
   // Creating the playwrightDeviceDetailObject
   // for use in crawlDomain & crawlSitemap's preLaunchHook
-  argvs.playwrightDeviceDetailsObject = getPlaywrightDeviceDetailsObject(argvs.deviceChosen, argvs.customDevice, argvs.viewportWidth);
+  argvs.playwrightDeviceDetailsObject = getPlaywrightDeviceDetailsObject(
+    argvs.deviceChosen,
+    argvs.customDevice,
+    argvs.viewportWidth,
+  );
 
   const res = await checkUrl(
     argvs.scanner,
@@ -284,7 +279,7 @@ const scanInit = async argvs => {
       printMessage([statuses.notASitemap.message], messageOptions);
       process.exit(res.status);
     case statuses.browserError.code:
-      printMessage([statuses.browserError.message], messageOptions); 
+      printMessage([statuses.browserError.message], messageOptions);
       process.exit(res.status);
     default:
       break;
@@ -293,19 +288,20 @@ const scanInit = async argvs => {
   if (argvs.exportDirectory) {
     constants.exportDirectory = argvs.exportDirectory;
   }
+
   const data = prepareData(argvs);
 
   setHeadlessMode(data.browser, data.isHeadless);
 
-  const screenToScan = getScreenToScan(argvs.deviceChosen, argvs.customDevice, argvs.viewportWidth); 
+  const screenToScan = getScreenToScan(argvs.deviceChosen, argvs.customDevice, argvs.viewportWidth);
 
-  // Clone profiles a second time 
+  // Clone profiles a second time
   clonedDataDir = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
-  data.userDataDirectory = clonedDataDir; 
+  data.userDataDirectory = clonedDataDir;
 
   printMessage([`Purple HATS version: ${appVersion}`, 'Starting scan...'], messageOptions);
-  constants.appVersion = appVersion; 
-  
+  constants.appVersion = appVersion;
+
   if (argvs.scanner === constants.scannerTypes.custom) {
     try {
       await playwrightAxeGenerator(data);

@@ -3,11 +3,10 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import readline from 'readline';
-import safe from 'safe-regex';
 import { devices } from 'playwright';
-import { consoleLogger, silentLogger } from './logs.js';
+import { consoleLogger, silentLogger, guiInfoLog } from './logs.js';
 import { fileURLToPath } from 'url';
-import { proxy } from './constants/constants.js';
+import { proxy, guiInfoStatusTypes } from './constants/constants.js';
 
 // Do NOT remove. These import statements will be used when the custom flow scan is run from the GUI app
 import { chromium } from 'playwright';
@@ -24,7 +23,7 @@ import constants, {
   getExecutablePath,
   removeQuarantineFlag,
 } from '#root/constants/constants.js';
-import { isSkippedUrl, submitForm } from '#root/constants/common.js';
+import { isSkippedUrl, submitForm, getBlackListedPatterns } from '#root/constants/common.js';
 import { spawnSync } from 'child_process';
 import { getDefaultChromeDataDir, getDefaultEdgeDataDir } from './constants/constants.js';
 
@@ -42,28 +41,6 @@ const formatScriptStringVar = val => {
 };
 
 const playwrightAxeGenerator = async data => {
-  const blacklistedPatternsFilename = 'exclusions.txt';
-  let blacklistedPatterns = null;
-
-  if (fs.existsSync(blacklistedPatternsFilename)) {
-    blacklistedPatterns = fs.readFileSync(blacklistedPatternsFilename).toString().split('\n');
-
-    let unsafe = blacklistedPatterns.filter(function (pattern) {
-      return !safe(pattern);
-    });
-
-    if (unsafe.length > 0) {
-      let unsafeExpressionsError =
-        "Unsafe expressions detected: '" +
-        unsafe +
-        "' Please revise " +
-        blacklistedPatternsFilename;
-      consoleLogger.error(unsafeExpressionsError);
-      silentLogger.error(unsafeExpressionsError);
-      process.exit(1);
-    }
-  }
-
   let {
     isHeadless,
     randomToken,
@@ -72,7 +49,9 @@ const playwrightAxeGenerator = async data => {
     viewportWidth,
     customFlowLabel,
     needsReviewItems,
+    blacklistedPatternsFilename,
   } = data;
+
   // these will be appended to the generated script if the scan is run from CLI/index.
   // this is so as the final generated script can be rerun after the scan.
   const importStatements = `
@@ -83,18 +62,19 @@ const playwrightAxeGenerator = async data => {
     import { createAndUpdateResultsFolders, createDetailsAndLogs, createScreenshotsFolder, cleanUp, getStoragePath } from '#root/utils.js';
     import constants, {
         getIntermediateScreenshotsPath,
-        getExecutablePath, removeQuarantineFlag
+        getExecutablePath,
+        removeQuarantineFlag,
+        guiInfoStatusTypes,
     } from '#root/constants/constants.js';
     import fs from 'fs';
     import path from 'path';
     import printMessage from 'print-message';
-    import { isSkippedUrl, submitForm } from '#root/constants/common.js';
+    import { isSkippedUrl, submitForm, getBlackListedPatterns } from '#root/constants/common.js';
     import { spawnSync } from 'child_process';
-    import safe from 'safe-regex';
-    import { consoleLogger, silentLogger } from '#root/logs.js';
+    import { consoleLogger, silentLogger, guiInfoLog } from '#root/logs.js';
 
   `;
-  const block1 = `const blacklistedPatternsFilename = 'exclusions.txt';
+  const block1 = `
 
 // checks and delete datasets path if it already exists
 await cleanUp(${formatScriptStringVar(randomToken)});
@@ -111,24 +91,14 @@ const urlsCrawled = { ...constants.urlsCrawledObj };
 const { dataset } = await createCrawleeSubFolders(${formatScriptStringVar(randomToken)});
 
 let blacklistedPatterns = null;
-
-if (fs.existsSync(blacklistedPatternsFilename)) {
-  blacklistedPatterns = fs.readFileSync(blacklistedPatternsFilename).toString().split('\\n');
-
-  let unsafe = blacklistedPatterns.filter(function (pattern) {
-    return !safe(pattern);
-  });
-  
-  if (unsafe.length > 0) {
-    let unsafeExpressionsError =
-      "Unsafe expressions detected: '" +
-      unsafe +
-      "' Please revise " +
-      blacklistedPatternsFilename;
-    consoleLogger.error(unsafeExpressionsError);
-    silentLogger.error(unsafeExpressionsError);
-    process.exit(1);
-  }
+try {
+  blacklistedPatterns = getBlackListedPatterns(
+    ${formatScriptStringVar(blacklistedPatternsFilename)}
+  );
+} catch (error) {
+  consoleLogger.error(error);
+  silentLogger.error(error);
+  process.exit(1);
 }
 
 var index = 1;
@@ -142,95 +112,94 @@ const intermediateScreenshotsPath = getIntermediateScreenshotsPath(
 const checkIfScanRequired = async page => {
   const imgPath = intermediateScreenshotsPath + '/PHScan-screenshot' + index.toString() + '.png';
 
-index += 1;
+  index += 1;
 
-const fullPageSize = await page.evaluate(() => {
-  return {
-    width: Math.max(
-      document.body.scrollWidth,
-      document.documentElement.scrollWidth,
-      document.body.offsetWidth,
-      document.documentElement.offsetWidth,
-      document.body.clientWidth,
-      document.documentElement.clientWidth,
-    ),
-    height: Math.max(
-      document.body.scrollHeight,
-      document.documentElement.scrollHeight,
-      document.body.offsetHeight,
-      document.documentElement.offsetHeight,
-      document.body.clientHeight,
-      document.documentElement.clientHeight,
-    ),
-  };
-});
-
-
-const originalSize = page.viewportSize();
-
-const usesInfiniteScroll = async () => {
-  const prevHeight = await page.evaluate(() => document.body.scrollHeight);
-
-  await page.evaluate(() => {
-    window.scrollTo(0, document.body.scrollHeight);
+  const fullPageSize = await page.evaluate(() => {
+    return {
+      width: Math.max(
+        document.body.scrollWidth,
+        document.documentElement.scrollWidth,
+        document.body.offsetWidth,
+        document.documentElement.offsetWidth,
+        document.body.clientWidth,
+        document.documentElement.clientWidth,
+      ),
+      height: Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight,
+        document.body.offsetHeight,
+        document.documentElement.offsetHeight,
+        document.body.clientHeight,
+        document.documentElement.clientHeight,
+      ),
+    };
   });
 
-  const isLoadMoreContent = async () => {
-    return new Promise((resolve) => {
-      setTimeout(async () => {
-        await page.waitForLoadState('domcontentloaded'); 
+  const originalSize = page.viewportSize();
 
-        const result = await page.evaluate((prevHeight) => {
-            const currentHeight = document.body.scrollHeight;
-            return (currentHeight > prevHeight);
-        }, prevHeight);
+  const usesInfiniteScroll = async () => {
+    const prevHeight = await page.evaluate(() => document.body.scrollHeight);
 
-        resolve(result);
-      }, 2500);
+    await page.evaluate(() => {
+      window.scrollTo(0, document.body.scrollHeight);
     });
-  }
 
-  const result = await isLoadMoreContent();
-  return result;
-};
+    const isLoadMoreContent = async () => {
+      return new Promise((resolve) => {
+        setTimeout(async () => {
+          await page.waitForLoadState('domcontentloaded'); 
 
-let screenshotBuff;
+          const result = await page.evaluate((prevHeight) => {
+              const currentHeight = document.body.scrollHeight;
+              return (currentHeight > prevHeight);
+          }, prevHeight);
 
-await usesInfiniteScroll();
+          resolve(result);
+        }, 2500);
+      });
+    }
 
-// scroll back to top of page for screenshot
-await page.evaluate(() => {
-  window.scrollTo(0, 0);
-});
+    const result = await isLoadMoreContent();
+    return result;
+  };
 
-pageUrl = page.url();
-consoleLogger.info(\`Screenshot page at: \${pageUrl}\`);
-silentLogger.info(\`Screenshot page at: \${pageUrl}\`);
+  let screenshotBuff;
 
-screenshotBuff = await page.screenshot({
-  path: imgPath,
-  clip: {
-    x: 0,
-    y: 0,
-    width: fullPageSize.width,
-    height: 5400
-  },
-  fullPage: true,
-  scale: 'css',
-});
+  await usesInfiniteScroll();
 
-if (originalSize) await page.setViewportSize(originalSize);
+  // scroll back to top of page for screenshot
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+  });
 
-var isSimilarPage = true;
+  pageUrl = page.url();
+  consoleLogger.info(\`Screenshot page at: \${pageUrl}\`);
+  silentLogger.info(\`Screenshot page at: \${pageUrl}\`);
 
-if (!urlImageDictionary[pageUrl]) {
-  urlImageDictionary[pageUrl] = [imgPath];
+  screenshotBuff = await page.screenshot({
+    path: imgPath,
+    clip: {
+      x: 0,
+      y: 0,
+      width: fullPageSize.width,
+      height: 5400
+    },
+    fullPage: true,
+    scale: 'css',
+  });
 
-  consoleLogger.info(\`Process page at: \${page.url()} , Scan required? true\`);
-  silentLogger.info(\`Process page at: \${page.url()} , Scan required? true\`);
-  
-  return true;
-} else {
+  if (originalSize) await page.setViewportSize(originalSize);
+
+  var isSimilarPage = true;
+
+  if (!urlImageDictionary[pageUrl]) {
+    urlImageDictionary[pageUrl] = [imgPath];
+
+    consoleLogger.info(\`Process page at: \${page.url()} , Scan required? true\`);
+    silentLogger.info(\`Process page at: \${page.url()} , Scan required? true\`);
+    
+    return true;
+  } else {
     try {
       const currImg = screenshotBuff;
       const prevImgIdx = urlImageDictionary[pageUrl].length - 1;
@@ -260,8 +229,8 @@ if (!urlImageDictionary[pageUrl]) {
       console.error('error: ', error);
     }
 
-  return !isSimilarPage;
-}
+    return !isSimilarPage;
+  }
 };
 
 const runAxeScan = async (needsReviewItems, page) => {
@@ -274,24 +243,29 @@ const runAxeScan = async (needsReviewItems, page) => {
 const processPage = async page => {
   try {
 		await page.waitForLoadState('networkidle', {'timeout': 10000 });
+    await page.waitForLoadState('domcontentloaded'); 
   } catch (e) {
     consoleLogger.info('Unable to detect networkidle');
     silentLogger.info('Unable to detect networkidle');
   }
   
-  if (blacklistedPatterns && isSkippedUrl(page, blacklistedPatterns)) {
-	return;
-  } else {
-	const scanRequired = await checkIfScanRequired(page);
-	
-	if (scanRequired) {
-    if (process.env.RUNNING_FROM_PH_GUI) {
-      console.log("Electron crawling::", urlsCrawled.scanned.length, "::scanned::", page.url());
-    }
-		await runAxeScan(${needsReviewItems}, page);
-	}
-  }
+  const pageUrl = page.url()
+  
 
+  if (blacklistedPatterns && isSkippedUrl(pageUrl, blacklistedPatterns)) {
+    urlsCrawled.userExcluded.push(pageUrl)
+    return;
+  } else {
+    const scanRequired = await checkIfScanRequired(page);
+    
+    if (scanRequired) {
+      guiInfoLog(guiInfoStatusTypes.SCANNED, {
+        numScanned: urlsCrawled.scanned.length,
+        urlScanned: pageUrl,
+      });
+      await runAxeScan(${needsReviewItems}, page);
+    }
+  }
 };
 
 const clickFunc = async (elem,page) => {
@@ -347,9 +321,7 @@ const clickFunc = async (elem,page) => {
 `;
 
   const block2 = ` 
-    if (process.env.RUNNING_FROM_PH_GUI) {
-      console.log('Electron scan completed');
-    }
+    guiInfoLog(guiInfoStatusTypes.COMPLETED);
     return urlsCrawled
       } catch (e) {
         console.error('Error: ', e);
@@ -371,7 +343,7 @@ const clickFunc = async (elem,page) => {
                   : customDevice || deviceChosen || 'Desktop',
               )}, 
               urlsCrawled.scanned, 
-              ${formatScriptStringVar(customFlowLabel)}
+              ${formatScriptStringVar(customFlowLabel || 'Custom Flow')}
             );
 
   await submitForm(

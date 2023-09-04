@@ -1,12 +1,11 @@
 import printMessage from 'print-message';
-
 import crawlSitemap from './crawlers/crawlSitemap.js';
 import crawlDomain from './crawlers/crawlDomain.js';
-
 import { generateArtifacts } from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
 import constants, { basicAuthRegex } from './constants/constants.js';
-import { submitForm } from './constants/common.js';
+import { getBlackListedPatterns, submitForm } from './constants/common.js';
+import { consoleLogger, silentLogger } from './logs.js';
 
 const combineRun = async (details, deviceToScan) => {
   const envDetails = { ...details };
@@ -28,12 +27,22 @@ const combineRun = async (details, deviceToScan) => {
     strategy,
     specifiedMaxConcurrency,
     needsReviewItems,
+    blacklistedPatternsFilename,
   } = envDetails;
 
   process.env.CRAWLEE_LOG_LEVEL = 'ERROR';
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
   const host = type === constants.scannerTypes.sitemap && isLocalSitemap ? '' : getHost(url);
+
+  let blacklistedPatterns = null;
+  try {
+    blacklistedPatterns = getBlackListedPatterns(blacklistedPatternsFilename);
+  } catch (error) {
+    consoleLogger.error(error);
+    silentLogger.error(error);
+    process.exit(1);
+  }
 
   // remove basic-auth credentials from URL
   let finalUrl = url;
@@ -67,6 +76,7 @@ const combineRun = async (details, deviceToScan) => {
         userDataDirectory,
         specifiedMaxConcurrency,
         needsReviewItems,
+        blacklistedPatterns,
       );
       break;
 
@@ -82,6 +92,7 @@ const combineRun = async (details, deviceToScan) => {
         strategy,
         specifiedMaxConcurrency,
         needsReviewItems,
+        blacklistedPatterns,
       );
       break;
 

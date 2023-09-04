@@ -1,5 +1,8 @@
+/* eslint-disable no-console */
 /* eslint-disable no-shadow */
 import { createLogger, format, transports } from 'winston';
+import { guiInfoStatusTypes } from './constants/constants.js';
+
 const { combine, timestamp, printf } = format;
 
 // Sample output
@@ -32,8 +35,27 @@ const silentLogger = createLogger({
   ],
 });
 
-export {
-  logFormat,
-  consoleLogger,
-  silentLogger,
+// guiInfoLogger feeds the gui information via console log and is mainly used for scanning process
+export const guiInfoLog = (status, data) => {
+  if (process.env.RUNNING_FROM_PH_GUI) {
+    switch (status) {
+      case guiInfoStatusTypes.COMPLETED:
+        console.log('Electron scan completed');
+        break;
+      case guiInfoStatusTypes.SCANNED:
+      case guiInfoStatusTypes.SKIPPED:
+      case guiInfoStatusTypes.ERROR:
+        console.log(
+          `Electron crawling::${data.numScanned || 0}::${status}::${
+            data.urlScanned || 'no url provided'
+          }`,
+        );
+        break;
+      default:
+        console.log(`Status provided to gui info log not recognized: ${status}`);
+        break;
+    }
+  }
 };
+
+export { logFormat, consoleLogger, silentLogger };

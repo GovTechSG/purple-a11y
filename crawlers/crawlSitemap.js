@@ -7,13 +7,15 @@ import {
   failedRequestHandler,
 } from './commonCrawlerFunc.js';
 
-import constants from '../constants/constants.js';
+import constants, { guiInfoStatusTypes } from '../constants/constants.js';
 import {
   getLinksFromSitemap,
   getPlaywrightLaunchOptions,
   messageOptions,
+  isSkippedUrl,
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
+import { guiInfoLog } from '../logs.js';
 
 const crawlSitemap = async (
   sitemapUrl,
@@ -25,9 +27,9 @@ const crawlSitemap = async (
   userDataDirectory,
   specifiedMaxConcurrency,
   needsReviewItems,
+  blacklistedPatterns,
 ) => {
-  let needsReview = needsReviewItems;
-
+  const needsReview = needsReviewItems;
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { playwrightDeviceDetailsObject } = viewportSettings;
   const { maxConcurrency } = constants;
@@ -68,42 +70,51 @@ const crawlSitemap = async (
       const contentType = response.headers()['content-type'];
       const status = response.status();
 
+      if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
+        urlsCrawled.userExcluded.push(request.url);
+        return;
+      }
+
       if (status === 403) {
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`)
-        }
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
         urlsCrawled.forbidden.push(request.url);
         return;
       }
 
       if (status !== 200) {
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::${request.url}`)
-        }
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
         urlsCrawled.invalid.push(request.url);
         return;
       }
 
       if (pagesCrawled === maxRequestsPerCrawl) {
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`)
-        }
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
         urlsCrawled.exceededRequests.push(request.url);
         return;
       }
 
-      pagesCrawled++;
+      pagesCrawled += 1;
 
       if (status === 200 && isWhitelistedContentType(contentType)) {
         const results = await runAxeScript(needsReview, page);
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::scanned::${request.url}`);
-        }  
+        guiInfoLog(guiInfoStatusTypes.SCANNED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
 
         const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
         if (isRedirected) {
           const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
-            item =>  (item.actualUrl || item.url) === request.loadedUrl,
+            item => (item.actualUrl || item.url) === request.loadedUrl,
           );
 
           if (isLoadedUrlInCrawledUrls) {
@@ -132,10 +143,11 @@ const crawlSitemap = async (
         }
         await dataset.pushData(results);
       } else {
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${actualUrl}`);
-        }
-  
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
+
         urlsCrawled.invalid.push(actualUrl);
       }
     },
@@ -146,9 +158,7 @@ const crawlSitemap = async (
 
   await crawler.run();
   await requestList.isFinished();
-  if (process.env.RUNNING_FROM_PH_GUI) {
-    console.log('Electron scan completed');
-  }
+  guiInfoLog(guiInfoStatusTypes.COMPLETED);
   return urlsCrawled;
 };
 
