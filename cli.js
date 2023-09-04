@@ -7,7 +7,6 @@ import _yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import printMessage from 'print-message';
 import { devices } from 'playwright';
-import os from 'os';
 import { cleanUp, zipResults, setHeadlessMode, getVersion, getStoragePath } from './utils.js';
 import {
   checkUrl,
@@ -23,8 +22,8 @@ import {
   validateDirPath,
   validateFilePath,
 } from './constants/common.js';
-import { cliOptions, messageOptions } from './constants/cliFunctions.js';
 import constants from './constants/constants.js';
+import { cliOptions, messageOptions } from './constants/cliFunctions.js';
 import combineRun from './combine.js';
 import playwrightAxeGenerator from './playwrightAxeGenerator.js';
 import { silentLogger } from './logs.js';

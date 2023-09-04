@@ -3,7 +3,6 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import readline from 'readline';
-import safe from 'safe-regex';
 import { devices } from 'playwright';
 import { consoleLogger, silentLogger, guiInfoLog } from './logs.js';
 import { fileURLToPath } from 'url';
@@ -72,7 +71,6 @@ const playwrightAxeGenerator = async data => {
     import printMessage from 'print-message';
     import { isSkippedUrl, submitForm, getBlackListedPatterns } from '#root/constants/common.js';
     import { spawnSync } from 'child_process';
-    import safe from 'safe-regex';
     import { consoleLogger, silentLogger, guiInfoLog } from '#root/logs.js';
 
   `;
@@ -114,95 +112,94 @@ const intermediateScreenshotsPath = getIntermediateScreenshotsPath(
 const checkIfScanRequired = async page => {
   const imgPath = intermediateScreenshotsPath + '/PHScan-screenshot' + index.toString() + '.png';
 
-index += 1;
+  index += 1;
 
-const fullPageSize = await page.evaluate(() => {
-  return {
-    width: Math.max(
-      document.body.scrollWidth,
-      document.documentElement.scrollWidth,
-      document.body.offsetWidth,
-      document.documentElement.offsetWidth,
-      document.body.clientWidth,
-      document.documentElement.clientWidth,
-    ),
-    height: Math.max(
-      document.body.scrollHeight,
-      document.documentElement.scrollHeight,
-      document.body.offsetHeight,
-      document.documentElement.offsetHeight,
-      document.body.clientHeight,
-      document.documentElement.clientHeight,
-    ),
-  };
-});
-
-
-const originalSize = page.viewportSize();
-
-const usesInfiniteScroll = async () => {
-  const prevHeight = await page.evaluate(() => document.body.scrollHeight);
-
-  await page.evaluate(() => {
-    window.scrollTo(0, document.body.scrollHeight);
+  const fullPageSize = await page.evaluate(() => {
+    return {
+      width: Math.max(
+        document.body.scrollWidth,
+        document.documentElement.scrollWidth,
+        document.body.offsetWidth,
+        document.documentElement.offsetWidth,
+        document.body.clientWidth,
+        document.documentElement.clientWidth,
+      ),
+      height: Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight,
+        document.body.offsetHeight,
+        document.documentElement.offsetHeight,
+        document.body.clientHeight,
+        document.documentElement.clientHeight,
+      ),
+    };
   });
 
-  const isLoadMoreContent = async () => {
-    return new Promise((resolve) => {
-      setTimeout(async () => {
-        await page.waitForLoadState('domcontentloaded'); 
+  const originalSize = page.viewportSize();
 
-        const result = await page.evaluate((prevHeight) => {
-            const currentHeight = document.body.scrollHeight;
-            return (currentHeight > prevHeight);
-        }, prevHeight);
+  const usesInfiniteScroll = async () => {
+    const prevHeight = await page.evaluate(() => document.body.scrollHeight);
 
-        resolve(result);
-      }, 2500);
+    await page.evaluate(() => {
+      window.scrollTo(0, document.body.scrollHeight);
     });
-  }
 
-  const result = await isLoadMoreContent();
-  return result;
-};
+    const isLoadMoreContent = async () => {
+      return new Promise((resolve) => {
+        setTimeout(async () => {
+          await page.waitForLoadState('domcontentloaded'); 
 
-let screenshotBuff;
+          const result = await page.evaluate((prevHeight) => {
+              const currentHeight = document.body.scrollHeight;
+              return (currentHeight > prevHeight);
+          }, prevHeight);
 
-await usesInfiniteScroll();
+          resolve(result);
+        }, 2500);
+      });
+    }
 
-// scroll back to top of page for screenshot
-await page.evaluate(() => {
-  window.scrollTo(0, 0);
-});
+    const result = await isLoadMoreContent();
+    return result;
+  };
 
-pageUrl = page.url();
-consoleLogger.info(\`Screenshot page at: \${pageUrl}\`);
-silentLogger.info(\`Screenshot page at: \${pageUrl}\`);
+  let screenshotBuff;
 
-screenshotBuff = await page.screenshot({
-  path: imgPath,
-  clip: {
-    x: 0,
-    y: 0,
-    width: fullPageSize.width,
-    height: 5400
-  },
-  fullPage: true,
-  scale: 'css',
-});
+  await usesInfiniteScroll();
 
-if (originalSize) await page.setViewportSize(originalSize);
+  // scroll back to top of page for screenshot
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+  });
 
-var isSimilarPage = true;
+  pageUrl = page.url();
+  consoleLogger.info(\`Screenshot page at: \${pageUrl}\`);
+  silentLogger.info(\`Screenshot page at: \${pageUrl}\`);
 
-if (!urlImageDictionary[pageUrl]) {
-  urlImageDictionary[pageUrl] = [imgPath];
+  screenshotBuff = await page.screenshot({
+    path: imgPath,
+    clip: {
+      x: 0,
+      y: 0,
+      width: fullPageSize.width,
+      height: 5400
+    },
+    fullPage: true,
+    scale: 'css',
+  });
 
-  consoleLogger.info(\`Process page at: \${page.url()} , Scan required? true\`);
-  silentLogger.info(\`Process page at: \${page.url()} , Scan required? true\`);
-  
-  return true;
-} else {
+  if (originalSize) await page.setViewportSize(originalSize);
+
+  var isSimilarPage = true;
+
+  if (!urlImageDictionary[pageUrl]) {
+    urlImageDictionary[pageUrl] = [imgPath];
+
+    consoleLogger.info(\`Process page at: \${page.url()} , Scan required? true\`);
+    silentLogger.info(\`Process page at: \${page.url()} , Scan required? true\`);
+    
+    return true;
+  } else {
     try {
       const currImg = screenshotBuff;
       const prevImgIdx = urlImageDictionary[pageUrl].length - 1;
@@ -232,8 +229,8 @@ if (!urlImageDictionary[pageUrl]) {
       console.error('error: ', error);
     }
 
-  return !isSimilarPage;
-}
+    return !isSimilarPage;
+  }
 };
 
 const runAxeScan = async (needsReviewItems, page) => {

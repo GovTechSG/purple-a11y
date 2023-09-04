@@ -7,7 +7,6 @@ import os from 'os';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import readline from 'readline';
-import safe from 'safe-regex';
 import printMessage from 'print-message';
 import { createCrawleeSubFolders, runAxeScript } from '#root/crawlers/commonCrawlerFunc.js';
 import { generateArtifacts } from '#root/mergeAxeResults.js';
