@@ -113,6 +113,7 @@ export const cliOptions = {
     describe:
       'Txt file that has a list of pattern of domains to exclude from accessibility scan separated by new line',
     type: 'string',
+    default: 'exclusions.txt',
     demandOption: false,
   },
 };
