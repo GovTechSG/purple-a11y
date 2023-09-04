@@ -261,10 +261,14 @@ Options:
                          he report                                      [string]
   -t, --specifiedMaxConcurrency  Maximum number of pages to scan concurrently.
                                  Use for sites with throttling. Defaults to 25.
-                                                                          [number]
-  -f, --needsReviewItems  Whether to display rule items requiring manual review in
-                          report. Defaults to false.
-                                                        [choices: "true", "false"]
+                                                                        [number]
+  -f, --needsReviewItems  Whether to display rule items requiring manual review 
+                          in report. Defaults to false.
+                                                      [choices: "true", "false"]
+  -x, --blacklistedPatternsFilename  Txt file that has a list of pattern of 
+                                     domains to exclude from accessibility scan 
+                                     separated by new line
+                                            [string] [default: "exclusions.txt"]
 Examples:
   To scan sitemap of website:', 'node cli.js -c [ 1 | Sitemap ] -d <device> -u
    <url_link> -w <viewportWidth>
