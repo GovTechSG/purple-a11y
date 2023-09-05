@@ -39,7 +39,9 @@
     "json5": "^2.2.3"
   },
   "scripts": {
-    "test": "node --experimental-vm-modules ./node_modules/.bin/jest"
+    "test": "node --experimental-vm-modules ./node_modules/.bin/jest",
+    "lint": "eslint . --ignore-path .gitignore",
+    "lint:fix": "eslint  . --fix --ignore-path .gitignore"
   },
   "author": "",
   "license": "MIT",

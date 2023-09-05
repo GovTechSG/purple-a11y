@@ -7,7 +7,7 @@ import {
   failedRequestHandler,
 } from './commonCrawlerFunc.js';
 
-import constants, { guiInfoStatusTypes } from '../constants/constants.js';
+import constants from '../constants/constants.js';
 import {
   getLinksFromSitemap,
   getPlaywrightLaunchOptions,
@@ -15,7 +15,7 @@ import {
   isSkippedUrl,
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
-import { guiInfoLog } from '../logs.js';
+import { guiInfoLog, guiInfoStatusTypes } from '../logs.js';
 
 const crawlSitemap = async (
   sitemapUrl,
@@ -53,7 +53,8 @@ const crawlSitemap = async (
     browserPoolOptions: {
       useFingerprints: false,
       preLaunchHooks: [
-        async (pageId, launchContext) => {
+        async (_pageId, launchContext) => {
+          // eslint-disable-next-line no-param-reassign
           launchContext.launchOptions = {
             ...launchContext.launchOptions,
             bypassCSP: true,

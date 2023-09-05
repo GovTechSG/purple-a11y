@@ -5,18 +5,14 @@ import {
   runAxeScript,
   failedRequestHandler,
 } from './commonCrawlerFunc.js';
-import constants, {
-  basicAuthRegex,
-  blackListedFileExtensions,
-  guiInfoStatusTypes,
-} from '../constants/constants.js';
+import constants, { basicAuthRegex, blackListedFileExtensions } from '../constants/constants.js';
 import {
   getPlaywrightLaunchOptions,
   isBlacklistedFileExtensions,
   isSkippedUrl,
 } from '../constants/common.js';
 import { areLinksEqual } from '../utils.js';
-import { guiInfoLog } from '../logs.js';
+import { guiInfoLog, guiInfoStatusTypes } from '../logs.js';
 
 const crawlDomain = async (
   url,
@@ -99,6 +95,7 @@ const crawlDomain = async (
       useFingerprints: false,
       preLaunchHooks: [
         async (_pageId, launchContext) => {
+          // eslint-disable-next-line no-param-reassign
           launchContext.launchOptions = {
             ...launchContext.launchOptions,
             bypassCSP: true,

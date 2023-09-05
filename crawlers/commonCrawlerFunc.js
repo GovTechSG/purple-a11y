@@ -2,8 +2,8 @@
 /* eslint-disable no-param-reassign */
 import crawlee, { playwrightUtils } from 'crawlee';
 import axe from 'axe-core';
-import { axeScript, guiInfoStatusTypes, saflyIconSelector } from '../constants/constants.js';
-import { guiInfoLog } from '../logs.js';
+import { axeScript, saflyIconSelector } from '../constants/constants.js';
+import { guiInfoLog, guiInfoStatusTypes } from '../logs.js';
 
 export const filterAxeResults = (needsReview, results, pageTitle) => {
   const { violations, passes, incomplete, url } = results;

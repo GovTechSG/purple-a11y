@@ -1,20 +1,14 @@
 import { execFileSync, execSync } from 'child_process';
 import path from 'path';
 import os from 'os';
-import { fileURLToPath } from 'url';
-import { destinationPath, getIntermediateScreenshotsPath } from './constants/constants.js';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 import fs from 'fs-extra';
-import crypto from 'crypto';
-
-import constants from './constants/constants.js';
-import { silentLogger } from './logs.js';
-import { get } from 'http';
+import constants, {
+  destinationPath,
+  getIntermediateScreenshotsPath,
+} from './constants/constants.js';
 
 export const getVersion = () => {
-  const loadJSON = path => JSON.parse(fs.readFileSync(new URL(path, import.meta.url)));
+  const loadJSON = pathString => JSON.parse(fs.readFileSync(new URL(pathString, import.meta.url)));
   const versionNum = loadJSON('./package.json').version;
 
   return versionNum;
@@ -32,17 +26,16 @@ export const isWhitelistedContentType = contentType => {
   return whitelist.filter(type => contentType.trim().startsWith(type)).length === 1;
 };
 
-export const getStoragePath = (randomToken) => {
+export const getStoragePath = randomToken => {
   if (constants.exportDirectory === process.cwd()) {
-    return `results/${randomToken}`; 
-  } else {
-    if (!path.isAbsolute(constants.exportDirectory)) {
-      constants.exportDirectory = path.resolve(process.cwd(), constants.exportDirectory);
-    }
-    return `${constants.exportDirectory}/${randomToken}`;
+    return `results/${randomToken}`;
   }
-}
-  
+  if (!path.isAbsolute(constants.exportDirectory)) {
+    constants.exportDirectory = path.resolve(process.cwd(), constants.exportDirectory);
+  }
+  return `${constants.exportDirectory}/${randomToken}`;
+};
+
 export const createDetailsAndLogs = async (scanDetails, randomToken) => {
   const storagePath = getStoragePath(randomToken);
   const logPath = `logs/${randomToken}`;
@@ -117,13 +110,13 @@ export const createScreenshotsFolder = randomToken => {
   if (fs.existsSync(intermediateScreenshotsPath)) {
     fs.readdir(intermediateScreenshotsPath, (err, files) => {
       if (err) {
-        console.log('Screenshots were not moved successfully: ' + err.message);
+        console.log(`Screenshots were not moved successfully: ${err.message}`);
       }
 
       if (!fs.existsSync(destinationPath(storagePath))) {
-        fs.mkdirSync(destinationPath(storagePath), err => {
-          if (err) {
-            console.log('Screenshots folder was not created successfully: ' + err.message);
+        fs.mkdirSync(destinationPath(storagePath), error => {
+          if (error) {
+            console.log(`Screenshots folder was not created successfully: ${error.message}`);
           }
         });
       }
@@ -135,16 +128,16 @@ export const createScreenshotsFolder = randomToken => {
         );
       });
 
-      fs.rmdir(intermediateScreenshotsPath, err => {
-        if (err) {
-          console.log(err);
+      fs.rmdir(intermediateScreenshotsPath, error => {
+        if (error) {
+          console.log(error);
         }
       });
     });
   }
 };
 
-export const cleanUp = async (pathToDelete, setDefaultFolders = false) => {
+export const cleanUp = async pathToDelete => {
   await fs.pathExists(pathToDelete).then(exists => {
     if (exists) {
       fs.removeSync(pathToDelete);
@@ -164,7 +157,8 @@ export const getCurrentTime = () =>
   });
 
 export const setHeadlessMode = (browser, isHeadless) => {
-  const isWindowsOSAndEdgeBrowser = browser === constants.browserTypes.edge && os.platform() === 'win32';
+  const isWindowsOSAndEdgeBrowser =
+    browser === constants.browserTypes.edge && os.platform() === 'win32';
   if (isHeadless || isWindowsOSAndEdgeBrowser) {
     process.env.CRAWLEE_HEADLESS = 1;
   } else {
@@ -183,36 +177,28 @@ export const zipResults = (zipName, resultsPath) => {
   }
 
   if (os.platform() === 'win32') {
-    try {
-      execSync(
-        `Get-ChildItem -Path "${resultsPath}\\*.*" -Recurse | Compress-Archive -DestinationPath "${zipName}"`,
-        { shell: 'powershell.exe' },
-      );
-    } catch (err) {
-      throw err;
-    }
+    execSync(
+      `Get-ChildItem -Path "${resultsPath}\\*.*" -Recurse | Compress-Archive -DestinationPath "${zipName}"`,
+      { shell: 'powershell.exe' },
+    );
   } else {
     // To zip up files recursively )-r) in the results folder path
     // Will only zip up the content of the results folder path with (-j) i.e. junk the path
     const command = '/usr/bin/zip';
     const args = ['-r', '-j', zipName, resultsPath];
-    try {
-      execFileSync(command, args);
-    } catch (err) {
-      throw err;
-    }
+    execFileSync(command, args);
   }
 };
 
 // areLinksEqual compares 2 string URLs and ignores comparison of 'www.' and url protocol
 // i.e. 'http://google.com' and 'https://www.google.com' returns true
 export const areLinksEqual = (link1, link2) => {
+  let l1;
+  let l2;
   try {
-    const format = link => {
-      return new URL(link.replace(/www\./, ''));
-    };
-    const l1 = format(link1);
-    const l2 = format(link2);
+    const format = link => new URL(link.replace(/www\./, ''));
+    l1 = format(link1);
+    l2 = format(link2);
 
     const areHostEqual = l1.host === l2.host;
     const arePathEqual = l1.pathname === l2.pathname;

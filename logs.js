@@ -1,15 +1,13 @@
 /* eslint-disable no-console */
-/* eslint-disable no-shadow */
 import { createLogger, format, transports } from 'winston';
-import { guiInfoStatusTypes } from './constants/constants.js';
 
 const { combine, timestamp, printf } = format;
 
 // Sample output
 // {"timestamp":"2020-11-25 17:29:07","level":"error","message":"hello world"}
-const logFormat = printf(({ timestamp, level, message }) => {
+const logFormat = printf(({ timestamp: _timestamp, level, message }) => {
   const log = {
-    timestamp: `${timestamp}`,
+    timestamp: `${_timestamp}`,
     level: `${level}`,
     message: `${message}`,
   };
@@ -34,6 +32,13 @@ const silentLogger = createLogger({
     new transports.File({ filename: 'errors.txt', level: 'warn', handleExceptions: true }),
   ],
 });
+
+export const guiInfoStatusTypes = {
+  SCANNED: 'scanned',
+  SKIPPED: 'skipped',
+  COMPLETED: 'completed',
+  ERROR: 'error',
+};
 
 // guiInfoLogger feeds the gui information via console log and is mainly used for scanning process
 export const guiInfoLog = (status, data) => {

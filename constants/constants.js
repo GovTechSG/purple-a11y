@@ -4,13 +4,12 @@ import fs from 'fs-extra';
 import { globSync } from 'glob';
 import which from 'which';
 import os from 'os';
-import { spawnSync } from 'child_process';
-import { silentLogger } from '../logs.js';
-import { execSync } from 'child_process';
+import { spawnSync, execSync } from 'child_process';
 import { chromium } from 'playwright';
+import { silentLogger } from '../logs.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const filename = fileURLToPath(import.meta.url);
+const dir = path.dirname(filename);
 
 const maxRequestsPerCrawl = 100;
 
@@ -108,11 +107,11 @@ export const getDefaultChromeDataDir = () => {
     }
     if (defaultChromeDataDir && fs.existsSync(defaultChromeDataDir)) {
       return defaultChromeDataDir;
-    } else {
-      return null;
     }
+    return null;
   } catch (error) {
     console.error(`Error in getDefaultChromeDataDir(): ${error}`);
+    return null;
   }
 };
 
@@ -143,37 +142,36 @@ export const getDefaultEdgeDataDir = () => {
 
     if (defaultEdgeDataDir && fs.existsSync(defaultEdgeDataDir)) {
       return defaultEdgeDataDir;
-    } else {
-      return null;
     }
+    return null;
   } catch (error) {
     console.error(`Error in getDefaultEdgeDataDir(): ${error}`);
+    return null;
   }
 };
 
 export const removeQuarantineFlag = function (searchPath) {
   if (os.platform() === 'darwin') {
-    let execPaths = globSync(searchPath, { absolute: true, recursive: true, nodir: true });
+    const execPaths = globSync(searchPath, { absolute: true, recursive: true, nodir: true });
     if (execPaths.length > 0) {
       execPaths.forEach(filePath => spawnSync('xattr', ['-d', 'com.apple.quarantine', filePath]));
     }
   }
 };
 
-export const getExecutablePath = function (dir, file) {
-  let execPaths = globSync(dir + '/' + file, { absolute: true, recursive: true, nodir: true });
+export const getExecutablePath = (_dir, file) => {
+  const execPaths = globSync(`${_dir}/${file}`, { absolute: true, recursive: true, nodir: true });
 
   if (execPaths.length === 0) {
-    let execInPATH = which.sync(file, { nothrow: true });
+    const execInPATH = which.sync(file, { nothrow: true });
 
     if (execInPATH) {
       return fs.realpathSync(execInPATH);
     }
     return null;
-  } else {
-    removeQuarantineFlag(execPaths[0]);
-    return execPaths[0];
   }
+  removeQuarantineFlag(execPaths[0]);
+  return execPaths[0];
 };
 
 /**
@@ -182,7 +180,7 @@ export const getExecutablePath = function (dir, file) {
 export const basicAuthRegex = /^.*\/\/.*:.*@.*$/i;
 
 // for crawlers
-export const axeScript = path.join(__dirname, '../node_modules/axe-core/axe.min.js');
+export const axeScript = path.join(dir, '../node_modules/axe-core/axe.min.js');
 
 const urlsCrawledObj = {
   toScan: [],
@@ -201,13 +199,6 @@ const scannerTypes = {
   sitemap: 'Sitemap',
   website: 'Website',
   custom: 'Custom',
-};
-
-export const guiInfoStatusTypes = {
-  SCANNED: 'scanned',
-  SKIPPED: 'skipped',
-  COMPLETED: 'completed',
-  ERROR: 'error',
 };
 
 let launchOptionsArgs = [];
@@ -241,15 +232,14 @@ export const getProxy = () => {
 
     if (getSettingValue('AutoConfigURL')) {
       return { type: 'autoConfig', url: getSettingValue('AutoConfigURL') };
-    } else if (getSettingValue('ProxyEnable') === '1') {
-      return { type: 'manualProxy', url: getSettingValue('ProxyServer') };
-    } else {
-      return null;
     }
-  } else {
-    // develop for mac
+    if (getSettingValue('ProxyEnable') === '1') {
+      return { type: 'manualProxy', url: getSettingValue('ProxyServer') };
+    }
     return null;
   }
+  // develop for mac
+  return null;
 };
 
 export const proxy = getProxy();
@@ -305,7 +295,7 @@ const urlCheckStatuses = {
 };
 
 const browserTypes = {
-  //order affects cliFunctions '-b'
+  // order affects cliFunctions '-b'
   chromium: 'chromium',
   chrome: 'chrome',
   edge: 'msedge',
@@ -329,13 +319,13 @@ export default {
   browserTypes,
   urlsCrawledObj,
   impactOrder,
-  launchOptionsArgs: launchOptionsArgs,
+  launchOptionsArgs,
   xmlSitemapTypes,
   urlCheckStatuses,
   launcher: chromium,
 };
 
-export const rootPath = __dirname;
+export const rootPath = dir;
 export const wcagWebPage = 'https://www.w3.org/TR/WCAG21/';
 const latestAxeVersion = '4.4';
 export const axeVersion = latestAxeVersion;

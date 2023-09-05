@@ -1,7 +1,7 @@
 import printMessage from 'print-message';
 import crawlSitemap from './crawlers/crawlSitemap.js';
 import crawlDomain from './crawlers/crawlDomain.js';
-import { generateArtifacts } from './mergeAxeResults.js';
+import generateArtifacts from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
 import constants, { basicAuthRegex } from './constants/constants.js';
 import { getBlackListedPatterns, submitForm } from './constants/common.js';

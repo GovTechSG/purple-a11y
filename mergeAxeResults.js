@@ -1,24 +1,24 @@
+/* eslint-disable no-template-curly-in-string */
 /* eslint-disable consistent-return */
-/* eslint-disable no-console */
+/* eslint-disable no-param-reassign */
 import os from 'os';
 import fs from 'fs-extra';
 import printMessage from 'print-message';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import ejs, { compile } from 'ejs';
-import constants from './constants/constants.js';
+import ejs from 'ejs';
+import { chromium } from 'playwright';
+import constants, { ruleIdsWithHtml } from './constants/constants.js';
 import { getCurrentTime, getStoragePath } from './utils.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import itemTypeDescription from './constants/itemTypeDescription.js';
-import { chromium } from 'playwright';
-import { ruleIdsWithHtml } from './constants/constants.js';
 import {
   muteAttributeValues,
   dropAllExceptWhitelisted,
   sortAlphaAttributes,
 } from './constants/common.js';
 
-const ruleMappingList = [
+export const ruleMappingList = [
   {
     ruleId: 'aria-hidden-focus',
     htmlSnippet:
@@ -67,8 +67,9 @@ const ruleMappingList = [
     htmlSnippet: 'What is inaccessible about this ${htmlSnippet}',
   },
 ];
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+
+const filename = fileURLToPath(import.meta.url);
+const dir = path.dirname(filename);
 
 const extractFileNames = async directory =>
   fs
@@ -127,9 +128,9 @@ const writeHTML = async (
   customFlowLabel,
   htmlFilename = 'report',
 ) => {
-  const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/report.ejs'), 'utf-8');
+  const ejsString = fs.readFileSync(path.join(dir, './static/ejs/report.ejs'), 'utf-8');
   const template = ejs.compile(ejsString, {
-    filename: path.join(__dirname, './static/ejs/report.ejs'),
+    filename: path.join(dir, './static/ejs/report.ejs'),
   });
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
@@ -142,9 +143,9 @@ const writeSummaryHTML = async (
   customFlowLabel,
   htmlFilename = 'summary',
 ) => {
-  const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/summary.ejs'), 'utf-8');
+  const ejsString = fs.readFileSync(path.join(dir, './static/ejs/summary.ejs'), 'utf-8');
   const template = ejs.compile(ejsString, {
-    filename: path.join(__dirname, './static/ejs/summary.ejs'),
+    filename: path.join(dir, './static/ejs/summary.ejs'),
   });
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
@@ -169,7 +170,7 @@ const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
 
   const page = await context.newPage();
 
-  const data = fs.readFileSync(htmlFilePath, { encoding: 'utf-8'});
+  const data = fs.readFileSync(htmlFilePath, { encoding: 'utf-8' });
   await page.setContent(data);
   // fs.readFile(htmlFilePath, 'utf8', async (err, data) => {
   //   await page.setContent(data);
@@ -242,7 +243,7 @@ const pushResults = async (rPath, allIssues) => {
 
       if (!(url in currRuleFromAllIssues.pagesAffected)) {
         currRuleFromAllIssues.pagesAffected[url] = { pageTitle, items: [] };
-        /*if (actualUrl) {
+        /* if (actualUrl) {
           currRuleFromAllIssues.pagesAffected[url].actualUrl = actualUrl;
           // Deduct duplication count from totalItems
           currRuleFromAllIssues.totalItems -= 1;
@@ -251,7 +252,7 @@ const pushResults = async (rPath, allIssues) => {
           // Hence, start with negative offset, will add pagesAffected.length later
           currRuleFromAllIssues.numberOfPagesAffectedAfterRedirects -= 1;
           currCategoryFromAllIssues.totalItems -= 1;
-        }*/
+        } */
       }
 
       currRuleFromAllIssues.pagesAffected[url].items.push(...items);
@@ -284,22 +285,22 @@ const flattenAndSortResults = allIssues => {
 };
 
 const createRuleIdJson = allIssues => {
-  var compiledRuleJson = {};
-  var ruleIdJson = {};
-  var snippets = [];
+  const compiledRuleJson = {};
+  let ruleIdJson = {};
+  let snippets = [];
 
-  allIssues.items.mustFix.rules.map(rule => {
+  allIssues.items.mustFix.rules.forEach(rule => {
     snippets = [];
     ruleIdJson = {};
-    var ruleId = rule.rule;
+    const ruleId = rule.rule;
 
     if (ruleIdsWithHtml.includes(ruleId)) {
-      var snippetsSet = new Set();
+      const snippetsSet = new Set();
       rule.pagesAffected.forEach(page => {
-        page.items.map(htmlItem => {
-          var flaggedHtml = htmlItem.html;
+        page.items.forEach(htmlItem => {
+          const flaggedHtml = htmlItem.html;
 
-          var standardisedHtmlString = sortAlphaAttributes(
+          const standardisedHtmlString = sortAlphaAttributes(
             muteAttributeValues(dropAllExceptWhitelisted(flaggedHtml)),
           );
           // fs.appendFileSync(
@@ -316,18 +317,18 @@ const createRuleIdJson = allIssues => {
     compiledRuleJson[ruleId] = ruleIdJson;
   });
 
-  allIssues.items.goodToFix.rules.map(rule => {
-    var ruleId = rule.rule;
+  allIssues.items.goodToFix.rules.forEach(rule => {
+    const ruleId = rule.rule;
     snippets = [];
     ruleIdJson = {};
 
     if (ruleIdsWithHtml.includes(ruleId)) {
-      var snippetsSet = new Set();
+      const snippetsSet = new Set();
       rule.pagesAffected.forEach(page => {
-        page.items.map(htmlItem => {
-          var flaggedHtml = htmlItem.html;
+        page.items.forEach(htmlItem => {
+          const flaggedHtml = htmlItem.html;
 
-          var standardisedHtmlString = sortAlphaAttributes(
+          const standardisedHtmlString = sortAlphaAttributes(
             muteAttributeValues(dropAllExceptWhitelisted(flaggedHtml)),
           );
           // fs.appendFileSync(
@@ -347,7 +348,7 @@ const createRuleIdJson = allIssues => {
   return compiledRuleJson;
 };
 
-export const generateArtifacts = async (
+const generateArtifacts = async (
   randomToken,
   urlScanned,
   scanType,
@@ -407,3 +408,5 @@ export const generateArtifacts = async (
   await writeSummaryPdf(htmlFilename, fileDestinationPath);
   return createRuleIdJson(allIssues);
 };
+
+export default generateArtifacts;

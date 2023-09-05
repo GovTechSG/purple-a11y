@@ -1,7 +1,4 @@
-/* eslint-disable consistent-return */
-/* eslint-disable no-console */
 /* eslint-disable camelcase */
-/* eslint-disable no-use-before-define */
 import validator from 'validator';
 import axios from 'axios';
 import { JSDOM } from 'jsdom';
@@ -80,7 +77,7 @@ export const validateFilePath = filePath => {
 // For all attributes within mutedAttributeValues array
 // replace their values with "something" while maintaining the attribute
 export const muteAttributeValues = htmlSnippet => {
-  const regex = new RegExp(`(\\s+)([\\w-]+)(\\s*=\\s*")([^"]*)(")`, `g`);
+  const regex = /(\s+)([\w-]+)(\s*=\s*")([^"]*)(")/g;
 
   // p1 is the whitespace before the attribute
   // p2 is the attribute name
@@ -124,6 +121,8 @@ export const sortAlphaAttributes = htmlString => {
         if (attributeA > attributeB) {
           return 1;
         }
+
+        return 0;
       });
 
       allAttributes.forEach((htmlAttribute, index) => {
@@ -240,6 +239,28 @@ export const isSkippedUrl = (pageUrl, whitelistedDomains) => {
   return matched;
 };
 
+export const isSitemapContent = async content => {
+  const { status: isValid } = await isValidXML(content);
+  if (isValid) {
+    return true;
+  }
+
+  const regexForHtml = /<(?:!doctype html|html|head|body)+?>/gim;
+  const regexForXmlSitemap = /<(?:urlset|feed|rss)+?.*>/gim;
+  const regexForUrl = /^.*(http|https):\/{2}.*$/gim;
+
+  if (String(content).match(regexForHtml) && String(content).match(regexForXmlSitemap)) {
+    // is an XML sitemap wrapped in a HTML document
+    return true;
+  }
+  if (!String(content).match(regexForHtml) && String(content).match(regexForUrl)) {
+    // treat this as a txt sitemap where all URLs will be extracted for crawling
+    return true;
+  }
+  // is HTML webpage
+  return false;
+};
+
 export const isFileSitemap = filePath => {
   if (!fs.existsSync(filePath)) {
     return false;
@@ -338,6 +359,7 @@ const checkUrlConnectivity = async url => {
           res.status = constants.urlCheckStatuses.systemError.code;
         }
         silentLogger.error(error);
+        return res;
       });
   } else {
     // enters here if input is not a URL or not using http/https protocols
@@ -345,6 +367,32 @@ const checkUrlConnectivity = async url => {
   }
 
   return res;
+};
+
+/**
+ * @param {string} browser browser name ("chrome" or "edge", null for chromium, the default Playwright browser)
+ * @returns playwright launch options object. For more details: https://playwright.dev/docs/api/class-browsertype#browser-type-launch
+ */
+export const getPlaywrightLaunchOptions = browser => {
+  let channel;
+  if (browser) {
+    channel = browser;
+  }
+  const options = {
+    // Drop the --use-mock-keychain flag to allow MacOS devices
+    // to use the cloned cookies.
+    ignoreDefaultArgs: ['--use-mock-keychain'],
+    args: constants.launchOptionsArgs,
+    ...(channel && { channel }), // Having no channel is equivalent to "chromium"
+  };
+  if (proxy) {
+    options.headless = false;
+    options.slowMo = 1000; // To ensure server-side rendered proxy page is loaded
+  } else if (browser === constants.browserTypes.edge && os.platform() === 'win32') {
+    // edge should be in non-headless mode
+    options.headless = false;
+  }
+  return options;
 };
 
 const checkUrlConnectivityWithBrowser = async (
@@ -359,13 +407,9 @@ const checkUrlConnectivityWithBrowser = async (
   let userAgent = null;
 
   if (Object.keys(playwrightDeviceDetailsObject).length > 0) {
-    if ('viewport' in playwrightDeviceDetailsObject) {
-      viewport = playwrightDeviceDetailsObject.viewport;
-    }
-
-    if ('userAgent' in playwrightDeviceDetailsObject) {
-      userAgent = playwrightDeviceDetailsObject.userAgent;
-    }
+    const { _viewport, _userAgent } = playwrightDeviceDetailsObject;
+    viewport = _viewport || null;
+    userAgent = _userAgent || null;
   }
 
   // Validate the connectivity of URL if the string format is url format
@@ -431,28 +475,6 @@ const checkUrlConnectivityWithBrowser = async (
   }
 
   return res;
-};
-
-export const isSitemapContent = async content => {
-  const { status: isValid } = await isValidXML(content);
-  if (isValid) {
-    return true;
-  }
-
-  const regexForHtml = new RegExp('<(?:!doctype html|html|head|body)+?>', 'gmi');
-  const regexForXmlSitemap = new RegExp('<(?:urlset|feed|rss)+?.*>', 'gmi');
-  const regexForUrl = new RegExp('^.*(http|https):/{2}.*$', 'gmi');
-
-  if (String(content).match(regexForHtml) && String(content).match(regexForXmlSitemap)) {
-    // is an XML sitemap wrapped in a HTML document
-    return true;
-  }
-  if (!String(content).match(regexForHtml) && String(content).match(regexForUrl)) {
-    // treat this as a txt sitemap where all URLs will be extracted for crawling
-    return true;
-  }
-  // is HTML webpage
-  return false;
 };
 
 export const checkUrl = async (
@@ -561,7 +583,7 @@ export const getLinksFromSitemap = async (
   const isLimitReached = () => urls.size >= maxLinksCount;
 
   const processXmlSitemap = async ($, sitemapType, selector) => {
-    for (const urlElement of $(selector)) {
+    $(selector).forEach(urlElement => {
       if (isLimitReached()) {
         return;
       }
@@ -572,7 +594,7 @@ export const getLinksFromSitemap = async (
         url = $(urlElement).text();
       }
       urls.add(url);
-    }
+    });
   };
 
   const processNonStandardSitemap = data => {
@@ -672,10 +694,12 @@ export const getLinksFromSitemap = async (
     switch (sitemapType) {
       case constants.xmlSitemapTypes.xmlIndex:
         silentLogger.info(`This is a XML format sitemap index.`);
+        // eslint-disable-next-line no-restricted-syntax
         for (const childSitemapUrl of $('loc')) {
           if (isLimitReached()) {
             break;
           }
+          // eslint-disable-next-line no-await-in-loop
           await fetchUrls($(childSitemapUrl, false).text());
         }
         break;
@@ -702,7 +726,8 @@ export const getLinksFromSitemap = async (
 };
 
 export const validEmail = email => {
-  const emailRegex = new RegExp(/^[A-Za-z0-9_!#$%&'*+\/=?`{|}~^.-]+@[A-Za-z0-9.-]+$/, 'gm');
+  // eslint-disable-next-line no-useless-escape
+  const emailRegex = /^[A-Za-z0-9_!#$%&'*+\/=?`{|}~^.-]+@[A-Za-z0-9.-]+$/gm;
 
   return emailRegex.test(email);
 };
@@ -721,98 +746,6 @@ export const validName = name => {
   }
 
   return true;
-};
-
-/**
- * Check for browser available to run scan and clone data directory of the browser if needed.
- * @param {*} preferredBrowser string of user's preferred browser
- * @param {*} isCli boolean flag to indicate if function is called from cli
- * @returns object consisting of browser to run and cloned data directory
- */
-export const getBrowserToRun = (preferredBrowser, isCli) => {
-  if (preferredBrowser === constants.browserTypes.chrome) {
-    const chromeData = getChromeData();
-    if (chromeData) return chromeData;
-
-    if (os.platform() === 'darwin') {
-      // mac user who specified -b chrome but does not have chrome
-      if (isCli) printMessage(['Unable to use Chrome, falling back to webkit...'], messageOptions);
-
-      constants.launcher = webkit;
-      return { browserToRun: null, clonedBrowserDataDir: '' };
-    } else {
-      if (isCli)
-        printMessage(['Unable to use Chrome, falling back to Edge browser...'], messageOptions);
-
-      const edgeData = getEdgeData();
-      if (edgeData) return edgeData;
-
-      if (isCli)
-        printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
-      process.exit(statuses.browserError.code);
-    }
-  } else if (preferredBrowser === constants.browserTypes.edge) {
-    const edgeData = getEdgeData();
-    if (edgeData) return edgeData;
-
-    if (isCli)
-      printMessage(['Unable to use Edge, falling back to Chrome browser...'], messageOptions);
-    const chromeData = getChromeData();
-    if (chromeData) return chromeData;
-
-    if (os.platform() === 'darwin') {
-      //  mac user who specified -b edge but does not have edge or chrome
-      if (isCli)
-        printMessage(['Unable to use Chrome and Edge, falling back to webkit...'], messageOptions);
-
-      constants.launcher = webkit;
-      return { browserToRun: null, clonedBrowserDataDir: '' };
-    } else {
-      if (isCli)
-        printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
-      process.exit(statuses.browserError.code);
-    }
-  } else {
-    // defaults to chromium
-    return { browserToRun: constants.browserTypes.chromium, clonedBrowserDataDir: '' };
-  }
-};
-/**
- * Cloning a second time with random token for parallel browser sessions
- * Also To mitigate agaisnt known bug where cookies are
- * overriden after each browser session - i.e. logs user out
- * after checkingUrl and unable to utilise same cookie for scan
- * */
-export const getClonedProfilesWithRandomToken = (browser, randomToken) => {
-  let clonedDataDir;
-  if (browser === constants.browserTypes.chrome) {
-    clonedDataDir = cloneChromeProfiles(randomToken);
-  } else if (browser === constants.browserTypes.edge) {
-    clonedDataDir = cloneEdgeProfiles(randomToken);
-  } else {
-    clonedDataDir = '';
-  }
-  return clonedDataDir;
-};
-
-export const getChromeData = () => {
-  const browserDataDir = getDefaultChromeDataDir();
-  const clonedBrowserDataDir = cloneChromeProfiles();
-  if (browserDataDir && clonedBrowserDataDir) {
-    const browserToRun = constants.browserTypes.chrome;
-    return { browserToRun, clonedBrowserDataDir };
-  } else {
-    return null;
-  }
-};
-
-export const getEdgeData = () => {
-  const browserDataDir = getDefaultEdgeDataDir();
-  const clonedBrowserDataDir = cloneEdgeProfiles();
-  if (browserDataDir && clonedBrowserDataDir) {
-    const browserToRun = constants.browserTypes.edge;
-    return { browserToRun, clonedBrowserDataDir };
-  }
 };
 
 /**
@@ -972,105 +905,6 @@ const cloneLocalStateFile = (options, destDir) => {
 };
 
 /**
- * Checks if the Chrome data directory exists and creates a clone
- * of all profile within the Purple-HATS directory located in the
- * .../User Data directory for Windows and
- * .../Chrome directory for Mac.
- * @param {string} randomToken - random token to append to the cloned directory
- * @returns {string} cloned data directory, null if any of the sub files failed to copy
- */
-export const cloneChromeProfiles = randomToken => {
-  const baseDir = getDefaultChromeDataDir();
-
-  if (!baseDir) {
-    return;
-  }
-
-  let destDir;
-
-  if (randomToken) {
-    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
-  } else {
-    destDir = path.join(baseDir, 'Purple-HATS');
-  }
-
-  if (fs.existsSync(destDir)) {
-    deleteClonedChromeProfiles();
-  }
-
-  if (!fs.existsSync(destDir)) {
-    fs.mkdirSync(destDir);
-  }
-
-  const baseOptions = {
-    cwd: baseDir,
-    recursive: true,
-    absolute: true,
-    nodir: true,
-  };
-  const cloneLocalStateFileSucess = cloneLocalStateFile(baseOptions, destDir);
-  if (cloneChromeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSucess) {
-    return destDir;
-  }
-
-  return null;
-};
-
-/**
- * Checks if the Edge data directory exists and creates a clone
- * of all profile within the Purple-HATS directory located in the
- * .../User Data directory for Windows and
- * .../Microsoft Edge directory for Mac.
- * @param {string} randomToken - random token to append to the cloned directory
- * @returns {string} cloned data directory, null if any of the sub files failed to copy
- */
-export const cloneEdgeProfiles = randomToken => {
-  const baseDir = getDefaultEdgeDataDir();
-
-  if (!baseDir) {
-    return;
-  }
-
-  let destDir;
-
-  if (randomToken) {
-    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
-  } else {
-    destDir = path.join(baseDir, 'Purple-HATS');
-  }
-
-  if (fs.existsSync(destDir)) {
-    deleteClonedEdgeProfiles();
-  }
-
-  if (!fs.existsSync(destDir)) {
-    fs.mkdirSync(destDir);
-  }
-
-  const baseOptions = {
-    cwd: baseDir,
-    recursive: true,
-    absolute: true,
-    nodir: true,
-  };
-
-  const cloneLocalStateFileSucess = cloneLocalStateFile(baseOptions, destDir);
-  if (cloneEdgeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSucess) {
-    return destDir;
-  }
-
-  return null;
-};
-
-export const deleteClonedProfiles = browser => {
-  if (browser === constants.browserTypes.chrome) {
-    deleteClonedChromeProfiles();
-  } else if (browser === constants.browserTypes.edge) {
-    deleteClonedEdgeProfiles();
-  }
-};
-
-/**
  * Deletes all the cloned Purple-HATS directories in the Chrome data directory
  * @returns null
  */
@@ -1139,6 +973,198 @@ export const deleteClonedEdgeProfiles = () => {
   }
 };
 
+export const deleteClonedProfiles = browser => {
+  if (browser === constants.browserTypes.chrome) {
+    deleteClonedChromeProfiles();
+  } else if (browser === constants.browserTypes.edge) {
+    deleteClonedEdgeProfiles();
+  }
+};
+
+/**
+ * Checks if the Chrome data directory exists and creates a clone
+ * of all profile within the Purple-HATS directory located in the
+ * .../User Data directory for Windows and
+ * .../Chrome directory for Mac.
+ * @param {string} randomToken - random token to append to the cloned directory
+ * @returns {string} cloned data directory, null if any of the sub files failed to copy
+ */
+export const cloneChromeProfiles = randomToken => {
+  const baseDir = getDefaultChromeDataDir();
+
+  if (!baseDir) {
+    return null;
+  }
+
+  let destDir;
+
+  if (randomToken) {
+    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
+  } else {
+    destDir = path.join(baseDir, 'Purple-HATS');
+  }
+
+  if (fs.existsSync(destDir)) {
+    deleteClonedChromeProfiles();
+  }
+
+  if (!fs.existsSync(destDir)) {
+    fs.mkdirSync(destDir);
+  }
+
+  const baseOptions = {
+    cwd: baseDir,
+    recursive: true,
+    absolute: true,
+    nodir: true,
+  };
+  const cloneLocalStateFileSucess = cloneLocalStateFile(baseOptions, destDir);
+  if (cloneChromeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSucess) {
+    return destDir;
+  }
+
+  return null;
+};
+
+/**
+ * Checks if the Edge data directory exists and creates a clone
+ * of all profile within the Purple-HATS directory located in the
+ * .../User Data directory for Windows and
+ * .../Microsoft Edge directory for Mac.
+ * @param {string} randomToken - random token to append to the cloned directory
+ * @returns {string} cloned data directory, null if any of the sub files failed to copy
+ */
+export const cloneEdgeProfiles = randomToken => {
+  const baseDir = getDefaultEdgeDataDir();
+
+  if (!baseDir) {
+    return null;
+  }
+
+  let destDir;
+
+  if (randomToken) {
+    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
+  } else {
+    destDir = path.join(baseDir, 'Purple-HATS');
+  }
+
+  if (fs.existsSync(destDir)) {
+    deleteClonedEdgeProfiles();
+  }
+
+  if (!fs.existsSync(destDir)) {
+    fs.mkdirSync(destDir);
+  }
+
+  const baseOptions = {
+    cwd: baseDir,
+    recursive: true,
+    absolute: true,
+    nodir: true,
+  };
+
+  const cloneLocalStateFileSucess = cloneLocalStateFile(baseOptions, destDir);
+  if (cloneEdgeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSucess) {
+    return destDir;
+  }
+
+  return null;
+};
+
+export const getChromeData = () => {
+  const browserDataDir = getDefaultChromeDataDir();
+  const clonedBrowserDataDir = cloneChromeProfiles();
+  if (browserDataDir && clonedBrowserDataDir) {
+    const browserToRun = constants.browserTypes.chrome;
+    return { browserToRun, clonedBrowserDataDir };
+  }
+  return null;
+};
+
+export const getEdgeData = () => {
+  const browserDataDir = getDefaultEdgeDataDir();
+  const clonedBrowserDataDir = cloneEdgeProfiles();
+  if (browserDataDir && clonedBrowserDataDir) {
+    const browserToRun = constants.browserTypes.edge;
+    return { browserToRun, clonedBrowserDataDir };
+  }
+
+  return null;
+};
+
+/**
+ * Check for browser available to run scan and clone data directory of the browser if needed.
+ * @param {*} preferredBrowser string of user's preferred browser
+ * @param {*} isCli boolean flag to indicate if function is called from cli
+ * @returns object consisting of browser to run and cloned data directory
+ */
+export const getBrowserToRun = (preferredBrowser, isCli) => {
+  if (preferredBrowser === constants.browserTypes.chrome) {
+    const chromeData = getChromeData();
+    if (chromeData) return chromeData;
+
+    if (os.platform() === 'darwin') {
+      // mac user who specified -b chrome but does not have chrome
+      if (isCli) printMessage(['Unable to use Chrome, falling back to webkit...'], messageOptions);
+
+      constants.launcher = webkit;
+      return { browserToRun: null, clonedBrowserDataDir: '' };
+    }
+    if (isCli)
+      printMessage(['Unable to use Chrome, falling back to Edge browser...'], messageOptions);
+
+    const edgeData = getEdgeData();
+    if (edgeData) return edgeData;
+
+    if (isCli) {
+      printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
+    }
+    process.exit(constants.urlCheckStatuses.browserError.code);
+  } else if (preferredBrowser === constants.browserTypes.edge) {
+    const edgeData = getEdgeData();
+    if (edgeData) return edgeData;
+
+    if (isCli)
+      printMessage(['Unable to use Edge, falling back to Chrome browser...'], messageOptions);
+    const chromeData = getChromeData();
+    if (chromeData) return chromeData;
+
+    if (os.platform() === 'darwin') {
+      //  mac user who specified -b edge but does not have edge or chrome
+      if (isCli)
+        printMessage(['Unable to use Chrome and Edge, falling back to webkit...'], messageOptions);
+
+      constants.launcher = webkit;
+      return { browserToRun: null, clonedBrowserDataDir: '' };
+    }
+    if (isCli)
+      printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
+    process.exit(constants.urlCheckStatuses.browserError.code);
+  }
+
+  // defaults to chromium
+  return { browserToRun: constants.browserTypes.chromium, clonedBrowserDataDir: '' };
+};
+
+/**
+ * Cloning a second time with random token for parallel browser sessions
+ * Also To mitigate agaisnt known bug where cookies are
+ * overriden after each browser session - i.e. logs user out
+ * after checkingUrl and unable to utilise same cookie for scan
+ * */
+export const getClonedProfilesWithRandomToken = (browser, randomToken) => {
+  let clonedDataDir;
+  if (browser === constants.browserTypes.chrome) {
+    clonedDataDir = cloneChromeProfiles(randomToken);
+  } else if (browser === constants.browserTypes.edge) {
+    clonedDataDir = cloneEdgeProfiles(randomToken);
+  } else {
+    clonedDataDir = '';
+  }
+  return clonedDataDir;
+};
+
 export const getPlaywrightDeviceDetailsObject = (deviceChosen, customDevice, viewportWidth) => {
   let playwrightDeviceDetailsObject = {};
   if (deviceChosen === 'Mobile' || customDevice === 'iPhone 11') {
@@ -1170,7 +1196,6 @@ export const getScreenToScan = (deviceChosen, customDevice, viewportWidth) => {
 };
 
 export const submitFormViaPlaywright = async (browserToRun, userDataDirectory, finalUrl) => {
-  let browserContext;
   const dirName = `clone-${Date.now()}`;
   let clonedDir = null;
   if (proxy && browserToRun === constants.browserTypes.edge) {
@@ -1178,7 +1203,7 @@ export const submitFormViaPlaywright = async (browserToRun, userDataDirectory, f
   } else if (proxy && browserToRun === constants.browserTypes.chrome) {
     clonedDir = cloneChromeProfiles(dirName);
   }
-  browserContext = await constants.launcher.launchPersistentContext(
+  const browserContext = await constants.launcher.launchPersistentContext(
     clonedDir || userDataDirectory,
     {
       ...getPlaywrightLaunchOptions(browserToRun),
@@ -1188,7 +1213,7 @@ export const submitFormViaPlaywright = async (browserToRun, userDataDirectory, f
   const page = await browserContext.newPage();
 
   try {
-    const response = await page.goto(finalUrl, {
+    await page.goto(finalUrl, {
       timeout: 30000,
       ...(proxy && { waitUntil: 'commit' }),
     });
@@ -1242,29 +1267,4 @@ export const submitForm = async (
       }
     }
   }
-};
-/**
- * @param {string} browser browser name ("chrome" or "edge", null for chromium, the default Playwright browser)
- * @returns playwright launch options object. For more details: https://playwright.dev/docs/api/class-browsertype#browser-type-launch
- */
-export const getPlaywrightLaunchOptions = browser => {
-  let channel;
-  if (browser) {
-    channel = browser;
-  }
-  const options = {
-    // Drop the --use-mock-keychain flag to allow MacOS devices
-    // to use the cloned cookies.
-    ignoreDefaultArgs: ['--use-mock-keychain'],
-    args: constants.launchOptionsArgs,
-    ...(channel && { channel }), // Having no channel is equivalent to "chromium"
-  };
-  if (proxy) {
-    options.headless = false;
-    options.slowMo = 1000; // To ensure server-side rendered proxy page is loaded
-  } else if (browser === constants.browserTypes.edge && os.platform() === 'win32') {
-    // edge should be in non-headless mode
-    options.headless = false;
-  }
-  return options;
 };

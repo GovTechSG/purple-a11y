@@ -1,20 +1,24 @@
+/* eslint-disable no-undef */
 import fs from 'fs';
 import path from 'path';
 import printMessage from 'print-message';
 import { fileURLToPath } from 'url';
 import constants from './constants/constants.js';
-import { submitForm } from './constants/common.js'
+import { submitForm } from './constants/common.js';
 import { createCrawleeSubFolders, filterAxeResults } from './crawlers/commonCrawlerFunc.js';
-import {
-  createAndUpdateResultsFolders,
-  createDetailsAndLogs,
-} from './utils.js';
-import { generateArtifacts } from './mergeAxeResults.js';
+import { createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
+import generateArtifacts from './mergeAxeResults.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const filename = fileURLToPath(import.meta.url);
+const dir = path.dirname(filename);
 
-export const init = async (entryUrl, customFlowLabelTestString, name = "Your Name", email = "email@domain.com", needsReview = false ) => {
+export const init = async (
+  entryUrl,
+  customFlowLabelTestString,
+  name = 'Your Name',
+  email = 'email@domain.com',
+  needsReview = false,
+) => {
   console.log('Starting Purple HATS');
 
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
@@ -38,7 +42,6 @@ export const init = async (entryUrl, customFlowLabelTestString, name = "Your Nam
   const { dataset } = await createCrawleeSubFolders(randomToken);
 
   let isInstanceTerminated = false;
-  let numPagesScanned = 0;
 
   const throwErrorIfTerminated = () => {
     if (isInstanceTerminated) {
@@ -48,10 +51,7 @@ export const init = async (entryUrl, customFlowLabelTestString, name = "Your Nam
 
   const getScripts = () => {
     throwErrorIfTerminated();
-    const axeScript = fs.readFileSync(
-      path.join(__dirname, 'node_modules/axe-core/axe.min.js'),
-      'utf-8',
-    );
+    const axeScript = fs.readFileSync(path.join(dir, 'node_modules/axe-core/axe.min.js'), 'utf-8');
     async function runA11yScan(elements = []) {
       axe.configure({
         branding: {
@@ -107,8 +107,7 @@ export const init = async (entryUrl, customFlowLabelTestString, name = "Your Nam
         name,
         JSON.stringify(basicFormHTMLSnippet),
         urlsCrawled.scanned.length,
-      )
-
+      );
     }
     return null;
   };
@@ -122,4 +121,4 @@ export const init = async (entryUrl, customFlowLabelTestString, name = "Your Nam
   };
 };
 
-export default init
+export default init;

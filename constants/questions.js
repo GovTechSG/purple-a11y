@@ -1,4 +1,5 @@
-import { getUserDataTxt, writeToUserDataTxt } from '../utils.js';
+/* eslint-disable no-param-reassign */
+import { getUserDataTxt } from '../utils.js';
 import {
   checkUrl,
   deleteClonedProfiles,
@@ -63,7 +64,7 @@ const startScanQuestions = [
     message: answers => getUrlMessage(answers.scanner),
     // eslint-disable-next-line func-names
     // eslint-disable-next-line object-shorthand
-    validate: async function (url, answers) {
+    validate: async (url, answers) => {
       const checkIfExit = url.toLowerCase();
 
       if (checkIfExit === 'exit') {
@@ -72,14 +73,18 @@ const startScanQuestions = [
 
       const statuses = constants.urlCheckStatuses;
       const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(constants.browserTypes.chrome);
-      const playwrightDeviceDetailsObject = getPlaywrightDeviceDetailsObject(answers.deviceChosen, answers.customDevice, answers.viewportWidth);
-      
+      const playwrightDeviceDetailsObject = getPlaywrightDeviceDetailsObject(
+        answers.deviceChosen,
+        answers.customDevice,
+        answers.viewportWidth,
+      );
+
       const res = await checkUrl(
-        answers.scanner, 
-        url, 
-        browserToRun, 
-        clonedBrowserDataDir, 
-        playwrightDeviceDetailsObject
+        answers.scanner,
+        url,
+        browserToRun,
+        clonedBrowserDataDir,
+        playwrightDeviceDetailsObject,
       );
 
       deleteClonedProfiles(browserToRun);
@@ -104,10 +109,13 @@ const startScanQuestions = [
             return true;
           }
           res.status = statuses.notASitemap.code;
-
+          break;
         case statuses.notASitemap.code:
           return statuses.notASitemap.message;
+        default:
+          return 1;
       }
+      return 1;
     },
     filter: input => sanitizeUrlInput(input.trim()).url,
   },
@@ -116,7 +124,7 @@ const startScanQuestions = [
     name: 'customFlowLabel',
     message: 'Give a preferred label to your custom scan flow (Optional)',
     when: answers => answers.scanner === constants.scannerTypes.custom,
-  }
+  },
 ];
 
 const newUserQuestions = [
