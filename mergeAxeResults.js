@@ -17,6 +17,9 @@ import {
   dropAllExceptWhitelisted,
   sortAlphaAttributes,
 } from './constants/common.js';
+import { createWriteStream } from 'fs';
+import { AsyncParser } from '@json2csv/node';
+import crypto from 'crypto';
 
 const ruleMappingList = [
   {
@@ -120,6 +123,44 @@ const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResu
   }
 };
 
+const writeCsv = async (pageResults, storagePath) => {
+  const csvOutput = createWriteStream(`${storagePath}/reports/report.csv`, { encoding: 'utf8' });
+  const flattenResult = item => {
+    const results = [];
+    const baseObj = { url: item.url };
+    const severities = ['mustFix', 'goodToFix'];
+    for (let severity of severities) {
+      const rules = item[severity].rules;
+      const ruleIds = Object.keys(rules);
+      for (let ruleId of ruleIds) {
+        const rule = rules[ruleId];
+        const { description, helpUrl, conformance, items } = rule;
+        for (let item of items) {
+          const { html, message, page } = item;
+          const context = html ? html : page;
+          results.push({
+            id: crypto.randomUUID(),
+            ...baseObj,
+            severity,
+            ruleId,
+            description,
+            helpUrl,
+            conformance,
+            context,
+            howToFix: message,
+          });
+        }
+      }
+    }
+    return results;
+  };
+  const opts = {
+    transforms: [flattenResult],
+  };
+  const parser = new AsyncParser(opts);
+  parser.parse(pageResults).pipe(csvOutput);
+};
+
 const writeHTML = async (
   allIssues,
   storagePath,
@@ -169,7 +210,7 @@ const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
 
   const page = await context.newPage();
 
-  const data = fs.readFileSync(htmlFilePath, { encoding: 'utf-8'});
+  const data = fs.readFileSync(htmlFilePath, { encoding: 'utf-8' });
   await page.setContent(data);
   // fs.readFile(htmlFilePath, 'utf8', async (err, data) => {
   //   await page.setContent(data);
@@ -199,8 +240,7 @@ const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
   fs.unlinkSync(htmlFilePath);
 };
 
-const pushResults = async (rPath, allIssues) => {
-  const pageResults = await parseContentToJson(rPath);
+const pushResults = async (pageResults, allIssues) => {
   const { url, pageTitle } = pageResults;
 
   allIssues.totalPagesScanned += 1;
@@ -376,13 +416,17 @@ export const generateArtifacts = async (
       passed: { description: itemTypeDescription.passed, totalItems: 0, rules: {} },
     },
   };
-
   const allFiles = await extractFileNames(directory);
 
+  const jsonArray = await Promise.all(
+    allFiles.map(async file => parseContentToJson(`${directory}/${file}`)),
+  );
+
+  await writeCsv(jsonArray, storagePath);
+
   await Promise.all(
-    allFiles.map(async file => {
-      const rPath = `${directory}/${file}`;
-      await pushResults(rPath, allIssues);
+    jsonArray.map(async pageResults => {
+      await pushResults(pageResults, allIssues);
     }),
   ).catch(flattenIssuesError => {
     consoleLogger.info('An error has occurred when flattening the issues, please try again.');
@@ -402,6 +446,7 @@ export const generateArtifacts = async (
   const htmlFilename = `${storagePath}/reports/summary.html`;
   const fileDestinationPath = `${storagePath}/reports/summary.pdf`;
   await writeResults(allIssues, storagePath);
+  await writeCsv(jsonArray, storagePath);
   await writeHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryPdf(htmlFilename, fileDestinationPath);
