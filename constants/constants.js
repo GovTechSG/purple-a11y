@@ -168,12 +168,11 @@ export const getExecutablePath = function (dir, file) {
     if (execInPATH) {
       return fs.realpathSync(execInPATH);
     } else {
-      const splitPath = os.platform() === 'win32'
-        ? process.env.PATH.split(';')
-        : process.env.PATH.split(':');
-      
+      const splitPath =
+        os.platform() === 'win32' ? process.env.PATH.split(';') : process.env.PATH.split(':');
+
       for (let path in splitPath) {
-        execPaths = globSync(path + '/' + file, { absolute: true, recursive: true, nodir: true })
+        execPaths = globSync(path + '/' + file, { absolute: true, recursive: true, nodir: true });
         if (execPaths.length !== 0) return fs.realpathSync(execPaths[0]);
       }
       return null;
@@ -202,12 +201,20 @@ const urlsCrawledObj = {
   blacklisted: [],
   exceededRequests: [],
   forbidden: [],
+  userExcluded: [],
 };
 
 const scannerTypes = {
   sitemap: 'Sitemap',
   website: 'Website',
   custom: 'Custom',
+};
+
+export const guiInfoStatusTypes = {
+  SCANNED: 'scanned',
+  SKIPPED: 'skipped',
+  COMPLETED: 'completed',
+  ERROR: 'error',
 };
 
 let launchOptionsArgs = [];
@@ -296,8 +303,12 @@ const urlCheckStatuses = {
   },
   notASitemap: { code: 15, message: 'Provided URL or filepath is not a sitemap.' },
   unauthorised: { code: 16, message: 'Provided URL needs basic authorisation.' },
-  browserError: { code: 17, message: "No browser available to run scans. Please ensure you have Chrome or Edge (for Windows only) installed."},
-  axiosTimeout: { code: 18, message: 'Axios timeout exceeded. Falling back on browser checks.'}
+  browserError: {
+    code: 17,
+    message:
+      'No browser available to run scans. Please ensure you have Chrome or Edge (for Windows only) installed.',
+  },
+  axiosTimeout: { code: 18, message: 'Axios timeout exceeded. Falling back on browser checks.' },
 };
 
 const browserTypes = {
@@ -318,7 +329,7 @@ const xmlSitemapTypes = {
 export default {
   allIssueFileName: 'all_issues',
   cliZipFileName: 'a11y-scan-results.zip',
-  exportDirectory: `${process.cwd()}`, 
+  exportDirectory: `${process.cwd()}`,
   maxRequestsPerCrawl,
   maxConcurrency: 25,
   scannerTypes,

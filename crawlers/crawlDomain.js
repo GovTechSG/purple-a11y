@@ -6,11 +6,20 @@ import {
   failedRequestHandler,
   isUrlPdf,
 } from './commonCrawlerFunc.js';
-import constants, { basicAuthRegex, blackListedFileExtensions } from '../constants/constants.js';
-import { getPlaywrightLaunchOptions, isBlacklistedFileExtensions } from '../constants/common.js';
+import constants, {
+  basicAuthRegex,
+  blackListedFileExtensions,
+  guiInfoStatusTypes,
+} from '../constants/constants.js';
+import {
+  getPlaywrightLaunchOptions,
+  isBlacklistedFileExtensions,
+  isSkippedUrl,
+} from '../constants/common.js';
 import { areLinksEqual } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
-import fs from 'fs'; 
+import fs from 'fs';
+import { guiInfoLog } from '../logs.js';
 
 const crawlDomain = async (
   url,
@@ -24,9 +33,10 @@ const crawlDomain = async (
   specifiedMaxConcurrency,
   needsReviewItems,
   fileTypes,
+  blacklistedPatterns,
 ) => {
   let needsReview = needsReviewItems;
-  const isScanHtml = ['all', 'html-only'].includes(fileTypes); 
+  const isScanHtml = ['all', 'html-only'].includes(fileTypes);
   const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { maxConcurrency } = constants;
@@ -34,14 +44,13 @@ const crawlDomain = async (
 
   const { dataset, requestQueue } = await createCrawleeSubFolders(randomToken);
   const pdfDownloads = [];
-  const uuidToPdfMapping = {}; 
+  const uuidToPdfMapping = {};
 
   if (!fs.existsSync(randomToken)) {
     fs.mkdirSync(randomToken);
   }
 
   let finalUrl;
-  let scanCompleted = false;
   let pagesCrawled;
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth = false;
@@ -67,6 +76,39 @@ const crawlDomain = async (
     pagesCrawled = 0;
   }
 
+  const enqueueProcess = async (enqueueLinks, enqueueLinksByClickingElements) => {
+    await enqueueLinks({
+      // set selector matches anchor elements with href but not contains # or starting with mailto:
+      selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
+      strategy,
+      requestQueue,
+      transformRequestFunction(req) {
+        req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+        if (isUrlPdf(req.url)) {
+          // playwright headless mode does not support navigation to pdf document
+          req.skipNavigation = true;
+        }
+        return req;
+      },
+    });
+
+    await enqueueLinksByClickingElements({
+      // set selector matches
+      // NOT <a>
+      // IS role='link' or button onclick
+      // enqueue new page URL
+      selector: ':not(a):is(*[role="link"], button[onclick])',
+      transformRequestFunction(req) {
+        req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+        if (isUrlPdf(req.url)) {
+          // playwright headless mode does not support navigation to pdf document
+          req.skipNavigation = true;
+        }
+        return req;
+      },
+    });
+  };
+
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
       launcher: constants.launcher,
@@ -76,7 +118,7 @@ const crawlDomain = async (
     browserPoolOptions: {
       useFingerprints: false,
       preLaunchHooks: [
-        async (pageId, launchContext) => {
+        async (_pageId, launchContext) => {
           launchContext.launchOptions = {
             ...launchContext.launchOptions,
             bypassCSP: true,
@@ -100,45 +142,63 @@ const crawlDomain = async (
       const actualUrl = request.loadedUrl || request.url;
 
       if (isBlacklistedFileExtensions(actualUrl, blackListedFileExtensions)) {
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::skipped::${request.url}`);
-        }
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
         urlsCrawled.blacklisted.push(request.url);
+        return;
+      }
+
+      if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
+        urlsCrawled.userExcluded.push(request.url);
+        await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);
         return;
       }
 
       // handle pdfs
       if (request.skipNavigation && isUrlPdf(actualUrl)) {
         if (!isScanPdfs) {
-          return process.env.RUNNING_FROM_PH_GUI
-            && console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`)
+          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: request.url,
+          });
+          return;
         }
-        const appendMapping = handlePdfDownload(randomToken, pdfDownloads, request, sendRequest, urlsCrawled);
-        appendMapping(uuidToPdfMapping); 
+        const appendMapping = handlePdfDownload(
+          randomToken,
+          pdfDownloads,
+          request,
+          sendRequest,
+          urlsCrawled,
+        );
+        appendMapping(uuidToPdfMapping);
         return;
       }
 
       if (response.status() === 403) {
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`)
-        }
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
         urlsCrawled.forbidden.push(request.url);
         return;
       }
 
       if (response.status() !== 200) {
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`);
-        }
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
         urlsCrawled.invalid.push(request.url);
         return;
       }
-      
+
       if (pagesCrawled === maxRequestsPerCrawl) {
         urlsCrawled.exceededRequests.push(request.url);
         return;
       }
-      pagesCrawled++;
+      pagesCrawled += 1;
 
       const location = await page.evaluate('location');
 
@@ -147,9 +207,10 @@ const crawlDomain = async (
       } else if (location.host.includes(host)) {
         if (isScanHtml) {
           const results = await runAxeScript(needsReview, page);
-          if (process.env.RUNNING_FROM_PH_GUI) {
-            console.log(`Electron crawling::${urlsCrawled.scanned.length}::scanned::${request.url}`);
-          }
+          guiInfoLog(guiInfoStatusTypes.SCANNED, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: request.url,
+          });
 
           // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
           const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
@@ -165,7 +226,7 @@ const crawlDomain = async (
               });
               return;
             }
-          
+
             urlsCrawled.scanned.push({
               url: request.url,
               pageTitle: results.pageTitle,
@@ -183,60 +244,19 @@ const crawlDomain = async (
             urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
           }
           await dataset.pushData(results);
-        } else if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`);
+        } else {
+          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: request.url,
+          });
         }
 
-        await enqueueLinks({
-          // set selector matches anchor elements with href but not contains # or starting with mailto:
-          selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
-          strategy,
-          requestQueue,
-          transformRequestFunction(req) {
-            if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
-              if (process.env.RUNNING_FROM_PH_GUI) {
-                console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${req.url}`);
-              }
-              urlsCrawled.blacklisted.push(req.url);
-            }
-
-            req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-            if (isUrlPdf(req.url)) {
-              // playwright headless mode does not support navigation to pdf document
-              req.skipNavigation = true;
-            }
-            
-            return req;
-          },
-        });
-
-        await enqueueLinksByClickingElements({
-          // set selector matches
-          // NOT <a>
-          // IS role='link' or button onclick
-          // enqueue new page URL
-          selector: ':not(a):is(*[role="link"], button[onclick])',
-          transformRequestFunction(req) {
-            if (isBlacklistedFileExtensions(req.url, blackListedFileExtensions)) {
-              if (process.env.RUNNING_FROM_PH_GUI) {
-                console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${req.url}`);
-              }
-              urlsCrawled.blacklisted.push(req.url);
-            }
-
-            req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-            
-            if (isUrlPdf(req.url)) {
-              // playwright headless mode does not support navigation to pdf document
-              req.skipNavigation = true;
-            }
-            return req;
-          },
-        });
+        await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);
       } else {
-        if (process.env.RUNNING_FROM_PH_GUI) {
-          console.log(`Electron crawling::${pagesCrawled}::${urlsCrawled.scanned.length}::skipped::${currentUrl}`);
-        }
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
         urlsCrawled.outOfDomain.push(request.url);
       }
     },
@@ -249,21 +269,19 @@ const crawlDomain = async (
 
   if (pdfDownloads.length > 0) {
     // wait for pdf downloads to complete
-    await Promise.all(pdfDownloads); 
+    await Promise.all(pdfDownloads);
 
     // scan and process pdf documents
     await runPdfScan(randomToken);
-    
+
     // transform result format
     const pdfResults = mapPdfScanResults(randomToken, uuidToPdfMapping);
-    
-    // push results for each pdf document to key value store 
+
+    // push results for each pdf document to key value store
     await Promise.all(pdfResults.map(result => dataset.pushData(result)));
   }
 
-  if (process.env.RUNNING_FROM_PH_GUI) {
-    console.log('Electron scan completed');
-  }
+  guiInfoLog(guiInfoStatusTypes.COMPLETED);
   return urlsCrawled;
 };
 

@@ -79,7 +79,7 @@ export const cliOptions = {
     describe: 'Preferred directory to store scan results. Path is relative to your home directory.',
     type: 'string',
     requiresArg: true,
-    demandOption: false
+    demandOption: false,
   },
   j: {
     alias: 'customFlowLabel',
@@ -116,7 +116,15 @@ export const cliOptions = {
     demandOption: false,
     requiresArg: true,
     default: 'html-only',
-  }
+  },
+  x: {
+    alias: 'blacklistedPatternsFilename',
+    describe:
+      'Txt file that has a list of pattern of domains to exclude from accessibility scan separated by new line',
+    type: 'string',
+    default: 'exclusions.txt',
+    demandOption: false,
+  },
 };
 
 export const configureReportSetting = isEnabled => {
