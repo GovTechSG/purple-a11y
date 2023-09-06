@@ -135,6 +135,10 @@ const writeCsv = async (pageResults, storagePath) => {
       for (let ruleId of ruleIds) {
         const rule = rules[ruleId];
         const { description, helpUrl, conformance, items } = rule;
+        // we filter out the below as it represents the A/AA/AAA level, not the clause itself
+        const clauses = conformance.filter(
+          clause => !['wcag2a', 'wcag2aa', 'wcag2aaa'].includes(clause),
+        );
         for (let item of items) {
           const { html, message, page } = item;
           const context = html ? html : page;
@@ -143,9 +147,9 @@ const writeCsv = async (pageResults, storagePath) => {
             ...baseObj,
             severity,
             ruleId,
-            description,
+            ruleDescription: description,
             helpUrl,
-            conformance,
+            clauses,
             context,
             howToFix: message,
           });
