@@ -426,8 +426,6 @@ export const generateArtifacts = async (
     allFiles.map(async file => parseContentToJson(`${directory}/${file}`)),
   );
 
-  await writeCsv(jsonArray, storagePath);
-
   await Promise.all(
     jsonArray.map(async pageResults => {
       await pushResults(pageResults, allIssues);
