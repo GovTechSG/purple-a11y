@@ -7,11 +7,13 @@ category summary is clicked %>
       wcag111: 'https://www.w3.org/TR/WCAG21/#non-text-content',
       wcag122: 'https://www.w3.org/TR/WCAG21/#captions-prerecorded',
       wcag131: 'https://www.w3.org/TR/WCAG21/#info-and-relationships',
+      wcag134: 'https://www.w3.org/TR/WCAG21/#orientation',
       wcag135: 'https://www.w3.org/TR/WCAG21/#identify-input-purpose',
       wcag141: 'https://www.w3.org/TR/WCAG21/#use-of-color',
       wcag142: 'https://www.w3.org/TR/WCAG21/#audio-control',
       wcag143: 'https://www.w3.org/TR/WCAG21/#contrast-minimum',
       wcag144: 'https://www.w3.org/TR/WCAG21/#resize-text',
+      wcag1410: 'https://www.w3.org/TR/WCAG21/#reflow',
       wcag1412: 'https://www.w3.org/TR/WCAG21/#text-spacing',
       wcag211: 'https://www.w3.org/TR/WCAG21/#keyboard',
       wcag221: 'https://www.w3.org/TR/WCAG21/#timing-adjustable',
@@ -49,8 +51,22 @@ category summary is clicked %>
     document.getElementById('expandedRuleName').innerHTML = htmlEscapeString(
       selectedRule.description,
     );
-    document.getElementById('expandedRuleDescription').innerHTML = whyItMatters[selectedRule.rule];
-    document.getElementById('expandedRuleHelpUrl').href = selectedRule.helpUrl;
+
+    const expandedRuleDescription = document.getElementById('expandedRuleDescription'); 
+    if (whyItMatters[selectedRule.rule]) {
+      expandedRuleDescription.hidden = false; 
+      expandedRuleDescription.innerHTML = whyItMatters[selectedRule.rule]; 
+    } else {
+      expandedRuleDescription.hidden = true; 
+    }
+
+    const expandedRuleHelpUrl = document.getElementById('expandedRuleHelpUrl');
+    if (selectedRule.helpUrl) {
+      expandedRuleHelpUrl.hidden = false;
+      expandedRuleHelpUrl.href = selectedRule.helpUrl; 
+    } else {
+      expandedRuleHelpUrl.hidden = true; 
+    }
     document.getElementById('expandedRuleConformance').replaceChildren(
       createElementFromString(`
       <div class="d-flex align-items-center">
@@ -254,10 +270,23 @@ category summary is clicked %>
               }
               <div class="p-3">
                 <div class="d-flex justify-content-between">
-                  <div class="fw-bold">HTML element</div>
-                  <pre class="page-item-card-section-content"><code class="language-html">${htmlEscapeString(
-                    item.html,
-                  )}</code></pre>
+                  ${
+                    item.html
+                      ? `
+                      <div class="fw-bold">HTML element</div>
+                        <pre class="page-item-card-section-content">
+                          <code class="language-html">
+                            ${htmlEscapeString(item.html)}
+                          </code>
+                        </pre>
+                      `
+                      : `
+                      <div class="fw-bold">Location</div>
+                        <div class="page-item-card-section-content">
+                            ${item.page > 0 ? `Page ${item.page}` : 'Document'}
+                        </div>
+                      `
+                  }
                 </div>
                 <hr />
                 <div class="d-flex justify-content-between">

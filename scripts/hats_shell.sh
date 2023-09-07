@@ -4,10 +4,12 @@ echo "hats Shell - Created By younglim - NO WARRANTY PROVIDED"
 echo "================================================================"
 echo ""
 
+__dir="$PWD"
+
 CURR_FOLDERNAME=$(basename "$PWD")
 if [[ $CURR_FOLDERNAME = "scripts" ]]; then
   cd ..
-  CURR_FOLDERNAME=$(basename $PWD)
+  CURR_FOLDERNAME=$(basename "$PWD")
 fi
 
 if [[ $(uname -m) == 'arm64' ]]; then
@@ -33,6 +35,10 @@ if find ./purple-hats -name "node_modules" -maxdepth 1 -type l -ls &> /dev/null;
 else
     export PATH="$PWD/node_modules/.bin:$PATH"
 fi
+
+echo "INFO: Set path to Java JRE"
+export JAVA_HOME="$(PWD)/jre"
+export PATH="$JAVA_HOME/bin:$PATH"
 
 echo "INFO: Set path to Playwright cache for this session"
 export PLAYWRIGHT_BROWSERS_PATH="$PWD/ms-playwright"

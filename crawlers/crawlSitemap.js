@@ -5,6 +5,7 @@ import {
   preNavigationHooks,
   runAxeScript,
   failedRequestHandler,
+  isUrlPdf,
 } from './commonCrawlerFunc.js';
 
 import constants, { guiInfoStatusTypes } from '../constants/constants.js';
@@ -15,6 +16,8 @@ import {
   isSkippedUrl,
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
+import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
+import fs from 'fs';
 import { guiInfoLog } from '../logs.js';
 
 const crawlSitemap = async (
@@ -27,12 +30,18 @@ const crawlSitemap = async (
   userDataDirectory,
   specifiedMaxConcurrency,
   needsReviewItems,
+  fileTypes,
   blacklistedPatterns,
 ) => {
-  const needsReview = needsReviewItems;
+  let needsReview = needsReviewItems;
+  const isScanHtml = ['all', 'html-only'].includes(fileTypes);
+  const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
+
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { playwrightDeviceDetailsObject } = viewportSettings;
   const { maxConcurrency } = constants;
+  const pdfDownloads = [];
+  const uuidToPdfMapping = {};
 
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
   const requestList = new crawlee.RequestList({
@@ -42,7 +51,11 @@ const crawlSitemap = async (
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
 
   const { dataset } = await createCrawleeSubFolders(randomToken);
-  let pagesCrawled;
+  let pagesCrawled = 0;
+
+  if (!fs.existsSync(randomToken)) {
+    fs.mkdirSync(randomToken);
+  }
 
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
@@ -65,8 +78,31 @@ const crawlSitemap = async (
     },
     requestList,
     preNavigationHooks,
-    requestHandler: async ({ page, request, response }) => {
+    requestHandler: async ({ page, request, response, sendRequest }) => {
       const actualUrl = request.loadedUrl || request.url;
+
+      if (isUrlPdf(actualUrl)) {
+        if (!isScanPdfs) {
+          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: request.url,
+          });
+          urlsCrawled.blacklisted.push(request.url);
+          return;
+        }
+        // pushes download promise into pdfDownloads
+        const { pdfFileName, trimmedUrl } = handlePdfDownload(
+          randomToken,
+          pdfDownloads,
+          request,
+          sendRequest,
+          urlsCrawled,
+        );
+
+        uuidToPdfMapping[pdfFileName] = trimmedUrl;
+        return;
+      }
+
       const contentType = response.headers()['content-type'];
       const status = response.status();
 
@@ -104,7 +140,7 @@ const crawlSitemap = async (
 
       pagesCrawled += 1;
 
-      if (status === 200 && isWhitelistedContentType(contentType)) {
+      if (isScanHtml && status === 200 && isWhitelistedContentType(contentType)) {
         const results = await runAxeScript(needsReview, page);
         guiInfoLog(guiInfoStatusTypes.SCANNED, {
           numScanned: urlsCrawled.scanned.length,
@@ -148,7 +184,7 @@ const crawlSitemap = async (
           urlScanned: request.url,
         });
 
-        urlsCrawled.invalid.push(actualUrl);
+        isScanHtml && urlsCrawled.invalid.push(actualUrl);
       }
     },
     failedRequestHandler,
@@ -157,7 +193,23 @@ const crawlSitemap = async (
   });
 
   await crawler.run();
+
   await requestList.isFinished();
+
+  if (pdfDownloads.length > 0) {
+    // wait for pdf downloads to complete
+    await Promise.all(pdfDownloads);
+
+    // scan and process pdf documents
+    await runPdfScan(randomToken);
+
+    // transform result format
+    const pdfResults = mapPdfScanResults(randomToken, uuidToPdfMapping);
+
+    // push results for each pdf document to key value store
+    await Promise.all(pdfResults.map(result => dataset.pushData(result)));
+  }
+
   guiInfoLog(guiInfoStatusTypes.COMPLETED);
   return urlsCrawled;
 };

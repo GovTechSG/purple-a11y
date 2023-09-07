@@ -17,6 +17,47 @@ if (-Not (Test-Path nodejs-win\node.exe)) {
     Remove-Item -Force .\nodejs-win.zip
 }
 
+# Install Coretto-11
+if (-Not (Test-Path jre\bin\java.exe)) {
+    if (-Not (Test-Path jdk\bin\java.exe)) {
+        Write-Output "Downloading Corretto-11"
+        Invoke-WebRequest -o ./corretto-11.zip "https://corretto.aws/downloads/latest/amazon-corretto-11-x64-windows-jdk.zip"     
+        
+        Write-Output "Unzip Corretto-11"
+        Expand-Archive .\corretto-11.zip -DestinationPath .
+        Get-ChildItem ./jdk* -Directory | Rename-Item -NewName jdk
+        Remove-Item -Force .\corretto-11.zip
+    }
+
+    Write-Output "Set path to JDK"
+    $env:JAVA_HOME = "$PWD\jdk"
+    $env:Path = "$env:JAVA_HOME\bin;$env:Path"
+
+    Write-Output "Build JRE SE"
+    jlink --output jre --add-modules java.se
+
+    Write-Output "Remove JDK"
+    Remove-Item -Force .\JDK -recurse
+}
+
+# Install VeraPDF
+if (-Not (Test-Path verapdf\verapdf.bat)) {
+    Write-Output "INFO: Downloading VeraPDF"
+    Invoke-WebRequest -o .\verapdf-installer.zip "http://downloads.verapdf.org/rel/verapdf-installer.zip"
+    Expand-Archive .\verapdf-installer.zip -DestinationPath .
+    Get-ChildItem ./verapdf-greenfield-* -Directory | Rename-Item -NewName verapdf-installer
+
+    Write-Output "INFO: Set path to JRE for this session"
+    $env:JAVA_HOME = "$PWD\jre"
+    $env:Path = "$env:JAVA_HOME\bin;$env:Path"
+
+    Write-Output "INFO: Installing VeraPDF"
+    .\verapdf-installer\verapdf-install "$PWD\verapdf-auto-install-windows.xml"
+    Move-Item -Path C:\Windows\Temp\verapdf -Destination verapdf
+    Remove-Item -Force -Path .\verapdf-installer.zip 
+    Remove-Item -Force -Path .\verapdf-installer -recurse
+}
+
 # Install Node dependencies
 if (Test-Path purple-hats) {
     Write-Output "Installing node dependencies"

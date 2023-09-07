@@ -4,6 +4,7 @@ import {
   preNavigationHooks,
   runAxeScript,
   failedRequestHandler,
+  isUrlPdf,
 } from './commonCrawlerFunc.js';
 import constants, {
   basicAuthRegex,
@@ -16,6 +17,8 @@ import {
   isSkippedUrl,
 } from '../constants/common.js';
 import { areLinksEqual } from '../utils.js';
+import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
+import fs from 'fs';
 import { guiInfoLog } from '../logs.js';
 
 const crawlDomain = async (
@@ -29,14 +32,23 @@ const crawlDomain = async (
   strategy,
   specifiedMaxConcurrency,
   needsReviewItems,
+  fileTypes,
   blacklistedPatterns,
 ) => {
-  const needsReview = needsReviewItems;
+  let needsReview = needsReviewItems;
+  const isScanHtml = ['all', 'html-only'].includes(fileTypes);
+  const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
   const urlsCrawled = { ...constants.urlsCrawledObj };
   const { maxConcurrency } = constants;
   const { playwrightDeviceDetailsObject } = viewportSettings;
 
   const { dataset, requestQueue } = await createCrawleeSubFolders(randomToken);
+  const pdfDownloads = [];
+  const uuidToPdfMapping = {};
+
+  if (!fs.existsSync(randomToken)) {
+    fs.mkdirSync(randomToken);
+  }
 
   let finalUrl;
   let pagesCrawled;
@@ -57,10 +69,10 @@ const crawlDomain = async (
 
     // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
     finalUrl = `${url.split('://')[0]}://${url.split('@')[1]}`;
-    await requestQueue.addRequest({ url: finalUrl });
+    await requestQueue.addRequest({ url: finalUrl, skipNavigation: isUrlPdf(finalUrl) });
     pagesCrawled = -1;
   } else {
-    await requestQueue.addRequest({ url });
+    await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
     pagesCrawled = 0;
   }
 
@@ -72,6 +84,10 @@ const crawlDomain = async (
       requestQueue,
       transformRequestFunction(req) {
         req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+        if (isUrlPdf(req.url)) {
+          // playwright headless mode does not support navigation to pdf document
+          req.skipNavigation = true;
+        }
         return req;
       },
     });
@@ -84,6 +100,10 @@ const crawlDomain = async (
       selector: ':not(a):is(*[role="link"], button[onclick])',
       transformRequestFunction(req) {
         req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+        if (isUrlPdf(req.url)) {
+          // playwright headless mode does not support navigation to pdf document
+          req.skipNavigation = true;
+        }
         return req;
       },
     });
@@ -114,6 +134,7 @@ const crawlDomain = async (
       page,
       request,
       response,
+      sendRequest,
       enqueueLinks,
       enqueueLinksByClickingElements,
     }) => {
@@ -132,6 +153,28 @@ const crawlDomain = async (
       if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
         urlsCrawled.userExcluded.push(request.url);
         await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);
+        return;
+      }
+
+      // handle pdfs
+      if (request.skipNavigation && isUrlPdf(actualUrl)) {
+        if (!isScanPdfs) {
+          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: request.url,
+          });
+          urlsCrawled.blacklisted.push(request.url);
+          return;
+        }
+        const { pdfFileName, trimmedUrl } = handlePdfDownload(
+          randomToken,
+          pdfDownloads,
+          request,
+          sendRequest,
+          urlsCrawled,
+        );
+
+        uuidToPdfMapping[pdfFileName] = trimmedUrl;
         return;
       }
 
@@ -164,44 +207,52 @@ const crawlDomain = async (
       if (isBasicAuth) {
         isBasicAuth = false;
       } else if (location.host.includes(host)) {
-        const results = await runAxeScript(needsReview, page);
-        guiInfoLog(guiInfoStatusTypes.SCANNED, {
-          numScanned: urlsCrawled.scanned.length,
-          urlScanned: request.url,
-        });
+        if (isScanHtml) {
+          const results = await runAxeScript(needsReview, page);
+          guiInfoLog(guiInfoStatusTypes.SCANNED, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: request.url,
+          });
 
-        // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
-        const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
-        if (isRedirected) {
-          const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
-            item => (item.actualUrl || item.url) === request.loadedUrl,
-          );
+          // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
+          const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
+          if (isRedirected) {
+            const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
+              item => (item.actualUrl || item.url) === request.loadedUrl,
+            );
 
-          if (isLoadedUrlInCrawledUrls) {
-            urlsCrawled.notScannedRedirects.push({
+            if (isLoadedUrlInCrawledUrls) {
+              urlsCrawled.notScannedRedirects.push({
+                fromUrl: request.url,
+                toUrl: request.loadedUrl, // i.e. actualUrl
+              });
+              return;
+            }
+
+            urlsCrawled.scanned.push({
+              url: request.url,
+              pageTitle: results.pageTitle,
+              actualUrl: request.loadedUrl, // i.e. actualUrl
+            });
+
+            urlsCrawled.scannedRedirects.push({
               fromUrl: request.url,
               toUrl: request.loadedUrl, // i.e. actualUrl
             });
-            return;
+
+            results.url = request.url;
+            results.actualUrl = request.loadedUrl;
+          } else {
+            urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
           }
-
-          urlsCrawled.scanned.push({
-            url: request.url,
-            pageTitle: results.pageTitle,
-            actualUrl: request.loadedUrl, // i.e. actualUrl
-          });
-
-          urlsCrawled.scannedRedirects.push({
-            fromUrl: request.url,
-            toUrl: request.loadedUrl, // i.e. actualUrl
-          });
-
-          results.url = request.url;
-          results.actualUrl = request.loadedUrl;
+          await dataset.pushData(results);
         } else {
-          urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
+          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: request.url,
+          });
+          urlsCrawled.blacklisted.push(request.url);
         }
-        await dataset.pushData(results);
 
         await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);
       } else {
@@ -218,6 +269,21 @@ const crawlDomain = async (
   });
 
   await crawler.run();
+
+  if (pdfDownloads.length > 0) {
+    // wait for pdf downloads to complete
+    await Promise.all(pdfDownloads);
+
+    // scan and process pdf documents
+    await runPdfScan(randomToken);
+
+    // transform result format
+    const pdfResults = mapPdfScanResults(randomToken, uuidToPdfMapping);
+
+    // push results for each pdf document to key value store
+    await Promise.all(pdfResults.map(result => dataset.pushData(result)));
+  }
+
   guiInfoLog(guiInfoStatusTypes.COMPLETED);
   return urlsCrawled;
 };

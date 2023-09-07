@@ -6,7 +6,7 @@ import validator from 'validator';
 import axios from 'axios';
 import { JSDOM } from 'jsdom';
 import * as cheerio from 'cheerio';
-import crawlee from 'crawlee';
+import crawlee, { Request } from 'crawlee';
 import { parseString } from 'xml2js';
 import fs from 'fs';
 import path from 'path';
@@ -25,6 +25,7 @@ import constants, {
   mutedAttributeValues,
 } from './constants.js';
 import { silentLogger } from '../logs.js';
+import { isUrlPdf } from '../crawlers/commonCrawlerFunc.js';
 
 // Drop all attributes from the HTML snippet except whitelisted
 export const dropAllExceptWhitelisted = htmlSnippet => {
@@ -287,64 +288,64 @@ export const sanitizeUrlInput = url => {
   return data;
 };
 
-const checkUrlConnectivity = async url => {
+const requestToUrl = async url => {
+  // User-Agent is modified to emulate a browser to handle cases where some sites ban non browser agents, resulting in a 403 error
   const res = {};
+  await axios
+    .get(url, {
+      headers: { 'User-Agent': devices['Desktop Chrome HiDPI'].userAgent },
+      httpsAgent,
+      timeout: 2000,
+    })
+    .then(async response => {
+      const redirectUrl = response.request.res.responseUrl;
+      res.status = constants.urlCheckStatuses.success.code;
 
+      if (redirectUrl != null) {
+        res.url = redirectUrl;
+      } else {
+        res.url = url;
+      }
+
+      res.content = response.data;
+    })
+    .catch(async error => {
+      if (error.code === 'ECONNABORTED') {
+        res.status = constants.urlCheckStatuses.axiosTimeout.code;
+      } else if (error.response) {
+        if (error.response.status === 401) {
+          // enters here if URL is protected by basic auth
+          res.status = constants.urlCheckStatuses.unauthorised.code;
+        } else {
+          // enters here if server responds with a status other than 2xx
+          // the scan should still proceed even if error codes are received, so that accessibility scans for error pages can be done too
+          res.status = constants.urlCheckStatuses.success.code;
+        }
+        res.url = url;
+        res.content = error.response.data;
+        return res;
+      } else if (error.request) {
+        // enters here if URL cannot be accessed
+        res.status = constants.urlCheckStatuses.cannotBeResolved.code;
+      } else {
+        res.status = constants.urlCheckStatuses.systemError.code;
+      }
+      silentLogger.error(error);
+    });
+  return res;
+};
+
+const checkUrlConnectivity = async url => {
   const data = sanitizeUrlInput(url);
 
   if (data.isValid) {
     // Validate the connectivity of URL if the string format is url format
-    // User-Agent is modified to emulate a browser to handle cases where some sites ban non browser agents, resulting in a 403 error
-    await axios
-      .get(data.url, {
-        headers: { 'User-Agent': devices['Desktop Chrome HiDPI'].userAgent },
-        httpsAgent,
-        timeout: 2000,
-      })
-      .then(async response => {
-        const redirectUrl = response.request.res.responseUrl;
-        res.status = constants.urlCheckStatuses.success.code;
-
-        if (redirectUrl != null) {
-          res.url = redirectUrl;
-        } else {
-          res.url = url;
-        }
-
-        res.content = response.data;
-      })
-      .catch(async error => {
-        if (error.code === 'ECONNABORTED') {
-          res.status = constants.urlCheckStatuses.axiosTimeout.code;
-          return res;
-        }
-        if (error.response) {
-          if (error.response.status === 401) {
-            // enters here if URL is protected by basic auth
-            res.status = constants.urlCheckStatuses.unauthorised.code;
-          } else {
-            // enters here if server responds with a status other than 2xx
-            // the scan should still proceed even if error codes are received, so that accessibility scans for error pages can be done too
-            res.status = constants.urlCheckStatuses.success.code;
-          }
-          res.url = url;
-          res.content = error.response.data;
-          return res;
-        }
-        if (error.request) {
-          // enters here if URL cannot be accessed
-          res.status = constants.urlCheckStatuses.cannotBeResolved.code;
-        } else {
-          res.status = constants.urlCheckStatuses.systemError.code;
-        }
-        silentLogger.error(error);
-      });
-  } else {
-    // enters here if input is not a URL or not using http/https protocols
-    res.status = constants.urlCheckStatuses.invalidUrl.code;
+    const res = await requestToUrl(data.url);
+    return res;
   }
 
-  return res;
+  // reaches here if input is not a URL or not using http/https protocols
+  return { status: constants.urlCheckStatuses.invalidUrl.code };
 };
 
 const checkUrlConnectivityWithBrowser = async (
@@ -392,6 +393,12 @@ const checkUrlConnectivityWithBrowser = async (
     // method will not throw an error when any valid HTTP status code is returned by the remote server, including 404 "Not Found" and 500 "Internal Server Error".
     // navigation to about:blank or navigation to the same URL with a different hash, which would succeed and return null.
     try {
+      // playwright headless mode does not support navigation to pdf document
+      if (isUrlPdf(url)) {
+        // make http request to url to check
+        return await requestToUrl(url);
+      }
+
       const response = await page.goto(url, {
         timeout: 30000,
         ...(proxy && { waitUntil: 'commit' }),
@@ -520,6 +527,7 @@ export const prepareData = argv => {
     customFlowLabel,
     specifiedMaxConcurrency,
     needsReviewItems,
+    fileTypes,
     blacklistedPatternsFilename,
   } = argv;
 
@@ -546,6 +554,7 @@ export const prepareData = argv => {
     specifiedMaxConcurrency,
     needsReviewItems,
     randomToken: resultFilename,
+    fileTypes,
     blacklistedPatternsFilename,
   };
 };
@@ -556,9 +565,18 @@ export const getLinksFromSitemap = async (
   browser,
   userDataDirectory,
 ) => {
-  const urls = new Set(); // for HTML documents
+  const urls = {}; // dictionary of requests to urls to be scanned
 
   const isLimitReached = () => urls.size >= maxLinksCount;
+
+  const addToUrlList = url => {
+    if (!url) return;
+    const request = new Request({ url });
+    if (isUrlPdf(url)) {
+      request.skipNavigation = true;
+    }
+    urls[url] = request;
+  };
 
   const processXmlSitemap = async ($, sitemapType, selector) => {
     for (const urlElement of $(selector)) {
@@ -571,13 +589,15 @@ export const getLinksFromSitemap = async (
       } else {
         url = $(urlElement).text();
       }
-      urls.add(url);
+      addToUrlList(url);
     }
   };
 
   const processNonStandardSitemap = data => {
     const urlsFromData = crawlee.extractUrls({ string: data }).slice(0, maxLinksCount);
-    urlsFromData.forEach(url => urls.add(url));
+    urlsFromData.forEach(url => {
+      addToUrlList(url);
+    });
   };
 
   let finalUserDataDirectory = userDataDirectory;
@@ -624,6 +644,10 @@ export const getLinksFromSitemap = async (
     };
 
     if (validator.isURL(url, urlOptions)) {
+      if (isUrlPdf(url)) {
+        addToUrlList(url);
+        return;
+      }
       if (proxy) {
         await getDataUsingPlaywright();
       } else {
@@ -698,7 +722,8 @@ export const getLinksFromSitemap = async (
   };
 
   await fetchUrls(sitemapUrl);
-  return Array.from(urls);
+  const requestList = Object.values(urls);
+  return requestList;
 };
 
 export const validEmail = email => {

@@ -73,7 +73,6 @@ export const blackListedFileExtensions = [
   'svg',
   'gif',
   'woff',
-  'pdf',
   'zip',
   'webp',
 ];
@@ -168,8 +167,16 @@ export const getExecutablePath = function (dir, file) {
 
     if (execInPATH) {
       return fs.realpathSync(execInPATH);
+    } else {
+      const splitPath =
+        os.platform() === 'win32' ? process.env.PATH.split(';') : process.env.PATH.split(':');
+
+      for (let path in splitPath) {
+        execPaths = globSync(path + '/' + file, { absolute: true, recursive: true, nodir: true });
+        if (execPaths.length !== 0) return fs.realpathSync(execPaths[0]);
+      }
+      return null;
     }
-    return null;
   } else {
     removeQuarantineFlag(execPaths[0]);
     return execPaths[0];
@@ -333,6 +340,7 @@ export default {
   xmlSitemapTypes,
   urlCheckStatuses,
   launcher: chromium,
+  pdfScanResultFileName: 'pdf-scan-results.json',
 };
 
 export const rootPath = __dirname;

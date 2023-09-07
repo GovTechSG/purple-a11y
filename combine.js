@@ -27,6 +27,7 @@ const combineRun = async (details, deviceToScan) => {
     strategy,
     specifiedMaxConcurrency,
     needsReviewItems,
+    fileTypes,
     blacklistedPatternsFilename,
   } = envDetails;
 
@@ -76,6 +77,7 @@ const combineRun = async (details, deviceToScan) => {
         userDataDirectory,
         specifiedMaxConcurrency,
         needsReviewItems,
+        fileTypes,
         blacklistedPatterns,
       );
       break;
@@ -92,6 +94,7 @@ const combineRun = async (details, deviceToScan) => {
         strategy,
         specifiedMaxConcurrency,
         needsReviewItems,
+        fileTypes,
         blacklistedPatterns,
       );
       break;

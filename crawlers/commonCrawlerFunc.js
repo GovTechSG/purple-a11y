@@ -131,3 +131,7 @@ export const failedRequestHandler = async ({ request }) => {
   guiInfoLog(guiInfoStatusTypes.ERROR, { numScanned: 0, urlScanned: request.url });
   crawlee.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
 };
+
+export const isUrlPdf = (url) => {
+  return url.split('.').pop() === 'pdf'; 
+}
