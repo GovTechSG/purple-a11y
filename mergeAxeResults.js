@@ -136,12 +136,18 @@ const writeCsv = async (pageResults, storagePath) => {
         const rule = rules[ruleId];
         const { description, helpUrl, conformance, items } = rule;
         // we filter out the below as it represents the A/AA/AAA level, not the clause itself
-        const clauses = conformance.filter(
+        const clausesArr = conformance.filter(
           clause => !['wcag2a', 'wcag2aa', 'wcag2aaa'].includes(clause),
         );
+        // format clauses as a string
+        const clauses = clausesArr.join(',');
+
         for (let item of items) {
           const { html, message, page } = item;
-          const context = html ? html : page;
+          const howToFix = message.replace(/(\r\n|\n|\r)/g, ' '); // remove newlines
+
+          const violation = html ? html : page;
+          const context = violation.replace(/(\r\n|\n|\r)/g, ''); // remove newlines
           results.push({
             id: crypto.randomUUID(),
             ...baseObj,
@@ -151,7 +157,7 @@ const writeCsv = async (pageResults, storagePath) => {
             helpUrl,
             clauses,
             context,
-            howToFix: message,
+            howToFix,
           });
         }
       }
