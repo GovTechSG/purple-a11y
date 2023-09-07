@@ -1,7 +1,7 @@
-import constants, { getExecutablePath } from '../constants/constants.js';
+import constants, { getExecutablePath, guiInfoStatusTypes } from '../constants/constants.js';
 import { exec, spawnSync } from 'child_process';
 import { globSync } from 'glob';
-import { consoleLogger, silentLogger } from '../logs.js';
+import { consoleLogger, guiInfoLog, silentLogger } from '../logs.js';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
 import { createRequire } from 'module';
@@ -113,14 +113,16 @@ export const handlePdfDownload = (randomToken, pdfDownloads, request, sendReques
         downloadFile.end();
         const buf = Buffer.concat(bufs);
         if (isPDF(buf)) {
-          process.env.RUNNING_FROM_PH_GUI &&
-            console.log(`Electron crawling::${urlsCrawled.scanned.length}::scanned::${trimmedUrl}`);
+          guiInfoLog(guiInfoStatusTypes.SCANNED, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: request.url,
+          });
           urlsCrawled.scanned.push({ url: trimmedUrl, pageTitle });
         } else {
-          process.env.RUNNING_FROM_PH_GUI &&
-            console.log(
-              `Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`,
-            );
+          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: request.url,
+          });
           urlsCrawled.invalid.push(trimmedUrl);
         }
         resolve();
@@ -128,9 +130,7 @@ export const handlePdfDownload = (randomToken, pdfDownloads, request, sendReques
     }),
   );
 
-  // function to save current uuid -> url mapping to an existing dictionary
-  const appendMapping = map => (map[pdfFileName] = trimmedUrl);
-  return appendMapping;
+  return { pdfFileName, trimmedUrl };
 };
 
 export const runPdfScan = async randomToken => {

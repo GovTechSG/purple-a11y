@@ -109,9 +109,6 @@ const combineRun = async (details, deviceToScan) => {
 
   if (scanDetails.urlsCrawled.scanned.length > 0) {
     await createAndUpdateResultsFolders(randomToken);
-  }
-
-  if (scanDetails.urlsCrawled.scanned.length > 0) {
     const basicFormHTMLSnippet = await generateArtifacts(
       randomToken,
       url,

@@ -288,8 +288,9 @@ export const sanitizeUrlInput = url => {
   return data;
 };
 
-const requestToUrl = async (url, res) => {
+const requestToUrl = async url => {
   // User-Agent is modified to emulate a browser to handle cases where some sites ban non browser agents, resulting in a 403 error
+  const res = {};
   await axios
     .get(url, {
       headers: { 'User-Agent': devices['Desktop Chrome HiDPI'].userAgent },
@@ -311,9 +312,7 @@ const requestToUrl = async (url, res) => {
     .catch(async error => {
       if (error.code === 'ECONNABORTED') {
         res.status = constants.urlCheckStatuses.axiosTimeout.code;
-        return res;
-      }
-      if (error.response) {
+      } else if (error.response) {
         if (error.response.status === 401) {
           // enters here if URL is protected by basic auth
           res.status = constants.urlCheckStatuses.unauthorised.code;
@@ -325,8 +324,7 @@ const requestToUrl = async (url, res) => {
         res.url = url;
         res.content = error.response.data;
         return res;
-      }
-      if (error.request) {
+      } else if (error.request) {
         // enters here if URL cannot be accessed
         res.status = constants.urlCheckStatuses.cannotBeResolved.code;
       } else {
@@ -334,22 +332,20 @@ const requestToUrl = async (url, res) => {
       }
       silentLogger.error(error);
     });
+  return res;
 };
 
 const checkUrlConnectivity = async url => {
-  const res = {};
-
   const data = sanitizeUrlInput(url);
 
   if (data.isValid) {
     // Validate the connectivity of URL if the string format is url format
-    await requestToUrl(data.url, res);
-  } else {
-    // enters here if input is not a URL or not using http/https protocols
-    res.status = constants.urlCheckStatuses.invalidUrl.code;
+    const res = await requestToUrl(data.url);
+    return res;
   }
 
-  return res;
+  // reaches here if input is not a URL or not using http/https protocols
+  return { status: constants.urlCheckStatuses.invalidUrl.code };
 };
 
 const checkUrlConnectivityWithBrowser = async (
@@ -400,9 +396,7 @@ const checkUrlConnectivityWithBrowser = async (
       // playwright headless mode does not support navigation to pdf document
       if (isUrlPdf(url)) {
         // make http request to url to check
-        const res = {};
-        await requestToUrl(url, res);
-        return res;
+        return await requestToUrl(url);
       }
 
       const response = await page.goto(url, {
@@ -576,6 +570,7 @@ export const getLinksFromSitemap = async (
   const isLimitReached = () => urls.size >= maxLinksCount;
 
   const addToUrlList = url => {
+    if (!url) return;
     const request = new Request({ url });
     if (isUrlPdf(url)) {
       request.skipNavigation = true;
@@ -594,7 +589,7 @@ export const getLinksFromSitemap = async (
       } else {
         url = $(urlElement).text();
       }
-      url && addToUrlList(url);
+      addToUrlList(url);
     }
   };
 

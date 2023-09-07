@@ -163,16 +163,18 @@ const crawlDomain = async (
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
+          urlsCrawled.blacklisted.push(request.url);
           return;
         }
-        const appendMapping = handlePdfDownload(
+        const { pdfFileName, trimmedUrl } = handlePdfDownload(
           randomToken,
           pdfDownloads,
           request,
           sendRequest,
           urlsCrawled,
         );
-        appendMapping(uuidToPdfMapping);
+
+        uuidToPdfMapping[pdfFileName] = trimmedUrl;
         return;
       }
 
@@ -249,6 +251,7 @@ const crawlDomain = async (
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
+          urlsCrawled.blacklisted.push(request.url);
         }
 
         await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);

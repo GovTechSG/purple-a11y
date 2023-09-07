@@ -87,17 +87,19 @@ const crawlSitemap = async (
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
+          urlsCrawled.blacklisted.push(request.url);
           return;
         }
         // pushes download promise into pdfDownloads
-        const appendMapping = handlePdfDownload(
+        const { pdfFileName, trimmedUrl } = handlePdfDownload(
           randomToken,
           pdfDownloads,
           request,
           sendRequest,
           urlsCrawled,
         );
-        appendMapping(uuidToPdfMapping);
+
+        uuidToPdfMapping[pdfFileName] = trimmedUrl;
         return;
       }
 
