@@ -36,7 +36,9 @@ else
     export PATH="$PWD/node_modules/.bin:$PATH"
 fi
 
-source "$__dir/install_corretto.command"
+echo "INFO: Set path to Java JRE"
+export JAVA_HOME="$(PWD)/jre"
+export PATH="$JAVA_HOME/bin:$PATH"
 
 echo "INFO: Set path to Playwright cache for this session"
 export PLAYWRIGHT_BROWSERS_PATH="$PWD/ms-playwright"
