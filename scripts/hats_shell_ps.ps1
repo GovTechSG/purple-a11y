@@ -22,8 +22,8 @@ echo "INFO: Set path to Playwright cache for this session"
 $env:PLAYWRIGHT_BROWSERS_PATH = "$path_to_hats\ms-playwright"
 $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "true"
 
-echo "INFO: Set path to JDK for this session"
-$env:JAVA_HOME = "$path_to_hats\jdk"
+echo "INFO: Set path to JRE for this session"
+$env:JAVA_HOME = "$path_to_hats\jre"
 $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 
 echo "INFO: Set path to VeraPDF for this session"
