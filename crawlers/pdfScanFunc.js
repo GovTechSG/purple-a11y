@@ -6,27 +6,28 @@ import fs from 'fs';
 import { randomUUID } from 'crypto';
 import { createRequire } from 'module';
 import os from 'os';
-import path from 'path'; 
+import path from 'path';
 
-const require = createRequire(import.meta.url); 
+const require = createRequire(import.meta.url);
 
-// CONSTANTS 
+// CONSTANTS
 
-// AAA: 1.4.8, 2.4.9 
-// AA: 1.3.4, 1.4.3, 1.4.4, 1.4.10 
+// AAA: 1.4.8, 2.4.9
+// AA: 1.3.4, 1.4.3, 1.4.4, 1.4.10
 // A: 1.3.1, 4.1.1, 4.1.2
-const level2aaa = ['2.4.9', '1.4.8'];
-const level2aa = ['1.3.4', '1.4.3', '1.4.4', '1.4.10']; 
-const level2a = ['1.3.1', '4.1.1', '4.1.2'];
-const clauseToLevel = { // mapping of clause to its A/AA/AAA level
-  ...(level2aa.reduce((prev, curr) => {
+const LEVEL_AAA = ['2.4.9', '1.4.8'];
+const LEVEL_AA = ['1.3.4', '1.4.3', '1.4.4', '1.4.10'];
+const LEVEL_A = ['1.3.1', '4.1.1', '4.1.2'];
+const clauseToLevel = {
+  // mapping of clause to its A/AA/AAA level
+  ...LEVEL_AA.reduce((prev, curr) => {
     prev[curr] = 'wcag2aa';
-    return prev; 
-  }, {})),
-  ...(level2a.reduce((prev, curr) => {
+    return prev;
+  }, {}),
+  ...LEVEL_A.reduce((prev, curr) => {
     prev[curr] = 'wcag2a';
-    return prev; 
-  }, {}))
+    return prev;
+  }, {}),
 };
 
 const metaToCategoryMap = {
@@ -34,7 +35,18 @@ const metaToCategoryMap = {
   error: 'goodToFix',
   serious: 'goodToFix',
   warning: 'goodToFix',
-  ignore: 'goodToFix'
+  ignore: 'goodToFix',
+};
+
+const EXCLUDED_RULES = {
+  '1.3.4': { 1: true }, // test for page orientation deemed a false positive, so its excluded
+};
+
+const isRuleExcluded = rule => {
+  const isExcluded = EXCLUDED_RULES[rule.clause]
+    ? EXCLUDED_RULES[rule.clause][rule.testNumber]
+    : false;
+  return isExcluded || LEVEL_AAA.includes(rule.clause);
 };
 
 const getVeraExecutable = () => {
@@ -71,22 +83,22 @@ const getVeraProfile = () => {
   return veraPdfProfile[0];
 };
 
-const isPDF = (buffer) => {
+const isPDF = buffer => {
   return (
-    Buffer.isBuffer(buffer) && buffer.lastIndexOf("%PDF-") === 0 && buffer.lastIndexOf("%%EOF") > -1
+    Buffer.isBuffer(buffer) && buffer.lastIndexOf('%PDF-') === 0 && buffer.lastIndexOf('%%EOF') > -1
   );
-}
+};
 
 export const handlePdfDownload = (randomToken, pdfDownloads, request, sendRequest, urlsCrawled) => {
   const pdfFileName = randomUUID();
-  const trimmedUrl = request.url.trim(); 
+  const trimmedUrl = request.url.trim();
   const pageTitle = decodeURI(trimmedUrl).split('/').pop();
-  
+
   pdfDownloads.push(
-    new Promise(async (resolve) => {
+    new Promise(async resolve => {
       const pdfResponse = await sendRequest({ responseType: 'buffer', isStream: true });
       pdfResponse.setEncoding('binary');
-    
+
       const bufs = []; // to check for pdf validity
       const downloadFile = fs.createWriteStream(`${randomToken}/${pdfFileName}.pdf`, {
         flags: 'a',
@@ -94,19 +106,21 @@ export const handlePdfDownload = (randomToken, pdfDownloads, request, sendReques
 
       pdfResponse.on('data', chunk => {
         downloadFile.write(chunk, 'binary');
-        bufs.push(Buffer.from(chunk)); 
+        bufs.push(Buffer.from(chunk));
       });
 
       pdfResponse.on('end', () => {
         downloadFile.end();
         const buf = Buffer.concat(bufs);
         if (isPDF(buf)) {
-          process.env.RUNNING_FROM_PH_GUI
-            && console.log(`Electron crawling::${urlsCrawled.scanned.length}::scanned::${trimmedUrl}`); 
-          urlsCrawled.scanned.push({ url: trimmedUrl, pageTitle }); 
+          process.env.RUNNING_FROM_PH_GUI &&
+            console.log(`Electron crawling::${urlsCrawled.scanned.length}::scanned::${trimmedUrl}`);
+          urlsCrawled.scanned.push({ url: trimmedUrl, pageTitle });
         } else {
-          process.env.RUNNING_FROM_PH_GUI
-            && console.log(`Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`); 
+          process.env.RUNNING_FROM_PH_GUI &&
+            console.log(
+              `Electron crawling::${urlsCrawled.scanned.length}::skipped::${request.url}`,
+            );
           urlsCrawled.invalid.push(trimmedUrl);
         }
         resolve();
@@ -119,13 +133,14 @@ export const handlePdfDownload = (randomToken, pdfDownloads, request, sendReques
   return appendMapping;
 };
 
-export const runPdfScan = async (randomToken) => {
+export const runPdfScan = async randomToken => {
   const execFile = getVeraExecutable();
   const veraPdfExe = '"' + execFile + '"';
   // const veraPdfProfile = getVeraProfile();
-  const veraPdfProfile = '"' 
-    + path.join(execFile, '..', 'profiles/veraPDF-validation-profiles-rel-1.24/PDF_UA/WCAG-21.xml')
-    + '"';
+  const veraPdfProfile =
+    '"' +
+    path.join(execFile, '..', 'profiles/veraPDF-validation-profiles-rel-1.24/PDF_UA/WCAG-21.xml') +
+    '"';
   if (!veraPdfExe || !veraPdfProfile) {
     process.exit(1);
   }
@@ -148,7 +163,7 @@ export const runPdfScan = async (randomToken) => {
   fs.writeFileSync(intermediateResultPath, ls.stdout, { encoding: 'utf-8' });
 };
 
-// transform results from veraPDF to desired format for report 
+// transform results from veraPDF to desired format for report
 export const mapPdfScanResults = (randomToken, uuidToUrlMapping) => {
   const intermediateFolder = randomToken;
   const intermediateResultPath = `${intermediateFolder}/${constants.pdfScanResultFileName}`;
@@ -167,35 +182,39 @@ export const mapPdfScanResults = (randomToken, uuidToUrlMapping) => {
 
   // loop through all jobs
   for (let jobIdx = 0; jobIdx < jobs.length; jobIdx++) {
-    const translated = { // transformed result for current job
+    const translated = {
+      // transformed result for current job
       goodToFix: {
         rules: {},
-        totalItems: 0, 
+        totalItems: 0,
       },
       mustFix: {
         rules: {},
-        totalItems: 0, 
-      }
+        totalItems: 0,
+      },
     };
 
     const { itemDetails, validationResult } = jobs[jobIdx];
     const { name: fileName } = itemDetails;
 
-    const uuid = fileName.split(os.platform() === 'win32' ? '\\' : '/')
-      .pop().split('.')[0];
-    const url = uuidToUrlMapping[uuid]
+    const uuid = fileName
+      .split(os.platform() === 'win32' ? '\\' : '/')
+      .pop()
+      .split('.')[0];
+    const url = uuidToUrlMapping[uuid];
     const pageTitle = decodeURI(url).split('/').pop();
 
     translated.url = url;
-    translated.pageTitle = pageTitle
+    translated.pageTitle = pageTitle;
 
-    if (!validationResult) { // check for error in scan
+    if (!validationResult) {
+      // check for error in scan
       consoleLogger.info(`Unable to scan ${pageTitle}, skipping`);
       continue; // skip this job
     }
 
     // destructure validation result
-    const { passedChecks, failedChecks, ruleSummaries }= validationResult.details;
+    const { passedChecks, failedChecks, ruleSummaries } = validationResult.details;
     const totalChecks = passedChecks + failedChecks;
 
     translated.totalItems = totalChecks;
@@ -203,25 +222,26 @@ export const mapPdfScanResults = (randomToken, uuidToUrlMapping) => {
     // loop through all failed rules
     for (let ruleIdx = 0; ruleIdx < ruleSummaries.length; ruleIdx++) {
       const rule = ruleSummaries[ruleIdx];
-      const { specification, testNumber, clause } = rule; 
-      if (level2aaa.includes(clause)) continue; // exclude level AAA rules
+      const { specification, testNumber, clause } = rule;
+
+      if (isRuleExcluded(rule)) continue;
       const [ruleId, transformedRule] = transformRule(rule);
 
       // ignore if violation is not in the meta file
       const meta = errorMeta[specification][clause][testNumber]?.STATUS ?? 'ignore';
-      const category = translated[metaToCategoryMap[meta]]; 
+      const category = translated[metaToCategoryMap[meta]];
 
       category.rules[ruleId] = transformedRule;
       category.totalItems += transformedRule.totalItems;
     }
 
-    resultsList.push(translated); 
+    resultsList.push(translated);
   }
   return resultsList;
 };
 
-const getPageFromContext = (context) => {
-  const path = context.split('/')
+const getPageFromContext = context => {
+  const path = context.split('/');
   let pageNumber = -1;
   if (context?.includes('pages') && path[path.length - 1].startsWith('pages')) {
     path.forEach(nodeString => {
@@ -233,7 +253,7 @@ const getPageFromContext = (context) => {
   return pageNumber;
 };
 
-const transformRule = (rule) => {
+const transformRule = rule => {
   // get specific rule
   const transformed = {};
   const { specification, description, clause, testNumber, checks } = rule;
@@ -254,6 +274,6 @@ const transformRule = (rule) => {
     transformed.items.push({ message: errorMessage, page: getPageFromContext(context) });
   }
   const ruleId = `pdf-${specification}-${clause}-${testNumber}`.replaceAll(' ', '_');
-  
-  return [ruleId, transformed]; 
+
+  return [ruleId, transformed];
 };
