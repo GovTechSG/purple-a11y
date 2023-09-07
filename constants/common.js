@@ -295,7 +295,7 @@ const requestToUrl = async url => {
     .get(url, {
       headers: { 'User-Agent': devices['Desktop Chrome HiDPI'].userAgent },
       httpsAgent,
-      timeout: 10,
+      timeout: 2000,
     })
     .then(async response => {
       const redirectUrl = response.request.res.responseUrl;
@@ -657,7 +657,7 @@ export const getLinksFromSitemap = async (
               rejectUnauthorized: false,
             }),
           });
-          data = await (await instance.get(url, { timeout: 10 })).data;
+          data = await (await instance.get(url, { timeout: 2000 })).data;
         } catch (error) {
           if (error.code === 'ECONNABORTED') {
             await getDataUsingPlaywright();
@@ -1258,7 +1258,7 @@ export const submitForm = async (
     await submitFormViaPlaywright(browserToRun, userDataDirectory, finalUrl);
   } else {
     try {
-      await axios.get(finalUrl, { timeout: 10 });
+      await axios.get(finalUrl, { timeout: 2000 });
     } catch (error) {
       if (error.code === 'ECONNABORTED') {
         if (browserToRun || constants.launcher === webkit) {
