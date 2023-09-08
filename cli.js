@@ -27,6 +27,8 @@ import { cliOptions, messageOptions } from './constants/cliFunctions.js';
 import combineRun from './combine.js';
 import playwrightAxeGenerator from './playwrightAxeGenerator.js';
 import { silentLogger } from './logs.js';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
 const appVersion = getVersion();
 const yargs = _yargs(hideBin(process.argv));
@@ -178,15 +180,18 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return option;
   })
   .coerce('x', option => {
-    const validationErrors = validateFilePath(option);
-    if (validationErrors) {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
+    try {
+      return validateFilePath(option, __dirname);
+    } catch (err) {
       printMessage(
         [`Invalid blacklistedPatternsFilename file path. ${validationErrors}`],
         messageOptions,
       );
       process.exit(1);
     }
-    return option;
   })
   .coerce('i', option => {
     const { choices } = cliOptions.i;
