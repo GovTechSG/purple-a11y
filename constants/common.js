@@ -57,24 +57,25 @@ export const validateDirPath = dirPath => {
 
 // validateFilePath validates a provided file path
 // returns null if no error
-export const validateFilePath = filePath => {
+export const validateFilePath = (filePath, cliDir) => {
   if (typeof filePath !== 'string') {
-    return 'Please provide string value of file path.';
+    throw new Error('Please provide string value of file path.');
   }
 
+  const absolutePath = path.isAbsolute(filePath) ? filePath : path.resolve(cliDir, filePath);
   try {
-    fs.accessSync(filePath);
-    if (!fs.statSync(filePath).isFile()) {
-      return 'Please provide a file path.';
+    fs.accessSync(absolutePath);
+    if (!fs.statSync(absolutePath).isFile()) {
+      throw new Error('Please provide a file path.');
     }
 
-    if (path.extname(filePath) !== '.txt') {
-      return 'Please provide a file with txt extension.';
+    if (path.extname(absolutePath) !== '.txt') {
+      throw new Error('Please provide a file with txt extension.');
     }
 
-    return null;
+    return absolutePath;
   } catch (error) {
-    return 'Please ensure path provided exists.';
+    throw new Error('Please ensure path provided exists.');
   }
 };
 
