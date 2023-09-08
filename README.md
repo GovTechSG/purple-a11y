@@ -11,6 +11,8 @@ This is the engine and command-line interface (CLI) for Purple HATS.  For a desk
 3. [Node.js](https://Node.js.org/en/)
 4. [Playwright](https://playwright.dev/)
 5. [Pixelmatch](https://github.com/mapbox/pixelmatch)
+6. [Corretto](https://aws.amazon.com/corretto)
+7. [VeraPDF](https://github.com/veraPDF/veraPDF-apps)
 
 ## Using Purple HATS as a NodeJS module
 
@@ -66,7 +68,7 @@ You can interact via your arrow keys.
 ```shell
 % node index
 ┌────────────────────────────────────────────────────────────┐
-│  Purple HATS (ver 0.9.1)                                   │
+│  Purple HATS (ver      )                                   │
 │  We recommend using Chrome browser for the best experience.│
 │                                                            │
 │ Welcome back User!!                                        │
@@ -85,7 +87,7 @@ Headless mode would allow you to run the scan in the background. If you would li
 ```shell
  % node index
 ┌────────────────────────────────────────────────────────────┐
-│ Purple HATS (ver 0.9.1)                                    │
+│ Purple HATS (ver      )                                    │
 │ We recommend using Chrome browser for the best experience. │
 │                                                            │
 │ Welcome back User!                                         │
@@ -100,7 +102,7 @@ Headless mode would allow you to run the scan in the background. If you would li
 ```shell
 % node index
 ┌────────────────────────────────────────────────────────────┐
-│ Purple HATS (ver 0.9.1)                                    │
+│ Purple HATS (ver      )                                     │
 │ We recommend using Chrome browser for the best experience. │
 │                                                            │
 │ Welcome back User!                                         │
@@ -136,7 +138,7 @@ If the sitemap URL provided is invalid, an error message will be prompted for yo
 ```shell
 % node index
 ┌────────────────────────────────────────────────────────────┐
-│ Purple HATS (ver 0.9.1)                                    │
+│ Purple HATS (ver      )                                    │
 │ We recommend using Chrome browser for the best experience. │
 │                                                            │
 │ Welcome back User!                                         │
@@ -160,7 +162,7 @@ If the website URL provided is invalid, an error message will be prompted for yo
 ``` shell
 % node index
 ┌────────────────────────────────────────────────────────────┐
-│ Purple HATS (ver 0.9.1)                                    │
+│ Purple HATS (ver      )                                   │
 │ We recommend using Chrome browser for the best experience. │
 │                                                            │
 │ Welcome back User!                                         │
@@ -185,7 +187,7 @@ Custom flow allows you to record a series of actions in the browser and re-play 
 ```shell
 % node index
 ┌────────────────────────────────────────────────────────────┐
-│ Purple HATS (ver 0.9.1)                                    │
+│ Purple HATS (ver      )                                   │
 │ We recommend using Chrome browser for the best experience. │
 │                                                            │
 │ Welcome back User!                                         │
@@ -265,6 +267,9 @@ Options:
   -f, --needsReviewItems  Whether to display rule items requiring manual review 
                           in report. Defaults to false.
                                                       [choices: "true", "false"]
+  -i, --fileTypes                    File types to include in the scan. Defaults
+                                      to html-only.
+       [string] [choices: "all", "pdf-only", "html-only"] [default: "html-only"]
   -x, --blacklistedPatternsFilename  Txt file that has a list of pattern of 
                                      domains to exclude from accessibility scan 
                                      separated by new line
