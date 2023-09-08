@@ -162,6 +162,7 @@ const writeCsv = async (pageResults, storagePath) => {
         }
       }
     }
+    if (results.length === 0) return {};
     return results;
   };
   const opts = {
@@ -261,7 +262,7 @@ const pushResults = async (pageResults, allIssues) => {
   allIssues.topFiveMostIssues.push({ url, pageTitle, totalIssues: totalIssuesInPage.size });
 
   ['mustFix', 'goodToFix', 'passed'].forEach(category => {
-    if (!pageResults[category]) return; 
+    if (!pageResults[category]) return;
     const { totalItems, rules } = pageResults[category];
     const currCategoryFromAllIssues = allIssues.items[category];
 
