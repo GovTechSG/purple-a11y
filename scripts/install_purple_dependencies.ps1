@@ -34,10 +34,10 @@ if (-Not (Test-Path jre\bin\java.exe)) {
     $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 
     Write-Output "Build JRE SE"
-    jlink --output jre --add-modules java.se
+    Start-Process jlink -ArgumentList "--output jre --add-modules java.se" -Wait -NoNewWindow
 
     Write-Output "Remove JDK"
-    Remove-Item -Force .\JDK -recurse
+    Remove-Item -Force .\jdk -recurse
 }
 
 # Install VeraPDF
