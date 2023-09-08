@@ -125,6 +125,10 @@ const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResu
 
 const writeCsv = async (pageResults, storagePath) => {
   const csvOutput = createWriteStream(`${storagePath}/reports/report.csv`, { encoding: 'utf8' });
+  const formatPageViolation = pageNum => {
+    if (pageNum < 0) return 'Document';
+    return `Page ${pageNum}`;
+  };
   const flattenResult = item => {
     const results = [];
     const baseObj = { url: item.url };
@@ -146,7 +150,8 @@ const writeCsv = async (pageResults, storagePath) => {
           const { html, message, page } = item;
           const howToFix = message.replace(/(\r\n|\n|\r)/g, ' '); // remove newlines
 
-          const violation = html ? html : page;
+          // page is a number, not string
+          const violation = html ? html : formatPageViolation(page);
           const context = violation.replace(/(\r\n|\n|\r)/g, ''); // remove newlines
           results.push({
             id: crypto.randomUUID(),
