@@ -316,7 +316,6 @@ const scanInit = async argvs => {
   data.userDataDirectory = clonedDataDir;
 
   printMessage([`Purple HATS version: ${appVersion}`, 'Starting scan...'], messageOptions);
-  constants.appVersion = appVersion;
 
   if (argvs.scanner === constants.scannerTypes.custom) {
     try {

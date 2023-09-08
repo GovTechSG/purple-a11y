@@ -7,7 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import ejs, { compile } from 'ejs';
 import constants from './constants/constants.js';
-import { getCurrentTime, getStoragePath } from './utils.js';
+import { getCurrentTime, getStoragePath, getVersion } from './utils.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import itemTypeDescription from './constants/itemTypeDescription.js';
 import { chromium } from 'playwright';
@@ -412,7 +412,7 @@ export const generateArtifacts = async (
   pagesScanned,
   customFlowLabel,
 ) => {
-  const phAppVersion = constants.appVersion;
+  const phAppVersion = getVersion();
   const storagePath = getStoragePath(randomToken);
   const directory = `${storagePath}/${constants.allIssueFileName}`;
   const allIssues = {
