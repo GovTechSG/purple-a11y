@@ -79,7 +79,8 @@ const runScan = async (answers) => {
   deleteClonedProfiles(browserToRun);
   answers.browserToRun = browserToRun; 
   answers.nameEmail = `${userData.name}:${userData.email}`;
-
+  answers.fileTypes = 'html-only';
+  
   const data = prepareData(answers);
   clonedDataDir = getClonedProfilesWithRandomToken(data.browser, data.randomToken); 
   data.userDataDirectory = clonedDataDir; 
