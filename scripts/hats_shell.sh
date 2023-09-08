@@ -4,8 +4,6 @@ echo "hats Shell - Created By younglim - NO WARRANTY PROVIDED"
 echo "================================================================"
 echo ""
 
-__dir="$PWD"
-
 CURR_FOLDERNAME=$(basename "$PWD")
 if [[ $CURR_FOLDERNAME = "scripts" ]]; then
   cd ..
@@ -39,6 +37,9 @@ fi
 echo "INFO: Set path to Java JRE"
 export JAVA_HOME="$(PWD)/jre"
 export PATH="$JAVA_HOME/bin:$PATH"
+
+echo "INFO: Set path to VeraPDF"
+export PATH="$PWD/verapdf:$PATH"
 
 echo "INFO: Set path to Playwright cache for this session"
 export PLAYWRIGHT_BROWSERS_PATH="$PWD/ms-playwright"
