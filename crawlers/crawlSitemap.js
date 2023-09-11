@@ -187,7 +187,11 @@ const crawlSitemap = async (
         isScanHtml && urlsCrawled.invalid.push(actualUrl);
       }
     },
-    failedRequestHandler,
+    failedRequestHandler: async ({ request }) => {
+      guiInfoLog(guiInfoStatusTypes.ERROR, { numScanned: urlsCrawled.scanned.length, urlScanned: request.url });
+      urlsCrawled.error.push(request.url);
+      crawlee.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
+    },
     maxRequestsPerCrawl,
     maxConcurrency: specifiedMaxConcurrency || maxConcurrency,
   });

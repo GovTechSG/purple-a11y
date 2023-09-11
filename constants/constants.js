@@ -199,6 +199,7 @@ const urlsCrawledObj = {
   notScannedRedirects: [],
   outOfDomain: [],
   blacklisted: [],
+  error: [],
   exceededRequests: [],
   forbidden: [],
   userExcluded: [],
