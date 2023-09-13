@@ -310,6 +310,9 @@
     border: none;
     padding: 0;
     text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
   #pagesScannedModalToggle:hover {
     color: #00339A;
@@ -340,6 +343,7 @@
   #pagesScannedModal .nav-item {
     padding: 0px; 
     border-bottom: none;
+    margin-bottom: -1px;
   }
   #pagesScannedModal .nav-link.active {
     border-bottom: 2px solid #0047FA;
@@ -353,7 +357,7 @@
     padding: 8px 16px 10px 16px;
   }
   #pagesScannedModal .badge {
-    background-color: #B5C5CA;
+    background-color: #E7ECEE;
     color: black;
     text-align: center;
     border-radius: 5px;
@@ -361,6 +365,9 @@
   #pagesScannedModal .nav-link.active > .badge {
     background-color: #0047FA;
     color: white;
+  }
+  #pagesScannedModal .not-scanned-url {
+    word-wrap: break-word;
   }
   #pagesScannedModal span {
     overflow: hidden;
