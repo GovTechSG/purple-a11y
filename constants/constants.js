@@ -327,6 +327,10 @@ const xmlSitemapTypes = {
   unknown: 4,
 };
 
+const forbiddenCharactersInDirPath = [
+  '<', '>', ':', '\"', '\\', '/', '|', '?', '*' 
+]
+
 export default {
   allIssueFileName: 'all_issues',
   cliZipFileName: 'a11y-scan-results.zip',
@@ -342,6 +346,7 @@ export default {
   urlCheckStatuses,
   launcher: chromium,
   pdfScanResultFileName: 'pdf-scan-results.json',
+  forbiddenCharactersInDirPath
 };
 
 export const rootPath = __dirname;

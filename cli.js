@@ -204,6 +204,27 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     }
     return option;
   })
+  .coerce('j', option => {
+    const containsForbiddenCharacters = constants.forbiddenCharactersInDirPath.some((char) => option.includes(char));
+    const exceedsMaxLength = option.length > 80; 
+    
+    if (containsForbiddenCharacters) {
+      const displayForbiddenCharacters = constants.forbiddenCharactersInDirPath.toString().replaceAll(',', ' , '); 
+      printMessage(
+        [`Invalid label. Cannot contain ${displayForbiddenCharacters}`],
+        messageOptions
+      )
+      process.exit(1); 
+    }
+    if (exceedsMaxLength) {
+      printMessage(
+        [`Invalid label. Cannot exceed 80 characters.`],
+        messageOptions
+      )
+      process.exit(1);
+    }
+    return option; 
+  })
   .check(argvs => {
     if (argvs.scanner === 'custom' && argvs.maxpages) {
       throw new Error('-p or --maxpages is only available in website and sitemap scans.');
