@@ -20,6 +20,7 @@ import {
 import { createWriteStream } from 'fs';
 import { AsyncParser } from '@json2csv/node';
 import crypto from 'crypto';
+import { getScreenshotsPdf } from './pdfScreenshotFunc.js';
 
 const ruleMappingList = [
   {
@@ -177,6 +178,43 @@ const writeCsv = async (pageResults, storagePath) => {
   parser.parse(pageResults).pipe(csvOutput);
 };
 
+const writeScreenshots = async (allIssues, storagePath) => {
+  const screenshotsDir = `${storagePath}/screenshots`;
+  const {
+    items: {
+      mustFix: { rules: mustFixRules },
+      goodToFix: { rules: goodToFixRules }
+    }
+  } = allIssues;
+  const getScreenshotsFromRule = (rule, category) => {
+    const { rule: ruleId, pagesAffected: pages } = rule;
+    for (let pageIdx = 0; pageIdx < pages.length; pageIdx++) {
+      const affectedPage = pages[pageIdx];
+      const { filePath, items } = affectedPage; // filePath is only defined for pdfs
+      items.forEach(async (violation, itemIdx) => {
+        const { html, context } = violation;
+        const screenshotFilename = `${ruleId}-${category}-page-${pageIdx}-screenshot-${itemIdx}.png`;
+        fs.ensureDirSync(screenshotsDir);
+        const screenshotPath = screenshotsDir + '/' + screenshotFilename;
+
+        // check if violation is for pdf or html
+        if (html) {
+          // function to get screenshots for html
+        } else {
+          // function to get screenshots for pdf
+          await getScreenshotsPdf(filePath, context, screenshotPath);
+        }
+      });
+    }
+  }
+  for (let rule of mustFixRules) {
+    getScreenshotsFromRule(rule, 'mustFix');
+  }
+  for (let rule of goodToFixRules) {
+    getScreenshotsFromRule(rule, 'goodToFix');
+  }
+};
+
 const writeHTML = async (
   allIssues,
   storagePath,
@@ -257,7 +295,7 @@ const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
 };
 
 const pushResults = async (pageResults, allIssues) => {
-  const { url, pageTitle } = pageResults;
+  const { url, pageTitle, filePath } = pageResults;
 
   allIssues.totalPagesScanned += 1;
 
@@ -298,7 +336,11 @@ const pushResults = async (pageResults, allIssues) => {
       currRuleFromAllIssues.totalItems += count;
 
       if (!(url in currRuleFromAllIssues.pagesAffected)) {
-        currRuleFromAllIssues.pagesAffected[url] = { pageTitle, items: [] };
+        currRuleFromAllIssues.pagesAffected[url] = { 
+          pageTitle,
+          items: [],
+          ...(filePath && { filePath }),
+        };
         /*if (actualUrl) {
           currRuleFromAllIssues.pagesAffected[url].actualUrl = actualUrl;
           // Deduct duplication count from totalItems
@@ -462,6 +504,11 @@ export const generateArtifacts = async (
   const fileDestinationPath = `${storagePath}/reports/summary.pdf`;
   await writeResults(allIssues, storagePath);
   await writeCsv(jsonArray, storagePath);
+  try {
+    await writeScreenshots(allIssues, storagePath);
+  } catch (e) {
+    console.log(e)  }
+  
   await writeHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryPdf(htmlFilename, fileDestinationPath);

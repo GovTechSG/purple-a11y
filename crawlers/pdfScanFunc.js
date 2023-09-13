@@ -203,9 +203,11 @@ export const mapPdfScanResults = (randomToken, uuidToUrlMapping) => {
       .split('.')[0];
     const url = uuidToUrlMapping[uuid];
     const pageTitle = decodeURI(url).split('/').pop();
+    const filePath = `${randomToken}/${uuid}.pdf`;
 
     translated.url = url;
     translated.pageTitle = pageTitle;
+    translated.filePath = filePath;
 
     if (!validationResult) {
       // check for error in scan
@@ -271,7 +273,7 @@ const transformRule = rule => {
 
   for (let checkIdx = 0; checkIdx < checks.length; checkIdx++) {
     const { errorMessage, context } = checks[checkIdx];
-    transformed.items.push({ message: errorMessage, page: getPageFromContext(context) });
+    transformed.items.push({ message: errorMessage, page: getPageFromContext(context), context });
   }
   const ruleId = `pdf-${specification}-${clause}-${testNumber}`.replaceAll(' ', '_');
 
