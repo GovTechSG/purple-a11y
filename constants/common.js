@@ -55,6 +55,20 @@ export const validateDirPath = dirPath => {
   }
 };
 
+export const validateCustomFlowLabel = (customFlowLabel) => {
+  const containsForbiddenCharacters = constants.forbiddenCharactersInDirPath.some((char) => customFlowLabel.includes(char));
+  const exceedsMaxLength = customFlowLabel.length > 80; 
+  
+  if (containsForbiddenCharacters) {
+    const displayForbiddenCharacters = constants.forbiddenCharactersInDirPath.toString().replaceAll(',', ' , '); 
+    return { isValid: false, errorMessage: `Invalid label. Cannot contain ${displayForbiddenCharacters}`}
+  }
+  if (exceedsMaxLength) {
+    return { isValid: false, errorMessage: `Invalid label. Cannot exceed 80 characters.`}
+  }
+  return { isValid: true }
+}
+
 // validateFilePath validates a provided file path
 // returns null if no error
 export const validateFilePath = (filePath, cliDir) => {

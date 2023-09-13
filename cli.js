@@ -21,6 +21,7 @@ import {
   getClonedProfilesWithRandomToken,
   validateDirPath,
   validateFilePath,
+  validateCustomFlowLabel,
 } from './constants/common.js';
 import constants from './constants/constants.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
@@ -205,22 +206,9 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return option;
   })
   .coerce('j', option => {
-    const containsForbiddenCharacters = constants.forbiddenCharactersInDirPath.some((char) => option.includes(char));
-    const exceedsMaxLength = option.length > 80; 
-    
-    if (containsForbiddenCharacters) {
-      const displayForbiddenCharacters = constants.forbiddenCharactersInDirPath.toString().replaceAll(',', ' , '); 
-      printMessage(
-        [`Invalid label. Cannot contain ${displayForbiddenCharacters}`],
-        messageOptions
-      )
-      process.exit(1); 
-    }
-    if (exceedsMaxLength) {
-      printMessage(
-        [`Invalid label. Cannot exceed 80 characters.`],
-        messageOptions
-      )
+    const {isValid, errorMessage} = validateCustomFlowLabel(option);
+    if (!isValid) {
+      printMessage([errorMessage], messageOptions); 
       process.exit(1);
     }
     return option; 
