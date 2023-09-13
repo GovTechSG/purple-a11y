@@ -19,6 +19,7 @@ import { areLinksEqual } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
 import fs from 'fs';
 import { guiInfoLog } from '../logs.js';
+import { chromium } from 'playwright';
 
 const crawlDomain = async (
   url,
@@ -137,6 +138,7 @@ const crawlDomain = async (
       enqueueLinks,
       enqueueLinksByClickingElements,
     }) => {
+
       // loadedUrl is the URL after redirects
       const actualUrl = request.loadedUrl || request.url;
 
@@ -264,7 +266,7 @@ const crawlDomain = async (
     },
     failedRequestHandler: async ({ request }) => {
       guiInfoLog(guiInfoStatusTypes.ERROR, { numScanned: urlsCrawled.scanned.length, urlScanned: request.url });
-      urlsCrawled.error.push(request.url);
+      urlsCrawled.error.push({url: request.url});
       crawlee.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
     },
     maxRequestsPerCrawl,
