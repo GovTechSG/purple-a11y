@@ -9,14 +9,12 @@
     <div class="modal-content">
       <div class="modal-header">
         <h4 class="modal-title fw-bold" id="pagesScannedModalLabel">
-          <%= scanType === 'Customized' ? 'Custom Flow' : totalPagesScanned + ' pages scanned'%>
+          <%= scanType === 'Customized' ? customFlowLabel + ' (' + totalPages + ' pages)' : scanType + ' crawl' + ' (' + totalPages + ' pages)'%>
         </h4>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <h6 class="modal-title fw-bold">
-          <%= scanType === 'Customized' ? totalPagesScanned + ' pages scanned' : ''%>
-        </h6>
+      <% if (totalPagesNotScanned > 0) { %>
         <ul class="nav nav-tabs" role="tablist">
           <li class="nav-item" role="presentation">
             <button 
@@ -53,6 +51,7 @@
             </button>
           </li>
         </ul>
+        <% } %>
         <div class="tab-content">
           <div class="tab-pane fade show active" id="pages-scanned" role="tabpanel" aria-labelledby="pages-scanned-tab">
             <ul class="unbulleted-list">
@@ -64,6 +63,7 @@
               <% }) %>
             </ul>    
           </div>
+          <% if (totalPagesNotScanned > 0) { %>
           <div class="tab-pane fade" id="pages-not-scanned" role="tabpanel" aria-labelledby="pages-not-scanned-tab">
             <ul class="unbulleted-list">
               <% pagesNotScanned.forEach((page, index) => { %>
@@ -73,6 +73,7 @@
               <% }) %>
             </ul>
           </div>
+          <% } %>
         </div>
       </div>
     </div>

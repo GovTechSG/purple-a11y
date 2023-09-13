@@ -453,6 +453,8 @@ export const generateArtifacts = async (
 
   flattenAndSortResults(allIssues);
 
+  allIssues.totalPages = allIssues.totalPagesScanned + allIssues.totalPagesNotScanned;
+
   printMessage([
     'Scan Summary',
     '',

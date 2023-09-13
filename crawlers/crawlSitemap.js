@@ -189,7 +189,7 @@ const crawlSitemap = async (
     },
     failedRequestHandler: async ({ request }) => {
       guiInfoLog(guiInfoStatusTypes.ERROR, { numScanned: urlsCrawled.scanned.length, urlScanned: request.url });
-      urlsCrawled.error.push(request.url);
+      urlsCrawled.error.push({url: request.url});
       crawlee.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
     },
     maxRequestsPerCrawl,
