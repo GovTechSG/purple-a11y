@@ -1,28 +1,47 @@
 # Scan Issue Details
-
-Details of each issue and severity rating provided by the scan engine.
+Details of each issue and severity rating provided by the current scan engine.
 
 ## Table Of Contents
-1. [WCAG 2.0 Level A](#wcag-20-level-a)
-2. [WCAG 2.0 Level AA](#wcag-20-level-aa)
-3. [WCAG 2.1 Level AA](#wcag-21-level-aa)
-4. [Best Practice](#best-practice)
+1. [Conformance Covered](#conformance-covered)
+2. [WCAG 2.0 Level A](#wcag-20-level-a)
+3. [WCAG 2.0 Level AA](#wcag-20-level-aa)
+4. [WCAG 2.1 Level AA](#wcag-21-level-aa)
+5. [Best Practice](#best-practice)
+
+## Conformance Covered
+| Conformance |
+| ----------- |
+| WCAG 1.1.1  |
+| WCAG 1.2.2  |
+| WCAG 1.3.1  |
+| WCAG 1.3.5  |
+| WCAG 1.4.1  |
+| WCAG 1.4.12 |
+| WCAG 1.4.2  |
+| WCAG 1.4.3  |
+| WCAG 1.4.4  |
+| WCAG 2.1.1  |
+| WCAG 2.2.1  |
+| WCAG 2.2.2  |
+| WCAG 2.4.1  |
+| WCAG 2.4.2  |
+| WCAG 2.4.4  |
+| WCAG 3.1.1  |
+| WCAG 3.1.2  |
+| WCAG 3.3.2  |
+| WCAG 4.1.2  |
 
 ## WCAG 2.0 Level A
 | Issue ID                    | Issue Description                                                                                                                                     | Severity    | Conformance            |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ---------------------- |
 | area-alt                    | Ensures `<area>` elements of image maps have alternate text                                                                                           | Must Fix    | WCAG 2.4.4, WCAG 4.1.2 |
 | aria-allowed-attr           | Ensures an element's role supports its ARIA attributes                                                                                                | Must Fix    | WCAG 4.1.2             |
-| aria-braille-equivalent     | Ensure aria-braillelabel and aria-brailleroledescription have a non-braille equivalent                                                                | Must Fix    | WCAG 4.1.2             |
 | aria-command-name           | Ensures every ARIA button, link and menuitem has an accessible name                                                                                   | Must Fix    | WCAG 4.1.2             |
-| aria-conditional-attr       | Ensures ARIA attributes are used as described in the specification of the element's role                                                              | Must Fix    | WCAG 4.1.2             |
-| aria-deprecated-role        | Ensures elements do not use deprecated roles                                                                                                          | Good to Fix | WCAG 4.1.2             |
 | aria-hidden-body            | Ensures aria-hidden="true" is not present on the document body.                                                                                       | Must Fix    | WCAG 4.1.2             |
 | aria-hidden-focus           | Ensures aria-hidden elements are not focusable nor contain focusable elements                                                                         | Must Fix    | WCAG 4.1.2             |
 | aria-input-field-name       | Ensures every ARIA input field has an accessible name                                                                                                 | Must Fix    | WCAG 4.1.2             |
 | aria-meter-name             | Ensures every ARIA meter node has an accessible name                                                                                                  | Must Fix    | WCAG 1.1.1             |
 | aria-progressbar-name       | Ensures every ARIA progressbar node has an accessible name                                                                                            | Must Fix    | WCAG 1.1.1             |
-| aria-prohibited-attr        | Ensures ARIA attributes are not prohibited for an element's role                                                                                      | Must Fix    | WCAG 4.1.2             |
 | aria-required-attr          | Ensures elements with ARIA roles have all required ARIA attributes                                                                                    | Must Fix    | WCAG 4.1.2             |
 | aria-required-children      | Ensures elements with an ARIA role that require child roles contain them                                                                              | Must Fix    | WCAG 1.3.1             |
 | aria-required-parent        | Ensures elements with an ARIA role that require parent roles are contained by them                                                                    | Must Fix    | WCAG 1.3.1             |
