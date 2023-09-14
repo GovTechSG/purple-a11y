@@ -179,7 +179,7 @@ const writeCsv = async (pageResults, storagePath) => {
 };
 
 const writeScreenshots = async (allIssues, storagePath) => {
-  const screenshotsDir = `${storagePath}/screenshots`;
+  const screenshotsDir = `${storagePath}/reports/screenshots`;
   const {
     items: {
       mustFix: { rules: mustFixRules },
@@ -504,11 +504,7 @@ export const generateArtifacts = async (
   const fileDestinationPath = `${storagePath}/reports/summary.pdf`;
   await writeResults(allIssues, storagePath);
   await writeCsv(jsonArray, storagePath);
-  try {
-    await writeScreenshots(allIssues, storagePath);
-  } catch (e) {
-    console.log(e)  }
-  
+  await writeScreenshots(allIssues, storagePath);
   await writeHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryPdf(htmlFilename, fileDestinationPath);

@@ -255,7 +255,7 @@ category summary is clicked %>
       const accordionBody = accordion.getElementsByClassName('accordion-body')[0];
       const elementCardsList = createElementFromString('<ul class="unbulleted-list"></ul>');
 
-      page.items.forEach(item => {
+      page.items.forEach((item, itemIdx) => {
         const itemCard = createElementFromString(`
           <li>
             <div class="card mt-3">
@@ -269,6 +269,13 @@ category summary is clicked %>
                   : ``
               }
               <div class="p-3">
+                <div class="d-flex justify-content-between">
+                  <div class="fw-bold">Screenshot</div>
+                  <pre class="page-item-card-section-content">
+                    <img src="screenshots/${ruleInCategory.rule}-${category}-page-${index}-screenshot-${itemIdx}.png" alt="Screenshot of affected element" />
+                  </pre>
+                </div>
+                <hr />
                 <div class="d-flex justify-content-between">
                   ${
                     item.html
