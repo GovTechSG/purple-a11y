@@ -17,7 +17,7 @@
     "fs-extra": "^11.1.0",
     "glob": "^9.1.2",
     "inquirer": "^9.1.4",
-    "jsdom": "^21.0.0",
+    "jsdom": "^21.1.2",
     "lodash": "^4.17.21",
     "pdfjs-dist": "github:veraPDF/pdfjs-dist#v2.14.305-taggedPdf-0.1.11",
     "playwright": "1.37.1",

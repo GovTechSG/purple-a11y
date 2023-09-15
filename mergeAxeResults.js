@@ -20,7 +20,8 @@ import {
 import { createWriteStream } from 'fs';
 import { AsyncParser } from '@json2csv/node';
 import crypto from 'crypto';
-import { getScreenshotsPdf } from './pdfScreenshotFunc.js';
+import { getScreenshotsPdf } from './screenshotFunc/pdfScreenshotFunc.js';
+import { getScreenshotHTML } from './screenshotFunc/htmlScreenshotFunc.js';
 
 const ruleMappingList = [
   {
@@ -178,41 +179,96 @@ const writeCsv = async (pageResults, storagePath) => {
   parser.parse(pageResults).pipe(csvOutput);
 };
 
-const writeScreenshots = async (allIssues, storagePath) => {
-  const screenshotsDir = `${storagePath}/reports/screenshots`;
-  const {
-    items: {
-      mustFix: { rules: mustFixRules },
-      goodToFix: { rules: goodToFixRules }
-    }
-  } = allIssues;
-  const getScreenshotsFromRule = (rule, category) => {
-    const { rule: ruleId, pagesAffected: pages } = rule;
-    for (let pageIdx = 0; pageIdx < pages.length; pageIdx++) {
-      const affectedPage = pages[pageIdx];
-      const { filePath, items } = affectedPage; // filePath is only defined for pdfs
-      items.forEach(async (violation, itemIdx) => {
-        const { html, context } = violation;
-        const screenshotFilename = `${ruleId}-${category}-page-${pageIdx}-screenshot-${itemIdx}.png`;
-        fs.ensureDirSync(screenshotsDir);
-        const screenshotPath = screenshotsDir + '/' + screenshotFilename;
+// const flattenAndSortResults = allIssues => {
+//   ['mustFix', 'goodToFix', 'passed'].forEach(category => {
+//     allIssues.totalItems += allIssues.items[category].totalItems;
+//     allIssues.items[category].rules = Object.entries(allIssues.items[category].rules)
+//       .map(ruleEntry => {
+//         const [rule, ruleInfo] = ruleEntry;
+//         ruleInfo.pagesAffected = Object.entries(ruleInfo.pagesAffected)
+//           .map(pageEntry => {
+//             const [url, pageInfo] = pageEntry;
+//             return { url, ...pageInfo };
+//           })
+//           .sort((page1, page2) => page2.items.length - page1.items.length);
+//         return { rule, ...ruleInfo };
+//       })
+//       .sort((rule1, rule2) => rule2.totalItems - rule1.totalItems);
+//   });
+//   allIssues.topFiveMostIssues.sort((page1, page2) => page2.totalIssues - page1.totalIssues);
+//   allIssues.topFiveMostIssues = allIssues.topFiveMostIssues.slice(0, 5);
+//   // convert the set to an array
+//   allIssues.wcagViolations = Array.from(allIssues.wcagViolations);
+// };
 
-        // check if violation is for pdf or html
-        if (html) {
-          // function to get screenshots for html
-        } else {
-          // function to get screenshots for pdf
-          await getScreenshotsPdf(filePath, context, screenshotPath);
-        }
-      });
-    }
-  }
-  for (let rule of mustFixRules) {
-    getScreenshotsFromRule(rule, 'mustFix');
-  }
-  for (let rule of goodToFixRules) {
-    getScreenshotsFromRule(rule, 'goodToFix');
-  }
+const writeScreenshots = async (allIssues, storagePath, browserToRun) => {
+  const screenshotsDir = `${storagePath}/reports/screenshots`;
+  ['mustFix', 'goodToFix'].forEach(category => {
+    const ruleItems = allIssues.items[category].rules 
+    allIssues.items[category].rules = ruleItems.map(ruleItem => {
+      const {rule, pagesAffected} = ruleItem;
+      ruleItem.pagesAffected =  pagesAffected.map((affectedPage, pageIdx) => {
+        const { url, filePath, items } = affectedPage; 
+        affectedPage.items = items.forEach(async (violation, itemIdx) => {
+          const { html, context } = violation;
+          const screenshotFilename = `${rule}-${category}-page-${pageIdx}-screenshot-${itemIdx}.png`;
+          const screenshotsUrlDir = screenshotsDir + '/' + url.replaceAll("https://", '').replaceAll('/', '_');
+          fs.ensureDirSync(screenshotsUrlDir);
+          const screenshotPath = screenshotsUrlDir + '/' + screenshotFilename;
+  
+          // check if violation is for pdf or html
+          if (html) {
+            // function to get screenshots for html
+            await getScreenshotHTML(html, url, screenshotPath, browserToRun);
+          } else {
+            // function to get screenshots for pdf
+            await getScreenshotsPdf(filePath, context, screenshotPath);
+          }
+          
+          violation.screenshotPath = screenshotPath; 
+          return violation;
+        })
+        return affectedPage;
+      })
+      return ruleItem;
+    })
+  })
+  // const {
+  //   items: {
+  //     mustFix: { rules: mustFixRules },
+  //     goodToFix: { rules: goodToFixRules }
+  //   }
+  // } = allIssues;
+
+  // const getScreenshotsFromRule = (rule, category) => {
+  //   const { rule: ruleId, pagesAffected: pages } = rule;
+  //   for (let pageIdx = 0; pageIdx < pages.length; pageIdx++) {
+  //     const affectedPage = pages[pageIdx];
+  //     const { url, filePath, items } = affectedPage; // filePath is only defined for pdfs
+  //     items.forEach(async (violation, itemIdx) => {
+  //       const { html, context } = violation;
+  //       const screenshotFilename = `${ruleId}-${category}-page-${pageIdx}-screenshot-${itemIdx}.png`;
+  //       const screenshotsUrlDir = screenshotsDir + '/' + url.replaceAll("https://", '').replaceAll('/', '_');
+  //       fs.ensureDirSync(screenshotsUrlDir);
+  //       const screenshotPath = screenshotsUrlDir + '/' + screenshotFilename;
+
+  //       // check if violation is for pdf or html
+  //       if (html) {
+  //         // function to get screenshots for html
+  //         await getScreenshotHTML(html, url, screenshotPath);
+  //       } else {
+  //         // function to get screenshots for pdf
+  //         await getScreenshotsPdf(filePath, context, screenshotPath);
+  //       }
+  //     });
+  //   }
+  // }
+  // for (let rule of mustFixRules) {
+  //   getScreenshotsFromRule(rule, 'mustFix');
+  // }
+  // for (let rule of goodToFixRules) {
+  //   getScreenshotsFromRule(rule, 'goodToFix');
+  // }
 };
 
 const writeHTML = async (
@@ -453,6 +509,7 @@ export const generateArtifacts = async (
   viewport,
   pagesScanned,
   customFlowLabel,
+  browserToRun
 ) => {
   const phAppVersion = getVersion();
   const storagePath = getStoragePath(randomToken);
@@ -504,7 +561,7 @@ export const generateArtifacts = async (
   const fileDestinationPath = `${storagePath}/reports/summary.pdf`;
   await writeResults(allIssues, storagePath);
   await writeCsv(jsonArray, storagePath);
-  await writeScreenshots(allIssues, storagePath);
+  await writeScreenshots(allIssues, storagePath, browserToRun);
   await writeHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryPdf(htmlFilename, fileDestinationPath);

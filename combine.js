@@ -115,6 +115,7 @@ const combineRun = async (details, deviceToScan) => {
       type,
       deviceToScan,
       urlsCrawled.scanned,
+      browser
     );
     const [name, email] = nameEmail.split(':');
     await submitForm(
