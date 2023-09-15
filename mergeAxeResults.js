@@ -69,58 +69,77 @@ const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResu
   }
 };
 
-const writeCsv = async (pageResults, storagePath) => {
+const writeCsv = async (allIssues, storagePath) => {
   const csvOutput = createWriteStream(`${storagePath}/reports/report.csv`, { encoding: 'utf8' });
   const formatPageViolation = pageNum => {
     if (pageNum < 0) return 'Document';
     return `Page ${pageNum}`;
   };
-  const flattenResult = item => {
-    const results = [];
-    const baseObj = { url: item.url };
-    const severities = ['mustFix', 'goodToFix'];
-    for (let severity of severities) {
-      const rules = item[severity].rules;
-      const ruleIds = Object.keys(rules);
-      for (let ruleId of ruleIds) {
-        const rule = rules[ruleId];
-        const { description, helpUrl, conformance, items } = rule;
-        // we filter out the below as it represents the A/AA/AAA level, not the clause itself
-        const clausesArr = conformance.filter(
-          clause => !['wcag2a', 'wcag2aa', 'wcag2aaa'].includes(clause),
-        );
-        // format clauses as a string
-        const clauses = clausesArr.join(',');
 
-        for (let item of items) {
-          const { html, message, page } = item;
-          const howToFix = message.replace(/(\r\n|\n|\r)/g, ' '); // remove newlines
-
-          // page is a number, not string
-          const violation = html ? html : formatPageViolation(page);
-          const context = violation.replace(/(\r\n|\n|\r)/g, ''); // remove newlines
-          results.push({
-            id: crypto.randomUUID(),
-            ...baseObj,
-            severity,
-            ruleId,
-            ruleDescription: description,
-            helpUrl,
-            clauses,
-            context,
-            howToFix,
-          });
+  // transform allIssues into the form:
+  // [['mustFix', rule1], ['mustFix', rule2], ['goodToFix', rule3], ...]
+  const getRulesByCategory = (allIssues) => {
+    return Object.entries(allIssues.items)
+      .filter(([category]) => category !== 'passed')
+      .reduce((prev, [category, value]) => {
+        const rules = value.rules;
+        for (let rule of rules) {
+          prev.push([category, rule]);
         }
-      }
+        return prev;
+      }, [])
+      .sort((a, b) => { // sort rules according to severity, then ruleId
+        const compareCategory = -(a[0].localeCompare(b[0])); 
+        return compareCategory === 0
+          ? a[1].rule.localeCompare(b[1].rule)
+          : compareCategory;
+      });
+  };
+  const flattenRule = ([severity, rule]) => {
+    const results = [];
+    const {
+      rule: issueId,
+      description: issueDescription,
+      conformance,
+      pagesAffected,
+      helpUrl: learnMore
+    } = rule;
+    // we filter out the below as it represents the A/AA/AAA level, not the clause itself
+    const clausesArr = conformance.filter(
+      clause => !['wcag2a', 'wcag2aa', 'wcag2aaa'].includes(clause),
+    );
+    pagesAffected.sort((a, b) => a.url.localeCompare(b.url));
+    // format clauses as a string
+    const wcagConformance = clausesArr.join(',');
+    for (let page of pagesAffected) {
+      const { url, items } = page;
+      items.forEach(item => {
+        const { html, page, message } = item;
+        const howToFix = message.replace(/(\r\n|\n|\r)/g, ' '); // remove newlines
+
+        // page is a number, not string
+        const violation = html ? html : formatPageViolation(page);
+        const context = violation.replace(/(\r\n|\n|\r)/g, ''); // remove newlines
+        results.push({
+          severity,
+          issueId,
+          issueDescription,
+          wcagConformance,
+          url,
+          context,
+          howToFix,
+          learnMore,
+        });
+      })
     }
     if (results.length === 0) return {};
     return results;
   };
   const opts = {
-    transforms: [flattenResult],
+    transforms: [getRulesByCategory, flattenRule],
   };
   const parser = new AsyncParser(opts);
-  parser.parse(pageResults).pipe(csvOutput);
+  parser.parse(allIssues).pipe(csvOutput);
 };
 
 const writeHTML = async (
@@ -380,7 +399,7 @@ export const generateArtifacts = async (
   const htmlFilename = `${storagePath}/reports/summary.html`;
   const fileDestinationPath = `${storagePath}/reports/summary.pdf`;
   await writeResults(allIssues, storagePath);
-  await writeCsv(jsonArray, storagePath);
+  await writeCsv(allIssues, storagePath);
   await writeHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryPdf(htmlFilename, fileDestinationPath);
