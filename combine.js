@@ -10,7 +10,6 @@ import { consoleLogger, silentLogger } from './logs.js';
 const combineRun = async (details, deviceToScan) => {
   const envDetails = { ...details };
 
-  // eslint-disable-next-line prettier/prettier
   const {
     type,
     url,
