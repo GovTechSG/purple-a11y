@@ -479,7 +479,7 @@ zsh: abort      node index.js
 
 If you find a scan takes too long to complete due to large website, or there are too many pages in a sitemap to scan, you may choose to limit number of pages scanned.
 
-To do this, open `constants\constants.js` with a text editor. Change the value for `maxRequestsPerCrawl` to a smaller number like 10, e.g. `export let maxRequestsPerCrawl = 10;` and save the file. Start a new purple-hats scan.
+To do this, run CLI mode `node cli.js` with the needed settings and specify `-p 10` where `10` is the number of pages you wish to scan.
 
 ## Additional Information on Data
 

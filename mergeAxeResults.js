@@ -5,71 +5,17 @@ import fs from 'fs-extra';
 import printMessage from 'print-message';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import ejs, { compile } from 'ejs';
+import ejs from 'ejs';
 import constants from './constants/constants.js';
 import { getCurrentTime, getStoragePath, getVersion } from './utils.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import itemTypeDescription from './constants/itemTypeDescription.js';
 import { chromium } from 'playwright';
-import { ruleIdsWithHtml } from './constants/constants.js';
-import {
-  muteAttributeValues,
-  dropAllExceptWhitelisted,
-  sortAlphaAttributes,
-} from './constants/common.js';
 import { createWriteStream } from 'fs';
 import { AsyncParser } from '@json2csv/node';
 import crypto from 'crypto';
+import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
 
-const ruleMappingList = [
-  {
-    ruleId: 'aria-hidden-focus',
-    htmlSnippet:
-      'Fix this code to ensures aria-hidden elements are not focusable nor contain focusable elements ``` ${htmlSnippet}```',
-  },
-  {
-    ruleId: 'aria-input-field-name',
-    htmlSnippet:
-      'Fix this code to ensure every ARIA input field has an accessible name```${htmlSnippet}```',
-  },
-  {
-    ruleId: 'aria-roles',
-    htmlSnippet: 'Fix the code with invalid element role ``` ${htmlSnippet}',
-  },
-  {
-    ruleId: 'aria-toggle-field-name',
-    htmlSnippet: 'Fix this code to have valid aria attribute: ```${htmlSnippet} ```',
-  },
-  {
-    ruleId: 'aria-valid-attr-value',
-    htmlSnippet: 'Fix this code with invalid aria attributes’ values: ```${htmlSnippet}```',
-  },
-  {
-    ruleId: 'aria-valid-attr',
-    htmlSnippet: 'Fix this code with invalid aria attributes: ```${htmlSnippet}',
-  },
-  {
-    ruleId: 'marquee',
-    htmlSnippet: 'Suggest an alternative to the marquee element ${htmlElement}',
-  },
-  {
-    ruleId: 'nested-interactive',
-    htmlSnippet: 'Ways to make this snippet not have nested interactivity? ${htmlSnippet}',
-  },
-  {
-    ruleId: 'avoid-inline-spacing',
-    htmlSnippet:
-      'Fix code snipept such that the style attribute does not have forced line-height,letter-spacing and word-spacing property to ensure inline text spacing is adjustable with custom stylesheets ${htmlSnippet}',
-  },
-  {
-    ruleId: 'aria-allowed-role',
-    htmlSnippet: 'Fix the code with invalid element role ${htmlSnippet}',
-  },
-  {
-    ruleId: 'tabindex',
-    htmlSnippet: 'What is inaccessible about this ${htmlSnippet}',
-  },
-];
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -123,58 +69,77 @@ const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResu
   }
 };
 
-const writeCsv = async (pageResults, storagePath) => {
+const writeCsv = async (allIssues, storagePath) => {
   const csvOutput = createWriteStream(`${storagePath}/reports/report.csv`, { encoding: 'utf8' });
   const formatPageViolation = pageNum => {
     if (pageNum < 0) return 'Document';
     return `Page ${pageNum}`;
   };
-  const flattenResult = item => {
-    const results = [];
-    const baseObj = { url: item.url };
-    const severities = ['mustFix', 'goodToFix'];
-    for (let severity of severities) {
-      const rules = item[severity].rules;
-      const ruleIds = Object.keys(rules);
-      for (let ruleId of ruleIds) {
-        const rule = rules[ruleId];
-        const { description, helpUrl, conformance, items } = rule;
-        // we filter out the below as it represents the A/AA/AAA level, not the clause itself
-        const clausesArr = conformance.filter(
-          clause => !['wcag2a', 'wcag2aa', 'wcag2aaa'].includes(clause),
-        );
-        // format clauses as a string
-        const clauses = clausesArr.join(',');
 
-        for (let item of items) {
-          const { html, message, page } = item;
-          const howToFix = message.replace(/(\r\n|\n|\r)/g, ' '); // remove newlines
-
-          // page is a number, not string
-          const violation = html ? html : formatPageViolation(page);
-          const context = violation.replace(/(\r\n|\n|\r)/g, ''); // remove newlines
-          results.push({
-            id: crypto.randomUUID(),
-            ...baseObj,
-            severity,
-            ruleId,
-            ruleDescription: description,
-            helpUrl,
-            clauses,
-            context,
-            howToFix,
-          });
+  // transform allIssues into the form:
+  // [['mustFix', rule1], ['mustFix', rule2], ['goodToFix', rule3], ...]
+  const getRulesByCategory = (allIssues) => {
+    return Object.entries(allIssues.items)
+      .filter(([category]) => category !== 'passed')
+      .reduce((prev, [category, value]) => {
+        const rules = value.rules;
+        for (let rule of rules) {
+          prev.push([category, rule]);
         }
-      }
+        return prev;
+      }, [])
+      .sort((a, b) => { // sort rules according to severity, then ruleId
+        const compareCategory = -(a[0].localeCompare(b[0])); 
+        return compareCategory === 0
+          ? a[1].rule.localeCompare(b[1].rule)
+          : compareCategory;
+      });
+  };
+  const flattenRule = ([severity, rule]) => {
+    const results = [];
+    const {
+      rule: issueId,
+      description: issueDescription,
+      conformance,
+      pagesAffected,
+      helpUrl: learnMore
+    } = rule;
+    // we filter out the below as it represents the A/AA/AAA level, not the clause itself
+    const clausesArr = conformance.filter(
+      clause => !['wcag2a', 'wcag2aa', 'wcag2aaa'].includes(clause),
+    );
+    pagesAffected.sort((a, b) => a.url.localeCompare(b.url));
+    // format clauses as a string
+    const wcagConformance = clausesArr.join(',');
+    for (let page of pagesAffected) {
+      const { url, items } = page;
+      items.forEach(item => {
+        const { html, page, message } = item;
+        const howToFix = message.replace(/(\r\n|\n|\r)/g, ' '); // remove newlines
+
+        // page is a number, not string
+        const violation = html ? html : formatPageViolation(page);
+        const context = violation.replace(/(\r\n|\n|\r)/g, ''); // remove newlines
+        results.push({
+          severity,
+          issueId,
+          issueDescription,
+          wcagConformance,
+          url,
+          context,
+          howToFix,
+          learnMore,
+        });
+      })
     }
     if (results.length === 0) return {};
     return results;
   };
   const opts = {
-    transforms: [flattenResult],
+    transforms: [getRulesByCategory, flattenRule],
   };
   const parser = new AsyncParser(opts);
-  parser.parse(pageResults).pipe(csvOutput);
+  parser.parse(allIssues).pipe(csvOutput);
 };
 
 const writeHTML = async (
@@ -211,6 +176,10 @@ let browserChannel = 'chrome';
 
 if (os.platform() === 'win32') {
   browserChannel = 'msedge';
+}
+
+if (os.platform() === 'linux') {
+  browserChannel = 'chromium';
 }
 
 const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
@@ -341,65 +310,29 @@ const flattenAndSortResults = allIssues => {
 };
 
 const createRuleIdJson = allIssues => {
-  var compiledRuleJson = {};
-  var ruleIdJson = {};
-  var snippets = [];
+  const compiledRuleJson = {};
 
-  allIssues.items.mustFix.rules.map(rule => {
-    snippets = [];
-    ruleIdJson = {};
-    var ruleId = rule.rule;
+  const ruleIterator = rule => {
+    const ruleId = rule.rule;
+    let snippets = [];
 
-    if (ruleIdsWithHtml.includes(ruleId)) {
-      var snippetsSet = new Set();
+    if (purpleAiRules.includes(ruleId)) {
+      const snippetsSet = new Set();
       rule.pagesAffected.forEach(page => {
-        page.items.map(htmlItem => {
-          var flaggedHtml = htmlItem.html;
-
-          var standardisedHtmlString = sortAlphaAttributes(
-            muteAttributeValues(dropAllExceptWhitelisted(flaggedHtml)),
-          );
-          // fs.appendFileSync(
-          //   'standardisedHtml.txt',
-          //   `flagged: ${flaggedHtml} \n standardised: ${standardisedHtmlString} \n`,
-          // );
-          snippetsSet.add(standardisedHtmlString);
+        page.items.forEach(htmlItem => {
+          snippetsSet.add(purpleAiHtmlETL(htmlItem.html));
         });
       });
       snippets = [...snippetsSet];
     }
-    ruleIdJson.snippets = snippets;
-    ruleIdJson.occurrences = rule.totalItems;
-    compiledRuleJson[ruleId] = ruleIdJson;
-  });
+    compiledRuleJson[ruleId] = {
+      snippets,
+      occurrences: rule.totalItems,
+    };
+  };
 
-  allIssues.items.goodToFix.rules.map(rule => {
-    var ruleId = rule.rule;
-    snippets = [];
-    ruleIdJson = {};
-
-    if (ruleIdsWithHtml.includes(ruleId)) {
-      var snippetsSet = new Set();
-      rule.pagesAffected.forEach(page => {
-        page.items.map(htmlItem => {
-          var flaggedHtml = htmlItem.html;
-
-          var standardisedHtmlString = sortAlphaAttributes(
-            muteAttributeValues(dropAllExceptWhitelisted(flaggedHtml)),
-          );
-          // fs.appendFileSync(
-          //   'standardisedHtml.txt',
-          //   `flagged: ${flaggedHtml} \n standardised: ${standardisedHtmlString} \n`,
-          // );
-          snippetsSet.add(standardisedHtmlString);
-        });
-      });
-      snippets = [...snippetsSet];
-    }
-    ruleIdJson.snippets = snippets;
-    ruleIdJson.occurrences = rule.totalItems;
-    compiledRuleJson[ruleId] = ruleIdJson;
-  });
+  allIssues.items.mustFix.rules.forEach(ruleIterator);
+  allIssues.items.goodToFix.rules.forEach(ruleIterator);
 
   return compiledRuleJson;
 };
@@ -417,6 +350,11 @@ export const generateArtifacts = async (
   const storagePath = getStoragePath(randomToken);
   const directory = `${storagePath}/${constants.allIssueFileName}`;
   const allIssues = {
+    storagePath,
+    purpleAi: {
+      htmlETL: purpleAiHtmlETL,
+      rules: purpleAiRules,
+    },
     startTime: getCurrentTime(),
     urlScanned,
     scanType,
@@ -466,7 +404,7 @@ export const generateArtifacts = async (
   const htmlFilename = `${storagePath}/reports/summary.html`;
   const fileDestinationPath = `${storagePath}/reports/summary.pdf`;
   await writeResults(allIssues, storagePath);
-  await writeCsv(jsonArray, storagePath);
+  await writeCsv(allIssues, storagePath);
   await writeHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryPdf(htmlFilename, fileDestinationPath);
