@@ -213,6 +213,10 @@ if (os.platform() === 'win32') {
   browserChannel = 'msedge';
 }
 
+if (os.platform() === 'linux') {
+  browserChannel = 'chromium';
+}
+
 const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
   const browser = await chromium.launch({
     headless: true,
