@@ -137,15 +137,6 @@ Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
             cy.terminatePh();
         });
     
-        it("should contain custom flow label", () => {
-            cy.task("returnResultsDir").then((res) => {
-                cy.visit(`./${res}`);
-                cy.get("#pagesScannedModalToggle").should(
-                    "contain",
-                    "Demo Cypress Scan"
-                );
-            });
-        });
     });
 
 Run your test with <code>npx cypress run</code> .
