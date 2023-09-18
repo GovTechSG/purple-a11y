@@ -193,7 +193,7 @@ const crawlDomain = async (
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
         });
-        urlsCrawled.invalid.push(request.url);
+        urlsCrawled.invalid.push({url: request.url});
         return;
       }
 
