@@ -35,9 +35,6 @@ if (-Not (Test-Path jre\bin\java.exe)) {
 
     Write-Output "Build JRE SE"
     Start-Process jlink -ArgumentList "--output jre --add-modules java.se" -Wait -NoNewWindow
-
-    Write-Output "Remove JDK"
-    Remove-Item -Force .\jdk -recurse
 }
 
 # Install VeraPDF
@@ -56,6 +53,12 @@ if (-Not (Test-Path verapdf\verapdf.bat)) {
     Move-Item -Path C:\Windows\Temp\verapdf -Destination verapdf
     Remove-Item -Force -Path .\verapdf-installer.zip 
     Remove-Item -Force -Path .\verapdf-installer -recurse
+}
+
+# Check if the jdk directory exists and remove
+if (Test-Path -Path .\jdk -PathType Container) {
+    # Remove the directory forcefully
+    Remove-Item -Path .\jdk -Recurse -Force
 }
 
 # Install Node dependencies
