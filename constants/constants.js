@@ -152,6 +152,7 @@ const urlsCrawledObj = {
   notScannedRedirects: [],
   outOfDomain: [],
   blacklisted: [],
+  error: [],
   exceededRequests: [],
   forbidden: [],
   userExcluded: [],
@@ -279,6 +280,14 @@ const xmlSitemapTypes = {
   unknown: 4,
 };
 
+const forbiddenCharactersInDirPath = [
+  '<', '>', ':', '\"', '\\', '/', '|', '?', '*' 
+]
+
+const reserveFileNameKeywords = [
+  "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
+];
+
 export default {
   allIssueFileName: 'all_issues',
   cliZipFileName: 'a11y-scan-results.zip',
@@ -294,6 +303,8 @@ export default {
   urlCheckStatuses,
   launcher: chromium,
   pdfScanResultFileName: 'pdf-scan-results.json',
+  forbiddenCharactersInDirPath,
+  reserveFileNameKeywords
 };
 
 export const rootPath = __dirname;

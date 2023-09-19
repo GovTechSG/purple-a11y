@@ -343,6 +343,7 @@ export const generateArtifacts = async (
   scanType,
   viewport,
   pagesScanned,
+  pagesNotScanned,
   customFlowLabel,
 ) => {
   const phAppVersion = getVersion();
@@ -359,7 +360,9 @@ export const generateArtifacts = async (
     scanType,
     viewport,
     pagesScanned,
+    pagesNotScanned,
     totalPagesScanned: 0,
+    totalPagesNotScanned: pagesNotScanned.length,
     totalItems: 0,
     topFiveMostIssues: [],
     wcagViolations: new Set(),
@@ -387,6 +390,8 @@ export const generateArtifacts = async (
   });
 
   flattenAndSortResults(allIssues);
+
+  allIssues.totalPages = allIssues.totalPagesScanned + allIssues.totalPagesNotScanned;
 
   printMessage([
     'Scan Summary',

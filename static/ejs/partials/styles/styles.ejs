@@ -358,6 +358,9 @@
     border: none;
     padding: 0;
     text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
 
   #pagesScannedModalToggle:hover {
@@ -368,12 +371,14 @@
     border-bottom: none;
     padding: 1rem 1.5rem 0 1.5rem;
   }
+  */
   #pagesScannedModal .modal-title {
-    font-size: 1.125rem;
-  } */
-  #pagesScannedModal .modal-body {
-    max-height: 632px;
+    width: 100%; 
+    word-wrap: break-word;
+  } 
+  #pagesScannedModal .tab-content {
     overflow-y: scroll;
+    max-height: 600px;
   }
 
   #pagesScannedModal li {
@@ -382,7 +387,39 @@
     padding: 8px;
     border-bottom: 1px solid #B5C5CA;
   }
-
+  #pagesScannedModal .nav-tabs {
+    border-width: 2px !important;
+    margin-bottom: 1rem;
+  }
+  #pagesScannedModal .nav-item {
+    padding: 0px; 
+    border-bottom: none;
+    margin-bottom: -1px;
+  }
+  #pagesScannedModal .nav-link.active {
+    border-bottom: 2px solid #0047FA;
+  }
+  #pagesScannedModal .nav-link {
+    border: none;
+    color: black !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 8px 16px 10px 16px;
+  }
+  #pagesScannedModal .badge {
+    background-color: #E7ECEE;
+    color: black;
+    text-align: center;
+    border-radius: 5px;
+  }
+  #pagesScannedModal .nav-link.active > .badge {
+    background-color: #0047FA;
+    color: white;
+  }
+  #pagesScannedModal .not-scanned-url {
+    word-wrap: break-word;
+  }
   #pagesScannedModal span {
     overflow: hidden;
     white-space: nowrap;
@@ -398,7 +435,6 @@
   #top-five-card {
     border-radius: 0.25rem;
   }
-
   #summary-scan-results-card,
   #scanabout-compliance-card {
     box-shadow: none;
