@@ -17,7 +17,7 @@ import {
   isSkippedUrl,
 } from '../constants/common.js';
 import { areLinksEqual } from '../utils.js';
-import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
+import { handlePdfDownload, runPdfScan, mapPdfScanResults, doPdfScreenshots } from './pdfScanFunc.js';
 import fs from 'fs';
 import { guiInfoLog } from '../logs.js';
 
@@ -279,6 +279,9 @@ const crawlDomain = async (
 
     // transform result format
     const pdfResults = mapPdfScanResults(randomToken, uuidToPdfMapping);
+
+    // get screenshots from pdf docs
+    await Promise.all(pdfResults.map(async result => await doPdfScreenshots(randomToken, result)));
 
     // push results for each pdf document to key value store
     await Promise.all(pdfResults.map(result => dataset.pushData(result)));

@@ -7,6 +7,8 @@ import { randomUUID } from 'crypto';
 import { createRequire } from 'module';
 import os from 'os';
 import path from 'path';
+import { getPdfScreenshots } from '../screenshotFunc/pdfScreenshotFunc.js';
+import { ensureDirSync } from 'fs-extra';
 
 const require = createRequire(import.meta.url);
 
@@ -278,4 +280,23 @@ const transformRule = rule => {
   const ruleId = `pdf-${specification}-${clause}-${testNumber}`.replaceAll(' ', '_');
 
   return [ruleId, transformed];
+};
+
+export const doPdfScreenshots = async (randomToken, result) => {
+  const { filePath, pageTitle } = result;
+  const formattedPageTitle = pageTitle.replaceAll(" ", "_").split('.')[0];
+  const screenshotsDir = path.join(randomToken, 'screenshots', 'pdf', formattedPageTitle);
+
+  ensureDirSync(screenshotsDir);
+
+  for (const category of ['mustFix', 'goodToFix']) {
+    const ruleItems = Object.entries(result[category].rules);
+    for (const [ruleId, ruleInfo] of ruleItems) {
+      const { items } = ruleInfo;
+      const filename = `${category}-${ruleId}`;
+      const screenshotPath = path.join(screenshotsDir, filename);
+      const newItems = await getPdfScreenshots(filePath, items, screenshotPath);
+      ruleInfo.items = newItems;
+    }
+  }
 };
