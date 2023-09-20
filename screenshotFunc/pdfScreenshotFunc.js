@@ -166,8 +166,8 @@ const annotateAndSave = (origCanvas, screenshotPath, viewport) => {
     canvasFactory.destroy({ canvas: highlightCanvas, context: highlightCtx });
 
     // current screenshot path leads to a temp dir, so modify to save the final file path
-    const [randomToken, ...rest] = indexedScreenshotPath.split(path.sep);
-    const finalScreenshotPath = path.join(getStoragePath(randomToken), 'reports', ...rest);
+    const [_, ...rest] = indexedScreenshotPath.split(path.sep);
+    const finalScreenshotPath = path.join(...rest);
     return finalScreenshotPath;
   };
 };
