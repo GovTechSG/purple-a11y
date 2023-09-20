@@ -269,6 +269,9 @@ category summary is clicked %>
                   : ``
               }
               <div class="p-3">
+                ${item.screenshotPath 
+                  ?
+                `
                 <div class="d-flex justify-content-between">
                   <div class="fw-bold">Screenshot</div>
                   <pre class="page-item-card-section-content">
@@ -276,6 +279,9 @@ category summary is clicked %>
                   </pre>
                 </div>
                 <hr />
+                `
+                  : ``
+                }
                 <div class="d-flex justify-content-between">
                   ${
                     item.html
