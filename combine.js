@@ -118,7 +118,7 @@ const combineRun = async (details, deviceToScan) => {
       type,
       deviceToScan,
       urlsCrawled.scanned,
-      pagesNotScanned
+      pagesNotScanned,
       browser
     );
     const [name, email] = nameEmail.split(':');
