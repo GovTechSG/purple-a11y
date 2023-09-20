@@ -1,4 +1,5 @@
 // import { JSDOM } from "jsdom";
+import { silentLogger } from '../logs.js';
 
 export const takeScreenshotForHTMLElements = async (violations, page, randomToken) => {
     let newViolations = [];
@@ -15,7 +16,7 @@ export const takeScreenshotForHTMLElements = async (violations, page, randomToke
                     await locator.screenshot({ path: `${randomToken}/${screenshotPath}` });
                     node.screenshotPath = screenshotPath; 
                 } catch (e) {
-                    console.log('screenshot error: ', e);
+                    silentLogger.error(e);
                 }
             }
             newViolationNodes.push(node);
@@ -41,9 +42,10 @@ const getLocator = async (page, selector, html) => {
 }
 
 const generateScreenshotPath = (url, impact, rule, index) => {
-    const domain = new URL(url).hostname;
+    const pathname = new URL(url).pathname;
+    const domain = pathname === '/' ? new URL(url).hostname : pathname;
     const category = impact === 'critical' || impact === 'serious' ? 'mustFix' : 'goodToFix';
-    const screenshotPath = `screenshots/html/${domain}/${category}-${rule}-${index}.png`;
+    const screenshotPath = `screenshots/html/${domain}-${category}-${rule}-${index}.png`;
     return screenshotPath; 
 }
 

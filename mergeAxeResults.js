@@ -20,7 +20,6 @@ import {
 import { createWriteStream } from 'fs';
 import { AsyncParser } from '@json2csv/node';
 import crypto from 'crypto';
-import { getScreenshotsPdf } from './screenshotFunc/pdfScreenshotFunc.js';
 
 const ruleMappingList = [
   {
@@ -176,34 +175,6 @@ const writeCsv = async (pageResults, storagePath) => {
   };
   const parser = new AsyncParser(opts);
   parser.parse(pageResults).pipe(csvOutput);
-};
-
-const writeScreenshotsForPDF = async (allIssues, storagePath) => {
-  const screenshotsDir = `${storagePath}/reports/screenshots/`;
-  ['mustFix', 'goodToFix'].forEach(category => {
-    const ruleItems = allIssues.items[category].rules 
-    allIssues.items[category].rules = ruleItems.map(ruleItem => {
-      const {rule, pagesAffected } = ruleItem;
-      ruleItem.pagesAffected =  pagesAffected.map((affectedPage, pageIdx) => {
-        const { filePath, items } = affectedPage; // filePath is only defined for pdfs
-        if (filePath) {
-          affectedPage.items = items.map(async (violation, itemIdx) => {
-            const { context } = violation;
-            const screenshotFilePath = `pdf/${category}/${rule}/page-${pageIdx}-screenshot-${itemIdx}.png`;
-            fs.ensureDirSync(screenshotsDir);
-            const screenshotPath = screenshotsDir + '/' + screenshotFilePath;
-            // function to get screenshots for pdf
-            await getScreenshotsPdf(filePath, context, screenshotPath);
-            
-            violation.screenshotPath = `screenshots/${screenshotFilePath}`; 
-            return violation;
-          })
-        }
-        return affectedPage;
-      })
-      return ruleItem;
-    })
-  })
 };
 
 const writeHTML = async (
@@ -440,7 +411,6 @@ const createRuleIdJson = allIssues => {
 const moveScreenshots = (randomToken, storagePath) => {
   const currentScreenshotsPath = `${randomToken}/screenshots`; 
   const resultsScreenshotsPath = `${storagePath}/reports/screenshots`;
-  console.log('results screenshots path: ', resultsScreenshotsPath);
   fs.moveSync(currentScreenshotsPath, resultsScreenshotsPath); 
 }
 
@@ -506,7 +476,6 @@ export const generateArtifacts = async (
   const fileDestinationPath = `${storagePath}/reports/summary.pdf`;
   await writeResults(allIssues, storagePath);
   await writeCsv(jsonArray, storagePath);
-  // await writeScreenshots(allIssues, storagePath, browserToRun);
   await writeHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryPdf(htmlFilename, fileDestinationPath);
