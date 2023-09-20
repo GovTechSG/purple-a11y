@@ -3,6 +3,13 @@ import pdfjs from 'pdfjs-dist';
 import fs from 'fs';
 import Canvas from 'canvas';
 import assert from 'assert';
+import path from 'path';
+import { getStoragePath } from '../utils.js';
+import { fileURLToPath } from 'url';
+import { silentLogger } from '../logs.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // CONSTANTS
 const BBOX_PADDING = 50;
@@ -35,84 +42,144 @@ NodeCanvasFactory.prototype = {
     canvasAndContext.context = null;
   },
 };
+
 const canvasFactory = new NodeCanvasFactory();
 
-export async function getScreenshotsPdf(pdfFilePath, context, screenshotPath) {
-  const bbox = { location: context };
-  const loadingTask = pdfjs.getDocument(pdfFilePath, canvasFactory);
+export async function getPdfScreenshots(pdfFilePath, items, screenshotPath) {
+  const newItems = _.cloneDeep(items);
+  const loadingTask = pdfjs.getDocument({
+    url: pdfFilePath,
+    canvasFactory,
+    standardFontDataUrl: path.join(__dirname, '../node_modules/pdfjs-dist/standard_fonts/'),
+    disableFontFace: true,
+    verbosity: 0,
+  });
+  const pdf = await loadingTask.promise;
+  const structureTree = await pdf._pdfInfo.structureTree;
 
-  loadingTask.promise.then(async (pdf) => {
-    const structureTree = await pdf._pdfInfo.structureTree;
+  // save some resources by caching page canvases to be reused by diff violations
+  const pageCanvasCache = {};
+
+  // iterate through each violation
+  for (let i = 0; i < newItems.length; i++) {
+    const { context } = newItems[i];
+    const bbox = { location: context };
     const bboxMap = buildBboxMap([bbox], structureTree);
 
-    // iterate through all affected pages
-  for (let pageNum of Object.keys(bboxMap)) {
-    const bboxList = bboxMap[pageNum]; 
-    const [page, bboxesWithLocation] = await pdf.getPage(parseInt(pageNum, 10)).then(async (page) => {
-      return [page, await Promise.all([page.getOperatorList(), page.getAnnotations()])
-        .then(getBboxesList(bboxList, page))]
-    })
+    for (const [pageNum, bboxList] of Object.entries(bboxMap)) {
+      const page = await pdf.getPage(parseInt(pageNum, 10));
 
-    // Render the page on a Node canvas with 200% scale.
-    const viewport = page.getViewport({ scale: 2.0 });
-    const canvasAndContext = canvasFactory.create(viewport.width, viewport.height);
-    const renderContext = {
-      canvasContext: canvasAndContext.context,
-      viewport,
-    };
+      // an array of length 1, containing location of current violation
+      const bboxesWithCoords = await Promise.all([
+        page.getOperatorList(),
+        page.getAnnotations(),
+      ]).then(getBboxesList(bboxList, page));
 
-    const renderTask = page.render(renderContext); // render pdf page onto a canvas
-    await renderTask.promise;
+      // Render the page on a Node canvas with 200% scale.
+      const viewport = page.getViewport({ scale: 2.0 });
 
-    // Convert to an image buffer.
-    for (let bbox of bboxesWithLocation) {
-      const { location, index } = bbox; 
-      const [left, bottom, width, height] = location.map(loc => loc * 2); // scale up by 2
-      const rectParams = [left, viewport.height - bottom - height, width, height];
+      const canvasAndContext =
+        pageCanvasCache[pageNum] ?? canvasFactory.create(viewport.width, viewport.height);
+      if (!pageCanvasCache[pageNum]) {
+        pageCanvasCache[pageNum] = canvasAndContext;
+      }
+      const { canvas: origCanvas, context: origCtx } = canvasAndContext;
 
-      // create new canvas with highlight so we do not "pollute" the original
-      const highlightCanvas = Canvas.createCanvas(viewport.width, viewport.height);
-      const highlightCtx = highlightCanvas.getContext('2d');
-      
-      highlightCtx.drawImage(canvasAndContext.canvas, 0, 0);
-      highlightCtx.fillStyle = 'rgba(0, 255, 255, 0.2)';
-      highlightCtx.fillRect(...rectParams);
+      const renderContext = {
+        canvasContext: origCtx,
+        viewport,
+      };
+      const renderTask = page.render(renderContext); // render pdf page onto a canvas
+      await renderTask.promise;
 
-      const rectParamsWithPadding = [
-        left - BBOX_PADDING,
-        viewport.height - bottom - height - BBOX_PADDING,
-        width + BBOX_PADDING * 2,
-        height + BBOX_PADDING * 2
-      ];
+      const finalScreenshotPath = annotateAndSave(
+        origCanvas,
+        screenshotPath,
+        viewport,
+      )(bboxesWithCoords[0]);
 
-      // create new canvas for cropped image
-      const croppedCanvas = Canvas.createCanvas(rectParamsWithPadding[2], rectParamsWithPadding[3]);
-      croppedCanvas.getContext('2d').drawImage(
-        highlightCanvas,
-        ...rectParamsWithPadding,
-        0, 0, rectParamsWithPadding[2], rectParamsWithPadding[3],
-      );
+      newItems[i].screenshotPath = finalScreenshotPath;
+      newItems[i].page = parseInt(pageNum, 10);
 
-      // convert the canvas to an image
-      const croppedImage = croppedCanvas.toBuffer();
-      fs.writeFile(screenshotPath, croppedImage, (error) => {
-        if (error) {
-          console.error('Error: ' + error);
-        } else {
-          console.log('Finished converting to a PNG image.');
-        }
-      })
       page.cleanup();
     }
   }
-  })
+  return newItems;
 }
+
+const annotateAndSave = (origCanvas, screenshotPath, viewport) => {
+  return ({ location }) => {
+    const [left, bottom, width, height] = location.map(loc => loc * 2); // scale up by 2
+    const rectParams = [left, viewport.height - bottom - height, width, height];
+
+    // create new canvas to annotate so we do not "pollute" the original
+    const { context: highlightCtx, canvas: highlightCanvas } = canvasFactory.create(
+      viewport.width,
+      viewport.height,
+    );
+
+    highlightCtx.drawImage(origCanvas, 0, 0);
+    highlightCtx.fillStyle = 'rgba(0, 255, 255, 0.2)';
+    highlightCtx.fillRect(...rectParams);
+
+    const rectParamsWithPadding = [
+      left - BBOX_PADDING,
+      viewport.height - bottom - height - BBOX_PADDING,
+      width + BBOX_PADDING * 2,
+      height + BBOX_PADDING * 2,
+    ];
+
+    // create new canvas to crop image
+    const { context: croppedCtx, canvas: croppedCanvas } = canvasFactory.create(
+      rectParamsWithPadding[2],
+      rectParamsWithPadding[3],
+    );
+
+    croppedCtx.drawImage(
+      highlightCanvas,
+      ...rectParamsWithPadding,
+      0,
+      0,
+      rectParamsWithPadding[2],
+      rectParamsWithPadding[3],
+    );
+
+    // convert the canvas to an image
+    const croppedImage = croppedCanvas.toBuffer();
+
+    // save image
+    let counter = 0;
+    let indexedScreenshotPath = `${screenshotPath}-${counter}.png`;
+    let fileExists = fs.existsSync(indexedScreenshotPath);
+    while (fileExists) {
+      counter++;
+      indexedScreenshotPath = `${screenshotPath}-${counter}.png`;
+      fileExists = fs.existsSync(indexedScreenshotPath);
+    }
+    fs.writeFileSync(indexedScreenshotPath, croppedImage, error => {
+      if (error) {
+        silentLogger.error("Error in writing screenshot: " + error);
+      }
+    });
+
+    canvasFactory.destroy({ canvas: croppedCanvas, context: croppedCtx });
+    canvasFactory.destroy({ canvas: highlightCanvas, context: highlightCtx });
+
+    // current screenshot path leads to a temp dir, so modify to save the final file path
+    const [randomToken, ...rest] = indexedScreenshotPath.split(path.sep);
+    const finalScreenshotPath = path.join(getStoragePath(randomToken), 'reports', ...rest);
+    return finalScreenshotPath;
+  };
+};
+
+// Below are methods adapted from
+// https://github.com/veraPDF/verapdf-js-viewer/blob/master/src/services/bboxService.ts
+// to determine the bounding box data of the violations from the context field
 
 export const getBboxesList = (bboxList, page) => {
   return ([operatorList, annotations]) => {
     const operationData = operatorList.argsArray[operatorList.argsArray.length - 2];
-    const [positionData, noMCIDData] =
-      operatorList.argsArray[operatorList.argsArray.length - 1];
+    const [positionData, noMCIDData] = operatorList.argsArray[operatorList.argsArray.length - 1];
     const bboxes = bboxList.map(bbox => {
       if (bbox.mcidList) {
         bbox.location = parseMcidToBbox(
@@ -156,8 +223,8 @@ export const getBboxesList = (bboxList, page) => {
       return bbox;
     });
     return bboxes;
-  }
-}
+  };
+};
 
 export const buildBboxMap = (bboxes, structure) => {
   const bboxMap = {};
@@ -279,24 +346,6 @@ export const getBboxPages = (bboxes, structure) => {
       console.error(`Location not supported: ${bbox.location}`);
     }
   });
-};
-
-export const checkIsBboxOutOfThePage = (bbox, scale, page) => {
-  const parent = document.querySelector('.react-pdf__Page[data-page-number="' + page + '"]');
-  const parentHeight = parent.offsetHeight;
-  const parentWidth = parent.offsetWidth;
-
-  const left = parseFloat(bbox.location[0]) * scale;
-  const top = parseFloat(bbox.location[1]) * scale;
-  const width = parseFloat(bbox.location[2]) * scale;
-  const height = parseFloat(bbox.location[3]) * scale;
-
-  return (
-    (top <= 0 && top + height <= 1) ||
-    (left <= 0 && left + width <= 1) ||
-    (parentHeight - top <= 1 && top + height >= parentHeight) ||
-    (parentWidth - left <= 1 && left + width >= parentWidth)
-  );
 };
 
 const calculateLocation = location => {
@@ -615,53 +664,6 @@ export const rotatePoint = (rotateAngle, point, viewport) => {
   }
   return [x, y];
 };
-
-export const activeBboxInViewport = () => {
-  let isInView = false;
-  const bboxes = document.querySelectorAll('.pdf-bbox_selected');
-  for (let index = 0; index < bboxes.length; index++) {
-    isInView = elementInViewport(bboxes[index]);
-    if (isInView) {
-      break;
-    }
-  }
-
-  return isInView;
-};
-
-export const scrollToActiveBbox = () => {
-  if (activeBboxInViewport()) {
-    return;
-  }
-  const el = document.querySelector('.pdf-bbox_selected');
-  if (!el) return;
-  el.scrollIntoView();
-  document.querySelector('.pdf-viewer').scrollTop -= 150;
-  if (!activeBboxInViewport()) {
-    el.scrollIntoView();
-  }
-};
-
-function elementInViewport(el) {
-  let top = el.offsetTop;
-  let left = el.offsetLeft;
-  let width = el.offsetWidth;
-  let height = el.offsetHeight;
-  while (el.offsetParent && !el.offsetParent.className.includes('pdf-viewer')) {
-    el = el.offsetParent;
-    top += el.offsetTop;
-    left += el.offsetLeft;
-  }
-  const parent = document.querySelector('.pdf-viewer');
-  const parentScrollTop = parent.scrollTop;
-  const parentScrollLeft = parent.scrollLeft;
-  return (
-    top >= parentScrollTop &&
-    left >= parentScrollLeft &&
-    top + height <= parentScrollTop + parent.offsetHeight &&
-    left + width <= parentScrollLeft + parent.offsetWidth
-  );
-}
 
 function concatBoundingBoxes(newBoundingBox, oldBoundingBox) {
   if (_.isNil(oldBoundingBox) && _.isNil(newBoundingBox)) {
