@@ -42,8 +42,8 @@ const getLocator = async (page, selector, html) => {
 }
 
 const generateScreenshotPath = (url, impact, rule, index) => {
-    const pathname = new URL(url).pathname;
-    const domain = pathname === '/' ? new URL(url).hostname : pathname;
+    const pathname = new URL(url).pathname?.replaceAll('/', '-').replace('-', '');
+    const domain = pathname === '' ? new URL(url).hostname : pathname;
     const category = impact === 'critical' || impact === 'serious' ? 'mustFix' : 'goodToFix';
     const screenshotPath = `screenshots/html/${domain}-${category}-${rule}-${index}.png`;
     return screenshotPath; 
