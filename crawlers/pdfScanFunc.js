@@ -285,7 +285,7 @@ const transformRule = rule => {
 export const doPdfScreenshots = async (randomToken, result) => {
   const { filePath, pageTitle } = result;
   const formattedPageTitle = pageTitle.replaceAll(" ", "_").split('.')[0];
-  const screenshotsDir = path.join(randomToken, 'screenshots', 'pdf');
+  const screenshotsDir = path.join(randomToken, 'elemScreenshots', 'pdf');
 
   ensureDirSync(screenshotsDir);
 
