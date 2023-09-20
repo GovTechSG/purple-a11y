@@ -208,7 +208,7 @@ const crawlDomain = async (
         isBasicAuth = false;
       } else if (location.host.includes(host)) {
         if (isScanHtml) {
-          const results = await runAxeScript(needsReview, page);
+          const results = await runAxeScript(needsReview, page, randomToken);
           guiInfoLog(guiInfoStatusTypes.SCANNED, {
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,

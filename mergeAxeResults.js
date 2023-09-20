@@ -21,7 +21,6 @@ import { createWriteStream } from 'fs';
 import { AsyncParser } from '@json2csv/node';
 import crypto from 'crypto';
 import { getScreenshotsPdf } from './screenshotFunc/pdfScreenshotFunc.js';
-import { getScreenshotPaths, processScreenshotData, takeScreenshotForHTMLElements } from './screenshotFunc/htmlScreenshotFunc.js';
 
 const ruleMappingList = [
   {
@@ -179,28 +178,6 @@ const writeCsv = async (pageResults, storagePath) => {
   parser.parse(pageResults).pipe(csvOutput);
 };
 
-// const flattenAndSortResults = allIssues => {
-//   ['mustFix', 'goodToFix', 'passed'].forEach(category => {
-//     allIssues.totalItems += allIssues.items[category].totalItems;
-//     allIssues.items[category].rules = Object.entries(allIssues.items[category].rules)
-//       .map(ruleEntry => {
-//         const [rule, ruleInfo] = ruleEntry;
-//         ruleInfo.pagesAffected = Object.entries(ruleInfo.pagesAffected)
-//           .map(pageEntry => {
-//             const [url, pageInfo] = pageEntry;
-//             return { url, ...pageInfo };
-//           })
-//           .sort((page1, page2) => page2.items.length - page1.items.length);
-//         return { rule, ...ruleInfo };
-//       })
-//       .sort((rule1, rule2) => rule2.totalItems - rule1.totalItems);
-//   });
-//   allIssues.topFiveMostIssues.sort((page1, page2) => page2.totalIssues - page1.totalIssues);
-//   allIssues.topFiveMostIssues = allIssues.topFiveMostIssues.slice(0, 5);
-//   // convert the set to an array
-//   allIssues.wcagViolations = Array.from(allIssues.wcagViolations);
-// };
-
 const writeScreenshotsForPDF = async (allIssues, storagePath) => {
   const screenshotsDir = `${storagePath}/reports/screenshots/`;
   ['mustFix', 'goodToFix'].forEach(category => {
@@ -228,17 +205,6 @@ const writeScreenshotsForPDF = async (allIssues, storagePath) => {
     })
   })
 };
-
-const writeScreenshotsForHTML = async (allIssues, storagePath, browserToRun) => {
-  const screenshotData = processScreenshotData(allIssues);
-  const screenshotItems = await takeScreenshotForHTMLElements(screenshotData, storagePath, browserToRun);
-  getScreenshotPaths(screenshotItems, allIssues);  
-}
-
-const writeScreenshots = async (allissues, storagePath, browserToRun) => {
-  await writeScreenshotsForHTML(allissues, storagePath, browserToRun);
-  await writeScreenshotsForPDF(allissues, storagePath);
-}
 
 const writeHTML = async (
   allIssues,
@@ -471,6 +437,13 @@ const createRuleIdJson = allIssues => {
   return compiledRuleJson;
 };
 
+const moveScreenshots = (randomToken, storagePath) => {
+  const currentScreenshotsPath = `${randomToken}/screenshots`; 
+  const resultsScreenshotsPath = `${storagePath}/reports/screenshots`;
+  console.log('results screenshots path: ', resultsScreenshotsPath);
+  fs.moveSync(currentScreenshotsPath, resultsScreenshotsPath); 
+}
+
 export const generateArtifacts = async (
   randomToken,
   urlScanned,
@@ -526,11 +499,14 @@ export const generateArtifacts = async (
     `Passed: ${allIssues.items.passed.totalItems} occurrences`,
   ]);
 
+  // move screenshots folder to report folders
+  moveScreenshots(randomToken, storagePath); 
+
   const htmlFilename = `${storagePath}/reports/summary.html`;
   const fileDestinationPath = `${storagePath}/reports/summary.pdf`;
   await writeResults(allIssues, storagePath);
   await writeCsv(jsonArray, storagePath);
-  await writeScreenshots(allIssues, storagePath, browserToRun);
+  // await writeScreenshots(allIssues, storagePath, browserToRun);
   await writeHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryHTML(allIssues, storagePath, scanType, customFlowLabel);
   await writeSummaryPdf(htmlFilename, fileDestinationPath);
