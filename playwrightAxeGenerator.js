@@ -234,7 +234,7 @@ const checkIfScanRequired = async page => {
 };
 
 const runAxeScan = async (needsReviewItems, page) => {
-  const result = await runAxeScript(needsReviewItems, page);
+  const result = await runAxeScript(needsReviewItems, page, ${formatScriptStringVar(randomToken)});
   await dataset.pushData(result);
   urlsCrawled.scanned.push({ url: page.url(), pageTitle: result.pageTitle });
 }

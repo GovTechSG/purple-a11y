@@ -428,9 +428,11 @@ const createRuleIdJson = allIssues => {
 };
 
 const moveScreenshots = (randomToken, storagePath) => {
-  const currentScreenshotsPath = `${randomToken}/screenshots`; 
-  const resultsScreenshotsPath = `${storagePath}/reports/screenshots`;
-  fs.moveSync(currentScreenshotsPath, resultsScreenshotsPath); 
+  const currentScreenshotsPath = `${randomToken}/elemScreenshots`; 
+  const resultsScreenshotsPath = `${storagePath}/reports/elemScreenshots`;
+  if (fs.existsSync(currentScreenshotsPath)) {
+    fs.moveSync(currentScreenshotsPath, resultsScreenshotsPath); 
+  }
 }
 
 export const generateArtifacts = async (
