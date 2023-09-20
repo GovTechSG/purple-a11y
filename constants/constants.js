@@ -14,53 +14,6 @@ const __dirname = path.dirname(__filename);
 
 const maxRequestsPerCrawl = 100;
 
-export const ruleIdsWithHtml = [
-  'aria-hidden-focus',
-  'aria-input-field-name',
-  'aria-roles',
-  'aria-toggle-field-name',
-  'aria-valid-attr-value',
-  'aria-valid-attr',
-  'nested-interactive',
-  'avoid-inline-spacing',
-  'aria-allowed-role',
-];
-
-// Whitelisted attributes (to not drop)
-// i.e. any other attribute will be dropped
-export const whitelistedAttributes = [
-  `type`,
-  `tabindex`,
-  `lang`,
-  `scope`,
-  `alt`,
-  `role`,
-  `charset`,
-  `for`,
-  `content`,
-  `name`,
-  `onclick`,
-  `aria*`,
-  `src`,
-  `value`,
-  `href`,
-  `title`,
-  `style`,
-];
-
-// Attributes to mute
-export const mutedAttributeValues = [
-  `name`,
-  `data`,
-  `src`,
-  `value`,
-  `href`,
-  `title`,
-  `aria-describedby`,
-  `aria-label`,
-  `aria-labelledby`,
-];
-
 export const blackListedFileExtensions = [
   'css',
   'js',
@@ -331,6 +284,10 @@ const forbiddenCharactersInDirPath = [
   '<', '>', ':', '\"', '\\', '/', '|', '?', '*' 
 ]
 
+const reserveFileNameKeywords = [
+  "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
+];
+
 export default {
   allIssueFileName: 'all_issues',
   cliZipFileName: 'a11y-scan-results.zip',
@@ -346,7 +303,8 @@ export default {
   urlCheckStatuses,
   launcher: chromium,
   pdfScanResultFileName: 'pdf-scan-results.json',
-  forbiddenCharactersInDirPath
+  forbiddenCharactersInDirPath,
+  reserveFileNameKeywords
 };
 
 export const rootPath = __dirname;

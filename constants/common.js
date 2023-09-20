@@ -21,20 +21,9 @@ import constants, {
   getDefaultEdgeDataDir,
   proxy,
   formDataFields,
-  whitelistedAttributes,
-  mutedAttributeValues,
 } from './constants.js';
 import { silentLogger } from '../logs.js';
 import { isUrlPdf } from '../crawlers/commonCrawlerFunc.js';
-
-// Drop all attributes from the HTML snippet except whitelisted
-export const dropAllExceptWhitelisted = htmlSnippet => {
-  const regex = new RegExp(
-    `(\\s+)(?!${whitelistedAttributes.join(`|`)})([\\w-]+)(\\s*=\\s*"[^"]*")`,
-    `g`,
-  );
-  return htmlSnippet.replace(regex, ``);
-};
 
 // validateDirPath validates a provided directory path
 // returns null if no error
@@ -54,6 +43,25 @@ export const validateDirPath = dirPath => {
     return 'Please ensure path provided exists.';
   }
 };
+
+export const validateCustomFlowLabel = (customFlowLabel) => {
+  const containsReserveWithDot = constants.reserveFileNameKeywords.some(char => customFlowLabel.toLowerCase().includes(char.toLowerCase() + "."));
+  const containsForbiddenCharacters = constants.forbiddenCharactersInDirPath.some((char) => customFlowLabel.includes(char));
+  const exceedsMaxLength = customFlowLabel.length > 80; 
+  
+  if (containsForbiddenCharacters) {
+    const displayForbiddenCharacters = constants.forbiddenCharactersInDirPath.toString().replaceAll(',', ' , '); 
+    return { isValid: false, errorMessage: `Invalid label. Cannot contain ${displayForbiddenCharacters}`}
+  }
+  if (exceedsMaxLength) {
+    return { isValid: false, errorMessage: `Invalid label. Cannot exceed 80 characters.`}
+  }
+  if (containsReserveWithDot) {
+    const displayReserveKeywords = constants.reserveFileNameKeywords.toString().replaceAll(',', ' , ');
+    return { isValid: false, errorMessage: `Invalid label. Cannot have '.' appended to ${displayReserveKeywords} as they are reserved keywords.`};
+  }
+  return { isValid: true }
+}
 
 // validateFilePath validates a provided file path
 // returns null if no error
@@ -77,72 +85,6 @@ export const validateFilePath = (filePath, cliDir) => {
   } catch (error) {
     throw new Error('Please ensure path provided exists.');
   }
-};
-
-// For all attributes within mutedAttributeValues array
-// replace their values with "something" while maintaining the attribute
-export const muteAttributeValues = htmlSnippet => {
-  const regex = new RegExp(`(\\s+)([\\w-]+)(\\s*=\\s*")([^"]*)(")`, `g`);
-
-  // p1 is the whitespace before the attribute
-  // p2 is the attribute name
-  // p3 is the attribute value before the replacement
-  // p4 is the attribute value (replaced with "...")
-  // p5 is the closing quote of the attribute value
-  return htmlSnippet.replace(regex, (match, p1, p2, p3, p4, p5) => {
-    if (mutedAttributeValues.includes(p2)) {
-      return `${p1}${p2}${p3}...${p5}`;
-    }
-    return match;
-  });
-};
-
-export const sortAlphaAttributes = htmlString => {
-  let entireHtml = '';
-  const htmlOpeningTagRegex = /<[^>]+/g;
-  const htmlTagmatches = htmlString.match(htmlOpeningTagRegex);
-
-  let sortedHtmlTag;
-
-  htmlTagmatches.forEach(htmlTag => {
-    const closingTag = htmlTag.trim().slice(-1) === '/' ? '/>' : '>';
-
-    const htmlElementRegex = /<[^> ]+/;
-    const htmlElement = htmlTag.match(htmlElementRegex);
-
-    const htmlAttributeRegex = /[a-z-]+="[^"]*"/g;
-    const allAttributes = htmlTag.match(htmlAttributeRegex);
-
-    if (allAttributes) {
-      sortedHtmlTag = `${htmlElement} `;
-      allAttributes.sort((a, b) => {
-        const attributeA = a.toLowerCase();
-        const attributeB = b.toLowerCase();
-
-        if (attributeA < attributeB) {
-          return -1;
-        }
-
-        if (attributeA > attributeB) {
-          return 1;
-        }
-      });
-
-      allAttributes.forEach((htmlAttribute, index) => {
-        sortedHtmlTag += htmlAttribute;
-        if (index !== allAttributes.length - 1) {
-          sortedHtmlTag += ' ';
-        }
-      });
-
-      sortedHtmlTag += closingTag;
-    } else {
-      sortedHtmlTag = htmlElement + closingTag;
-    }
-
-    entireHtml += sortedHtmlTag;
-  });
-  return entireHtml;
 };
 
 export const getBlackListedPatterns = blacklistedPatternsFilename => {

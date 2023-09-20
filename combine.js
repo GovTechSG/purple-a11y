@@ -108,12 +108,17 @@ const combineRun = async (details, deviceToScan) => {
 
   if (scanDetails.urlsCrawled.scanned.length > 0) {
     await createAndUpdateResultsFolders(randomToken);
+    const pagesNotScanned = [ 
+      ...urlsCrawled.error,  
+      ...urlsCrawled.invalid, 
+    ]
     const basicFormHTMLSnippet = await generateArtifacts(
       randomToken,
       url,
       type,
       deviceToScan,
       urlsCrawled.scanned,
+      pagesNotScanned
       browser
     );
     const [name, email] = nameEmail.split(':');

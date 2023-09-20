@@ -250,7 +250,6 @@ const processPage = async page => {
   }
   
   const pageUrl = page.url()
-  
 
   if (blacklistedPatterns && isSkippedUrl(pageUrl, blacklistedPatterns)) {
     urlsCrawled.userExcluded.push(pageUrl)
@@ -343,6 +342,7 @@ const clickFunc = async (elem,page) => {
                   : customDevice || deviceChosen || 'Desktop',
               )}, 
               urlsCrawled.scanned, 
+              urlsCrawled.error,
               ${formatScriptStringVar(customFlowLabel || 'Custom Flow')}
             );
 

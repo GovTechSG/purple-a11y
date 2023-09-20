@@ -3,7 +3,6 @@ import {
   createCrawleeSubFolders,
   preNavigationHooks,
   runAxeScript,
-  failedRequestHandler,
   isUrlPdf,
 } from './commonCrawlerFunc.js';
 import constants, {
@@ -20,6 +19,7 @@ import { areLinksEqual } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults, doPdfScreenshots } from './pdfScanFunc.js';
 import fs from 'fs';
 import { guiInfoLog } from '../logs.js';
+import { chromium } from 'playwright';
 
 const crawlDomain = async (
   url,
@@ -138,6 +138,7 @@ const crawlDomain = async (
       enqueueLinks,
       enqueueLinksByClickingElements,
     }) => {
+
       // loadedUrl is the URL after redirects
       const actualUrl = request.loadedUrl || request.url;
 
@@ -192,7 +193,7 @@ const crawlDomain = async (
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
         });
-        urlsCrawled.invalid.push(request.url);
+        urlsCrawled.invalid.push({url: request.url});
         return;
       }
 
@@ -263,7 +264,11 @@ const crawlDomain = async (
         urlsCrawled.outOfDomain.push(request.url);
       }
     },
-    failedRequestHandler,
+    failedRequestHandler: async ({ request }) => {
+      guiInfoLog(guiInfoStatusTypes.ERROR, { numScanned: urlsCrawled.scanned.length, urlScanned: request.url });
+      urlsCrawled.error.push({url: request.url});
+      crawlee.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
+    },
     maxRequestsPerCrawl,
     maxConcurrency: specifiedMaxConcurrency || maxConcurrency,
   });

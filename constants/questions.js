@@ -9,6 +9,7 @@ import {
   sanitizeUrlInput,
   validEmail,
   validName,
+  validateCustomFlowLabel,
 } from './common.js';
 import constants from './constants.js';
 
@@ -116,6 +117,13 @@ const startScanQuestions = [
     name: 'customFlowLabel',
     message: 'Give a preferred label to your custom scan flow (Optional)',
     when: answers => answers.scanner === constants.scannerTypes.custom,
+    validate: label => {
+      const {isValid, errorMessage} = validateCustomFlowLabel(label); 
+      if (!isValid) {
+        return errorMessage; 
+      }
+      return true; 
+    }
   }
 ];
 

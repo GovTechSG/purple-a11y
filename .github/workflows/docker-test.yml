@@ -1,0 +1,53 @@
+name: Build Run and Test Docker Container
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Build and run Docker container
+      run: |
+        # Build your Docker image (replace 'purple-hats' and 'Dockerfile' with your image name and Dockerfile path)
+        docker build -t purple-hats .
+        # Run the Docker container (adjust any options as needed)
+        docker run -dit --name purple-hats-container purple-hats
+      # Ensure the Docker container is running before running the next step
+      continue-on-error: true
+
+    - name: Run Node CLI command inside the Docker container
+      run: |
+        # Execute a webisite crawl
+        docker exec purple-hats-container node cli -u "${{ vars.A11Y_SCAN_URL }}" -c 2 -p "${{ vars.A11Y_SCAN_MAX_NUM_PAGES }}" -t "${{ vars.A11Y_SCAN_MAX_CONCURRENCY }}" -k "younglim:younglim@users.noreply.github.com" -b chromium || true
+       
+    - name: Print errors
+      run: |
+        docker exec purple-hats-container cat errors.txt || true
+      
+    - name: Print logs
+      run: |
+        docker exec purple-hats-container cat logs/*/*.txt || true
+    - name: Copy Results from Docker Container
+      run: docker cp purple-hats-container:/app/results ./results
+
+    - name: Zip Results
+      run: zip -r results.zip ./results
+
+    - name: Upload Zip File
+      uses: actions/upload-artifact@v2
+      with:
+        name: results
+        path: results.zip
+          
+    - name: Cleanup Docker container
+      run: |
+        # Stop and remove the Docker container
+        docker stop purple-hats-container
+        docker rm purple-hats-container

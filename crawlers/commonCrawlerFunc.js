@@ -20,6 +20,19 @@ export const filterAxeResults = (needsReview, results, pageTitle) => {
     if (rule === 'frame-tested') return;
 
     const conformance = tags.filter(tag => tag.startsWith('wcag') || tag === 'best-practice');
+    // handle rare cases where conformance level is not the first element
+    const levels = ['wcag2a', 'wcag2aa', 'wcag2aaa'];
+    if (conformance[0] !== 'best-practice' && !levels.includes(conformance[0])) {
+      conformance.sort((a, b) => {
+        if (levels.includes(a)) {
+          return -1;
+        } else if (levels.includes(b)) {
+          return 1;
+        }
+
+        return 0;
+      });
+    }
 
     const addTo = (category, node) => {
       const { html, failureSummary, screenshotPath } = node;
@@ -136,6 +149,6 @@ export const failedRequestHandler = async ({ request }) => {
   crawlee.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
 };
 
-export const isUrlPdf = (url) => {
-  return url.split('.').pop() === 'pdf'; 
-}
+export const isUrlPdf = url => {
+  return url.split('.').pop() === 'pdf';
+};

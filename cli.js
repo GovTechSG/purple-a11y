@@ -21,6 +21,7 @@ import {
   getClonedProfilesWithRandomToken,
   validateDirPath,
   validateFilePath,
+  validateCustomFlowLabel,
 } from './constants/common.js';
 import constants from './constants/constants.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
@@ -203,6 +204,14 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
       process.exit(1);
     }
     return option;
+  })
+  .coerce('j', option => {
+    const {isValid, errorMessage} = validateCustomFlowLabel(option);
+    if (!isValid) {
+      printMessage([errorMessage], messageOptions); 
+      process.exit(1);
+    }
+    return option; 
   })
   .check(argvs => {
     if (argvs.scanner === 'custom' && argvs.maxpages) {
