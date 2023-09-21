@@ -42,6 +42,15 @@
     };
     document.addEventListener('DOMContentLoaded', initTooltips);
   </script>
+  <script>
+    let showPurpleAi = false;
+    async function checkToShowPurpleAi () {
+      if (!hasProxy) {
+          showPurpleAi = await checkPurpleAiAvail();
+      }
+    }
+    checkToShowPurpleAi();
+  </script>
 </body>
 
 </html>

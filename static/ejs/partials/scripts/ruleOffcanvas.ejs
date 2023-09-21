@@ -85,7 +85,7 @@ category summary is clicked %>
     `),
     );
 
-    if (purpleAiRules.includes(selectedRule.rule)) {
+    if (purpleAiRules.includes(selectedRule.rule) && showPurpleAi) {
       document.querySelector('#expandedRuleAiFeedback').style.display = 'block';
     } else {
       document.querySelector('#expandedRuleAiFeedback').style.display = 'none';
@@ -218,7 +218,7 @@ category summary is clicked %>
         const buttonDivForAiFeedback = `${buttonAIId}-${index}`;
         const aiErrorDiv = `${errorAIId}-${index}`;
         let itemCard;
-        const isPurpleAiRule = purpleAiRules.includes(ruleInCategory.rule);
+        const isPurpleAiRule = purpleAiRules.includes(ruleInCategory.rule) && showPurpleAi;
         let purpleAiQueryLabel;
         if (isPurpleAiRule) {
           purpleAiQueryLabel = await checkPurpleAiQueryLabel(ruleInCategory.rule, item.html);
