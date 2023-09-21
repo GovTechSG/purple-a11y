@@ -125,6 +125,15 @@ export const cliOptions = {
     default: 'exclusions.txt',
     demandOption: false,
   },
+  a: {
+    alias: 'additional',
+    describe: 'Additional features to include in the report: \nscreenshots - Include element screenshots in the generated report \nnone - Exclude all additional features in the generated report',
+    type: 'string',
+    default: 'screenshots',
+    choices: ['screenshots', 'none'],
+    requiresArg: true,
+    demandOption: false,
+  }
 };
 
 export const configureReportSetting = isEnabled => {

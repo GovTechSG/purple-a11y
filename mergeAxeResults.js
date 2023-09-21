@@ -95,7 +95,8 @@ const writeCsv = async (allIssues, storagePath) => {
           : compareCategory;
       });
   };
-  const flattenRule = ([severity, rule]) => {
+  const flattenRule = (catAndRule) => {
+    const [severity, rule] = catAndRule;
     const results = [];
     const {
       rule: issueId,
@@ -137,6 +138,17 @@ const writeCsv = async (allIssues, storagePath) => {
   };
   const opts = {
     transforms: [getRulesByCategory, flattenRule],
+    fields: [
+      "severity",
+      "issueId",
+      "issueDescription",
+      "wcagConformance",
+      "url",
+      "context",
+      "howToFix",
+      "learnMore",
+    ],
+    includeEmptyRows: true,
   };
   const parser = new AsyncParser(opts);
   parser.parse(allIssues).pipe(csvOutput);
@@ -226,7 +238,7 @@ const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
 };
 
 const pushResults = async (pageResults, allIssues) => {
-  const { url, pageTitle } = pageResults;
+  const { url, pageTitle, filePath } = pageResults;
 
   allIssues.totalPagesScanned += 1;
 
@@ -267,7 +279,11 @@ const pushResults = async (pageResults, allIssues) => {
       currRuleFromAllIssues.totalItems += count;
 
       if (!(url in currRuleFromAllIssues.pagesAffected)) {
-        currRuleFromAllIssues.pagesAffected[url] = { pageTitle, items: [] };
+        currRuleFromAllIssues.pagesAffected[url] = { 
+          pageTitle,
+          items: [],
+          ...(filePath && { filePath }),
+        };
         /*if (actualUrl) {
           currRuleFromAllIssues.pagesAffected[url].actualUrl = actualUrl;
           // Deduct duplication count from totalItems
@@ -337,6 +353,14 @@ const createRuleIdJson = allIssues => {
   return compiledRuleJson;
 };
 
+const moveScreenshots = (randomToken, storagePath) => {
+  const currentScreenshotsPath = `${randomToken}/elemScreenshots`; 
+  const resultsScreenshotsPath = `${storagePath}/reports/elemScreenshots`;
+  if (fs.existsSync(currentScreenshotsPath)) {
+    fs.moveSync(currentScreenshotsPath, resultsScreenshotsPath); 
+  }
+}
+
 export const generateArtifacts = async (
   randomToken,
   urlScanned,
@@ -345,6 +369,7 @@ export const generateArtifacts = async (
   pagesScanned,
   pagesNotScanned,
   customFlowLabel,
+  browserToRun
 ) => {
   const phAppVersion = getVersion();
   const storagePath = getStoragePath(randomToken);
@@ -401,6 +426,9 @@ export const generateArtifacts = async (
     `Good to Fix: ${allIssues.items.goodToFix.rules.length} issues / ${allIssues.items.goodToFix.totalItems} occurrences`,
     `Passed: ${allIssues.items.passed.totalItems} occurrences`,
   ]);
+
+  // move screenshots folder to report folders
+  moveScreenshots(randomToken, storagePath); 
 
   const htmlFilename = `${storagePath}/reports/summary.html`;
   const fileDestinationPath = `${storagePath}/reports/summary.pdf`;

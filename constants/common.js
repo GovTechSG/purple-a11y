@@ -472,6 +472,7 @@ export const prepareData = argv => {
     needsReviewItems,
     fileTypes,
     blacklistedPatternsFilename,
+    additional,
   } = argv;
 
   // construct filename for scan results
@@ -499,6 +500,7 @@ export const prepareData = argv => {
     randomToken: resultFilename,
     fileTypes,
     blacklistedPatternsFilename,
+    includeScreenshots: !(additional === 'none'),
   };
 };
 

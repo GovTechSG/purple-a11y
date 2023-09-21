@@ -10,13 +10,16 @@
     "@json2csv/node": "^7.0.3",
     "axe-core": "^4.6.2",
     "axios": "^1.2.2",
+    "canvas": "^2.11.2",
     "cheerio": "^1.0.0-rc.12",
     "crawlee": "^3.5.2",
     "ejs": "^3.1.9",
     "fs-extra": "^11.1.0",
     "glob": "^9.1.2",
     "inquirer": "^9.1.4",
-    "jsdom": "^21.0.0",
+    "jsdom": "^21.1.2",
+    "lodash": "^4.17.21",
+    "pdfjs-dist": "github:veraPDF/pdfjs-dist#v2.14.305-taggedPdf-0.1.11",
     "playwright": "1.37.1",
     "print-message": "^3.0.1",
     "safe-regex": "^2.1.1",
@@ -36,7 +39,7 @@
     "prettier": "^2.8.2"
   },
   "overrides": {
-    "node-fetch": "^3.3.0",
+    "node-fetch": "^2.3.0",
     "json5": "^2.2.3"
   },
   "scripts": {

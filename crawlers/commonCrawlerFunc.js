@@ -4,6 +4,8 @@ import crawlee, { playwrightUtils } from 'crawlee';
 import axe from 'axe-core';
 import { axeScript, guiInfoStatusTypes, saflyIconSelector } from '../constants/constants.js';
 import { guiInfoLog } from '../logs.js';
+import { takeScreenshotForHTMLElements } from '../screenshotFunc/htmlScreenshotFunc.js';
+import fs from 'fs';
 
 export const filterAxeResults = (needsReview, results, pageTitle) => {
   const { violations, passes, incomplete, url } = results;
@@ -34,15 +36,16 @@ export const filterAxeResults = (needsReview, results, pageTitle) => {
     }
 
     const addTo = (category, node) => {
-      const { html, failureSummary } = node;
+      const { html, failureSummary, screenshotPath } = node;
       if (!(rule in category.rules)) {
         category.rules[rule] = { description, helpUrl, conformance, totalItems: 0, items: [] };
       }
       const message = displayNeedsReview
         ? failureSummary.slice(failureSummary.indexOf('\n') + 1).trim()
         : failureSummary;
+      // add in screenshot path 
       category.rules[rule].items.push(
-        displayNeedsReview ? { html, message, displayNeedsReview } : { html, message },
+        displayNeedsReview ? { html, message, screenshotPath, displayNeedsReview } : { html, message, screenshotPath },
       );
       category.rules[rule].totalItems += 1;
       category.totalItems += 1;
@@ -93,7 +96,7 @@ export const filterAxeResults = (needsReview, results, pageTitle) => {
   };
 };
 
-export const runAxeScript = async (needsReview, page, selectors = []) => {
+export const runAxeScript = async (needsReview, includeScreenshots, page, randomToken, selectors = []) => {
   await crawlee.playwrightUtils.injectFile(page, axeScript);
 
   const results = await page.evaluate(
@@ -118,6 +121,11 @@ export const runAxeScript = async (needsReview, page, selectors = []) => {
     { selectors, saflyIconSelector },
   );
 
+  if (includeScreenshots) {
+    results.violations = await takeScreenshotForHTMLElements(results.violations, page, randomToken);
+  if (needsReview) results.incomplete = await takeScreenshotForHTMLElements(results.incomplete, page, randomToken);
+  }
+  
   const pageTitle = await page.evaluate(() => document.title);
   return filterAxeResults(needsReview, results, pageTitle);
 };

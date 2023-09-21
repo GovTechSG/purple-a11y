@@ -50,6 +50,7 @@ const playwrightAxeGenerator = async data => {
     customFlowLabel,
     needsReviewItems,
     blacklistedPatternsFilename,
+    includeScreenshots,
   } = data;
 
   // these will be appended to the generated script if the scan is run from CLI/index.
@@ -233,8 +234,8 @@ const checkIfScanRequired = async page => {
   }
 };
 
-const runAxeScan = async (needsReviewItems, page) => {
-  const result = await runAxeScript(needsReviewItems, page);
+const runAxeScan = async (needsReviewItems, includeScreenshots, page) => {
+  const result = await runAxeScript(needsReviewItems, includeScreenshots, page, ${formatScriptStringVar(randomToken)});
   await dataset.pushData(result);
   urlsCrawled.scanned.push({ url: page.url(), pageTitle: result.pageTitle });
 }
@@ -262,7 +263,7 @@ const processPage = async page => {
         numScanned: urlsCrawled.scanned.length,
         urlScanned: pageUrl,
       });
-      await runAxeScan(${needsReviewItems}, page);
+      await runAxeScan(${needsReviewItems}, ${includeScreenshots}, page);
     }
   }
 };

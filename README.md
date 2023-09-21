@@ -274,6 +274,12 @@ Options:
                                      domains to exclude from accessibility scan 
                                      separated by new line
                                             [string] [default: "exclusions.txt"]
+  -a, --additional  Additional features to include in the report:
+                    screenshots - Include element screenshots in the generated 
+                    report
+                    none - Exclude all additional features in the generated re
+                    port
+            [string] [choices: "screenshots", "none"] [default: "screenshots"]
 Examples:
   To scan sitemap of website:', 'node cli.js -c [ 1 | Sitemap ] -d <device> -u
    <url_link> -w <viewportWidth>

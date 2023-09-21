@@ -10,7 +10,6 @@ import { consoleLogger, silentLogger } from './logs.js';
 const combineRun = async (details, deviceToScan) => {
   const envDetails = { ...details };
 
-  // eslint-disable-next-line prettier/prettier
   const {
     type,
     url,
@@ -29,6 +28,7 @@ const combineRun = async (details, deviceToScan) => {
     needsReviewItems,
     fileTypes,
     blacklistedPatternsFilename,
+    includeScreenshots,
   } = envDetails;
 
   process.env.CRAWLEE_LOG_LEVEL = 'ERROR';
@@ -79,6 +79,7 @@ const combineRun = async (details, deviceToScan) => {
         needsReviewItems,
         fileTypes,
         blacklistedPatterns,
+        includeScreenshots,
       );
       break;
 
@@ -96,6 +97,7 @@ const combineRun = async (details, deviceToScan) => {
         needsReviewItems,
         fileTypes,
         blacklistedPatterns,
+        includeScreenshots,
       );
       break;
 
@@ -119,7 +121,8 @@ const combineRun = async (details, deviceToScan) => {
       type,
       deviceToScan,
       urlsCrawled.scanned,
-      pagesNotScanned
+      pagesNotScanned,
+      browser
     );
     const [name, email] = nameEmail.split(':');
     await submitForm(
