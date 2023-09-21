@@ -236,15 +236,15 @@
 
   const checkPurpleAiAvail = async () => {
     // check if catalog is empty 
-    return api(apiUrls.catalog).then(catalogData => {
-      try {
+    try {
+      return api(apiUrls.catalog).then(catalogData => {
         const catalogHasData = Object.keys(catalogData).length > 1;
         return catalogHasData;
-      } catch (e) {
-        console.error('Unable to fetch Purple AI catalog');
-        return false; 
-      }
-    })
+      })
+    } catch (e) {
+      console.error('Unable to fetch Purple AI catalog');
+      return false; 
+    }
   }
 
   const checkPurpleAiQueryLabel = async (ruleId, ruleHtml) => {
