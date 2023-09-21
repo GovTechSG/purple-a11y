@@ -227,7 +227,7 @@ category summary is clicked %>
         itemCard = createElementFromString(`
           <li>
             <div class="card mt-3">
-              ${item.needsReview ? `<div class="needsReview">This occurrence might be a false positive that needs to be verified by a human.</div>` : ``}
+              ${item.displayNeedsReview ? `<div class="needsReview">This occurrence might be a false positive that needs to be verified by a human.</div>` : ``}
               <div class="p-3">
                 ${item.screenshotPath
                   ?
@@ -267,10 +267,10 @@ category summary is clicked %>
                 <hr />
                 <div class="d-flex justify-content-between g-one">
                   <div class="fw-bold page-item-card-section-title">${
-                    item.needsReview ? 'Details' : 'How to fix'
+                    item.displayNeedsReview ? 'Details' : 'How to fix'
                   }</div>
                   <div class="page-item-card-section-content">
-                    ${generateItemMessageElement(item.needsReview, item.message)}
+                    ${generateItemMessageElement(item.displayNeedsReview, item.message)}
                   </div>
                 </div>
                 ${isPurpleAiRule ? `

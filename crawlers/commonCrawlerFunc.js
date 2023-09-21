@@ -5,6 +5,7 @@ import axe from 'axe-core';
 import { axeScript, guiInfoStatusTypes, saflyIconSelector } from '../constants/constants.js';
 import { guiInfoLog } from '../logs.js';
 import { takeScreenshotForHTMLElements } from '../screenshotFunc/htmlScreenshotFunc.js';
+import fs from 'fs';
 
 export const filterAxeResults = (needsReview, results, pageTitle) => {
   const { violations, passes, incomplete, url } = results;
@@ -122,6 +123,7 @@ export const runAxeScript = async (needsReview, includeScreenshots, page, random
 
   if (includeScreenshots) {
     results.violations = await takeScreenshotForHTMLElements(results.violations, page, randomToken);
+  if (needsReview) results.incomplete = await takeScreenshotForHTMLElements(results.incomplete, page, randomToken);
   }
   
   const pageTitle = await page.evaluate(() => document.title);
