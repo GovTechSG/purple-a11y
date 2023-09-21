@@ -95,7 +95,7 @@ export const filterAxeResults = (needsReview, results, pageTitle) => {
   };
 };
 
-export const runAxeScript = async (needsReview, page, randomToken, selectors = []) => {
+export const runAxeScript = async (needsReview, includeScreenshots, page, randomToken, selectors = []) => {
   await crawlee.playwrightUtils.injectFile(page, axeScript);
 
   const results = await page.evaluate(
@@ -120,7 +120,9 @@ export const runAxeScript = async (needsReview, page, randomToken, selectors = [
     { selectors, saflyIconSelector },
   );
 
-  results.violations = await takeScreenshotForHTMLElements(results.violations, page, randomToken);
+  if (includeScreenshots) {
+    results.violations = await takeScreenshotForHTMLElements(results.violations, page, randomToken);
+  }
   
   const pageTitle = await page.evaluate(() => document.title);
   return filterAxeResults(needsReview, results, pageTitle);

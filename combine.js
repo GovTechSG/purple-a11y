@@ -28,6 +28,7 @@ const combineRun = async (details, deviceToScan) => {
     needsReviewItems,
     fileTypes,
     blacklistedPatternsFilename,
+    includeScreenshots,
   } = envDetails;
 
   process.env.CRAWLEE_LOG_LEVEL = 'ERROR';
@@ -78,6 +79,7 @@ const combineRun = async (details, deviceToScan) => {
         needsReviewItems,
         fileTypes,
         blacklistedPatterns,
+        includeScreenshots,
       );
       break;
 
@@ -95,6 +97,7 @@ const combineRun = async (details, deviceToScan) => {
         needsReviewItems,
         fileTypes,
         blacklistedPatterns,
+        includeScreenshots,
       );
       break;
 

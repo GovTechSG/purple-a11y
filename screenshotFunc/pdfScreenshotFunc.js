@@ -4,7 +4,6 @@ import fs from 'fs';
 import Canvas from 'canvas';
 import assert from 'assert';
 import path from 'path';
-import { getStoragePath } from '../utils.js';
 import { fileURLToPath } from 'url';
 import { silentLogger } from '../logs.js';
 
@@ -325,27 +324,46 @@ export const getSelectedPageByLocation = bboxLocation => {
   return pageNumber;
 };
 
+export const getPageFromContext = async (context, pdfFilePath) => {
+  const loadingTask = pdfjs.getDocument({
+    url: pdfFilePath,
+    canvasFactory,
+    standardFontDataUrl: path.join(__dirname, '../node_modules/pdfjs-dist/standard_fonts/'),
+    disableFontFace: true,
+    verbosity: 0,
+  });
+  const pdf = await loadingTask.promise;
+  const structureTree = await pdf._pdfInfo.structureTree;
+  const page = getBboxPage({ location: context }, structureTree);
+  return page;
+}
+
 export const getBboxPages = (bboxes, structure) => {
   return bboxes.map(bbox => {
-    try {
-      if (
-        bbox.location.includes('StructTreeRoot') ||
-        bbox.location.includes('root/doc') ||
-        bbox.location === 'root'
-      ) {
-        const mcidData = getTagsFromErrorPlace(bbox.location, structure);
-        const pageIndex = mcidData[0][1];
-        return pageIndex + 1;
-      } else {
-        const bboxesFromLocation = bbox.location.includes('pages[')
-          ? calculateLocation(bbox.location)
-          : calculateLocationJSON(bbox.location);
-        return bboxesFromLocation.length ? bboxesFromLocation[0].page : 0;
-      }
-    } catch (e) {
-      console.error(`Location not supported: ${bbox.location}`);
-    }
+    getBboxPage(bbox, structure)
   });
+};
+
+export const getBboxPage = (bbox, structure) => {
+  try {
+    if (
+      bbox.location.includes('StructTreeRoot') ||
+      bbox.location.includes('root/doc') ||
+      bbox.location === 'root'
+    ) {
+      const mcidData = getTagsFromErrorPlace(bbox.location, structure);
+      const pageIndex = mcidData[0][1];
+      return pageIndex + 1;
+    } else {
+      const bboxesFromLocation = bbox.location.includes('pages[')
+        ? calculateLocation(bbox.location)
+        : calculateLocationJSON(bbox.location);
+      return bboxesFromLocation.length ? bboxesFromLocation[0].page : 0;
+    }
+  } catch (e) {
+    console.error(`Location not supported: ${bbox.location}`);
+    return -1;
+  }
 };
 
 const calculateLocation = location => {

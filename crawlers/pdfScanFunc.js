@@ -1,5 +1,5 @@
 import constants, { getExecutablePath, guiInfoStatusTypes } from '../constants/constants.js';
-import { exec, spawnSync } from 'child_process';
+import { spawnSync } from 'child_process';
 import { globSync } from 'glob';
 import { consoleLogger, guiInfoLog, silentLogger } from '../logs.js';
 import fs from 'fs';
@@ -7,7 +7,7 @@ import { randomUUID } from 'crypto';
 import { createRequire } from 'module';
 import os from 'os';
 import path from 'path';
-import { getPdfScreenshots } from '../screenshotFunc/pdfScreenshotFunc.js';
+import { getPageFromContext, getPdfScreenshots } from '../screenshotFunc/pdfScreenshotFunc.js';
 import { ensureDirSync } from 'fs-extra';
 
 const require = createRequire(import.meta.url);
@@ -166,7 +166,7 @@ export const runPdfScan = async randomToken => {
 };
 
 // transform results from veraPDF to desired format for report
-export const mapPdfScanResults = (randomToken, uuidToUrlMapping) => {
+export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
   const intermediateFolder = randomToken;
   const intermediateResultPath = `${intermediateFolder}/${constants.pdfScanResultFileName}`;
 
@@ -229,7 +229,7 @@ export const mapPdfScanResults = (randomToken, uuidToUrlMapping) => {
       const { specification, testNumber, clause } = rule;
 
       if (isRuleExcluded(rule)) continue;
-      const [ruleId, transformedRule] = transformRule(rule);
+      const [ruleId, transformedRule] = await transformRule(rule, filePath);
 
       // ignore if violation is not in the meta file
       const meta = errorMeta[specification][clause][testNumber]?.STATUS ?? 'ignore';
@@ -244,20 +244,7 @@ export const mapPdfScanResults = (randomToken, uuidToUrlMapping) => {
   return resultsList;
 };
 
-const getPageFromContext = context => {
-  const path = context.split('/');
-  let pageNumber = -1;
-  if (context?.includes('pages') && path[path.length - 1].startsWith('pages')) {
-    path.forEach(nodeString => {
-      if (nodeString.includes('pages')) {
-        pageNumber = parseInt(nodeString.split(/[[\]]/)[1], 10) + 1;
-      }
-    });
-  }
-  return pageNumber;
-};
-
-const transformRule = rule => {
+const transformRule = async (rule, filePath) => {
   // get specific rule
   const transformed = {};
   const { specification, description, clause, testNumber, checks } = rule;
@@ -275,7 +262,8 @@ const transformRule = rule => {
 
   for (let checkIdx = 0; checkIdx < checks.length; checkIdx++) {
     const { errorMessage, context } = checks[checkIdx];
-    transformed.items.push({ message: errorMessage, page: getPageFromContext(context), context });
+    const page = await getPageFromContext(context, filePath);
+    transformed.items.push({ message: errorMessage, page, context });
   }
   const ruleId = `pdf-${specification}-${clause}-${testNumber}`.replaceAll(' ', '_');
 

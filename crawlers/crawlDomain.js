@@ -34,6 +34,7 @@ const crawlDomain = async (
   needsReviewItems,
   fileTypes,
   blacklistedPatterns,
+  includeScreenshots,
 ) => {
   let needsReview = needsReviewItems;
   const isScanHtml = ['all', 'html-only'].includes(fileTypes);
@@ -209,7 +210,7 @@ const crawlDomain = async (
         isBasicAuth = false;
       } else if (location.host.includes(host)) {
         if (isScanHtml) {
-          const results = await runAxeScript(needsReview, page, randomToken);
+          const results = await runAxeScript(needsReview, includeScreenshots, page, randomToken);
           guiInfoLog(guiInfoStatusTypes.SCANNED, {
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
@@ -283,10 +284,14 @@ const crawlDomain = async (
     await runPdfScan(randomToken);
 
     // transform result format
-    const pdfResults = mapPdfScanResults(randomToken, uuidToPdfMapping);
+    const pdfResults = await mapPdfScanResults(randomToken, uuidToPdfMapping);
 
     // get screenshots from pdf docs
-    await Promise.all(pdfResults.map(async result => await doPdfScreenshots(randomToken, result)));
+    if (includeScreenshots) {
+      await Promise.all(pdfResults.map(
+        async result => await doPdfScreenshots(randomToken, result)
+      ));
+    }
 
     // push results for each pdf document to key value store
     await Promise.all(pdfResults.map(result => dataset.pushData(result)));
