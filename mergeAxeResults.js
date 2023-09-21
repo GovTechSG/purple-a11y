@@ -373,6 +373,7 @@ export const generateArtifacts = async (
       goodToFix: { description: itemTypeDescription.goodToFix, totalItems: 0, rules: {} },
       passed: { description: itemTypeDescription.passed, totalItems: 0, rules: {} },
     },
+    proxy: constants.proxy
   };
   const allFiles = await extractFileNames(directory);
 

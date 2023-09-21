@@ -232,6 +232,21 @@
     getRuleIdData: (ruleId) => `https://govtechsg.github.io/purple-ai/results/${ruleId}.json`
   }
 
+  const hasProxy = `<%=proxy%>`;
+
+  const checkPurpleAiAvail = async () => {
+    // check if catalog is empty 
+    return api(apiUrls.catalog).then(catalogData => {
+      try {
+        const catalogHasData = Object.keys(catalogData).length > 1;
+        return catalogHasData;
+      } catch (e) {
+        console.error('Unable to fetch Purple AI catalog');
+        return false; 
+      }
+    })
+  }
+
   const checkPurpleAiQueryLabel = async (ruleId, ruleHtml) => {
     return api(apiUrls.catalog).then(catalogData => {
         // no information for current rule
