@@ -95,7 +95,8 @@ const writeCsv = async (allIssues, storagePath) => {
           : compareCategory;
       });
   };
-  const flattenRule = ([severity, rule]) => {
+  const flattenRule = (catAndRule) => {
+    const [severity, rule] = catAndRule;
     const results = [];
     const {
       rule: issueId,
@@ -137,6 +138,17 @@ const writeCsv = async (allIssues, storagePath) => {
   };
   const opts = {
     transforms: [getRulesByCategory, flattenRule],
+    fields: [
+      "severity",
+      "issueId",
+      "issueDescription",
+      "wcagConformance",
+      "url",
+      "context",
+      "howToFix",
+      "learnMore",
+    ],
+    includeEmptyRows: true,
   };
   const parser = new AsyncParser(opts);
   parser.parse(allIssues).pipe(csvOutput);
