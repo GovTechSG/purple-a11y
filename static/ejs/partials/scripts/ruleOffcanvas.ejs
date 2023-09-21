@@ -223,21 +223,27 @@ category summary is clicked %>
         if (isPurpleAiRule) {
           purpleAiQueryLabel = await checkPurpleAiQueryLabel(ruleInCategory.rule, item.html);
         }
+
         itemCard = createElementFromString(`
           <li>
             <div class="card mt-3">
               ${item.needsReview ? `<div class="needsReview">This occurrence might be a false positive that needs to be verified by a human.</div>` : ``}
               <div class="p-3">
-                ${item.screenshotPath 
+                ${item.screenshotPath
                   ?
                 `
-                <div class="d-flex justify-content-between">
-                  <div class="fw-bold">Screenshot</div>
-                  <pre class="page-item-card-section-content">
-                    <img src=${item.screenshotPath} alt="Screenshot of affected element" />
-                  </pre>
+                <div class="hide-on-img-error">
+                  <div class="d-flex justify-content-between">
+                    <div class="fw-bold">Screenshot</div>
+                    <pre class="page-item-card-section-content">
+                      <img 
+                        src=${item.screenshotPath} 
+                        onerror="this.onerror = null; this.closest('div.hide-on-img-error').remove();"
+                        alt="Screenshot of affected element" />
+                    </pre>
+                  </div>
+                  <hr/> 
                 </div>
-                <hr />
                 `
                   : ``
                 }
