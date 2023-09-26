@@ -11,12 +11,6 @@ fi
 
 PROJECT_DIR="$PWD"
 
-if ! [ -f nodejs-mac-arm64/bin/node ]; then
-  echo "Downloading NodeJS LTS (ARM64)"
-  curl -o ./nodejs-mac-arm64.tar.gz --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-darwin-arm64.tar.gz  
-  mkdir nodejs-mac-arm64 && tar -xzf nodejs-mac-arm64.tar.gz -C nodejs-mac-arm64 --strip-components=1 && rm ./nodejs-mac-arm64.tar.gz
-fi
-
 if ! [ -f nodejs-mac-x64/bin/node ]; then
   echo "Downloading NodeJS LTS (x64)"
   curl -o ./nodejs-mac-x64.tar.gz --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-darwin-x64.tar.gz     
@@ -48,8 +42,6 @@ if ! [ -f jre/bin/java ]; then
 
 fi
 
-source "${__dir}/hats_shell.sh"
-
 if ! [ -f verapdf/verapdf ]; then
   echo "Downloading VeraPDF"
   if [ -d "./verapdf" ]; then rm -Rf ./verapdf; fi
@@ -76,12 +68,8 @@ if [ -d "node_modules" ]; then
   rm -rf node_modules 
 fi
 
-echo "Installing Node dependencies to $PWD"
-npm ci --force
-
-echo "Installing Playwright browsers"
-npx playwright install webkit
-
+echo "Installing Node dependencies to $PWD and Installing Playwright browsers"
+source "${__dir}/hats_shell.sh" npm ci --force; npx playwright install webkit
 
 
 
