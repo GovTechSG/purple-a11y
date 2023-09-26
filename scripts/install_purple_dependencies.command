@@ -42,8 +42,6 @@ if ! [ -f jre/bin/java ]; then
 
 fi
 
-source "${__dir}/hats_shell.sh"
-
 if ! [ -f verapdf/verapdf ]; then
   echo "Downloading VeraPDF"
   if [ -d "./verapdf" ]; then rm -Rf ./verapdf; fi
@@ -70,12 +68,8 @@ if [ -d "node_modules" ]; then
   rm -rf node_modules 
 fi
 
-echo "Installing Node dependencies to $PWD"
-npm ci --force
-
-echo "Installing Playwright browsers"
-npx playwright install webkit
-
+echo "Installing Node dependencies to $PWD and Installing Playwright browsers"
+source "${__dir}/hats_shell.sh" npm ci --force; npx playwright install webkit
 
 
 
