@@ -11,12 +11,6 @@ fi
 
 PROJECT_DIR="$PWD"
 
-if ! [ -f nodejs-mac-arm64/bin/node ]; then
-  echo "Downloading NodeJS LTS (ARM64)"
-  curl -o ./nodejs-mac-arm64.tar.gz --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-darwin-arm64.tar.gz  
-  mkdir nodejs-mac-arm64 && tar -xzf nodejs-mac-arm64.tar.gz -C nodejs-mac-arm64 --strip-components=1 && rm ./nodejs-mac-arm64.tar.gz
-fi
-
 if ! [ -f nodejs-mac-x64/bin/node ]; then
   echo "Downloading NodeJS LTS (x64)"
   curl -o ./nodejs-mac-x64.tar.gz --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-darwin-x64.tar.gz     
