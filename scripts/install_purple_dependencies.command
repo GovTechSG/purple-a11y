@@ -13,8 +13,9 @@ PROJECT_DIR="$PWD"
 
 if ! [ -f nodejs-mac-x64/bin/node ]; then
   echo "Downloading NodeJS LTS (x64)"
-  curl -o ./nodejs-mac-x64.tar.gz --create-dirs https://nodejs.org/dist/v18.12.1/node-v18.12.1-darwin-x64.tar.gz     
+  curl -o ./nodejs-mac-x64.tar.gz --create-dirs https://nodejs.org/dist/v18.18.0/node-v18.18.0-darwin-x64.tar.gz     
   mkdir nodejs-mac-x64 && tar -xzf nodejs-mac-x64.tar.gz -C nodejs-mac-x64 --strip-components=1 && rm ./nodejs-mac-x64.tar.gz
+  rm node-*-darwin-x64.tar.gz
 fi
 
 export CORRETTO_BASEDIR="$HOME/Library/Application Support/Purple HATS"
