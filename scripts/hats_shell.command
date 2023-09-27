@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
@@ -18,5 +18,5 @@ if [[ $(uname -m) == 'arm64' ]]; then
     arch -x86_64 $SHELL_NAME "$CURR_FOLDERNAME/hats_shell.sh" $SHELL_NAME
     
 else
-    $SHELL_NAME "$CURR_FOLDERNAME/hats_shell.sh" $SHELL_NAME 
+    $SHELL_NAME "$CURR_FOLDERNAME/hats_shell.sh" $SHELL_NAME
 fi
