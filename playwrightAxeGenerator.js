@@ -270,7 +270,8 @@ const processPage = async page => {
 
 const clickFunc = async (elem,page) => {
   const numElems = await elem.count(); 
-
+  consoleLogger.info(\`Number of matched elements: \${numElems}\`);
+  
   const waitForElemIsVisible = async (elem, duration) => {
     try {
       await elem.waitFor({state: "visible", timeout: duration});
@@ -308,7 +309,7 @@ const clickFunc = async (elem,page) => {
   } else if (numElems === 0) {
       await elem.click();
 
-  } else for (let index = 0; index < numElems; index++) {
+  } else for (let index = numElems - 1; index >= 0; index--) {
       const nth = await elem.nth(index); 
       if (! await nth.isVisible()) {
         await hoverParentAndClickElem(nth, page);
