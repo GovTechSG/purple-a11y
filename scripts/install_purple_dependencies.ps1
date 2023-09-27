@@ -13,7 +13,7 @@ if (-Not (Test-Path nodejs-win\node.exe)) {
     
     Write-Output "Unzip Node"
     Expand-Archive .\nodejs-win.zip -DestinationPath .
-    Rename-Item node-v18.12.1-win-x64 -NewName nodejs-win
+    Rename-Item node-v18.18.0-win-x64 -NewName nodejs-win
     Remove-Item -Force .\nodejs-win.zip
 }
 
