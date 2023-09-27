@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 echo "hats Shell - Created By younglim - NO WARRANTY PROVIDED"
 echo "================================================================"
