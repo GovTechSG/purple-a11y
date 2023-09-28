@@ -719,7 +719,7 @@ export const getBrowserToRun = (preferredBrowser, isCli) => {
 
       if (isCli)
         printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
-      process.exit(statuses.browserError.code);
+      process.exit(constants.urlCheckStatuses.browserError.code);
     }
   } else if (preferredBrowser === constants.browserTypes.edge) {
     const edgeData = getEdgeData();
@@ -740,7 +740,7 @@ export const getBrowserToRun = (preferredBrowser, isCli) => {
     } else {
       if (isCli)
         printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
-      process.exit(statuses.browserError.code);
+      process.exit(constants.urlCheckStatuses.browserError.code);
     }
   } else {
     // defaults to chromium
@@ -779,6 +779,7 @@ export const getChromeData = () => {
 export const getEdgeData = () => {
   const browserDataDir = getDefaultEdgeDataDir();
   const clonedBrowserDataDir = cloneEdgeProfiles();
+  console.log(browserDataDir, clonedBrowserDataDir, 'getEdgeData');
   if (browserDataDir && clonedBrowserDataDir) {
     const browserToRun = constants.browserTypes.edge;
     return { browserToRun, clonedBrowserDataDir };
@@ -1024,7 +1025,9 @@ export const cloneEdgeProfiles = randomToken => {
     nodir: true,
   };
 
+  console.log(destDir, 'destDir');
   const cloneLocalStateFileSucess = cloneLocalStateFile(baseOptions, destDir);
+  console.log(cloneLocalStateFileSucess, 'cloneLocalStateFileSuccess');
   if (cloneEdgeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSucess) {
     return destDir;
   }
