@@ -9,11 +9,11 @@ $ErrorActionPreference = 'Stop'
 # Install NodeJS binaries
 if (-Not (Test-Path nodejs-win\node.exe)) {
     Write-Output "Downloading Node"
-    Invoke-WebRequest -o ./nodejs-win.zip "https://nodejs.org/dist/v18.12.1/node-v18.12.1-win-x64.zip"     
+    Invoke-WebRequest -o ./nodejs-win.zip "https://nodejs.org/dist/v18.18.0/node-v18.18.0-win-x64.zip"     
     
     Write-Output "Unzip Node"
     Expand-Archive .\nodejs-win.zip -DestinationPath .
-    Rename-Item node-v18.12.1-win-x64 -NewName nodejs-win
+    Rename-Item node-v18.18.0-win-x64 -NewName nodejs-win
     Remove-Item -Force .\nodejs-win.zip
 }
 
