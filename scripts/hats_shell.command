@@ -15,6 +15,7 @@ if [[ $(uname -m) == 'arm64' ]]; then
         /usr/sbin/softwareupdate --install-rosetta --agree-to-license
     fi
 
+    echo "Switching to x86_64 shell"
     arch -x86_64 $SHELL_NAME "$CURR_FOLDERNAME/hats_shell.sh" $SHELL_NAME
     
 else
