@@ -422,7 +422,8 @@ export const checkUrl = async (
     );
   } else {
     res = await checkUrlConnectivity(url);
-    if (res.status === constants.urlCheckStatuses.axiosTimeout.code) {
+    if (res.status === constants.urlCheckStatuses.axiosTimeout.code ||
+        res.status === constants.urlCheckStatuses.cannotBeResolved.code) {
       if (browser || constants.launcher === webkit) {
         res = await checkUrlConnectivityWithBrowser(
           url,
