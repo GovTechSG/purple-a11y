@@ -83,6 +83,6 @@ else
   fi
 
   echo "Installing Node dependencies to $PWD and Installing Playwright browsers"
-  "${__dir}/hats_shell.sh" 'npm ci --force; npx playwright install;'
+  "${__dir}/hats_shell.sh" 'npm ci --force; npx playwright install webkit;'
 
 fi
