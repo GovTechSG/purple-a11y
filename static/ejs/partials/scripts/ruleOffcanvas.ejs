@@ -233,21 +233,21 @@ category summary is clicked %>
                   ?
                 `
                 <div class="hide-on-img-error">
-                  <div class="d-flex justify-content-between">
+                  <div class="d-flex justify-content-between g-one">
                     <div class="fw-bold">Screenshot</div>
-                    <pre class="page-item-card-section-content">
+                    <div class="page-item-card-section-content bg-grey-w-border">
                       <img 
                         src=${item.screenshotPath} 
                         onerror="this.onerror = null; this.closest('div.hide-on-img-error').remove();"
                         alt="Screenshot of affected element" />
-                    </pre>
+                    </div>
                   </div>
                   <hr/> 
                 </div>
                 `
                   : ``
                 }
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between g-one">
                   ${
                     item.html
                       ? `
