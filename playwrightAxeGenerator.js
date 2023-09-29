@@ -572,6 +572,8 @@ const clickFunc = async (elem,page) => {
         } else {
           appendToGeneratedScript(line);
         }
+        // to dismiss file explorer window popups
+        appendToGeneratedScript("page.on('filechooser', () => {});");
         continue;
       }
 
