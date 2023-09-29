@@ -697,6 +697,10 @@ const clickFunc = async (elem,page) => {
               const finalFilename = getStringWithinSingleQuotes(trimmedArg);
               substitutedArgument = `"${path.join(__dir, finalFilename)}"`;
             }
+            if (os.platform() === 'win32') {
+              // escape backslashes if on windows
+              substitutedArgument = substitutedArgument.replaceAll("\\", "\\\\");
+            }
             return `.setInputFiles(${substitutedArgument})`;
           });
           return modifiedCode;
