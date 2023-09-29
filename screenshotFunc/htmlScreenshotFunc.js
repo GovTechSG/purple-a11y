@@ -12,7 +12,7 @@ export const takeScreenshotForHTMLElements = async (violations, page, randomToke
             if (selector) {
                 try {
                     const screenshotPath = generateScreenshotPath(page.url(), impact, rule, newViolationNodes.length);
-                    const locator = await getLocator(page, selector, html);
+                    const locator = page.locator(selector);
                     await locator.screenshot({ path: `${randomToken}/${screenshotPath}` });
                     node.screenshotPath = screenshotPath; 
                 } catch (e) {
@@ -25,20 +25,6 @@ export const takeScreenshotForHTMLElements = async (violations, page, randomToke
         newViolations.push(violation);
     }
     return newViolations;
-}
-  
-const getLocator = async (page, selector, html) => {
-    let locator;
-    if (selector.includes('>')) {
-        const selectors = selector.split('>');  
-        locator = page.locator(selectors[0].trim());
-        for (let i = 1; i < selectors.length; i++) {
-            locator = locator.filter({ has: page.locator(selectors[i].trim())});
-        }
-    } else {
-        locator = page.locator(selector);
-    }
-    return locator;
 }
 
 const generateScreenshotPath = (url, impact, rule, index) => {
