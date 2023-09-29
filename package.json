@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@json2csv/node": "^7.0.3",
-    "axe-core": "^4.6.2",
+    "axe-core": "^4.8.2",
     "axios": "^1.2.2",
     "canvas": "^2.11.2",
     "cheerio": "^1.0.0-rc.12",
