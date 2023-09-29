@@ -662,6 +662,50 @@ const clickFunc = async (elem,page) => {
         continue;
       }
 
+      if (line.trim().includes('.setInputFiles(')) {
+        // handle file uploads
+        const substituteFilePaths = (code) => {
+          // default upload directory to be appended to the front of filename
+	        const __dir = path.join(constants.exportDirectory, "Upload Files");
+          const regex = /\.setInputFiles\(([^]*)\)/g;
+        
+          // to extract string from single quotes (i.e. extract test from 'test')
+          const getStringWithinSingleQuotes = (str) => {
+            const pattern = /'([^]*)'/;
+            // Use the match method to find the substring
+            const match = str.match(pattern);
+            return match[1];
+          }
+          
+          const modifiedCode = code.replace(regex, (match, argument) => {
+            // contents within the round brackets
+            let substitutedArgument = argument;
+        
+            // Remove array square brackets if any
+            substitutedArgument = substitutedArgument.replace(/^\[|\]$/g, '');
+        
+            if (substitutedArgument.includes(',')) {
+              // Argument is an array, split it, prepend __dir to each element, and reassemble the array
+              const files = substitutedArgument.split(',').map(file => {
+                const finalFilename = getStringWithinSingleQuotes(file.trim());
+                return `"${path.join(__dir, finalFilename)}"`
+              });
+              substitutedArgument = `[${files.join(', ')}]`;
+            } else {
+              // Argument is a string, add __dir to it without enclosing it in single quotes
+              const trimmedArg = substitutedArgument.trim()
+              const finalFilename = getStringWithinSingleQuotes(trimmedArg);
+              substitutedArgument = `"${path.join(__dir, finalFilename)}"`;
+            }
+            return `.setInputFiles(${substitutedArgument})`;
+          });
+          return modifiedCode;
+        }
+        appendToGeneratedScript(substituteFilePaths(line));
+        nextStepNeedsProcessPage = true;
+        continue;
+      }
+
       const isClick = line.trim().includes('click()');
 
       if ((line.trim().includes('getBy') && !line.trim().includes('getByPlaceholder')) || isClick) {
