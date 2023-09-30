@@ -2,6 +2,15 @@
 
 # Installation script for canvas on MacOS arm64
 
+# Go up one level of scripts folder
+CURR_FOLDERNAME="$(basename "$PWD")"
+if [ "$CURR_FOLDERNAME" = "scripts" ]; then
+  cd ..
+  CURR_FOLDERNAME="$(basename "$PWD")"
+fi
+
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Set canvas version
 CANVAS_VERSION="2.11.2"
 
@@ -42,24 +51,26 @@ mkdir homebrew && curl -L https://github.com/Homebrew/brew/tarball/master | tar 
 echo "Install canvas dependencies for arm64"
 brew install pkg-config cairo pango libpng giflib librsvg
 
+echo "Cleanup brew dependencies to reduce disk space"
+brew list | grep -vE 'pkg-config|cairo|pango|libpng|giflib|librsvg|pixman|glib|gettext|libx11|harfbuzz|jpeg-turbo|libxau|libxcb|libxdmcp|libxext|libxrender|pcre2|fontconfig|freetype|fribidi|graphite2|xorgproto' | xargs brew uninstall --force --ignore-dependencies
+brew cleanup --prune=all
+
 echo "Install canvas globally"
 npm install canvas@$CANVAS_VERSION -g
 
 echo "Check if canvas is installed"
 if npm list -g canvas > /dev/null 2>&1; then
   echo "Successuflly installed canvas"
-  
+
   echo "Link arm64 canvas"
-  cd purple-hats
+  if ! [ -f package.json ] && [ -d purple-hats ]; then
+    cd purple-hats
+  fi
   npm link canvas
-
-  echo "Cleanup brew dependencies"
-  for pkg in $(brew leaves); do brew uninstall $pkg; done 
-  brew cleanup --prune=all
-  brew list | grep -vE 'pkg-config|cairo|pango|libpng|giflib|librsvg|pixman|glib|gettext|libx11|harfbuzz|jpeg-turbo|libxau|libxcb|libxdmcp|libxext|libxrender|pcre2|fontconfig|freetype|fribidi|graphite2|xorgproto' | xargs brew uninstall --force --ignore-dependencies
-
+  
   echo "Create tar.gz of dependencies"
-  tar -czvf "node-canvas-$CANVAS_VERSION.macos-arm64.tar.gz" homebrew nodejs-mac-arm64/lib/node_modules/canvas
+  cd "$__dir"
+  tar -czf "node-canvas-$CANVAS_VERSION.macos-arm64.tar.gz" homebrew nodejs-mac-arm64/lib/node_modules/canvas
 
 else
   echo "Error occured intalling canvas. Please install canvas manually with npm install canvas@$CANVAS_VERSION -g"
