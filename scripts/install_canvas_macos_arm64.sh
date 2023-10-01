@@ -45,9 +45,8 @@ export PKG_CONFIG_PATH="$HOMEBREW/opt/jpeg/lib/pkgconfig"
 echo "Install homebrew portable"
 mkdir homebrew && curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C homebrew
 
-echo "Install python3 and canvas dependencies for arm64"
-brew install pkg-config cairo pango librsvg python3 giflib 
-brew upgrade python # activates python 3
+echo "Install canvas dependencies for arm64"
+brew install pkg-config cairo pango librsvg giflib 
 
 echo "Install macpack utility"
 pip3 install macpack
@@ -58,18 +57,23 @@ echo "Install purple dependencies"
 if ! [ -f package.json ] && [ -d purple-hats ]; then
   cd purple-hats
 fi
-npm ci
+
+npm install
 
 echo "Check if canvas is installed"
 if npm list canvas > /dev/null 2>&1; then
   echo "Successuflly installed canvas"
 
   echo "Binding canvas dependencies"
-  macpack ./node_modules/canvas/build/Release/canvas.node -d .
+  python3 ~/Library/Python/*/lib/python/site-packages/macpack/patcher.py ./node_modules/canvas/build/Release/canvas.node -d .
   
   echo "Create tar.gz of canvas dependencies"
-  tar -czf "$__dir/node-canvas-libs.macos-arm64.tar.gz" ./node_modules/canvas/build/Release/canvas.node
+  tar -czf "$__dir/node-canvas-libs.macos-arm64.tar.gz" --directory=./node_modules/canvas/build Release
 
 else
   echo "Error occured intalling canvas. Please install canvas manually with npm install canvas@$CANVAS_VERSION -g"
 fi
+
+cd "$__dir"
+
+
