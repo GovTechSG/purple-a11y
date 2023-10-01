@@ -43,6 +43,10 @@ fi
 export CORRETTO_BASEDIR="$HOME/Library/Application Support/Purple HATS"
 mkdir -p "$CORRETTO_BASEDIR" 
 
+echo "INFO: Set path to Corretto-11 JDK"
+export JAVA_HOME="$CORRETTO_BASEDIR/amazon-corretto-11.jdk.x64/Contents/Home"
+export PATH="$JAVA_HOME/bin:$PATH"
+
 if ! [ -f jre/bin/java ]; then
   cd "$CORRETTO_BASEDIR" 
   if ! [ -f amazon-corretto-11.jdk.x64/Contents/Home/bin/java ]; then
@@ -54,10 +58,6 @@ if ! [ -f jre/bin/java ]; then
   else
     echo "Found Corretto (x64)"
   fi
-
-  echo "INFO: Set path to Corretto-11 JDK"
-  export JAVA_HOME="$CORRETTO_BASEDIR/amazon-corretto-11.jdk.x64/Contents/Home"
-  export PATH="$JAVA_HOME/bin:$PATH"
 
   echo "INFO: Build JRE SE"
   cd "$__dir"
