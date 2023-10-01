@@ -11,9 +11,6 @@ fi
 
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Set canvas version
-CANVAS_VERSION="2.11.2"
-
 # Get the machine architecture
 arch=$(uname -m)
 
@@ -48,29 +45,30 @@ export PKG_CONFIG_PATH="$HOMEBREW/opt/jpeg/lib/pkgconfig"
 echo "Install homebrew portable"
 mkdir homebrew && curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C homebrew
 
-echo "Install canvas dependencies for arm64"
-brew install pkg-config cairo pango libpng giflib librsvg
+echo "Install python3 and canvas dependencies for arm64"
+brew install pkg-config cairo pango librsvg python3 giflib 
+brew upgrade python # activates python 3
 
-echo "Cleanup brew dependencies to reduce disk space"
-brew list | grep -vE 'pkg-config|cairo|pango|libpng|giflib|librsvg|pixman|glib|gettext|libx11|harfbuzz|jpeg-turbo|libxau|libxcb|libxdmcp|libxext|libxrender|pcre2|fontconfig|freetype|fribidi|graphite2|xorgproto' | xargs brew uninstall --force --ignore-dependencies
-brew cleanup --prune=all
+echo "Install macpack utility"
+pip3 install macpack
 
-echo "Install canvas globally"
-npm install canvas@$CANVAS_VERSION -g
+source "${__dir}/hats_shell.sh"
+
+echo "Install purple dependencies"
+if ! [ -f package.json ] && [ -d purple-hats ]; then
+  cd purple-hats
+fi
+npm ci
 
 echo "Check if canvas is installed"
-if npm list -g canvas > /dev/null 2>&1; then
+if npm list canvas > /dev/null 2>&1; then
   echo "Successuflly installed canvas"
 
-  echo "Link arm64 canvas"
-  if ! [ -f package.json ] && [ -d purple-hats ]; then
-    cd purple-hats
-  fi
-  npm link canvas
+  echo "Binding canvas dependencies"
+  macpack ./node_modules/canvas/build/Release/canvas.node -d .
   
-  echo "Create tar.gz of dependencies"
-  cd "$__dir"
-  tar -czf "node-canvas-$CANVAS_VERSION.macos-arm64.tar.gz" homebrew nodejs-mac-arm64/lib/node_modules/canvas
+  echo "Create tar.gz of canvas dependencies"
+  tar -czf "$__dir/node-canvas-libs.macos-arm64.tar.gz" ./node_modules/canvas/build/Release/canvas.node
 
 else
   echo "Error occured intalling canvas. Please install canvas manually with npm install canvas@$CANVAS_VERSION -g"
