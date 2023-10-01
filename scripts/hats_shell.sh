@@ -28,9 +28,6 @@ if [[ $(uname -m) == 'arm64' ]]; then
     echo "INFO: Setting path to node arm64 for this session"
     export PATH_TO_NODE="$PWD/nodejs-mac-arm64/bin"
 
-    echo "INFO: Set path to Homebrew arm64"
-    export PATH="$PWD/homebrew/bin:$PATH"
-
 else
     echo "INFO: Setting path to node x64 for this session"
     export PATH_TO_NODE="$PWD/nodejs-mac-x64/bin"
