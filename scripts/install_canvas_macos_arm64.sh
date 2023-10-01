@@ -65,7 +65,7 @@ if npm list canvas > /dev/null 2>&1; then
   echo "Successuflly installed canvas"
 
   echo "Binding canvas dependencies"
-  python3 ~/Library/Python/*/lib/python/site-packages/macpack/patcher.py ./node_modules/canvas/build/Release/canvas.node -d .
+  python3 ~/Library/Python/*/lib/python/site-packages/macpack/patcher.py ./node_modules/canvas/build/Release/canvas.node -d . -v
   
   echo "Create tar.gz of canvas dependencies"
   tar -czf "$__dir/node-canvas-libs.macos-arm64.tar.gz" --directory=./node_modules/canvas/build Release
