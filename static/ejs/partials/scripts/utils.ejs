@@ -303,7 +303,7 @@
       .then(ruleIdData => {
         const escapedHtml = escapeHtmlForAI(ruleIdData[ruleHtmlLabel]);
         const replacedString = escapedHtml.replaceAll(
-          /```([\s\S]*?)```/g,
+          /```(?:html)?([\s\S]*?)```/g,
           `<code class="codeForAiResponse language-html hljs">$1</code>`,
         );
         const replacedRuleHtmlLabel = escapeHtmlForAI(ruleHtmlLabel);
