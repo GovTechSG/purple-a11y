@@ -37,7 +37,7 @@ const parseContentToJson = async rPath =>
       silentLogger.error(`(parseContentToJson) - ${parseError}`);
     });
 
-const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResults') => {
+const writeResults = async (allissues, storagePath, isCustomFlow, jsonFilename = 'compiledResults') => {
   const finalResultsInJson = JSON.stringify(allissues, null, 4);
 
   const passedItemsJson = {};
@@ -237,7 +237,7 @@ const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
   fs.unlinkSync(htmlFilePath);
 };
 
-const pushResults = async (pageResults, allIssues) => {
+const pushResults = async (pageResults, allIssues, isCustomFlow) => {
   const { url, pageTitle, filePath } = pageResults;
 
   allIssues.totalPagesScanned += 1;
@@ -281,7 +281,8 @@ const pushResults = async (pageResults, allIssues) => {
       if (!(url in currRuleFromAllIssues.pagesAffected)) {
         currRuleFromAllIssues.pagesAffected[url] = { 
           pageTitle,
-          items: [],
+          items: isCustomFlow ? {} : [],
+          ...(isCustomFlow && { occurrences: 0 }),
           ...(filePath && { filePath }),
         };
         /*if (actualUrl) {
@@ -296,14 +297,26 @@ const pushResults = async (pageResults, allIssues) => {
         }*/
       }
 
-      currRuleFromAllIssues.pagesAffected[url].items.push(...items);
+      if (isCustomFlow) {
+        const { pageIndex, pageImagePath } = pageResults;
+        if (!(pageIndex in currRuleFromAllIssues.pagesAffected[url].items)) {
+          currRuleFromAllIssues.pagesAffected[url].items[pageIndex] = {
+            pageImagePath,
+            items: [],
+          }
+        } 
+        currRuleFromAllIssues.pagesAffected[url].items[pageIndex].items.push(...items);
+        currRuleFromAllIssues.pagesAffected[url].occurrences += items.length;
+      } else {
+        currRuleFromAllIssues.pagesAffected[url].items.push(...items);
+      }
       // currRuleFromAllIssues.numberOfPagesAffectedAfterRedirects +=
-      //   currRuleFromAllIssues.pagesAffected.length;
+      // currRuleFromAllIssues.pagesAffected.length;
     });
   });
 };
 
-const flattenAndSortResults = allIssues => {
+const flattenAndSortResults = (allIssues, isCustomFlow) => {
   ['mustFix', 'goodToFix', 'passed'].forEach(category => {
     allIssues.totalItems += allIssues.items[category].totalItems;
     allIssues.items[category].rules = Object.entries(allIssues.items[category].rules)
@@ -312,6 +325,13 @@ const flattenAndSortResults = allIssues => {
         ruleInfo.pagesAffected = Object.entries(ruleInfo.pagesAffected)
           .map(pageEntry => {
             const [url, pageInfo] = pageEntry;
+            if (isCustomFlow) {
+              pageInfo.items = Object.entries(pageInfo.items)
+                .map(itemEntry => {
+                  const [pageIndex, itemInfo] = itemEntry; 
+                  return { pageIndex, ...itemInfo };
+                })
+            }
             return { url, ...pageInfo };
           })
           .sort((page1, page2) => page2.items.length - page1.items.length);
@@ -369,7 +389,6 @@ export const generateArtifacts = async (
   pagesScanned,
   pagesNotScanned,
   customFlowLabel,
-  browserToRun
 ) => {
   const phAppVersion = getVersion();
   const storagePath = getStoragePath(randomToken);
@@ -406,16 +425,23 @@ export const generateArtifacts = async (
     allFiles.map(async file => parseContentToJson(`${directory}/${file}`)),
   );
 
+  const isCustomFlow = scanType === 'Customized';
+  console.log(scanType);
+
   await Promise.all(
     jsonArray.map(async pageResults => {
-      await pushResults(pageResults, allIssues);
+      await pushResults(pageResults, allIssues, isCustomFlow);
     }),
   ).catch(flattenIssuesError => {
     consoleLogger.info('An error has occurred when flattening the issues, please try again.');
     silentLogger.error(flattenIssuesError.stack);
   });
 
-  flattenAndSortResults(allIssues);
+  fs.writeFileSync('./afterPushResults-Modified.json', JSON.stringify(allIssues));
+
+  flattenAndSortResults(allIssues, isCustomFlow);
+
+  fs.writeFileSync('./afterFlattenAndSort-Modified.json', JSON.stringify(allIssues));
 
   allIssues.totalPages = allIssues.totalPagesScanned + allIssues.totalPagesNotScanned;
 
@@ -432,10 +458,10 @@ export const generateArtifacts = async (
 
   const htmlFilename = `${storagePath}/reports/summary.html`;
   const fileDestinationPath = `${storagePath}/reports/summary.pdf`;
-  await writeResults(allIssues, storagePath);
-  await writeCsv(allIssues, storagePath);
+  // await writeResults(allIssues, storagePath);
+  // await writeCsv(allIssues, storagePath);
   await writeHTML(allIssues, storagePath, scanType, customFlowLabel);
-  await writeSummaryHTML(allIssues, storagePath, scanType, customFlowLabel);
-  await writeSummaryPdf(htmlFilename, fileDestinationPath);
-  return createRuleIdJson(allIssues);
+  // await writeSummaryHTML(allIssues, storagePath, scanType, customFlowLabel);
+  // await writeSummaryPdf(htmlFilename, fileDestinationPath);
+  // return createRuleIdJson(allIssues);
 };

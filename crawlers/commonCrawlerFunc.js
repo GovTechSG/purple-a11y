@@ -7,7 +7,7 @@ import { guiInfoLog } from '../logs.js';
 import { takeScreenshotForHTMLElements } from '../screenshotFunc/htmlScreenshotFunc.js';
 import fs from 'fs';
 
-export const filterAxeResults = (needsReview, results, pageTitle) => {
+export const filterAxeResults = (needsReview, results, pageTitle, isCustomFlow, customFlowDetails) => {
   const { violations, passes, incomplete, url } = results;
 
   let totalItems = 0;
@@ -86,19 +86,23 @@ export const filterAxeResults = (needsReview, results, pageTitle) => {
     });
   });
 
-  return {
+  
+  const item =  {
     url,
     pageTitle,
+    ...(isCustomFlow && { pageIndex: customFlowDetails.pageIndex }),
+    ...(isCustomFlow && { pageImagePath: customFlowDetails.pageImagePath}),
     totalItems,
     mustFix,
     goodToFix,
     passed,
   };
+
+  return item;
 };
 
-export const runAxeScript = async (needsReview, includeScreenshots, page, randomToken, selectors = []) => {
+export const runAxeScript = async (needsReview, includeScreenshots, page, randomToken, isCustomFlow, customFlowDetails, selectors = []) => {
   await crawlee.playwrightUtils.injectFile(page, axeScript);
-
   const results = await page.evaluate(
     async ({ selectors, saflyIconSelector, needsReview }) => {
       // remove so that axe does not scan
@@ -127,7 +131,7 @@ export const runAxeScript = async (needsReview, includeScreenshots, page, random
   }
   
   const pageTitle = await page.evaluate(() => document.title);
-  return filterAxeResults(needsReview, results, pageTitle);
+  return filterAxeResults(needsReview, results, pageTitle, isCustomFlow, customFlowDetails);
 };
 
 export const createCrawleeSubFolders = async randomToken => {

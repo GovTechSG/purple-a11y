@@ -111,7 +111,8 @@ const intermediateScreenshotsPath = getIntermediateScreenshotsPath(
 );
 
 const checkIfScanRequired = async page => {
-  const imgPath = intermediateScreenshotsPath + '/PHScan-screenshot' + index.toString() + '.png';
+  const imgName = 'PHScan-screenshot' + index.toString() + '.png' 
+  const imgPath = intermediateScreenshotsPath + '/' + imgName;
 
   index += 1;
 
@@ -191,7 +192,7 @@ const checkIfScanRequired = async page => {
 
   if (originalSize) await page.setViewportSize(originalSize);
 
-  var isSimilarPage = true;
+  var isSimilarPage = false;
 
   if (!urlImageDictionary[pageUrl]) {
     urlImageDictionary[pageUrl] = [imgPath];
@@ -199,43 +200,57 @@ const checkIfScanRequired = async page => {
     consoleLogger.info(\`Process page at: \${page.url()} , Scan required? true\`);
     silentLogger.info(\`Process page at: \${page.url()} , Scan required? true\`);
     
-    return true;
+    return {
+      scanRequired: true,
+      pageIndex: 1, 
+      pageImagePath: \`screenshots/\${imgName}\` // relative path from reports folder
+    };
   } else {
     try {
       const currImg = screenshotBuff;
-      const prevImgIdx = urlImageDictionary[pageUrl].length - 1;
-      const prevImg = fs.readFileSync(urlImageDictionary[pageUrl][prevImgIdx]);
-      const comparator = getComparator('image/png');
-      console.time('Time taken');
-      const isDiff = comparator(currImg, prevImg, { maxDiffPixelRatio: 0.04 });
+      let prevImgIdx = urlImageDictionary[pageUrl].length - 1;
 
-      if (isDiff && isDiff.errorMessage && isDiff.errorMessage.includes("ratio")) {
-          urlImageDictionary[pageUrl].push(imgPath)
-          isSimilarPage = false;
-      } else {
+      while (!isSimilarPage && prevImgIdx >= 0) {
+        const prevImg = fs.readFileSync(urlImageDictionary[pageUrl][prevImgIdx]);
+        const comparator = getComparator('image/png');
+        console.time('Time taken');
+        const isDiff = comparator(currImg, prevImg, { maxDiffPixelRatio: 0.04 });
+
+        if (isDiff && isDiff.errorMessage && isDiff.errorMessage.includes('ratio')) {
+          prevImgIdx--;
+        } else {
+          isSimilarPage = true;
+        }
+
+        console.timeEnd('Time taken');
+      }
+      console.log('is similar page: ', isSimilarPage);
+
+      if (isSimilarPage) {
         // Delete screenshot
         fs.unlink(imgPath, err => {
           if (err) throw err;
         });
-
-        isSimilarPage = true;
+      } else {
+        urlImageDictionary[pageUrl].push(imgPath)
       }
 
       consoleLogger.info(\`Process page at: \${page.url()} , Scan required? \${!isSimilarPage}\`);
       silentLogger.info(\`Process page at: \${page.url()} , Scan required? \${!isSimilarPage}\`);
-      
-      console.timeEnd('Time taken');
 
+      return {
+        scanRequired: !isSimilarPage, 
+        ...(!isSimilarPage && { pageIndex: urlImageDictionary[pageUrl].length}),
+        ...(!isSimilarPage && { pageImagePath: \`screenshots/\${imgName}\`})
+      };
     } catch (error) {
       console.error('error: ', error);
     }
-
-    return !isSimilarPage;
   }
 };
 
-const runAxeScan = async (needsReviewItems, includeScreenshots, page) => {
-  const result = await runAxeScript(needsReviewItems, includeScreenshots, page, ${formatScriptStringVar(randomToken)});
+const runAxeScan = async (needsReviewItems, includeScreenshots, page, customFlowDetails) => {
+  const result = await runAxeScript(needsReviewItems, includeScreenshots, page, ${formatScriptStringVar(randomToken)}, true, customFlowDetails);
   await dataset.pushData(result);
   urlsCrawled.scanned.push({ url: page.url(), pageTitle: result.pageTitle });
 }
@@ -256,14 +271,14 @@ const processPage = async page => {
     urlsCrawled.userExcluded.push(pageUrl)
     return;
   } else {
-    const scanRequired = await checkIfScanRequired(page);
+    const { scanRequired, pageIndex, pageImagePath } = await checkIfScanRequired(page);
     
     if (scanRequired) {
       guiInfoLog(guiInfoStatusTypes.SCANNED, {
         numScanned: urlsCrawled.scanned.length,
         urlScanned: pageUrl,
       });
-      await runAxeScan(${needsReviewItems}, ${includeScreenshots}, page);
+      await runAxeScan(${needsReviewItems}, ${includeScreenshots}, page, { pageIndex, pageImagePath });
     }
   }
 };

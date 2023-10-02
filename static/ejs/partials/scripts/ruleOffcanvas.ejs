@@ -154,6 +154,7 @@ category summary is clicked %>
 
   function buildExpandedRuleCategoryContent(category, ruleInCategory) {
     const contentContainer = document.getElementById('expandedRuleCategoryContent');
+    const isCustomFlow = <%- scanType === 'Customized' -%>;
 
     if (category === 'passed') {
       contentContainer.innerHTML = `You may find the list of passed HTML elements in <a href='./passed_items.json.txt' target='_blank'>passed_items.json.txt</a>.`;
@@ -179,9 +180,8 @@ category summary is clicked %>
             <div class="accordion-item">
               <div class="accordion-header" id="${accordionId}-title">
                 <button 
-                  aria-label="Page ${index + 1}: ${page.pageTitle}, ${
-        page.items.length
-      } occurrences" class="accordion-button collapsed" 
+                  aria-label="Page ${index + 1}: ${page.pageTitle}, ${isCustomFlow ? page.occurrences : page.items.length} occurrences"
+                  class="accordion-button collapsed" 
                   type="button" 
                   data-bs-toggle="collapse" 
                   data-bs-target="#${accordionId}-content" 
@@ -189,18 +189,12 @@ category summary is clicked %>
                   aria-controls="${accordionId}-content"
                 >
                   <div class="me-3">${page.pageTitle}</div>
-                  <div class="ms-auto counter">${page.items.length}</div>
+                  <div class="ms-auto counter">${isCustomFlow ? page.occurrences : page.items.length}</div>
                 </button>
               </div>
               <div id="${accordionId}-content" class="accordion-collapse collapse" aria-labelledby="${accordionId}-title">
                 <div class="accordion-body p-3">
-                  <a aria-label="URL to ${page.pageTitle}" href="${page.url}" target="_blank">${
-        page.url
-      }</a>
-                  <div class="page-accordion-content-title">
-                    <span>${getFormattedCategoryTitle(category)} elements</span>
-                    <span class="page-items-count">${page.items.length}</span>
-                  </div>
+                  <a aria-label="URL to ${page.pageTitle}" href="${page.url}" target="_blank">${page.url}</a>
                 </div>
               </div>
             </div>
@@ -211,98 +205,338 @@ category summary is clicked %>
       accordionsList.appendChild(accordion);
 
       const accordionBody = accordion.getElementsByClassName('accordion-body')[0];
-      const elementCardsList = createElementFromString('<ul class="unbulleted-list"></ul>');
 
-      page.items.forEach(async (item, index) => {
-        const accordionDivToAppendAI = `${accordionAIId}-${index}`;
-        const buttonDivForAiFeedback = `${buttonAIId}-${index}`;
-        const aiErrorDiv = `${errorAIId}-${index}`;
-        let itemCard;
-        const isPurpleAiRule = purpleAiRules.includes(ruleInCategory.rule) && showPurpleAi;
-        let purpleAiQueryLabel;
-        if (isPurpleAiRule) {
-          purpleAiQueryLabel = await checkPurpleAiQueryLabel(ruleInCategory.rule, item.html);
-        }
-
-        itemCard = createElementFromString(`
-          <li>
-            <div class="card mt-3">
-              ${item.displayNeedsReview ? `<div class="needsReview">This occurrence might be a false positive that needs to be verified by a human.</div>` : ``}
-              <div class="p-3">
-                ${item.screenshotPath
-                  ?
-                `
-                <div class="hide-on-img-error">
-                  <div class="d-flex justify-content-between">
-                    <div class="fw-bold">Screenshot</div>
-                    <pre class="page-item-card-section-content">
-                      <img 
-                        src=${item.screenshotPath} 
-                        onerror="this.onerror = null; this.closest('div.hide-on-img-error').remove();"
-                        alt="Screenshot of affected element" />
-                    </pre>
+      if (isCustomFlow) {
+        if (page.items.length > 1) {
+          const pageAccordionsList = createElementFromString(`<ul class="unbulleted-list"></ul>`);
+          page.items.forEach(async (pageItem, index) => {
+            const pageAccordionId = `${ruleInCategory.rule}-${category}-page-${index}-${pageItem.pageImagePath}`;
+            const pageAccordion = createElementFromString(`
+            <li>
+              <div class="accordion mt-2">
+                <div class="accordion-item">
+                  <div class="accordion-header" id="${pageAccordionId}-title">
+                    <button 
+                      aria-label="Page ${pageItem.pageIndex}: ${pageItem.items.length} occurrences"
+                      class="accordion-button collapsed" 
+                      type="button" 
+                      data-bs-toggle="collapse" 
+                      data-bs-target="#${pageAccordionId}-content" 
+                      aria-expanded="false" 
+                      aria-controls="${pageAccordionId}-content"
+                    >
+                      <div class="me-3">Page ${pageItem.pageIndex}</div>
+                      <div class="ms-auto counter">${pageItem.items.length}</div>
+                    </button>
                   </div>
-                  <hr/> 
+                  <div id="${pageAccordionId}-content" class="accordion-collapse collapse" aria-labelledby="${pageAccordionId}-title">
+                    <div class="accordion-body p-3 page-accordion-body">
+                      <div class="page-accordion-content-title">
+                        <span>${getFormattedCategoryTitle(category)} elements</span>
+                        <span class="page-items-count">${page.items.length}</span>
+                      </div>
+                      <img src=${pageItem.pageImagePath} class="custom-flow-screenshot"/>
+                    </div>
+                  </div>
                 </div>
-                `
-                  : ``
-                }
-                <div class="d-flex justify-content-between">
-                  ${
-                    item.html
-                      ? `
-                      <div class="fw-bold">HTML element</div>
-                      <pre class="page-item-card-section-content">
-                        <code class="language-html">
-                          ${htmlEscapeString(item.html)}
-                        </code>
-                      </pre>`
-                      : `
-                      <div class="fw-bold">Location</div>
-                      <div class="page-item-card-section-content">
-                          ${item.page > 0 ? `Page ${item.page}` : 'Document'}
-                      </div>`
+              </div>
+            </li>
+          `);
+          pageAccordionsList.appendChild(pageAccordion);
+
+          const pageAccordionBody = pageAccordion.getElementsByClassName(`page-accordion-body`)[0];
+          const elementCardsList = createElementFromString('<ul class="unbulleted-list"></ul>');
+
+          pageItem.items.forEach(async (item, index) => {
+              const accordionDivToAppendAI = `${accordionAIId}-${pageAccordionId}-${index}`;
+              const buttonDivForAiFeedback = `${buttonAIId}-${pageAccordionId}-${index}`;
+              const aiErrorDiv = `${errorAIId}-${pageAccordionId}-${index}`;
+
+              const isPurpleAiRule = purpleAiRules.includes(ruleInCategory.rule) && showPurpleAi;
+              let purpleAiQueryLabel;
+              if (isPurpleAiRule) {
+                purpleAiQueryLabel = await checkPurpleAiQueryLabel(ruleInCategory.rule, item.html);
+              }
+
+              let itemCard;
+              itemCard = createElementFromString(`
+                <li>
+                  <div class="card mt-3">
+                    ${item.displayNeedsReview ? `<div class="needsReview">This occurrence might be a false positive that needs to be verified by a human.</div>` : ``}
+                    <div class="p-3">
+                      ${item.screenshotPath
+                        ?
+                      `
+                      <div class="hide-on-img-error">
+                        <div class="d-flex justify-content-between">
+                          <div class="fw-bold">Screenshot</div>
+                          <pre class="page-item-card-section-content">
+                            <img 
+                              src=${item.screenshotPath} 
+                              onerror="this.onerror = null; this.closest('div.hide-on-img-error').remove();"
+                              alt="Screenshot of affected element" />
+                          </pre>
+                        </div>
+                        <hr/> 
+                      </div>
+                      `
+                        : ``
+                      }
+                      <div class="d-flex justify-content-between">
+                        ${
+                          item.html
+                            ? `
+                            <div class="fw-bold">HTML element</div>
+                            <pre class="page-item-card-section-content">
+                              <code class="language-html">
+                                ${htmlEscapeString(item.html)}
+                              </code>
+                            </pre>`
+                            : `
+                            <div class="fw-bold">Location</div>
+                            <div class="page-item-card-section-content">
+                                ${item.page > 0 ? `Page ${item.page}` : 'Document'}
+                            </div>`
+                        }
+                      </div>
+                      <hr />
+                      <div class="d-flex justify-content-between g-one">
+                        <div class="fw-bold page-item-card-section-title">${
+                          item.displayNeedsReview ? 'Details' : 'How to fix'
+                        }</div>
+                        <div class="page-item-card-section-content">
+                          ${generateItemMessageElement(item.displayNeedsReview, item.message)}
+                        </div>
+                      </div>
+                      ${isPurpleAiRule ? `
+                      <hr />
+                      <div class="d-flex g-one">
+                        <div class="fw-bold page-item-card-section-title">AI suggestion</div>
+                        <div id="${accordionDivToAppendAI}" class="page-item-card-section-content">
+                          ${purpleAiQueryLabel ? `
+                            <button id=${buttonDivForAiFeedback} class="aiGenerateResponseButton" onClick="getPurpleAiAnswer('${
+                              ruleInCategory.rule
+                            }','${accordionDivToAppendAI}', '${purpleAiQueryLabel}', '${buttonDivForAiFeedback}', '${aiErrorDiv}')">Generate response</button>
+                            <div id=${aiErrorDiv}></div>` : `
+                            <span class="processAI">Processing AI suggestions, please check back later.</span>` 
+                          }
+                        </div>
+                      </div>` : ``
+                      }
+                    </div>
+                  </div>
+                <li>
+              `);
+              elementCardsList.appendChild(itemCard);
+
+              hljs.configure({
+                ignoreUnescapedHTML: true
+              });
+              hljs.highlightAll();
+            })
+            pageAccordionBody.appendChild(elementCardsList);
+          });
+
+          accordionBody.appendChild(pageAccordionsList);
+        } else {
+            page.items.forEach((pageItem, index) => {
+              accordionBody.appendChild(createElementFromString(` 
+                      <div class="page-accordion-content-title">
+                        <span>${getFormattedCategoryTitle(category)} elements</span>
+                        <span class="page-items-count">${page.items.length}</span>
+                      </div>`))
+              accordionBody.appendChild(createElementFromString(`<img src=${pageItem.pageImagePath} class="custom-flow-screenshot"/>`));
+              const elementCardsList = createElementFromString('<ul class="unbulleted-list"></ul>');
+              pageItem.items.forEach(async (item, index) => {
+                  const accordionDivToAppendAI = `${accordionAIId}-${index}`;
+                  const buttonDivForAiFeedback = `${buttonAIId}-${index}`;
+                  const aiErrorDiv = `${errorAIId}-${index}`;
+
+                  const isPurpleAiRule = purpleAiRules.includes(ruleInCategory.rule) && showPurpleAi;
+                  let purpleAiQueryLabel;
+                  if (isPurpleAiRule) {
+                    purpleAiQueryLabel = await checkPurpleAiQueryLabel(ruleInCategory.rule, item.html);
                   }
-                </div>
-                <hr />
-                <div class="d-flex justify-content-between g-one">
-                  <div class="fw-bold page-item-card-section-title">${
-                    item.displayNeedsReview ? 'Details' : 'How to fix'
-                  }</div>
-                  <div class="page-item-card-section-content">
-                    ${generateItemMessageElement(item.displayNeedsReview, item.message)}
+
+                  let itemCard;
+                  itemCard = createElementFromString(`
+                    <li>
+                      <div class="card mt-3">
+                        ${item.displayNeedsReview ? `<div class="needsReview">This occurrence might be a false positive that needs to be verified by a human.</div>` : ``}
+                        <div class="p-3">
+                          ${item.screenshotPath
+                            ?
+                          `
+                          <div class="hide-on-img-error">
+                            <div class="d-flex justify-content-between">
+                              <div class="fw-bold">Screenshot</div>
+                              <pre class="page-item-card-section-content">
+                                <img 
+                                  src=${item.screenshotPath} 
+                                  onerror="this.onerror = null; this.closest('div.hide-on-img-error').remove();"
+                                  alt="Screenshot of affected element" />
+                              </pre>
+                            </div>
+                            <hr/> 
+                          </div>
+                          `
+                            : ``
+                          }
+                          <div class="d-flex justify-content-between">
+                            ${
+                              item.html
+                                ? `
+                                <div class="fw-bold">HTML element</div>
+                                <pre class="page-item-card-section-content">
+                                  <code class="language-html">
+                                    ${htmlEscapeString(item.html)}
+                                  </code>
+                                </pre>`
+                                : `
+                                <div class="fw-bold">Location</div>
+                                <div class="page-item-card-section-content">
+                                    ${item.page > 0 ? `Page ${item.page}` : 'Document'}
+                                </div>`
+                            }
+                          </div>
+                          <hr />
+                          <div class="d-flex justify-content-between g-one">
+                            <div class="fw-bold page-item-card-section-title">${
+                              item.displayNeedsReview ? 'Details' : 'How to fix'
+                            }</div>
+                            <div class="page-item-card-section-content">
+                              ${generateItemMessageElement(item.displayNeedsReview, item.message)}
+                            </div>
+                          </div>
+                          ${isPurpleAiRule ? `
+                          <hr />
+                          <div class="d-flex g-one">
+                            <div class="fw-bold page-item-card-section-title">AI suggestion</div>
+                            <div id="${accordionDivToAppendAI}" class="page-item-card-section-content">
+                              ${purpleAiQueryLabel ? `
+                                <button id=${buttonDivForAiFeedback} class="aiGenerateResponseButton" onClick="getPurpleAiAnswer('${
+                                  ruleInCategory.rule
+                                }','${accordionDivToAppendAI}', '${purpleAiQueryLabel}', '${buttonDivForAiFeedback}', '${aiErrorDiv}')">Generate response</button>
+                                <div id=${aiErrorDiv}></div>` : `
+                                <span class="processAI">Processing AI suggestions, please check back later.</span>` 
+                              }
+                            </div>
+                          </div>` : ``
+                          }
+                        </div>
+                      </div>
+                    <li>
+                  `);
+                  elementCardsList.appendChild(itemCard);
+
+                  hljs.configure({
+                    ignoreUnescapedHTML: true
+                  });
+                  hljs.highlightAll();
+                })
+                accordionBody.appendChild(elementCardsList);
+                return accordion;
+            })
+        }
+      } else {
+        accordionBody.appendChild(createElementFromString(` 
+                      <div class="page-accordion-content-title">
+                        <span>${getFormattedCategoryTitle(category)} elements</span>
+                        <span class="page-items-count">${page.items.length}</span>
+                      </div>`))
+        const elementCardsList = createElementFromString('<ul class="unbulleted-list"></ul>');
+
+        page.items.forEach(async (item, index) => {
+          console.log(item);
+          const accordionDivToAppendAI = `${accordionAIId}-${index}`;
+          const buttonDivForAiFeedback = `${buttonAIId}-${index}`;
+          const aiErrorDiv = `${errorAIId}-${index}`;
+          let itemCard;
+          const isPurpleAiRule = purpleAiRules.includes(ruleInCategory.rule) && showPurpleAi;
+          let purpleAiQueryLabel;
+          if (isPurpleAiRule) {
+            purpleAiQueryLabel = await checkPurpleAiQueryLabel(ruleInCategory.rule, item.html);
+          }
+
+          itemCard = createElementFromString(`
+            <li>
+              <div class="card mt-3">
+                ${item.displayNeedsReview ? `<div class="needsReview">This occurrence might be a false positive that needs to be verified by a human.</div>` : ``}
+                <div class="p-3">
+                  ${item.screenshotPath
+                    ?
+                  `
+                  <div class="hide-on-img-error">
+                    <div class="d-flex justify-content-between">
+                      <div class="fw-bold">Screenshot</div>
+                      <pre class="page-item-card-section-content">
+                        <img 
+                          src=${item.screenshotPath} 
+                          onerror="this.onerror = null; this.closest('div.hide-on-img-error').remove();"
+                          alt="Screenshot of affected element" />
+                      </pre>
+                    </div>
+                    <hr/> 
                   </div>
-                </div>
-                ${isPurpleAiRule ? `
-                <hr />
-                <div class="d-flex g-one">
-                  <div class="fw-bold page-item-card-section-title">AI suggestion</div>
-                  <div id="${accordionDivToAppendAI}" class="page-item-card-section-content">
-                    ${purpleAiQueryLabel ? `
-                      <button id=${buttonDivForAiFeedback} class="aiGenerateResponseButton" onClick="getPurpleAiAnswer('${
-                        ruleInCategory.rule
-                      }','${accordionDivToAppendAI}', '${purpleAiQueryLabel}', '${buttonDivForAiFeedback}', '${aiErrorDiv}')">Generate response</button>
-                      <div id=${aiErrorDiv}></div>` : `
-                      <span class="processAI">Processing AI suggestions, please check back later.</span>` 
+                  `
+                    : ``
+                  }
+                  <div class="d-flex justify-content-between">
+                    ${
+                      item.html
+                        ? `
+                        <div class="fw-bold">HTML element</div>
+                        <pre class="page-item-card-section-content">
+                          <code class="language-html">
+                            ${htmlEscapeString(item.html)}
+                          </code>
+                        </pre>`
+                        : `
+                        <div class="fw-bold">Location</div>
+                        <div class="page-item-card-section-content">
+                            ${item.page > 0 ? `Page ${item.page}` : 'Document'}
+                        </div>`
                     }
                   </div>
-                </div>` : ``
-                }
+                  <hr />
+                  <div class="d-flex justify-content-between g-one">
+                    <div class="fw-bold page-item-card-section-title">${
+                      item.displayNeedsReview ? 'Details' : 'How to fix'
+                    }</div>
+                    <div class="page-item-card-section-content">
+                      ${generateItemMessageElement(item.displayNeedsReview, item.message)}
+                    </div>
+                  </div>
+                  ${isPurpleAiRule ? `
+                  <hr />
+                  <div class="d-flex g-one">
+                    <div class="fw-bold page-item-card-section-title">AI suggestion</div>
+                    <div id="${accordionDivToAppendAI}" class="page-item-card-section-content">
+                      ${purpleAiQueryLabel ? `
+                        <button id=${buttonDivForAiFeedback} class="aiGenerateResponseButton" onClick="getPurpleAiAnswer('${
+                          ruleInCategory.rule
+                        }','${accordionDivToAppendAI}', '${purpleAiQueryLabel}', '${buttonDivForAiFeedback}', '${aiErrorDiv}')">Generate response</button>
+                        <div id=${aiErrorDiv}></div>` : `
+                        <span class="processAI">Processing AI suggestions, please check back later.</span>` 
+                      }
+                    </div>
+                  </div>` : ``
+                  }
+                </div>
               </div>
-            </div>
-          <li>
-        `);
-        elementCardsList.appendChild(itemCard);
+            <li>
+          `);
+          elementCardsList.appendChild(itemCard);
 
-        hljs.configure({
-          ignoreUnescapedHTML: true
+          hljs.configure({
+            ignoreUnescapedHTML: true
+          });
+          hljs.highlightAll();
         });
-        hljs.highlightAll();
-      });
-
-      accordionBody.appendChild(elementCardsList);
-      return accordion;
-    });
+        accordionBody.appendChild(elementCardsList);
+        return accordion;
+      }
+    });    
     contentContainer.replaceChildren(contentTitle, accordionsList);
 
     hljs.highlightAll();
