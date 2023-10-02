@@ -402,10 +402,9 @@ const clickFunc = async (elem,page) => {
 
     // use webkit for recording due to flaky codegen on mobile / specify viewports
     if (os.platform() === 'darwin') {
-      browser = 'webkit';
-      channel = '';
+      // Use Chrome
     } else {
-      // Windows
+      // Use Edge if Chrome cannot be launched on data directory
       if (!getDefaultChromeDataDir()) {
         channel = 'msedge';
       }
