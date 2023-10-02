@@ -16,7 +16,7 @@ import {
   isSkippedUrl,
 } from '../constants/common.js';
 import { areLinksEqual } from '../utils.js';
-import { handlePdfDownload, runPdfScan, mapPdfScanResults, doPdfScreenshots } from './pdfScanFunc.js';
+import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
 import fs from 'fs';
 import { guiInfoLog } from '../logs.js';
 import { chromium } from 'playwright';
@@ -139,7 +139,6 @@ const crawlDomain = async (
       enqueueLinks,
       enqueueLinksByClickingElements,
     }) => {
-
       // loadedUrl is the URL after redirects
       const actualUrl = request.loadedUrl || request.url;
 
@@ -194,7 +193,7 @@ const crawlDomain = async (
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
         });
-        urlsCrawled.invalid.push({url: request.url});
+        urlsCrawled.invalid.push({ url: request.url });
         return;
       }
 
@@ -266,8 +265,11 @@ const crawlDomain = async (
       }
     },
     failedRequestHandler: async ({ request }) => {
-      guiInfoLog(guiInfoStatusTypes.ERROR, { numScanned: urlsCrawled.scanned.length, urlScanned: request.url });
-      urlsCrawled.error.push({url: request.url});
+      guiInfoLog(guiInfoStatusTypes.ERROR, {
+        numScanned: urlsCrawled.scanned.length,
+        urlScanned: request.url,
+      });
+      urlsCrawled.error.push({ url: request.url });
       crawlee.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
     },
     maxRequestsPerCrawl,
@@ -287,11 +289,11 @@ const crawlDomain = async (
     const pdfResults = await mapPdfScanResults(randomToken, uuidToPdfMapping);
 
     // get screenshots from pdf docs
-    if (includeScreenshots) {
-      await Promise.all(pdfResults.map(
-        async result => await doPdfScreenshots(randomToken, result)
-      ));
-    }
+    // if (includeScreenshots) {
+    //   await Promise.all(pdfResults.map(
+    //     async result => await doPdfScreenshots(randomToken, result)
+    //   ));
+    // }
 
     // push results for each pdf document to key value store
     await Promise.all(pdfResults.map(result => dataset.pushData(result)));
