@@ -69,7 +69,7 @@ const writeResults = async (allissues, storagePath, isCustomFlow, jsonFilename =
   }
 };
 
-const writeCsv = async (allIssues, storagePath) => {
+const writeCsv = async (allIssues, storagePath, isCustomFlow) => {
   const csvOutput = createWriteStream(`${storagePath}/reports/report.csv`, { encoding: 'utf8' });
   const formatPageViolation = pageNum => {
     if (pageNum < 0) return 'Document';
@@ -112,26 +112,50 @@ const writeCsv = async (allIssues, storagePath) => {
     pagesAffected.sort((a, b) => a.url.localeCompare(b.url));
     // format clauses as a string
     const wcagConformance = clausesArr.join(',');
+  
     for (let page of pagesAffected) {
       const { url, items } = page;
-      items.forEach(item => {
-        const { html, page, message } = item;
-        const howToFix = message.replace(/(\r\n|\n|\r)/g, ' '); // remove newlines
-
-        // page is a number, not string
-        const violation = html ? html : formatPageViolation(page);
-        const context = violation.replace(/(\r\n|\n|\r)/g, ''); // remove newlines
-        results.push({
-          severity,
-          issueId,
-          issueDescription,
-          wcagConformance,
-          url,
-          context,
-          howToFix,
-          learnMore,
-        });
-      })
+      if (isCustomFlow) {
+        items.forEach(pageItem => {
+          pageItem.items.forEach(item => {
+            const { html, page, message } = item;
+            const howToFix = message.replace(/(\r\n|\n|\r)/g, ' '); // remove newlines
+    
+            // page is a number, not string
+            const violation = html ? html : formatPageViolation(page);
+            const context = violation.replace(/(\r\n|\n|\r)/g, ''); // remove newlines
+            results.push({
+              severity,
+              issueId,
+              issueDescription,
+              wcagConformance,
+              url,
+              context,
+              howToFix,
+              learnMore,
+            });
+          })
+        })
+      } else {
+        items.forEach(item => {
+          const { html, page, message } = item;
+          const howToFix = message.replace(/(\r\n|\n|\r)/g, ' '); // remove newlines
+  
+          // page is a number, not string
+          const violation = html ? html : formatPageViolation(page);
+          const context = violation.replace(/(\r\n|\n|\r)/g, ''); // remove newlines
+          results.push({
+            severity,
+            issueId,
+            issueDescription,
+            wcagConformance,
+            url,
+            context,
+            howToFix,
+            learnMore,
+          });
+        })
+      }
     }
     if (results.length === 0) return {};
     return results;
@@ -345,7 +369,7 @@ const flattenAndSortResults = (allIssues, isCustomFlow) => {
   allIssues.wcagViolations = Array.from(allIssues.wcagViolations);
 };
 
-const createRuleIdJson = allIssues => {
+const createRuleIdJson = (allIssues, isCustomFlow) => {
   const compiledRuleJson = {};
 
   const ruleIterator = rule => {
@@ -355,9 +379,17 @@ const createRuleIdJson = allIssues => {
     if (purpleAiRules.includes(ruleId)) {
       const snippetsSet = new Set();
       rule.pagesAffected.forEach(page => {
-        page.items.forEach(htmlItem => {
-          snippetsSet.add(purpleAiHtmlETL(htmlItem.html));
-        });
+        if (isCustomFlow) {
+          page.items.forEach(pageItem => {
+            pageItem.items.forEach(htmlItem => {
+              snippetsSet.add(purpleAiHtmlETL(htmlItem.html))
+            })
+          })
+        } else {
+          page.items.forEach(htmlItem => {
+            snippetsSet.add(purpleAiHtmlETL(htmlItem.html));
+          });
+        }
       });
       snippets = [...snippetsSet];
     }
@@ -426,7 +458,6 @@ export const generateArtifacts = async (
   );
 
   const isCustomFlow = scanType === 'Customized';
-  console.log(scanType);
 
   await Promise.all(
     jsonArray.map(async pageResults => {
@@ -437,11 +468,7 @@ export const generateArtifacts = async (
     silentLogger.error(flattenIssuesError.stack);
   });
 
-  fs.writeFileSync('./afterPushResults-Modified.json', JSON.stringify(allIssues));
-
   flattenAndSortResults(allIssues, isCustomFlow);
-
-  fs.writeFileSync('./afterFlattenAndSort-Modified.json', JSON.stringify(allIssues));
 
   allIssues.totalPages = allIssues.totalPagesScanned + allIssues.totalPagesNotScanned;
 
@@ -458,10 +485,10 @@ export const generateArtifacts = async (
 
   const htmlFilename = `${storagePath}/reports/summary.html`;
   const fileDestinationPath = `${storagePath}/reports/summary.pdf`;
-  // await writeResults(allIssues, storagePath);
-  // await writeCsv(allIssues, storagePath);
+  await writeResults(allIssues, storagePath);
+  await writeCsv(allIssues, storagePath, isCustomFlow);
   await writeHTML(allIssues, storagePath, scanType, customFlowLabel);
-  // await writeSummaryHTML(allIssues, storagePath, scanType, customFlowLabel);
-  // await writeSummaryPdf(htmlFilename, fileDestinationPath);
-  // return createRuleIdJson(allIssues);
+  await writeSummaryHTML(allIssues, storagePath, scanType, customFlowLabel);
+  await writeSummaryPdf(htmlFilename, fileDestinationPath);
+  return createRuleIdJson(allIssues, isCustomFlow);
 };

@@ -224,7 +224,6 @@ const checkIfScanRequired = async page => {
 
         console.timeEnd('Time taken');
       }
-      console.log('is similar page: ', isSimilarPage);
 
       if (isSimilarPage) {
         // Delete screenshot
