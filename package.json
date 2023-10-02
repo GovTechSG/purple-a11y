@@ -1,16 +1,15 @@
 {
   "name": "@govtechsg/purple-hats",
   "main": "npmIndex.js",
-  "version": "0.9.21",
+  "version": "0.9.22",
   "type": "module",
   "imports": {
     "#root/*.js": "./*.js"
   },
   "dependencies": {
     "@json2csv/node": "^7.0.3",
-    "axe-core": "^4.6.2",
+    "axe-core": "^4.8.2",
     "axios": "^1.2.2",
-    "canvas": "^2.11.2",
     "cheerio": "^1.0.0-rc.12",
     "crawlee": "^3.5.2",
     "ejs": "^3.1.9",
