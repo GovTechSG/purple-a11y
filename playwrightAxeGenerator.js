@@ -268,7 +268,14 @@ const processPage = async page => {
   }
 };
 
-const clickFunc = async (elem,page) => {
+const clickFunc = async (elem,page, clickOptions=undefined) => {
+  const clickElem = async (e) => {
+    if (clickOptions) {
+      await e.click(clickOptions);
+    } else {
+      await e.click();
+    }
+  }
   const numElems = await elem.count(); 
   consoleLogger.info(\`Number of matched elements: \${numElems}\`);
   
@@ -294,7 +301,8 @@ const clickFunc = async (elem,page) => {
 
           if (await waitForElemIsVisible(nth, 500)) {
             await processPage(page);
-            await nth.click();
+            // await nth.click(clickOptions);
+            await clickElem(nth);
             return;
           }
 
@@ -307,14 +315,16 @@ const clickFunc = async (elem,page) => {
     await hoverParentAndClickElem(elem, page);
   
   } else if (numElems === 0) {
-      await elem.click();
+      // await elem.click();
+      await clickElem(elem);
 
   } else for (let index = numElems - 1; index >= 0; index--) {
       const nth = await elem.nth(index); 
       if (! await nth.isVisible()) {
         await hoverParentAndClickElem(nth, page);
       } else {
-        await nth.click();
+        // await nth.click();
+        await clickElem(nth);
       }
   }
 
@@ -475,6 +485,7 @@ const clickFunc = async (elem,page) => {
     // } else {
     //   appendToGeneratedScript(importStatementsForWin);
     // }
+    let multilineStr = "";
 
     for await (let line of rl) {
       // remove invalid characters
@@ -510,7 +521,7 @@ const clickFunc = async (elem,page) => {
           }
         }
         if (!proxy && isHeadless) {
-          appendToGeneratedScript(`headless: true`);
+          appendToGeneratedScript(`headless: true,`);
           continue;
         }
       }
@@ -548,6 +559,15 @@ const clickFunc = async (elem,page) => {
         appendToGeneratedScript(`let elem;`);
         continue;
       }
+      // handle actions which take up multiple lines
+      multilineStr += line;
+      if (multilineStr.endsWith(";")) {
+        line = multilineStr;
+        multilineStr = "";
+      } else {
+        continue;
+      }
+
       if (line.trim() === `const page = await context.newPage();`) {
         if (deviceChosen === 'Mobile') {
           appendToGeneratedScript(line);
@@ -635,7 +655,7 @@ const clickFunc = async (elem,page) => {
         nextStepNeedsProcessPage = false;
       }
 
-      if (line.trim().includes('.getByRole(') && line.trim().includes('.click()')) {
+      if (line.trim().includes('.getByRole(') && line.trim().includes('.click(')) {
         // add includeHidden: true to getByRole options
         const paramsStartIdx = line.indexOf('getByRole(') + 'getByRole('.length;
         const paramsEndIdx = line.indexOf(')', paramsStartIdx);
@@ -712,13 +732,23 @@ const clickFunc = async (elem,page) => {
         continue;
       }
 
-      const isClick = line.trim().includes('click()');
+      const isClick = line.trim().includes('click(');
 
       if ((line.trim().includes('getBy') && !line.trim().includes('getByPlaceholder')) || isClick) {
         const lastIndex = line.lastIndexOf('.');
         const locator = line.substring(0, lastIndex);
-        isClick && appendToGeneratedScript(`elem = ${locator}`);
-        appendToGeneratedScript(isClick ? `await clickFunc(elem, page)` : line);
+
+        // get click options if any, include them in the clickFunc
+        const clickOptions = line.match(/[^]*\.click\(([^]*)\)/)[1];
+        if (isClick) {
+          appendToGeneratedScript(`elem = ${locator}`);
+          const clickFuncLine = clickOptions.length
+            ? `await clickFunc(elem, page, ${clickOptions})`
+            : 'await clickFunc(elem, page)';
+          appendToGeneratedScript(clickFuncLine);
+        } else {
+          appendToGeneratedScript(line);
+        }
 
         nextStepNeedsProcessPage = true;
         continue;
