@@ -43,9 +43,6 @@ ENV PATH="/opt/verapdf:${PATH}"
 # Install dependencies
 RUN npm ci --omit=dev
 
-# cleanup build deps
-RUN apk del .build-deps
-
 # Install Playwright browsers
 RUN npx playwright install chromium webkit
 
