@@ -95,3 +95,6 @@ fi
 
 echo "Installing Node dependencies to $PWD"
 npm ci
+
+echo "Installing Playwright Webkit to $PLAYWRIGHT_BROWSERS_PATH"
+npx playwright install webkit
