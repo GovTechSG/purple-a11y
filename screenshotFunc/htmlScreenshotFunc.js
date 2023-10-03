@@ -13,6 +13,7 @@ export const takeScreenshotForHTMLElements = async (violations, page, randomToke
                 try {
                     const screenshotPath = generateScreenshotPath(page.url(), impact, rule, newViolationNodes.length);
                     const locator = page.locator(selector);
+                    await locator.scrollIntoViewIfNeeded();
                     await locator.screenshot({ path: `${randomToken}/${screenshotPath}` });
                     node.screenshotPath = screenshotPath; 
                 } catch (e) {
