@@ -8,7 +8,8 @@ export const takeScreenshotForHTMLElements = async (violations, page, randomToke
         let newViolationNodes = [];
         for (const node of violation.nodes) {
             const { html, target, impact } = node; 
-            const selector = target.length === 1 ? target[0] : null; 
+            const hasValidSelector = target.length === 1 && typeof target[0] === 'string';
+            const selector = hasValidSelector ? target[0] : null; 
             if (selector) {
                 try {
                     const screenshotPath = generateScreenshotPath(page.url(), impact, rule, newViolationNodes.length);
