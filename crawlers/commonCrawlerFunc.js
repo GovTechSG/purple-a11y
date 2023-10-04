@@ -45,7 +45,12 @@ export const filterAxeResults = (needsReview, results, pageTitle) => {
         : failureSummary;
       // add in screenshot path 
       category.rules[rule].items.push(
-        displayNeedsReview ? { html, message, screenshotPath, displayNeedsReview } : { html, message, screenshotPath },
+        {
+          html,
+          message,
+          screenshotPath,
+          ...(displayNeedsReview && { displayNeedsReview })
+        }
       );
       category.rules[rule].totalItems += 1;
       category.totalItems += 1;
