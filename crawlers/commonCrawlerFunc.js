@@ -43,10 +43,16 @@ export const filterAxeResults = (needsReview, results, pageTitle) => {
       const message = displayNeedsReview
         ? failureSummary.slice(failureSummary.indexOf('\n') + 1).trim()
         : failureSummary;
+
+      let finalHtml = html;
+      if (html.includes('</script>')) {
+        finalHtml = html.replaceAll('</script>', '&lt;/script>');
+      }
+      
       // add in screenshot path 
       category.rules[rule].items.push(
         {
-          html,
+          html: finalHtml,
           message,
           screenshotPath,
           ...(displayNeedsReview && { displayNeedsReview })
@@ -128,7 +134,7 @@ export const runAxeScript = async (needsReview, includeScreenshots, page, random
 
   if (includeScreenshots) {
     results.violations = await takeScreenshotForHTMLElements(results.violations, page, randomToken);
-  if (needsReview) results.incomplete = await takeScreenshotForHTMLElements(results.incomplete, page, randomToken);
+    if (needsReview) results.incomplete = await takeScreenshotForHTMLElements(results.incomplete, page, randomToken);
   }
   
   const pageTitle = await page.evaluate(() => document.title);

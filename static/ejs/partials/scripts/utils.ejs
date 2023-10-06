@@ -392,6 +392,9 @@
   }
 
   function htmlEscapeString(string) {
+    if (string.includes('&lt;/script>')) {
+      string = string.replaceAll('&lt;/script>', '<\/script>')
+    }
     return string
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
