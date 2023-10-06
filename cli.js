@@ -288,6 +288,7 @@ const scanInit = async argvs => {
   switch (res.status) {
     case statuses.success.code:
       argvs.finalUrl = res.url;
+      if (process.env.RUNNING_FROM_PH_GUI) console.log('Url is valid');
       break;
     case statuses.unauthorised.code:
       printMessage([statuses.unauthorised.message], messageOptions);
