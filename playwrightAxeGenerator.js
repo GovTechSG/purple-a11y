@@ -368,6 +368,7 @@ const clickFunc = async (elem,page, clickOptions=undefined) => {
     ${formatScriptStringVar(data.nameEmail.split(':')[0])},
     JSON.stringify(basicFormHTMLSnippet),
     urlsCrawled.scanned.length,
+    "${data.metadata.replace(/"/g, '\\"')}",
   );
 
   if (process.env.RUNNING_FROM_PH_GUI) {

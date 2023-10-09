@@ -107,6 +107,7 @@ export const init = async (entryUrl, customFlowLabelTestString, name = "Your Nam
         name,
         JSON.stringify(basicFormHTMLSnippet),
         urlsCrawled.scanned.length,
+        "{}",
       )
 
     }

@@ -133,6 +133,13 @@ export const cliOptions = {
     choices: ['screenshots', 'none'],
     requiresArg: true,
     demandOption: false,
+  },
+  q: {
+    alias: 'metadata',
+    describe: 'Additional scan metadata',
+    type: 'string',
+    default: '{}',
+    demandOption: false,
   }
 };
 
