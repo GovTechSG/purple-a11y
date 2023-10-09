@@ -421,16 +421,31 @@
   #pagesScannedModal .not-scanned-url {
     word-wrap: break-word;
   }
-  #pagesScannedModal span {
+  #pagesScannedModal p {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
     color: #4A6168;
+    margin: 0;
   }
 
   #pagesScannedModal h6 {
     padding-left: 0.5rem;
   }
+
+
+  #pagesScannedModal .custom-flow-screenshot-container {
+    flex-direction: row;
+  }
+
+  #pagesScannedModal .custom-flow-screenshot-container img {
+    height: 56px;
+    width: 20%;
+  }
+
+  #pagesScannedModal .display-url-container {
+    min-width: 80%;;
+  } 
 
   #wcag-compliance-card,
   #top-five-card {
@@ -971,6 +986,21 @@
 
   .g-one {
     gap: 1rem;
+  }
+
+  .custom-flow-screenshot {
+    border: 1px solid #2E69FF;
+    border-radius: 4px;
+    width: 150px;
+    height: 128px;
+    object-fit: cover;
+    object-position: 100% 0;
+  }
+
+  .custom-flow-screenshot-container {
+    display: flex;
+    align-items: top;
+    gap: 1rem
   }
 
   #expandedRuleCategoryContent .accordion-body pre, .bg-grey-w-border {

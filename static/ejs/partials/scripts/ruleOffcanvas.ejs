@@ -154,6 +154,7 @@ category summary is clicked %>
 
   function buildExpandedRuleCategoryContent(category, ruleInCategory) {
     const contentContainer = document.getElementById('expandedRuleCategoryContent');
+    const isCustomFlow = <%- scanType === 'Customized' -%>;
 
     if (category === 'passed') {
       contentContainer.innerHTML = `You may find the list of passed HTML elements in <a href='./passed_items.json.txt' target='_blank'>passed_items.json.txt</a>.`;
@@ -179,9 +180,7 @@ category summary is clicked %>
             <div class="accordion-item">
               <div class="accordion-header" id="${accordionId}-title">
                 <button 
-                  aria-label="Page ${index + 1}: ${page.pageTitle}, ${
-        page.items.length
-      } occurrences" class="accordion-button collapsed" 
+                  aria-label="Page ${index + 1}: ${page.pageTitle}, ${page.items.length} occurrences" class="accordion-button collapsed" 
                   type="button" 
                   data-bs-toggle="collapse" 
                   data-bs-target="#${accordionId}-content" 
@@ -194,9 +193,16 @@ category summary is clicked %>
               </div>
               <div id="${accordionId}-content" class="accordion-collapse collapse" aria-labelledby="${accordionId}-title">
                 <div class="accordion-body p-3">
-                  <a href="${page.url}" target="_blank">${
-        page.url
-      }</a>
+                  ${ isCustomFlow
+                    ? 
+                    `
+                      <div class="custom-flow-screenshot-container">
+                        <img src=${page.pageImagePath} class="custom-flow-screenshot"/>
+                        <a href="${page.url}" target="_blank">${page.url}</a>
+                      </div>
+                    `
+                    : `<a href="${page.url}" target="_blank">${page.url}</a>`
+                  }
                   <div class="page-accordion-content-title">
                     <span>${getFormattedCategoryTitle(category)} elements</span>
                     <span class="page-items-count">${page.items.length}</span>

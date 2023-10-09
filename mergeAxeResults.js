@@ -237,7 +237,7 @@ const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
   fs.unlinkSync(htmlFilePath);
 };
 
-const pushResults = async (pageResults, allIssues) => {
+const pushResults = async (pageResults, allIssues, isCustomFlow) => {
   const { url, pageTitle, filePath } = pageResults;
 
   allIssues.totalPagesScanned += 1;
@@ -278,32 +278,43 @@ const pushResults = async (pageResults, allIssues) => {
 
       currRuleFromAllIssues.totalItems += count;
 
-      if (!(url in currRuleFromAllIssues.pagesAffected)) {
-        currRuleFromAllIssues.pagesAffected[url] = { 
-          pageTitle,
-          items: [],
-          ...(filePath && { filePath }),
-        };
-        /*if (actualUrl) {
-          currRuleFromAllIssues.pagesAffected[url].actualUrl = actualUrl;
-          // Deduct duplication count from totalItems
-          currRuleFromAllIssues.totalItems -= 1;
-          // Previously using pagesAffected.length to display no. of pages affected
-          // However, since pagesAffected array contains duplicates, we need to deduct the duplicates
-          // Hence, start with negative offset, will add pagesAffected.length later
-          currRuleFromAllIssues.numberOfPagesAffectedAfterRedirects -= 1;
-          currCategoryFromAllIssues.totalItems -= 1;
-        }*/
+      if (isCustomFlow) {
+        const { pageIndex, pageImagePath } = pageResults;
+        currRuleFromAllIssues.pagesAffected[pageIndex] = {
+          url,
+          pageTitle, 
+          pageImagePath,
+          items: [], 
+        } 
+        currRuleFromAllIssues.pagesAffected[pageIndex].items.push(...items);
+      } else {
+        if (!(url in currRuleFromAllIssues.pagesAffected)) {
+          currRuleFromAllIssues.pagesAffected[url] = { 
+            pageTitle,
+            items: [],
+            ...(filePath && { filePath }),
+          };
+          /*if (actualUrl) {
+            currRuleFromAllIssues.pagesAffected[url].actualUrl = actualUrl;
+            // Deduct duplication count from totalItems
+            currRuleFromAllIssues.totalItems -= 1;
+            // Previously using pagesAffected.length to display no. of pages affected
+            // However, since pagesAffected array contains duplicates, we need to deduct the duplicates
+            // Hence, start with negative offset, will add pagesAffected.length later
+            currRuleFromAllIssues.numberOfPagesAffectedAfterRedirects -= 1;
+            currCategoryFromAllIssues.totalItems -= 1;
+          }*/
+        }
+  
+        currRuleFromAllIssues.pagesAffected[url].items.push(...items);
+        // currRuleFromAllIssues.numberOfPagesAffectedAfterRedirects +=
+        //   currRuleFromAllIssues.pagesAffected.length;
       }
-
-      currRuleFromAllIssues.pagesAffected[url].items.push(...items);
-      // currRuleFromAllIssues.numberOfPagesAffectedAfterRedirects +=
-      //   currRuleFromAllIssues.pagesAffected.length;
     });
   });
 };
 
-const flattenAndSortResults = allIssues => {
+const flattenAndSortResults = (allIssues, isCustomFlow) => {
   ['mustFix', 'goodToFix', 'passed'].forEach(category => {
     allIssues.totalItems += allIssues.items[category].totalItems;
     allIssues.items[category].rules = Object.entries(allIssues.items[category].rules)
@@ -311,8 +322,13 @@ const flattenAndSortResults = allIssues => {
         const [rule, ruleInfo] = ruleEntry;
         ruleInfo.pagesAffected = Object.entries(ruleInfo.pagesAffected)
           .map(pageEntry => {
-            const [url, pageInfo] = pageEntry;
-            return { url, ...pageInfo };
+            if (isCustomFlow) {
+              const [pageIndex, pageInfo] = pageEntry; 
+              return { pageIndex, ...pageInfo };
+            } else {
+              const [url, pageInfo] = pageEntry;
+              return { url, ...pageInfo };
+            }
           })
           .sort((page1, page2) => page2.items.length - page1.items.length);
         return { rule, ...ruleInfo };
@@ -401,6 +417,7 @@ export const generateArtifacts = async (
     proxy: constants.proxy
   };
   const allFiles = await extractFileNames(directory);
+  const isCustomFlow = scanType === 'Customized';
 
   const jsonArray = await Promise.all(
     allFiles.map(async file => parseContentToJson(`${directory}/${file}`)),
@@ -408,14 +425,14 @@ export const generateArtifacts = async (
 
   await Promise.all(
     jsonArray.map(async pageResults => {
-      await pushResults(pageResults, allIssues);
+      await pushResults(pageResults, allIssues, isCustomFlow);
     }),
   ).catch(flattenIssuesError => {
     consoleLogger.info('An error has occurred when flattening the issues, please try again.');
     silentLogger.error(flattenIssuesError.stack);
   });
 
-  flattenAndSortResults(allIssues);
+  flattenAndSortResults(allIssues, isCustomFlow);
 
   allIssues.totalPages = allIssues.totalPagesScanned + allIssues.totalPagesNotScanned;
 

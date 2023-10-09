@@ -31,7 +31,7 @@ export const blackListedFileExtensions = [
 ];
 
 export const getIntermediateScreenshotsPath = datasetsPath => `${datasetsPath}/screenshots`;
-export const destinationPath = storagePath => `${storagePath}/screenshots`;
+export const destinationPath = storagePath => `${storagePath}/reports/screenshots`;
 
 /**  Get the path to Default Profile in the Chrome Data Directory
  * as per https://chromium.googlesource.com/chromium/src/+/master/docs/user_data_dir.md
