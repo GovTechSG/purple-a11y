@@ -136,7 +136,7 @@ export const cliOptions = {
   },
   q: {
     alias: 'metadata',
-    describe: 'Json string that constains additional scan metadata. Defaults to "{}"',
+    describe: 'Json string that contains additional scan metadata. Defaults to "{}"',
     type: 'string',
     default: '{}',
     demandOption: false,
