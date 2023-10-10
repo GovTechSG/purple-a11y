@@ -265,6 +265,19 @@ category summary is clicked %>
                 `
                   : ``
                 }
+                ${ item.xpath
+                  ? 
+                  `
+                  <div class="d-flex justify-content-between g-one">
+                    <div class="fw-bold">Path</div>
+                    <pre class="page-item-card-section-content">
+                        <code class="language-html">${item.xpath}</code>
+                    </pre>
+                  </div>
+                  <hr/>
+                  `
+                  :``
+                }
                 <div class="d-flex justify-content-between g-one">
                   ${
                     item.html

@@ -36,7 +36,7 @@ export const filterAxeResults = (needsReview, results, pageTitle, customFlowDeta
     }
 
     const addTo = (category, node) => {
-      const { html, failureSummary, screenshotPath } = node;
+      const { html, failureSummary, screenshotPath, target } = node;
       if (!(rule in category.rules)) {
         category.rules[rule] = { description, helpUrl, conformance, totalItems: 0, items: [] };
       }
@@ -49,12 +49,15 @@ export const filterAxeResults = (needsReview, results, pageTitle, customFlowDeta
         finalHtml = html.replaceAll('</script>', '&lt;/script>');
       }
       
+      const xpath = target.length === 1 && typeof target[0] === 'string' ? target[0] : null;
+      
       // add in screenshot path 
       category.rules[rule].items.push(
         {
-          html: finalHtml,
+          html: finalHtml, 
           message,
           screenshotPath,
+          ...(xpath && { xpath }),
           ...(displayNeedsReview && { displayNeedsReview })
         }
       );
