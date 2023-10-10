@@ -232,7 +232,6 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
       // default to empty object
       return "{}";
     }
-    console.log(option, "OPTION");
     return option;
   })
   .check(argvs => {
