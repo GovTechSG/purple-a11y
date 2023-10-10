@@ -214,6 +214,18 @@ category summary is clicked %>
         </li>
       `);
 
+      if (isCustomFlow) {
+        const customScreenshotElem = accordion.getElementsByClassName(`custom-flow-screenshot`)[0];
+        customScreenshotElem.onerror = function(event) {
+          this.onerror = null;
+          this.remove();
+        }
+        customScreenshotElem.onclick = function(event) {
+          event.preventDefault();
+          openLightbox(this.src);
+        }
+      }
+
       accordionsList.appendChild(accordion);
 
       const accordionBody = accordion.getElementsByClassName('accordion-body')[0];

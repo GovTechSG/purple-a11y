@@ -352,6 +352,24 @@
     display: inline-block;
   }
 
+  .screenshot-lightbox {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    padding: 32px 0; 
+    left: 0; 
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.9);
+  }
+  .lightbox-content {
+    margin: auto;
+    display: block;
+    height: 100%;
+  }
+  
   #pagesScannedModalToggle {
     background-color: transparent;
     color: #0047FA;
@@ -440,7 +458,7 @@
 
   #pagesScannedModal .custom-flow-screenshot-container img {
     height: 56px;
-    width: 20%;
+    min-width: 20%;
   }
 
   #pagesScannedModal .display-url-container {

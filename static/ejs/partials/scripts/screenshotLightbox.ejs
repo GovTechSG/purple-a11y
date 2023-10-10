@@ -1,0 +1,31 @@
+<%# functions used to show lightbox of screenshot when thumbnail is clicked on %>
+<script>
+    const lightbox = document.getElementsByClassName('screenshot-lightbox')[0];
+    var customFlowScreenshots = document.getElementsByClassName('custom-flow-screenshot'); 
+    Array.from(customFlowScreenshots).forEach(screenshot => {
+        screenshot.onerror = function(event) {
+            screenshot.onerror = null;
+            screenshot.remove();
+        }
+        screenshot.onclick = event => {
+            event.preventDefault();
+            openLightbox(screenshot.src);
+        }
+    }) 
+
+    window.addEventListener('click', event => {
+        if (event.target === lightbox) {
+            closeLightbox();
+        }
+    })
+
+    const openLightbox = (imgSrc) => {
+        lightbox.style.display = 'block';
+        const lightboxImg = document.getElementById('lightbox-image');
+        lightboxImg.src = imgSrc;
+    }
+
+    const closeLightbox = () => {
+        lightbox.style.display = 'none';
+    }
+</script>
