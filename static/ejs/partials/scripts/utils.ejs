@@ -232,7 +232,8 @@
     getRuleIdData: (ruleId) => `https://govtechsg.github.io/purple-ai/results/${ruleId}.json`
   }
 
-  const hasProxy = `<%=proxy%>`;
+  const hasProxy = <%=proxy%>;
+  const isOffline = () => !window.navigator.onLine;
 
   const checkPurpleAiAvail = async () => {
     // check if catalog is empty 
@@ -248,10 +249,16 @@
   }
 
   const checkPurpleAiQueryLabel = async (ruleId, ruleHtml) => {
+    const purpleAiQueryLabel = {
+      label: null, 
+      isInternetError: false,
+      isGenericError: false
+    }
+
     return api(apiUrls.catalog).then(catalogData => {
         // no information for current rule
         if (!catalogData[ruleId] || catalogData[ruleId].length === 0) {
-          return null;
+          return purpleAiQueryLabel;
         }
 
         if (rulesUsingRoles.includes(ruleId)) {
@@ -262,7 +269,8 @@
           if (roleForHtml) {
             const currentLabel = `${htmlElement}_${roleForHtml}`;
             const foundLabel = catalogData[ruleId].find(label => label === currentLabel);
-            return foundLabel ? escapeHtmlForAI(currentLabel) : null;
+            purpleAiQueryLabel.label = foundLabel ? escapeHtmlForAI(currentLabel) : null;
+            return purpleAiQueryLabel;
           }
         }
 
@@ -272,7 +280,8 @@
         const currentLabel = currentLabelList.join('_');
 
         if (catalogData[ruleId].includes(currentLabel)) {
-          return escapeHtmlForAI(currentLabel);
+          purpleAiQueryLabel.label = escapeHtmlForAI(currentLabel);
+          return purpleAiQueryLabel;
         }
 
         // count the number of elements in keyArr that
@@ -286,15 +295,48 @@
           return attrMatch.length >= 3;
         })
 
-        return foundLabel ? escapeHtmlForAI(foundLabel) : null;
+        purpleAiQueryLabel.label = foundLabel ? escapeHtmlForAI(foundLabel) : null;
+        return purpleAiQueryLabel;
       })
       .catch(err => {
         console.error(`An error has occured while checking if ${ruleId} needs AI query`);
-        return null;
+        if (isOffline()) {
+          purpleAiQueryLabel.isInternetError = true;
+          return purpleAiQueryLabel;
+        } else {
+          purpleAiQueryLabel.isGenericError = true; 
+          return purpleAiQueryLabel;
+        }
       });
   }
 
-  const getPurpleAiAnswer = async (ruleId, accordionDiv, ruleHtmlLabel, buttonsDiv, aiErrorDiv) => {
+  const handleOfflinePurpleAi = async (ruleId, accordionDiv, html, buttonsDiv, aiErrorDiv) => {
+    let purpleAiQueryLabel; 
+    if (!hasProxy) purpleAiQueryLabel = await checkPurpleAiQueryLabel(ruleId, html);
+    if (hasProxy || purpleAiQueryLabel.isInternetError) {
+      document
+        .getElementById(aiErrorDiv)
+        .replaceChildren(
+          createElementFromString(
+            `<div class="generateAiError">This feature requires internet connection. Please try again</div>`,
+          ),
+        );
+    } else if (purpleAiQueryLabel.isGenericError) {
+      document
+        .getElementById(aiErrorDiv)
+        .replaceChildren(
+          createElementFromString(
+            `<div class="generateAiError">Something went wrong. Please try again</div>`,
+          ),
+        );
+    } else if (!purpleAiQueryLabel.label) {
+      document.getElementById(accordionDiv).innerHTML = `<span class="processAI">Processing AI suggestions, please check back later.</span>`
+    } else {
+      await getPurpleAiAnswer(ruleId, accordionDiv, purpleAiQueryLabel.label, buttonsDiv, aiErrorDiv);
+    }
+  }
+
+  const getPurpleAiAnswer = async (ruleId, accordionDiv, ruleHtmlLabel, buttonsDiv, aiErrorDiv, html) => {
     const storagePath = '<%= storagePath %>';
     document.getElementById(buttonsDiv).disabled = true;
     document.getElementById(buttonsDiv).textContent = 'Generating...';
@@ -371,11 +413,14 @@
         document.getElementById(buttonsDiv).disabled = false;
         document.getElementById(buttonsDiv).style = `border: 1px solid #6E52EF;color: #6E52EF;`;
         document.getElementById(buttonsDiv).textContent = 'Generate response';
+        const errorMessageToDisplay = isOffline()
+          ? 'This feature requires internet connection. Please try again'
+          : 'Something went wrong. Please try again.'
         document
           .getElementById(aiErrorDiv)
           .replaceChildren(
             createElementFromString(
-              `<div class="generateAiError">Something went wrong. Please try again.</div>`,
+              `<div class="generateAiError">${errorMessageToDisplay}</div>`,
             ),
           );
       });
@@ -389,6 +434,10 @@
     };
 
     return titles[category];
+  }
+
+  function escapeHtmlStringForArg(string) {
+    return htmlEscapeString(string).replaceAll('&#039;', "\\'");
   }
 
   function htmlEscapeString(string) {

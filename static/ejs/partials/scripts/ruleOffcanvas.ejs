@@ -85,7 +85,7 @@ category summary is clicked %>
     `),
     );
 
-    if (purpleAiRules.includes(selectedRule.rule) && showPurpleAi) {
+    if (purpleAiRules.includes(selectedRule.rule)) {
       document.querySelector('#expandedRuleAiFeedback').style.display = 'block';
     } else {
       document.querySelector('#expandedRuleAiFeedback').style.display = 'none';
@@ -236,9 +236,9 @@ category summary is clicked %>
         const buttonDivForAiFeedback = `${buttonAIId}-${index}`;
         const aiErrorDiv = `${errorAIId}-${index}`;
         let itemCard;
-        const isPurpleAiRule = purpleAiRules.includes(ruleInCategory.rule) && showPurpleAi;
+        const isPurpleAiRule = purpleAiRules.includes(ruleInCategory.rule);
         let purpleAiQueryLabel;
-        if (isPurpleAiRule) {
+        if (isPurpleAiRule && !hasProxy) {
           purpleAiQueryLabel = await checkPurpleAiQueryLabel(ruleInCategory.rule, item.html);
         }
 
@@ -309,13 +309,39 @@ category summary is clicked %>
                 <div class="d-flex g-one">
                   <div class="fw-bold page-item-card-section-title">AI suggestion</div>
                   <div id="${accordionDivToAppendAI}" class="page-item-card-section-content">
-                    ${purpleAiQueryLabel ? `
-                      <button id=${buttonDivForAiFeedback} class="aiGenerateResponseButton" onClick="getPurpleAiAnswer('${
-                        ruleInCategory.rule
-                      }','${accordionDivToAppendAI}', '${purpleAiQueryLabel}', '${buttonDivForAiFeedback}', '${aiErrorDiv}')">Generate response</button>
-                      <div id=${aiErrorDiv}></div>` : `
-                      <span class="processAI">Processing AI suggestions, please check back later.</span>` 
-                    }
+                    ${hasProxy || purpleAiQueryLabel.isInternetError ?
+                      `<button 
+                        id=${buttonDivForAiFeedback} 
+                        class="aiGenerateResponseButton" 
+                        onClick="handleOfflinePurpleAi(
+                          '${ruleInCategory.rule}',
+                          '${accordionDivToAppendAI}', 
+                          '${escapeHtmlStringForArg(item.html)}', 
+                          '${buttonDivForAiFeedback}', 
+                          '${aiErrorDiv}')"
+                        >
+                          Generate response
+                        </button>
+                        <div id=${aiErrorDiv}></div>` : 
+                        (purpleAiQueryLabel.label ?
+                          `<button 
+                          id=${buttonDivForAiFeedback} 
+                          class="aiGenerateResponseButton" 
+                          onClick="getPurpleAiAnswer(
+                            '${ruleInCategory.rule}',
+                            '${accordionDivToAppendAI}', 
+                            '${purpleAiQueryLabel.label}', 
+                            '${buttonDivForAiFeedback}', 
+                            '${aiErrorDiv}')"
+                          >
+                            Generate response
+                          </button>
+                          <div id=${aiErrorDiv}></div>` :
+                          `<span class="processAI">
+                            Processing AI suggestions, please check back later.
+                          </span>`
+                        ) 
+                      }
                   </div>
                 </div>` : ``
                 }
