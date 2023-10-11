@@ -270,9 +270,12 @@ category summary is clicked %>
                   `
                   <div class="d-flex justify-content-between g-one">
                     <div class="fw-bold">Path</div>
-                    <pre class="page-item-card-section-content">
+                    <div class="page-item-card-section-content path-code-container bg-grey-w-border">
+                      <button class="copy-button">Copy</button>
+                      <pre>
                         <code class="language-html">${item.xpath}</code>
-                    </pre>
+                      </pre>
+                    </div>
                   </div>
                   <hr/>
                   `
@@ -351,6 +354,27 @@ category summary is clicked %>
         `);
         elementCardsList.appendChild(itemCard);
 
+        const copyButtonElem = itemCard.getElementsByClassName('copy-button')[0];
+        const textToCopy = itemCard.querySelector('.path-code-container code');
+        copyButtonElem.addEventListener('click', event => {
+          const selection = window.getSelection();
+          const range = document.createRange();
+          range.selectNodeContents(textToCopy);
+          selection.removeAllRanges();
+          selection.addRange(range);
+
+          // Copy the selected text to the clipboard
+          document.execCommand("copy");
+
+          // Deselect the text
+          selection.removeAllRanges();
+
+          copyButtonElem.textContent = "Copied!";
+            setTimeout(function() {
+                copyButtonElem.textContent = "Copy";
+            }, 1500);
+        })
+  
         hljs.configure({
           ignoreUnescapedHTML: true
         });
