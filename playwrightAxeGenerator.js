@@ -301,7 +301,6 @@ const clickFunc = async (elem,page, clickOptions=undefined) => {
 
           if (await waitForElemIsVisible(nth, 500)) {
             await processPage(page);
-            // await nth.click(clickOptions);
             await clickElem(nth);
             return;
           }
@@ -315,7 +314,6 @@ const clickFunc = async (elem,page, clickOptions=undefined) => {
     await hoverParentAndClickElem(elem, page);
   
   } else if (numElems === 0) {
-      // await elem.click();
       await clickElem(elem);
 
   } else for (let index = numElems - 1; index >= 0; index--) {
@@ -323,7 +321,6 @@ const clickFunc = async (elem,page, clickOptions=undefined) => {
       if (! await nth.isVisible()) {
         await hoverParentAndClickElem(nth, page);
       } else {
-        // await nth.click();
         await clickElem(nth);
       }
   }
@@ -368,6 +365,7 @@ const clickFunc = async (elem,page, clickOptions=undefined) => {
     ${formatScriptStringVar(data.nameEmail.split(':')[0])},
     JSON.stringify(basicFormHTMLSnippet),
     urlsCrawled.scanned.length,
+    "${data.metadata.replace(/"/g, '\\"')}",
   );
 
   if (process.env.RUNNING_FROM_PH_GUI) {

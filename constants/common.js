@@ -473,6 +473,7 @@ export const prepareData = argv => {
     fileTypes,
     blacklistedPatternsFilename,
     additional,
+    metadata
   } = argv;
 
   // construct filename for scan results
@@ -501,6 +502,7 @@ export const prepareData = argv => {
     fileTypes,
     blacklistedPatternsFilename,
     includeScreenshots: !(additional === 'none'),
+    metadata,
   };
 };
 
@@ -1192,6 +1194,7 @@ export const submitForm = async (
   name,
   scanResultsJson,
   numberOfPagesScanned,
+  metadata,
 ) => {
   const finalUrl =
     `${formDataFields.formUrl}?` +
@@ -1200,7 +1203,8 @@ export const submitForm = async (
     `${formDataFields.emailField}=${email}&` +
     `${formDataFields.nameField}=${name}&` +
     `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}&` +
-    `${formDataFields.numberOfPagesScannedField}=${numberOfPagesScanned}`;
+    `${formDataFields.numberOfPagesScannedField}=${numberOfPagesScanned}&` +
+    `${formDataFields.metadataField}=${encodeURIComponent(metadata)}`;
 
   if (proxy) {
     await submitFormViaPlaywright(browserToRun, userDataDirectory, finalUrl);

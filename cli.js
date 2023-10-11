@@ -225,6 +225,15 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     }
     return option;
   })
+  .coerce('q', option => {
+    try {
+      JSON.parse(option);
+    } catch (e) {
+      // default to empty object
+      return "{}";
+    }
+    return option;
+  })
   .check(argvs => {
     if (argvs.scanner === 'custom' && argvs.maxpages) {
       throw new Error('-p or --maxpages is only available in website and sitemap scans.');

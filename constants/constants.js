@@ -236,6 +236,7 @@ export const formDataFields = {
   nameField: 'entry.1787318910',
   resultsField: 'entry.904051439',
   numberOfPagesScannedField: 'entry.238043773',
+  metadataField: 'entry.1027769131',
 };
 
 const urlCheckStatuses = {

@@ -29,6 +29,7 @@ const combineRun = async (details, deviceToScan) => {
     fileTypes,
     blacklistedPatternsFilename,
     includeScreenshots,
+    metadata,
   } = envDetails;
 
   process.env.CRAWLEE_LOG_LEVEL = 'ERROR';
@@ -125,16 +126,17 @@ const combineRun = async (details, deviceToScan) => {
       browser
     );
     const [name, email] = nameEmail.split(':');
-    // await submitForm(
-    //   browser,
-    //   userDataDirectory,
-    //   url,
-    //   type,
-    //   email,
-    //   name,
-    //   JSON.stringify(basicFormHTMLSnippet),
-    //   urlsCrawled.scanned.length,
-    // );
+    await submitForm(
+      browser,
+      userDataDirectory,
+      url,
+      type,
+      email,
+      name,
+      JSON.stringify(basicFormHTMLSnippet),
+      urlsCrawled.scanned.length,
+      metadata,
+    );
   } else {
     printMessage([`No pages were scanned.`], constants.alertMessageOptions);
   }
