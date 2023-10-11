@@ -37,7 +37,9 @@
         document.querySelectorAll('[data-bs-toggle="tooltip"]'),
       );
       tooltipTriggerList.map((tooltipTriggerEl) => {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+        const tooltip = new bootstrap.Tooltip(tooltipTriggerEl);
+        tooltipTriggerEl.addEventListener('mouseleave', () => tooltip.hide());
+        return tooltip;
       });
     };
     document.addEventListener('DOMContentLoaded', initTooltips);

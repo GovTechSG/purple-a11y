@@ -40,7 +40,9 @@
           document.querySelectorAll('[data-bs-toggle="tooltip"]'),
         );
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-          return new bootstrap.Tooltip(tooltipTriggerEl);
+          const tooltip = new bootstrap.Tooltip(tooltipTriggerEl);
+          tooltipTriggerEl.addEventListener('mouseleave', () => tooltip.hide());
+          return tooltip;
         });
       });
     </script>
