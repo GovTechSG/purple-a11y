@@ -280,7 +280,8 @@ Options:
                     none - Exclude all additional features in the generated re
                     port
               [string] [choices: "screenshots", "none"] [default: "screenshots"]
-  -q, --metadata  Json string that contains additional scan metadata.
+  -q, --metadata  Json string that contains additional scan metadata for
+                  telemetry purposes.
                   Defaults to "{}"
                                                         [string] [default: "{}"]
 Examples:
