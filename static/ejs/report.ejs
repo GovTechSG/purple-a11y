@@ -20,8 +20,9 @@
   <%- include('partials/scripts/utils') %>
   <%- include('partials/scripts/categorySummary') %>
   <%- include('partials/scripts/ruleOffcanvas') %>
+  <script type="text/javascript" src="newJson.js"></script>
   <script>
-    const scanItems = <%- JSON.stringify(
+    let scanItems = <%- JSON.stringify(
         {
           ...items, 
           passed: {
@@ -29,7 +30,20 @@
             ...items.passed
           }, 
         }
-      ) %>
+      ) %>;
+    try {
+      scanItems = data ? data : scanItems;
+    } catch (e) {
+    }
+    const saveJsonButton = document.getElementById("save-json-button");
+    saveJsonButton.addEventListener('click', () => {
+      const a = document.createElement('a')
+      a.href = "data:text/javascript;charset=utf-8," + encodeURIComponent("const data = " + JSON.stringify(scanItems));
+      a.download = "newJson.js";
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    });
   </script>
   <script>
     function initTooltips() {

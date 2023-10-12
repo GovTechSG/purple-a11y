@@ -41,6 +41,49 @@ category summary is clicked %>
     return links.join('&nbsp&nbsp,&nbsp&nbsp&nbsp');
   }
 
+  function onSubmitComment(elem) {
+    const formData = new FormData(elem);
+    const formProps = Object.fromEntries(formData);
+    const newComment = formProps['add-comment'];
+    const itemLocator = elem.id.split("_");
+    let item = scanItems;
+    for (let level of itemLocator) {
+      item = item[level];
+    }
+    if (item.comments) {
+      item.comments.push(newComment);
+    } else {
+      item.comments = [newComment];
+    }
+    const parent = elem.parentNode;
+
+    const newCommentElem = document.createElement("li");
+    newCommentElem.className = "list-group-item";
+    const text = document.createTextNode(newComment);
+    newCommentElem.appendChild(text);
+
+    let ulChild = null;
+
+    // Loop through the parent element's children
+    for (var i = 0; i < parent.children.length; i++) {
+        var child = parent.children[i];
+        if (child.tagName === "UL") {
+            ulChild = child;
+            break; // Exit the loop if a <ul> element is found
+        }
+    }
+
+    if (ulChild && ulChild.classList.contains('comment-list')) {
+      ulChild.appendChild(newCommentElem);
+    } else {
+      const newCommentListElem = document.createElement("ul");
+      newCommentListElem.className = "comment-list list-group";
+      newCommentListElem.appendChild(newCommentElem);
+      parent.insertBefore(newCommentListElem, elem);
+    }
+    return false;
+  }
+
   function expandRule(selectedCategory, selectedRule) {
     const conformanceLevels = {
       wcag2a: 'Level A',
@@ -168,6 +211,7 @@ category summary is clicked %>
     const accordionsList = createElementFromString(`<ul class="unbulleted-list"></ul>`);
 
     ruleInCategory.pagesAffected.forEach((page, index) => {
+      const pageIndex = index;
       const accordionId = `${ruleInCategory.rule}-${category}-page-${index}`;
       var accordionAIId = `${ruleInCategory.rule}-${category}-accordion-AI-${index}`;
       var buttonAIId = `${ruleInCategory.rule}-${category}-button-AI-${index}`;
@@ -223,6 +267,11 @@ category summary is clicked %>
         if (isPurpleAiRule) {
           purpleAiQueryLabel = await checkPurpleAiQueryLabel(ruleInCategory.rule, item.html);
         }
+
+        const itemLocator = [category, 'rules'];
+        const ruleIndex = scanItems[category].rules.findIndex(e => e.rule === ruleInCategory.rule);
+        itemLocator.push(ruleIndex);
+        itemLocator.push('pagesAffected', pageIndex, 'items', index);
 
         itemCard = createElementFromString(`
           <li>
@@ -288,6 +337,20 @@ category summary is clicked %>
                   </div>
                 </div>` : ``
                 }
+                <hr />
+                <div class="d-flex g-one">
+                  <div class="fw-bold page-item-card-section-title">Comments</div>
+                  <div class="page-item-card-section-content">
+                    ${item.comments ? 
+                    `<ul class="list-group comment-list">
+                      ${item.comments.map(str => `<li class="list-group-item">${str}</li>`).join("")}
+                    </ul>` : ""}
+                    <form class="d-flex flex-row gap-2 mt-2" action="#" id="${itemLocator.join("_")}" onsubmit="return onSubmitComment(this);">
+                      <input class="flex-grow-1 form-control" type="text" placeholder="Add a comment" name="add-comment" />
+                      <button class="btn btn-primary" type="submit">Add</button>
+                    </form>
+                  </div>
+                </div>
               </div>
             </div>
           <li>
