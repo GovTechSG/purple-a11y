@@ -44,6 +44,7 @@
       reader.onload = (event) => {
         const newData = JSON.parse(event.target.result);
         scanItems = newData;
+        document.getElementById("data-uploaded-label").innerText = "Uploaded: " + uploadedData.name;
       };
       reader.readAsText(uploadedData);
     }
@@ -54,8 +55,8 @@
     
     saveJsonButton.addEventListener('click', () => {
       const a = document.createElement('a')
-      a.href = "data:text/javascript;charset=utf-8," + encodeURIComponent("const data = " + JSON.stringify(scanItems));
-      a.download = "newJson.js";
+      a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(scanItems));
+      a.download = "newJson.json";
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
