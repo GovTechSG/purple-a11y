@@ -41,6 +41,21 @@ category summary is clicked %>
     return links.join('&nbsp&nbsp,&nbsp&nbsp&nbsp');
   }
 
+  function generateCommentItem({ comment, timestamp }) {
+    const time = new Date(timestamp).toLocaleString(undefined, { timeStyle: 'short', dateStyle: 'medium'});
+    const newCommentItem = document.createElement("li");
+    newCommentItem.className = "list-group-item d-flex justify-content-between";
+    const commentText = document.createTextNode(comment);
+    
+    const timeText = document.createElement("small");
+    timeText.className = "text-muted";
+    timeText.innerText = time;
+
+    newCommentItem.appendChild(commentText);
+    newCommentItem.appendChild(timeText);
+    return newCommentItem;
+  }
+
   function onSubmitComment(elem) {
     const formData = new FormData(elem);
     const formProps = Object.fromEntries(formData);
@@ -50,17 +65,14 @@ category summary is clicked %>
     for (let level of itemLocator) {
       item = item[level];
     }
+    const commentObj = { comment: newComment, timestamp: new Date() }
     if (item.comments) {
-      item.comments.push(newComment);
+      item.comments.push(commentObj);
     } else {
-      item.comments = [newComment];
+      item.comments = [commentObj];
     }
     const parent = elem.parentNode;
-
-    const newCommentElem = document.createElement("li");
-    newCommentElem.className = "list-group-item";
-    const text = document.createTextNode(newComment);
-    newCommentElem.appendChild(text);
+    const newCommentElem = generateCommentItem(commentObj);
 
     let ulChild = null;
 
@@ -344,7 +356,7 @@ category summary is clicked %>
                   <div class="page-item-card-section-content">
                     ${item.comments ? 
                     `<ul class="list-group comment-list">
-                      ${item.comments.map(str => `<li class="list-group-item">${str}</li>`).join("")}
+                      ${item.comments.map(comment => generateCommentItem(comment).outerHTML).join("")}
                     </ul>` : ""}
                     <form autocomplete="off" class="d-flex flex-row gap-2 mt-2" action="#" id="${itemLocator.join("_")}" onsubmit="return onSubmitComment(this);">
                       <input class="flex-grow-1 form-control" type="text" placeholder="Add a comment" name="add-comment" />
