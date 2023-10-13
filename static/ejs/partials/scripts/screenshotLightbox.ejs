@@ -1,6 +1,7 @@
 <%# functions used to show lightbox of screenshot when thumbnail is clicked on %>
 <script>
     const lightbox = document.getElementsByClassName('screenshot-lightbox')[0];
+    const lightboxContent = document.getElementsByClassName('lightbox-content')[0];
     var customFlowScreenshots = document.getElementsByClassName('custom-flow-screenshot'); 
     Array.from(customFlowScreenshots).forEach(screenshot => {
         screenshot.onerror = function(event) {
@@ -14,18 +15,75 @@
     }) 
 
     window.addEventListener('click', event => {
-        if (event.target === lightbox) {
+        if (event.target === lightbox || event.target === lightboxContent) {
             closeLightbox();
         }
     })
 
+    const getAspectRatioForHeight = (lightboxImg) => {
+      const originalWidth = lightboxImg.naturalWidth; 
+      const originalHeight = lightboxImg.naturalHeight; 
+      const aspectRatio = originalHeight / originalWidth;
+      return aspectRatio;
+    }
+
+    const getAspectRatioForWidth = (lightboxImg) => {
+      const originalWidth = lightboxImg.naturalWidth; 
+      const originalHeight = lightboxImg.naturalHeight; 
+      const aspectRatio = originalWidth / originalHeight;
+      return aspectRatio; 
+    }
+
     const openLightbox = (imgSrc) => {
-        lightbox.style.display = 'block';
+        lightbox.style.display = 'flex';
+        lightbox.style.flexDirection = 'column';
         const lightboxImg = document.getElementById('lightbox-image');
         lightboxImg.src = imgSrc;
+        lightboxImg.style.height = `${lightboxImg.parentNode.clientHeight}px`;
+        lightboxImg.style.width = `${Math.round(getAspectRatioForWidth(lightboxImg) * lightboxImg.parentNode.clientHeight)}px`
     }
 
     const closeLightbox = () => {
         lightbox.style.display = 'none';
+    }
+
+    const zoomIn = () => {
+      const lightboxImg = document.getElementById('lightbox-image');
+    
+      const aspectRatio = getAspectRatioForHeight(lightboxImg);
+      var currWidth = lightboxImg.clientWidth; 
+      var currHeight = lightboxImg.clientHeight;
+      const maxWidth = document.getElementsByClassName('lightbox-content')[0].clientWidth;
+      
+     if (currWidth < Math.round(0.5 * maxWidth)) {
+        lightboxImg.style.width = `${Math.round(0.5 * maxWidth)}px`;
+        lightboxImg.style.height = `${aspectRatio * Math.round(0.5 * maxWidth)}px`;
+      } else if (currWidth < Math.round(0.75 * maxWidth)) {
+        lightboxImg.style.width = `${Math.round(0.75 * maxWidth)}px`;
+        lightboxImg.style.height = `${aspectRatio * Math.round(0.75 * maxWidth)}px`;
+      } else if (currWidth < maxWidth) {
+        lightboxImg.style.width = `${maxWidth}px`;
+        lightboxImg.style.height = `${aspectRatio * maxWidth}px`;
+      }
+    }
+
+    const zoomOut = () => {
+      const lightboxImg = document.getElementById('lightbox-image');
+      const aspectRatio = getAspectRatioForHeight(lightboxImg);
+      var currWidth = lightboxImg.clientWidth; 
+      var currHeight = lightboxImg.clientHeight;
+      const minHeight = lightboxImg.parentNode.clientHeight;
+      const maxWidth = document.getElementsByClassName('lightbox-content')[0].clientWidth;
+
+      if (currWidth >= maxWidth) {
+        lightboxImg.style.width = `${Math.round(0.75 * maxWidth)}px`
+        lightboxImg.style.height = `${aspectRatio * Math.round(0.75 * maxWidth)}px`;
+      } else if (currWidth >= Math.round(0.75 * maxWidth)) {
+        lightboxImg.style.width = `${Math.round(0.5 * maxWidth)}px`
+        lightboxImg.style.height = `${aspectRatio * Math.round(0.5 * maxWidth)}px`;
+      } else if (currWidth >= Math.round(0.5 * maxWidth)) {
+        lightboxImg.style.width = `${Math.round(getAspectRatioForWidth(lightboxImg) * minHeight)}px`;
+        lightboxImg.style.height = `${minHeight}px`;
+      }
     }
 </script>
