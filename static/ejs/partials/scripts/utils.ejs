@@ -456,4 +456,23 @@
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
   }
+
+  function copyToClipboard(event, copyButtonElem, textToCopy) {
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(textToCopy);
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    // Copy the selected text to the clipboard
+    document.execCommand("copy");
+
+    // Deselect the text
+    selection.removeAllRanges();
+
+    copyButtonElem.textContent = "Copied!";
+      setTimeout(function() {
+          copyButtonElem.textContent = "Copy";
+      }, 1500);
+  }
 </script>

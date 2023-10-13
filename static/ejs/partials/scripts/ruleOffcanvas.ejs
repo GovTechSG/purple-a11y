@@ -271,9 +271,9 @@ category summary is clicked %>
                   <div class="d-flex justify-content-between g-one">
                     <div class="fw-bold">Path</div>
                     <div class="page-item-card-section-content path-code-container bg-grey-w-border">
-                      <button class="copy-button">Copy</button>
+                      <button class="copy-button copy-xpath-button">Copy</button>
                       <pre>
-                        <code class="language-html">${item.xpath}</code>
+                        <code class="language-html xpath-to-copy">${item.xpath}</code>
                       </pre>
                     </div>
                   </div>
@@ -286,11 +286,15 @@ category summary is clicked %>
                     item.html
                       ? `
                       <div class="fw-bold">HTML element</div>
-                      <pre class="page-item-card-section-content">
-                        <code class="language-html">
-                          ${htmlEscapeString(item.html)}
-                        </code>
-                      </pre>`
+                      <div class="page-item-card-section-content path-code-container bg-grey-w-border">
+                        <button class="copy-button copy-html-button">Copy</button>
+                        <pre class="page-item-card-section-content">
+                          <code class="language-html html-to-copy">
+                            ${htmlEscapeString(item.html)}
+                          </code>
+                      </pre>
+                      </div>
+                      `
                       : `
                       <div class="fw-bold">Location</div>
                       <div class="page-item-card-section-content">
@@ -354,26 +358,13 @@ category summary is clicked %>
         `);
         elementCardsList.appendChild(itemCard);
 
-        const copyButtonElem = itemCard.getElementsByClassName('copy-button')[0];
-        const textToCopy = itemCard.querySelector('.path-code-container code');
-        copyButtonElem.addEventListener('click', event => {
-          const selection = window.getSelection();
-          const range = document.createRange();
-          range.selectNodeContents(textToCopy);
-          selection.removeAllRanges();
-          selection.addRange(range);
+        const copyHtmlButtonElem = itemCard.querySelector('.copy-html-button');
+        const copyXpathButtonElem = itemCard.querySelector('.copy-xpath-button');
+        const htmlToCopy = itemCard.querySelector('.html-to-copy');
+        const xpathToCopy = itemCard.querySelector('.xpath-to-copy'); 
 
-          // Copy the selected text to the clipboard
-          document.execCommand("copy");
-
-          // Deselect the text
-          selection.removeAllRanges();
-
-          copyButtonElem.textContent = "Copied!";
-            setTimeout(function() {
-                copyButtonElem.textContent = "Copy";
-            }, 1500);
-        })
+        copyHtmlButtonElem.onclick = (event) => copyToClipboard(event, copyHtmlButtonElem, htmlToCopy);
+        copyXpathButtonElem.onclick = (event) => copyToClipboard(event, copyXpathButtonElem, xpathToCopy);
   
         hljs.configure({
           ignoreUnescapedHTML: true
