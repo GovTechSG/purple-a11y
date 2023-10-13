@@ -41,18 +41,28 @@ category summary is clicked %>
     return links.join('&nbsp&nbsp,&nbsp&nbsp&nbsp');
   }
 
-  function generateCommentItem({ comment, timestamp }) {
+  function generateCommentItem({ comment, timestamp, commenter }) {
     const time = new Date(timestamp).toLocaleString(undefined, { timeStyle: 'short', dateStyle: 'medium'});
     const newCommentItem = document.createElement("li");
-    newCommentItem.className = "list-group-item d-flex justify-content-between";
-    const commentText = document.createTextNode(comment);
-    
+    newCommentItem.className = "list-group-item d-flex flex-column";
+
+    const commentHead = document.createElement("div");
+    commentHead.className = "d-flex flex-row justify-content-between align-items-center";
+
+    const commenterElem = document.createElement("strong");
+    commenterElem.innerText = commenter;
+
     const timeText = document.createElement("small");
     timeText.className = "text-muted";
     timeText.innerText = time;
+  
+    commentHead.appendChild(commenterElem);
+    commentHead.appendChild(timeText)
 
+    const commentText = document.createTextNode(comment);
+    
+    newCommentItem.appendChild(commentHead);
     newCommentItem.appendChild(commentText);
-    newCommentItem.appendChild(timeText);
     return newCommentItem;
   }
 
@@ -60,12 +70,13 @@ category summary is clicked %>
     const formData = new FormData(elem);
     const formProps = Object.fromEntries(formData);
     const newComment = formProps['add-comment'];
+    const commenter = formProps['commenter'];
     const itemLocator = elem.id.split("_");
     let item = scanItems;
     for (let level of itemLocator) {
       item = item[level];
     }
-    const commentObj = { comment: newComment, timestamp: new Date() }
+    const commentObj = { comment: newComment, timestamp: new Date(), commenter }
     if (item.comments) {
       item.comments.push(commentObj);
     } else {
@@ -359,6 +370,7 @@ category summary is clicked %>
                       ${item.comments.map(comment => generateCommentItem(comment).outerHTML).join("")}
                     </ul>` : ""}
                     <form autocomplete="off" class="d-flex flex-row gap-2 mt-2" action="#" id="${itemLocator.join("_")}" onsubmit="return onSubmitComment(this);">
+                      <input class="w-25 form-control" type="text" placeholder="Name" name="commenter" />
                       <input class="flex-grow-1 form-control" type="text" placeholder="Add a comment" name="add-comment" />
                       <button class="btn btn-primary" type="submit">Add</button>
                     </form>
