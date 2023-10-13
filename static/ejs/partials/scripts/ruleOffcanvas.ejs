@@ -270,11 +270,29 @@ category summary is clicked %>
                   `
                   <div class="d-flex justify-content-between g-one">
                     <div class="fw-bold">Path</div>
-                    <div class="page-item-card-section-content path-code-container bg-grey-w-border">
-                      <button class="copy-button">Copy</button>
-                      <pre>
-                        <code class="language-html">${item.xpath}</code>
-                      </pre>
+                    <div class="page-item-card-section-content">
+                        <div class="path-container">
+                          ${item.xpath}
+                          <button 
+                            aria-describedby="copyTooltipDescription"
+                            class="copy-button"
+                          >
+                            <svg 
+                              tabindex="-1"
+                              title="Copy" 
+                              class="copy-icon"
+                              data-bs-toggle="tooltip" 
+                              data-bs-placement="top"
+                              xmlns="http://www.w3.org/2000/svg" 
+                              width="14" 
+                              height="16" 
+                              viewBox="0 0 14 16" 
+                              fill="none"
+                            >
+                              <path d="M11.2188 0.5H4.65625C4.15897 0.5 3.68206 0.697544 3.33042 1.04917C2.97879 1.40081 2.78125 1.87772 2.78125 2.375C2.28397 2.375 1.80706 2.57254 1.45542 2.92417C1.10379 3.27581 0.90625 3.75272 0.90625 4.25V13.625C0.90625 14.1223 1.10379 14.5992 1.45542 14.9508C1.80706 15.3025 2.28397 15.5 2.78125 15.5H9.34375C9.84103 15.5 10.3179 15.3025 10.6696 14.9508C11.0212 14.5992 11.2188 14.1223 11.2188 13.625C11.716 13.625 12.1929 13.4275 12.5446 13.0758C12.8962 12.7242 13.0938 12.2473 13.0938 11.75V2.375C13.0938 1.87772 12.8962 1.40081 12.5446 1.04917C12.1929 0.697544 11.716 0.5 11.2188 0.5ZM11.2188 12.6875V4.25C11.2188 3.75272 11.0212 3.27581 10.6696 2.92417C10.3179 2.57254 9.84103 2.375 9.34375 2.375H3.71875C3.71875 2.12636 3.81752 1.8879 3.99334 1.71209C4.16915 1.53627 4.40761 1.4375 4.65625 1.4375H11.2188C11.4674 1.4375 11.7058 1.53627 11.8817 1.71209C12.0575 1.8879 12.1562 2.12636 12.1562 2.375V11.75C12.1562 11.9986 12.0575 12.2371 11.8817 12.4129C11.7058 12.5887 11.4674 12.6875 11.2188 12.6875ZM1.84375 4.25C1.84375 4.00136 1.94252 3.7629 2.11834 3.58709C2.29415 3.41127 2.53261 3.3125 2.78125 3.3125H9.34375C9.59239 3.3125 9.83085 3.41127 10.0067 3.58709C10.1825 3.7629 10.2812 4.00136 10.2812 4.25V13.625C10.2812 13.8736 10.1825 14.1121 10.0067 14.2879C9.83085 14.4637 9.59239 14.5625 9.34375 14.5625H2.78125C2.53261 14.5625 2.29415 14.4637 2.11834 14.2879C1.94252 14.1121 1.84375 13.8736 1.84375 13.625V4.25Z" fill="#333333"/>
+                            </svg>
+                          </button>
+                        </div>
                     </div>
                   </div>
                   <hr/>
@@ -355,26 +373,25 @@ category summary is clicked %>
         elementCardsList.appendChild(itemCard);
 
         const copyButtonElem = itemCard.getElementsByClassName('copy-button')[0];
-        const textToCopy = itemCard.querySelector('.path-code-container code');
-        copyButtonElem.addEventListener('click', event => {
-          const selection = window.getSelection();
-          const range = document.createRange();
-          range.selectNodeContents(textToCopy);
-          selection.removeAllRanges();
-          selection.addRange(range);
+        const textToCopy = createElementFromString(`<textarea>${item.xpath}</textarea>`)
+        copyButtonElem.onclick = event => {
+          textToCopy.select();
+          // Copy the text inside the text field
+          navigator.clipboard.writeText(textToCopy.value);
+        };
+        copyButtonElem.onfocus = event => {
+          document.querySelector('.copy-icon').dispatchEvent(new MouseEvent('mouseover')); 
+        };
+        copyButtonElem.onblur = event => {
+          document.querySelector('.copy-icon').dispatchEvent(new MouseEvent('mouseout'));
+        }
+        copyButtonElem.onmousedown = event => {
+          event.preventDefault();
+        }
 
-          // Copy the selected text to the clipboard
-          document.execCommand("copy");
+        const copyTooltip = itemCard.querySelector('.copy-icon'); 
+        new bootstrap.Tooltip(copyTooltip);
 
-          // Deselect the text
-          selection.removeAllRanges();
-
-          copyButtonElem.textContent = "Copied!";
-            setTimeout(function() {
-                copyButtonElem.textContent = "Copy";
-            }, 1500);
-        })
-  
         hljs.configure({
           ignoreUnescapedHTML: true
         });

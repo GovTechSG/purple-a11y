@@ -999,21 +999,25 @@
   }
 
   .page-item-card-section-content .copy-button {
-    align-self: flex-end;
-    background-color: lightgrey;
-    color: white;
-    border: none;
+    align-self: center;
+    all: unset; 
+    border: 1px solid #97ADB5;
+    border-radius: 4px;
     cursor: pointer;
-    border-radius: 5px;
+    margin-left: 0.5rem;
+    padding: 0 0.5rem;
   }
 
-  .path-code-container {
+  .page-item-card-section-content .path-container {
     display: flex;
-    flex-direction: column;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
   }
 
-  .path-code-container pre {
-    border: none !important;
+  .page-item-card-section-content .path-code-container {
+    display: flex;
+    width: 100%;
   }
 
   .processAI {
