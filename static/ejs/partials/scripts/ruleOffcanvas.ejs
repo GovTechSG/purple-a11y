@@ -345,7 +345,7 @@ category summary is clicked %>
                     `<ul class="list-group comment-list">
                       ${item.comments.map(str => `<li class="list-group-item">${str}</li>`).join("")}
                     </ul>` : ""}
-                    <form class="d-flex flex-row gap-2 mt-2" action="#" id="${itemLocator.join("_")}" onsubmit="return onSubmitComment(this);">
+                    <form autocomplete="off" class="d-flex flex-row gap-2 mt-2" action="#" id="${itemLocator.join("_")}" onsubmit="return onSubmitComment(this);">
                       <input class="flex-grow-1 form-control" type="text" placeholder="Add a comment" name="add-comment" />
                       <button class="btn btn-primary" type="submit">Add</button>
                     </form>

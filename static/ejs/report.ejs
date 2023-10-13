@@ -20,7 +20,7 @@
   <%- include('partials/scripts/utils') %>
   <%- include('partials/scripts/categorySummary') %>
   <%- include('partials/scripts/ruleOffcanvas') %>
-  <script type="text/javascript" src="newJson.js"></script>
+  <!-- <script type="text/javascript" src="newJson.js"></script> -->
   <script>
     let scanItems = <%- JSON.stringify(
         {
@@ -31,11 +31,27 @@
           }, 
         }
       ) %>;
-    try {
-      scanItems = data ? data : scanItems;
-    } catch (e) {
+    // try {
+    //   scanItems = data ? data : scanItems;
+    // } catch (e) {
+    // }
+    function uploadData() {
+      document.getElementById("upload-data-input").click();
+    };
+    function handleUploadFile() {
+      const uploadedData = this.files[0];
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const newData = JSON.parse(event.target.result);
+        scanItems = newData;
+      };
+      reader.readAsText(uploadedData);
     }
     const saveJsonButton = document.getElementById("save-json-button");
+    const uploadDataButton = document.getElementById("upload-data-button");
+    const uploadDataInput = document.getElementById("upload-data-input");
+    uploadDataInput.addEventListener("change", handleUploadFile);
+    
     saveJsonButton.addEventListener('click', () => {
       const a = document.createElement('a')
       a.href = "data:text/javascript;charset=utf-8," + encodeURIComponent("const data = " + JSON.stringify(scanItems));
