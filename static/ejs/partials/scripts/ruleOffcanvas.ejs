@@ -238,7 +238,7 @@ category summary is clicked %>
         let itemCard;
         const isPurpleAiRule = purpleAiRules.includes(ruleInCategory.rule);
         let purpleAiQueryLabel;
-        if (isPurpleAiRule && !hasProxy) {
+        if (isPurpleAiRule) {
           purpleAiQueryLabel = await checkPurpleAiQueryLabel(ruleInCategory.rule, item.html);
         }
 
@@ -330,7 +330,7 @@ category summary is clicked %>
                 <div class="d-flex g-one">
                   <div class="fw-bold page-item-card-section-title">AI suggestion</div>
                   <div id="${accordionDivToAppendAI}" class="page-item-card-section-content">
-                    ${hasProxy || purpleAiQueryLabel.isInternetError ?
+                    ${purpleAiQueryLabel.hasNetworkError ?
                       `<button 
                         id=${buttonDivForAiFeedback} 
                         class="aiGenerateResponseButton" 

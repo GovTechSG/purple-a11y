@@ -215,7 +215,7 @@
         })
         .catch((error) => {
           delete ongoingPromise[key]; // remove the promise from the queue in case of an error
-          throw error;
+          throw new Error('Network Error');
         });
 
       // add the promise to the queue
@@ -232,27 +232,13 @@
     getRuleIdData: (ruleId) => `https://govtechsg.github.io/purple-ai/results/${ruleId}.json`
   }
 
-  const hasProxy = <%=proxy%>;
   const isOffline = () => !window.navigator.onLine;
-
-  const checkPurpleAiAvail = async () => {
-    // check if catalog is empty 
-    try {
-      return api(apiUrls.catalog).then(catalogData => {
-        const catalogHasData = Object.keys(catalogData).length > 1;
-        return catalogHasData;
-      })
-    } catch (e) {
-      console.error('Unable to fetch Purple AI catalog');
-      return false; 
-    }
-  }
 
   const checkPurpleAiQueryLabel = async (ruleId, ruleHtml) => {
     const purpleAiQueryLabel = {
       label: null, 
-      isInternetError: false,
-      isGenericError: false
+      hasNetworkError: false,
+      hasGenericError: false
     }
 
     return api(apiUrls.catalog).then(catalogData => {
@@ -300,20 +286,25 @@
       })
       .catch(err => {
         console.error(`An error has occured while checking if ${ruleId} needs AI query`);
-        if (isOffline()) {
-          purpleAiQueryLabel.isInternetError = true;
-          return purpleAiQueryLabel;
+        if (err.message === 'Network Error') {
+          return {
+            label: null,
+            hasNetworkError: true,
+            hasGenericError: false
+          }
         } else {
-          purpleAiQueryLabel.isGenericError = true; 
-          return purpleAiQueryLabel;
+          return {
+            label: null, 
+            hasNetworkError: false, 
+            hasGenericError: true
+          }
         }
       });
   }
 
   const handleOfflinePurpleAi = async (ruleId, accordionDiv, html, buttonsDiv, aiErrorDiv) => {
-    let purpleAiQueryLabel; 
-    if (!hasProxy) purpleAiQueryLabel = await checkPurpleAiQueryLabel(ruleId, html);
-    if (hasProxy || purpleAiQueryLabel.isInternetError) {
+    let purpleAiQueryLabel = await checkPurpleAiQueryLabel(ruleId, html);
+    if (purpleAiQueryLabel.hasNetworkError) {
       document
         .getElementById(aiErrorDiv)
         .replaceChildren(
@@ -321,7 +312,7 @@
             `<div class="generateAiError">This feature requires internet connection. Please try again</div>`,
           ),
         );
-    } else if (purpleAiQueryLabel.isGenericError) {
+    } else if (purpleAiQueryLabel.hasNetworkError) {
       document
         .getElementById(aiErrorDiv)
         .replaceChildren(
@@ -418,7 +409,7 @@
         document.getElementById(buttonsDiv).disabled = false;
         document.getElementById(buttonsDiv).style = `border: 1px solid #6E52EF;color: #6E52EF;`;
         document.getElementById(buttonsDiv).textContent = 'Generate response';
-        const errorMessageToDisplay = isOffline()
+        const errorMessageToDisplay = err.message === 'Network Error'
           ? 'This feature requires internet connection. Please try again'
           : 'Something went wrong. Please try again.'
         document
