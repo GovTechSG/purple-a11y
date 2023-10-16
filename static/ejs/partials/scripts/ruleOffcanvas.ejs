@@ -372,26 +372,30 @@ category summary is clicked %>
         `);
         elementCardsList.appendChild(itemCard);
 
+        const copyTooltip = itemCard.querySelector('.copy-icon'); 
+        const copyTooltipItem = new bootstrap.Tooltip(copyTooltip);
+
         const copyButtonElem = itemCard.getElementsByClassName('copy-button')[0];
         const textToCopy = createElementFromString(`<textarea>${item.xpath}</textarea>`)
         copyButtonElem.onclick = event => {
           textToCopy.select();
           // Copy the text inside the text field
           navigator.clipboard.writeText(textToCopy.value);
+          
+          copyTooltip.setAttribute('data-bs-original-title', 'Copied');
+          copyTooltipItem.update();
+          copyTooltipItem.show();
         };
-        copyButtonElem.onfocus = event => {
-          document.querySelector('.copy-icon').dispatchEvent(new MouseEvent('mouseover')); 
+        copyButtonElem.onmouseover = event => {
+          copyTooltip.dispatchEvent(new MouseEvent('mouseover')); 
         };
-        copyButtonElem.onblur = event => {
-          document.querySelector('.copy-icon').dispatchEvent(new MouseEvent('mouseout'));
+        copyButtonElem.onmouseout = event => {
+          copyTooltip.dispatchEvent(new MouseEvent('mouseout'));
         }
         copyButtonElem.onmousedown = event => {
           event.preventDefault();
         }
-
-        const copyTooltip = itemCard.querySelector('.copy-icon'); 
-        new bootstrap.Tooltip(copyTooltip);
-
+        
         hljs.configure({
           ignoreUnescapedHTML: true
         });
