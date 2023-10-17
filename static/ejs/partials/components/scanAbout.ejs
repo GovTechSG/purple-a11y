@@ -171,8 +171,14 @@
     scrolling="no"
   ></iframe>
   <script>
-    if (!navigator.onLine) {
-      document.getElementById('a11y-online-banner').style.display = 'none';
-    }
+    const a11yOnlineBannerElem = document.getElementById('a11y-online-banner'); 
+    a11yOnlineBannerElem.style.display = 'none'; 
+    fetch('https://govtechsg.github.io/purple-banner-embeds/')
+      .then((response) => {
+        if (response.ok) {
+          console.log(response);
+          a11yOnlineBannerElem.style.display = 'block';
+        }
+      })
   </script>
 </aside>
