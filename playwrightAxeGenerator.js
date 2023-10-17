@@ -284,7 +284,14 @@ const processPage = async page => {
   }
 };
 
-const clickFunc = async (elem,page) => {
+const clickFunc = async (elem,page, clickOptions=undefined) => {
+  const clickElem = async (e) => {
+    if (clickOptions) {
+      await e.click(clickOptions);
+    } else {
+      await e.click();
+    }
+  }
   const numElems = await elem.count(); 
   consoleLogger.info(\`Number of matched elements: \${numElems}\`);
   
