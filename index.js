@@ -80,6 +80,7 @@ const runScan = async (answers) => {
   answers.browserToRun = browserToRun; 
   answers.nameEmail = `${userData.name}:${userData.email}`;
   answers.fileTypes = 'html-only';
+  answers.metadata = "{}";
   
   const data = prepareData(answers);
   clonedDataDir = getClonedProfilesWithRandomToken(data.browser, data.randomToken); 

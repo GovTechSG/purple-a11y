@@ -279,7 +279,11 @@ Options:
                     report
                     none - Exclude all additional features in the generated re
                     port
-            [string] [choices: "screenshots", "none"] [default: "screenshots"]
+              [string] [choices: "screenshots", "none"] [default: "screenshots"]
+  -q, --metadata  Json string that contains additional scan metadata for
+                  telemetry purposes.
+                  Defaults to "{}"
+                                                        [string] [default: "{}"]
 Examples:
   To scan sitemap of website:', 'node cli.js -c [ 1 | Sitemap ] -d <device> -u
    <url_link> -w <viewportWidth>
