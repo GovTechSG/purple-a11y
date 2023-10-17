@@ -385,6 +385,11 @@ category summary is clicked %>
           copyTooltip.setAttribute('data-bs-original-title', 'Copied');
           copyTooltipItem.update();
           copyTooltipItem.show();
+
+          setTimeout(() => { 
+            copyTooltip.setAttribute('data-bs-original-title', 'Copy');
+            copyTooltipItem.update();
+          }, 1500)
         };
         copyButtonElem.onmouseover = event => {
           copyTooltip.dispatchEvent(new MouseEvent('mouseover')); 
