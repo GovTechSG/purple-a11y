@@ -277,13 +277,60 @@ const scanInit = async argvs => {
     argvs.viewportWidth,
   );
 
-  const res = await checkUrl(
-    argvs.scanner,
-    argvs.url,
-    argvs.browserToRun,
-    clonedDataDir,
-    argvs.playwrightDeviceDetailsObject,
-  );
+  if (process.env.VALIDATE_URL_PH_GUI || !process.env.RUNNING_FROM_PH_GUI) {
+    const res = await checkUrl(
+      argvs.scanner,
+      argvs.url,
+      argvs.browserToRun,
+      clonedDataDir,
+      argvs.playwrightDeviceDetailsObject,
+    );
+    switch (res.status) {
+      case statuses.success.code:
+        argvs.finalUrl = res.url;
+        if (process.env.VALIDATE_URL_PH_GUI) {
+          console.log('Url is valid');
+          process.exit(0);
+        }
+        break;
+      case statuses.unauthorised.code:
+        printMessage([statuses.unauthorised.message], messageOptions);
+        process.exit(res.status);
+      case statuses.cannotBeResolved.code:
+        printMessage([statuses.cannotBeResolved.message], messageOptions);
+        process.exit(res.status);
+      case statuses.systemError.code:
+        printMessage([statuses.systemError.message], messageOptions);
+        process.exit(res.status);
+      case statuses.invalidUrl.code:
+        if (argvs.scanner !== constants.scannerTypes.sitemap) {
+          printMessage([statuses.invalidUrl.message], messageOptions);
+          process.exit(res.status);
+        }
+        /* if sitemap scan is selected, treat this URL as a filepath
+            isFileSitemap will tell whether the filepath exists, and if it does, whether the
+            file is a sitemap */
+        if (isFileSitemap(argvs.url)) {
+          argvs.isLocalSitemap = true;
+          break;
+        } else {
+          res.status = statuses.notASitemap.code;
+        }
+      case statuses.notASitemap.code:
+        printMessage([statuses.notASitemap.message], messageOptions);
+        process.exit(res.status);
+      case statuses.browserError.code:
+        printMessage([statuses.browserError.message], messageOptions);
+        process.exit(res.status);
+      default:
+        break;
+    }
+  }
+
+  if (process.env.RUNNING_FROM_PH_GUI) {
+    // url has been validated 
+    argvs.finalUrl = argvs.url; 
+  }
 
   if (argvs.scanner === constants.scannerTypes.website && !argvs.strategy) {
     argvs.strategy = 'same-domain';
@@ -294,44 +341,7 @@ const scanInit = async argvs => {
   deleteClonedProfiles(argvs.browserToRun);
 
   // eslint-disable-next-line default-case
-  switch (res.status) {
-    case statuses.success.code:
-      argvs.finalUrl = res.url;
-      if (process.env.RUNNING_FROM_PH_GUI) console.log('Url is valid');
-      break;
-    case statuses.unauthorised.code:
-      printMessage([statuses.unauthorised.message], messageOptions);
-      process.exit(res.status);
-    case statuses.cannotBeResolved.code:
-      printMessage([statuses.cannotBeResolved.message], messageOptions);
-      process.exit(res.status);
-    case statuses.systemError.code:
-      printMessage([statuses.systemError.message], messageOptions);
-      process.exit(res.status);
-    case statuses.invalidUrl.code:
-      if (argvs.scanner !== constants.scannerTypes.sitemap) {
-        printMessage([statuses.invalidUrl.message], messageOptions);
-        process.exit(res.status);
-      }
-      /* if sitemap scan is selected, treat this URL as a filepath
-          isFileSitemap will tell whether the filepath exists, and if it does, whether the
-          file is a sitemap */
-      if (isFileSitemap(argvs.url)) {
-        argvs.isLocalSitemap = true;
-        break;
-      } else {
-        res.status = statuses.notASitemap.code;
-      }
-    case statuses.notASitemap.code:
-      printMessage([statuses.notASitemap.message], messageOptions);
-      process.exit(res.status);
-    case statuses.browserError.code:
-      printMessage([statuses.browserError.message], messageOptions);
-      process.exit(res.status);
-    default:
-      break;
-  }
-
+  
   if (argvs.exportDirectory) {
     constants.exportDirectory = argvs.exportDirectory;
   }
