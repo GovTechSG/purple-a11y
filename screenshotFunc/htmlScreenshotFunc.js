@@ -3,6 +3,7 @@ import { silentLogger } from '../logs.js';
 
 export const takeScreenshotForHTMLElements = async (violations, page, randomToken) => {
     let newViolations = [];
+    const locatorTimeout = 5000;
     for (const violation of violations) {
         const { id: rule } = violation; 
         let newViolationNodes = [];
@@ -14,11 +15,11 @@ export const takeScreenshotForHTMLElements = async (violations, page, randomToke
                 try {
                     const screenshotPath = generateScreenshotPath(page.url(), impact, rule, newViolationNodes.length);
                     const locator = page.locator(selector);
-                    await locator.scrollIntoViewIfNeeded();
-                    await locator.screenshot({ path: `${randomToken}/${screenshotPath}` });
+                    await locator.scrollIntoViewIfNeeded({ timeout: locatorTimeout });
+                    await locator.screenshot({ path: `${randomToken}/${screenshotPath}`, timeout: locatorTimeout });
                     node.screenshotPath = screenshotPath; 
                 } catch (e) {
-                    silentLogger.error(e);
+                    silentLogger.info(e);
                 }
             }
             newViolationNodes.push(node);

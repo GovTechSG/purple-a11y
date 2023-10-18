@@ -95,10 +95,11 @@ const crawlDomain = async (
 
     await enqueueLinksByClickingElements({
       // set selector matches
+      // NOT <iframe>
       // NOT <a>
       // IS role='link' or button onclick
       // enqueue new page URL
-      selector: ':not(a):is(*[role="link"], button[onclick])',
+      selector: ':not(iframe), :not(a):is(*[role="link"], button[onclick])',
       transformRequestFunction(req) {
         req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
         if (isUrlPdf(req.url)) {
