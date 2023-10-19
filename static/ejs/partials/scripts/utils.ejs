@@ -9,9 +9,7 @@
   const purpleAiHtmlETL = <%- purpleAi.htmlETL %>;
   const purpleAiRules = <%- JSON.stringify(purpleAi.rules) %>;
 
-  const htmlTagAndAttributeRegex = new RegExp(
-    /((?<=[<])\s*([a-zA-Z][^\s>/]*)\b)|([\w-]+)\s*(?==\s*["']([^"']*)["'])/g,
-  );
+  const htmlTagAndAttributeRegex = new RegExp(/([a-zA-Z][^\s/>]*\b)|([\w-]+)\s*=\s*["']([^"']*)["']/g);
 
   const rulesUsingRoles = [
     'aria-allowed-attr',
@@ -23,9 +21,8 @@
   ];
 
   const createLabelForRuleWithRole = html => {
-    const htmlTagAndRoleAttributeRegex = new RegExp(
-      /(?<=<)\s*([a-zA-Z][^\s>/]*\b)|role="([^"]*)"/g,
-    );
+    const htmlTagAndRoleAttributeRegex = new RegExp(/<\s*([a-zA-Z][^\s/>]*\b)|role="([^"]*)"/g);
+
     const htmlLabel = html.match(htmlTagAndRoleAttributeRegex).toString().replaceAll(',', '_');
 
     return htmlLabel || '';

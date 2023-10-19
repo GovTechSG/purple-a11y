@@ -71,11 +71,7 @@ category summary is clicked %>
     document.getElementById('expandedRuleConformance').replaceChildren(
       createElementFromString(`
       <div class="d-flex align-items-center">
-        <div role="group" ${
-          selectedRule.conformance[0] === 'best-practice'
-            ? 'aria-hidden="true"'
-            : `aria-label="${conformanceLevels[selectedRule.conformance[0]]}"`
-        } class="conformance-bubble ${selectedRule.conformance[0]}"></div>
+        <div aria-hidden="true" class="conformance-bubble ${selectedRule.conformance[0]}"></div>
         ${
           selectedRule.conformance[0] === 'best-practice'
             ? `<span>Best practice</span>`
