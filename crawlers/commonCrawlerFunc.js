@@ -7,7 +7,7 @@ import { guiInfoLog } from '../logs.js';
 import { takeScreenshotForHTMLElements } from '../screenshotFunc/htmlScreenshotFunc.js';
 import fs from 'fs';
 
-export const filterAxeResults = (needsReview, results, pageTitle) => {
+export const filterAxeResults = (needsReview, results, pageTitle, customFlowDetails) => {
   const { violations, passes, incomplete, url } = results;
 
   let totalItems = 0;
@@ -36,7 +36,7 @@ export const filterAxeResults = (needsReview, results, pageTitle) => {
     }
 
     const addTo = (category, node) => {
-      const { html, failureSummary, screenshotPath } = node;
+      const { html, failureSummary, screenshotPath, target } = node;
       if (!(rule in category.rules)) {
         category.rules[rule] = { description, helpUrl, conformance, totalItems: 0, items: [] };
       }
@@ -49,12 +49,15 @@ export const filterAxeResults = (needsReview, results, pageTitle) => {
         finalHtml = html.replaceAll('</script>', '&lt;/script>');
       }
       
+      const xpath = target.length === 1 && typeof target[0] === 'string' ? target[0] : null;
+      
       // add in screenshot path 
       category.rules[rule].items.push(
         {
-          html: finalHtml,
+          html: finalHtml, 
           message,
           screenshotPath,
+          ...(xpath && { xpath }),
           ...(displayNeedsReview && { displayNeedsReview })
         }
       );
@@ -99,7 +102,9 @@ export const filterAxeResults = (needsReview, results, pageTitle) => {
 
   return {
     url,
-    pageTitle,
+    pageTitle: customFlowDetails ? `${customFlowDetails.pageIndex}: ${pageTitle}` : pageTitle,
+    ...(customFlowDetails && { pageIndex: customFlowDetails.pageIndex }),
+    ...(customFlowDetails && { pageImagePath: customFlowDetails.pageImagePath }),
     totalItems,
     mustFix,
     goodToFix,
@@ -107,7 +112,7 @@ export const filterAxeResults = (needsReview, results, pageTitle) => {
   };
 };
 
-export const runAxeScript = async (needsReview, includeScreenshots, page, randomToken, selectors = []) => {
+export const runAxeScript = async (needsReview, includeScreenshots, page, randomToken, customFlowDetails, selectors = []) => {
   await crawlee.playwrightUtils.injectFile(page, axeScript);
 
   const results = await page.evaluate(
@@ -138,7 +143,7 @@ export const runAxeScript = async (needsReview, includeScreenshots, page, random
   }
   
   const pageTitle = await page.evaluate(() => document.title);
-  return filterAxeResults(needsReview, results, pageTitle);
+  return filterAxeResults(needsReview, results, pageTitle, customFlowDetails);
 };
 
 export const createCrawleeSubFolders = async randomToken => {

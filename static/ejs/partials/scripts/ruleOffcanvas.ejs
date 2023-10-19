@@ -85,7 +85,7 @@ category summary is clicked %>
     `),
     );
 
-    if (purpleAiRules.includes(selectedRule.rule) && showPurpleAi) {
+    if (purpleAiRules.includes(selectedRule.rule)) {
       document.querySelector('#expandedRuleAiFeedback').style.display = 'block';
     } else {
       document.querySelector('#expandedRuleAiFeedback').style.display = 'none';
@@ -154,6 +154,7 @@ category summary is clicked %>
 
   function buildExpandedRuleCategoryContent(category, ruleInCategory) {
     const contentContainer = document.getElementById('expandedRuleCategoryContent');
+    const isCustomFlow = <%- scanType === 'Customized' -%>;
 
     if (category === 'passed') {
       contentContainer.innerHTML = `You may find the list of passed HTML elements in <a href='./passed_items.json.txt' target='_blank'>passed_items.json.txt</a>.`;
@@ -179,9 +180,7 @@ category summary is clicked %>
             <div class="accordion-item">
               <div class="accordion-header" id="${accordionId}-title">
                 <button 
-                  aria-label="Page ${index + 1}: ${page.pageTitle}, ${
-        page.items.length
-      } occurrences" class="accordion-button collapsed" 
+                  aria-label="Page ${index + 1}: ${page.pageTitle}, ${page.items.length} occurrences" class="accordion-button collapsed" 
                   type="button" 
                   data-bs-toggle="collapse" 
                   data-bs-target="#${accordionId}-content" 
@@ -194,9 +193,16 @@ category summary is clicked %>
               </div>
               <div id="${accordionId}-content" class="accordion-collapse collapse" aria-labelledby="${accordionId}-title">
                 <div class="accordion-body p-3">
-                  <a href="${page.url}" target="_blank">${
-        page.url
-      }</a>
+                  ${ isCustomFlow
+                    ? 
+                    `
+                      <div class="custom-flow-screenshot-container">
+                        <img src=${page.pageImagePath} class="custom-flow-screenshot"/>
+                        <a href="${page.url}" target="_blank">${page.url}</a>
+                      </div>
+                    `
+                    : `<a href="${page.url}" target="_blank">${page.url}</a>`
+                  }
                   <div class="page-accordion-content-title">
                     <span>${getFormattedCategoryTitle(category)} elements</span>
                     <span class="page-items-count">${page.items.length}</span>
@@ -208,6 +214,18 @@ category summary is clicked %>
         </li>
       `);
 
+      if (isCustomFlow) {
+        const customScreenshotElem = accordion.getElementsByClassName(`custom-flow-screenshot`)[0];
+        customScreenshotElem.onerror = function(event) {
+          this.onerror = null;
+          this.remove();
+        }
+        customScreenshotElem.onclick = function(event) {
+          event.preventDefault();
+          openLightbox(this.src, page.pageTitle);
+        }
+      }
+
       accordionsList.appendChild(accordion);
 
       const accordionBody = accordion.getElementsByClassName('accordion-body')[0];
@@ -218,7 +236,7 @@ category summary is clicked %>
         const buttonDivForAiFeedback = `${buttonAIId}-${index}`;
         const aiErrorDiv = `${errorAIId}-${index}`;
         let itemCard;
-        const isPurpleAiRule = purpleAiRules.includes(ruleInCategory.rule) && showPurpleAi;
+        const isPurpleAiRule = purpleAiRules.includes(ruleInCategory.rule);
         let purpleAiQueryLabel;
         if (isPurpleAiRule) {
           purpleAiQueryLabel = await checkPurpleAiQueryLabel(ruleInCategory.rule, item.html);
@@ -246,6 +264,40 @@ category summary is clicked %>
                 </div>
                 `
                   : ``
+                }
+                ${ item.xpath
+                  ? 
+                  `
+                  <div class="d-flex justify-content-between g-one">
+                    <div class="fw-bold">Path</div>
+                    <div class="page-item-card-section-content">
+                        <div class="path-container">
+                          ${item.xpath}
+                          <button 
+                            aria-describedby="copyTooltipDescription"
+                            class="copy-button"
+                          >
+                            <svg 
+                              tabindex="-1"
+                              title="Copy" 
+                              class="copy-icon"
+                              data-bs-toggle="tooltip" 
+                              data-bs-placement="top"
+                              xmlns="http://www.w3.org/2000/svg" 
+                              width="14" 
+                              height="16" 
+                              viewBox="0 0 14 16" 
+                              fill="none"
+                            >
+                              <path d="M11.2188 0.5H4.65625C4.15897 0.5 3.68206 0.697544 3.33042 1.04917C2.97879 1.40081 2.78125 1.87772 2.78125 2.375C2.28397 2.375 1.80706 2.57254 1.45542 2.92417C1.10379 3.27581 0.90625 3.75272 0.90625 4.25V13.625C0.90625 14.1223 1.10379 14.5992 1.45542 14.9508C1.80706 15.3025 2.28397 15.5 2.78125 15.5H9.34375C9.84103 15.5 10.3179 15.3025 10.6696 14.9508C11.0212 14.5992 11.2188 14.1223 11.2188 13.625C11.716 13.625 12.1929 13.4275 12.5446 13.0758C12.8962 12.7242 13.0938 12.2473 13.0938 11.75V2.375C13.0938 1.87772 12.8962 1.40081 12.5446 1.04917C12.1929 0.697544 11.716 0.5 11.2188 0.5ZM11.2188 12.6875V4.25C11.2188 3.75272 11.0212 3.27581 10.6696 2.92417C10.3179 2.57254 9.84103 2.375 9.34375 2.375H3.71875C3.71875 2.12636 3.81752 1.8879 3.99334 1.71209C4.16915 1.53627 4.40761 1.4375 4.65625 1.4375H11.2188C11.4674 1.4375 11.7058 1.53627 11.8817 1.71209C12.0575 1.8879 12.1562 2.12636 12.1562 2.375V11.75C12.1562 11.9986 12.0575 12.2371 11.8817 12.4129C11.7058 12.5887 11.4674 12.6875 11.2188 12.6875ZM1.84375 4.25C1.84375 4.00136 1.94252 3.7629 2.11834 3.58709C2.29415 3.41127 2.53261 3.3125 2.78125 3.3125H9.34375C9.59239 3.3125 9.83085 3.41127 10.0067 3.58709C10.1825 3.7629 10.2812 4.00136 10.2812 4.25V13.625C10.2812 13.8736 10.1825 14.1121 10.0067 14.2879C9.83085 14.4637 9.59239 14.5625 9.34375 14.5625H2.78125C2.53261 14.5625 2.29415 14.4637 2.11834 14.2879C1.94252 14.1121 1.84375 13.8736 1.84375 13.625V4.25Z" fill="#333333"/>
+                            </svg>
+                          </button>
+                        </div>
+                    </div>
+                  </div>
+                  <hr/>
+                  `
+                  :``
                 }
                 <div class="d-flex justify-content-between g-one">
                   ${
@@ -278,13 +330,39 @@ category summary is clicked %>
                 <div class="d-flex g-one">
                   <div class="fw-bold page-item-card-section-title">AI suggestion</div>
                   <div id="${accordionDivToAppendAI}" class="page-item-card-section-content">
-                    ${purpleAiQueryLabel ? `
-                      <button id=${buttonDivForAiFeedback} class="aiGenerateResponseButton" onClick="getPurpleAiAnswer('${
-                        ruleInCategory.rule
-                      }','${accordionDivToAppendAI}', '${purpleAiQueryLabel}', '${buttonDivForAiFeedback}', '${aiErrorDiv}')">Generate response</button>
-                      <div id=${aiErrorDiv}></div>` : `
-                      <span class="processAI">Processing AI suggestions, please check back later.</span>` 
-                    }
+                    ${purpleAiQueryLabel.hasNetworkError ?
+                      `<button 
+                        id=${buttonDivForAiFeedback} 
+                        class="aiGenerateResponseButton" 
+                        onClick="handleOfflinePurpleAi(
+                          '${ruleInCategory.rule}',
+                          '${accordionDivToAppendAI}', 
+                          '${escapeHtmlStringForArg(item.html)}', 
+                          '${buttonDivForAiFeedback}', 
+                          '${aiErrorDiv}')"
+                        >
+                          Generate response
+                        </button>
+                        <div id=${aiErrorDiv}></div>` : 
+                        (purpleAiQueryLabel.label ?
+                          `<button 
+                          id=${buttonDivForAiFeedback} 
+                          class="aiGenerateResponseButton" 
+                          onClick="getPurpleAiAnswer(
+                            '${ruleInCategory.rule}',
+                            '${accordionDivToAppendAI}', 
+                            '${purpleAiQueryLabel.label}', 
+                            '${buttonDivForAiFeedback}', 
+                            '${aiErrorDiv}')"
+                          >
+                            Generate response
+                          </button>
+                          <div id=${aiErrorDiv}></div>` :
+                          `<span class="processAI">
+                            Processing AI suggestions, please check back later.
+                          </span>`
+                        ) 
+                      }
                   </div>
                 </div>` : ``
                 }
@@ -294,6 +372,35 @@ category summary is clicked %>
         `);
         elementCardsList.appendChild(itemCard);
 
+        const copyTooltip = itemCard.querySelector('.copy-icon'); 
+        const copyTooltipItem = new bootstrap.Tooltip(copyTooltip);
+
+        const copyButtonElem = itemCard.getElementsByClassName('copy-button')[0];
+        const textToCopy = createElementFromString(`<textarea>${item.xpath}</textarea>`)
+        copyButtonElem.onclick = event => {
+          textToCopy.select();
+          // Copy the text inside the text field
+          navigator.clipboard.writeText(textToCopy.value);
+          
+          copyTooltip.setAttribute('data-bs-original-title', 'Copied');
+          copyTooltipItem.update();
+          copyTooltipItem.show();
+
+          setTimeout(() => { 
+            copyTooltip.setAttribute('data-bs-original-title', 'Copy');
+            copyTooltipItem.update();
+          }, 1500)
+        };
+        copyButtonElem.onmouseover = event => {
+          copyTooltip.dispatchEvent(new MouseEvent('mouseover')); 
+        };
+        copyButtonElem.onmouseout = event => {
+          copyTooltip.dispatchEvent(new MouseEvent('mouseout'));
+        }
+        copyButtonElem.onmousedown = event => {
+          event.preventDefault();
+        }
+        
         hljs.configure({
           ignoreUnescapedHTML: true
         });
@@ -433,9 +540,9 @@ category summary is clicked %>
     'aria-roles': '<p>\n  Elements assigned invalid ARIA role values are not interpreted by assistive\n  technology as intended by the developer.\n</p>',
     label: '<p>\n  Effective form labels are required to make forms accessible. The purpose of\n  form elements such as checkboxes, radio buttons, input fields, etcetera, is\n  often apparent to sighted users, even if the form element is not\n  programmatically labeled. Screen readers users require useful form labels to\n  identify form fields. Adding a label to all form elements eliminates ambiguity\n  and contributes to a more accessible product.\n</p>',
     'landmark-one-main': '<p>\n  Navigating a web page is far simpler for screen reader users if all of the\n  content splits between one or more high-level sections. Content outside of\n  these sections is difficult to find, and its purpose may be unclear.\n</p>',
-    'aria-braille-equivalent': '<p class="rule-desc-text">\nARIA braille attributes were introduced to adjust how labels and role descriptions appear on braille displays, but they cannot be the only attribute providing a label, or a role description. <code>aria-braillelabel</code> must only be applied to elements with an accessible name, like <code>aria-label</code> , and <code>aria-brailleroledescription</code> should only be used with <code>aria-roledescription</code>.\n</p>', 
-    'aria-conditional-attr': '<p class="rule-desc-text">\nARIA attributes should be used according to their specified roles for elements, as using them incorrectly can result in unpredictable behavior for assistive technologies. This can lead to a poor user experience for people with disabilities who rely on these technologies.\n</p>',
-    'aria-deprecated-role': '<p class="rule-desc-text">\nDeprecated ARIA roles are not recognized or properly processed by screen readers and other assistive technologies. Using these means may hinder some users access to essential information. Always assign values to role that align with current, non-deprecated or abstract ARIA roles.\n</p>',
-    'aria-prohibited-attr': '<p class="rule-desc-text">\nThis rule specifically checks that none of the attributes used with a particular role are marked as "prohibited" for that role in the latest version of ARIA. For instance, attributes like <code>aria-label</code> and <code>aria-labelledby</code> are not permitted on roles like <code>presentation</code> and <code>none</code>, as well as on text-like roles such as <code>code</code>, <code>insertion</code>, <code>strong</code> and others.\n</p>'
+    'aria-braille-equivalent': '<p class="rule-desc-text">\nARIA braille attributes were introduced to allow adjusting how labels and role descriptions are rendered on a braille display. They cannot be the only attribute providing a label, or a role description. When used without a corresponding label or role description ARIA says to ignore these attributes, although this may not happen consistently in screen readers and other assistive technologies.\n</p>', 
+    'aria-conditional-attr': '<p class="rule-desc-text">\nUsing ARIA attributes on elements where they are not expected can result in unpredictable behavior for assistive technologies. This can lead to a poor user experience for people with disabilities who rely on these technologies. It is important to follow the ARIA specification to ensure that assistive technologies can properly interpret and communicate the intended meaning of the content.\n</p>',
+    'aria-deprecated-role': '<p class="rule-desc-text">\nUsing deprecated WAI-ARIA roles is bad for accessibility. They will not be recognized or correctly processed by screen readers and other assistive technologies. Using these means not everyone will be able to access essential information.\n</p>',
+    'aria-prohibited-attr': '<p class="rule-desc-text">\nUsing ARIA attributes in roles where they are prohibited can mean that important information is not communicated to users of assistive technologies. assistive technologies may also attempt to compensate for the issue, resulting in inconsistent and confusing behavior of these tools.\n</p>'
   };
 </script>

@@ -57,8 +57,18 @@
             <ul class="unbulleted-list">
               <% pagesScanned.forEach((page, index) => { %> 
               <li>
-                <a href="<%= page.url %>" target="_blank"><%= page.pageTitle.length > 0 ? page.pageTitle : page.url %></a>
-                <span><%= page.url %></span>
+                <% if (scanType === 'Customized') {%>
+                    <div class="custom-flow-screenshot-container">
+                      <img src="<%= page.pageImagePath %>" class="custom-flow-screenshot">
+                      <div class="display-url-container">
+                        <a href="<%= page.url %>" target="_blank"><%= page.pageTitle.length > 0 ? page.pageTitle : page.url %></a>
+                        <p><%= page.url %></p>
+                      </div>
+                    </div>
+                <% } else { %>
+                    <a href="<%= page.url %>" target="_blank"><%= page.pageTitle.length > 0 ? page.pageTitle : page.url %></a>
+                    <p><%= page.url %></p>
+                <% } %>
               </li>
               <% }) %>
             </ul>    

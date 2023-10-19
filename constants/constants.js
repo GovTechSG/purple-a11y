@@ -31,7 +31,7 @@ export const blackListedFileExtensions = [
 ];
 
 export const getIntermediateScreenshotsPath = datasetsPath => `${datasetsPath}/screenshots`;
-export const destinationPath = storagePath => `${storagePath}/screenshots`;
+export const destinationPath = storagePath => `${storagePath}/reports/screenshots`;
 
 /**  Get the path to Default Profile in the Chrome Data Directory
  * as per https://chromium.googlesource.com/chromium/src/+/master/docs/user_data_dir.md
@@ -229,7 +229,8 @@ export const impactOrder = {
 };
 
 export const formDataFields = {
-  formUrl: `https://docs.google.com/forms/d/e/1FAIpQLSem5C8fyNs5TiU5Vv2Y63-SH7CHN86f-LEPxeN_1u_ldUbgUA/formResponse`,
+  formUrl: `https://docs.google.com/forms/d/e/1FAIpQLSem5C8fyNs5TiU5Vv2Y63-SH7CHN86f-LEPxeN_1u_ldUbgUA/formResponse`, // prod
+  // formUrl: `https://docs.google.com/forms/d/e/1FAIpQLScNldkNEajZbAiXK5TmMy4DfMERC2Sd7aJJrD76vBNz4pm05g/formResponse`, // dev
   websiteUrlField: 'entry.1562345227',
   scanTypeField: 'entry.1148680657',
   emailField: 'entry.52161304',

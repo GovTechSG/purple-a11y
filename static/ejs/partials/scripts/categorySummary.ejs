@@ -38,7 +38,7 @@
     scanItems[category].rules.forEach((rule, index) => {
       const buttonAriaLabel = `${rule.description}, ${rule.totalItems} occurrences`;
       const purpleAiSvgId = `${category}-${rule.rule}-${index}`;
-      const isPurpleAiRule = purpleAiRules.includes(rule.rule) && showPurpleAi;
+      const isPurpleAiRule = purpleAiRules.includes(rule.rule);
 
       const ruleItem = createElementFromString(`
         <li>
