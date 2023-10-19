@@ -343,34 +343,65 @@ const clickFunc = async (elem,page, clickOptions=undefined) => {
   }
 };
 
-const waitForCaptcha = async (page, locator) => {
+const waitForCaptcha = async (page, captchaLocator) => {
+  await captchaLocator.scrollIntoViewIfNeeded({ timeout: 3000 });
+  const captchaElem = await captchaLocator.evaluateHandle(elem => elem);
+
   // debounce function
-  const waitForInactivity = element =>
-    new Promise(resolve => {
+  const waitForInactivity = elem =>
+    new Promise(async resolve => {
+      const onKeydown = event => {
+        if (event.target !== elem || (event.target === elem && event.key === 'Enter')) {
+          event.preventDefault();
+          if (event.key === 'Enter') {
+            cleanup();
+          }
+        }
+      };
+
+      const onClick = event => {
+        if (event.target.tagName === 'BUTTON') {
+          event.preventDefault();
+          cleanup();
+        }
+      };
+
       const duration = 3000;
       let timeoutId;
       const restartTimer = () => {
-        clearTimeout(timeoutId); // clear any existing timeout
+        clearTimeout(timeoutId);
         timeoutId = setTimeout(() => {
-          element.removeEventListener('keyup', restartTimer);
-          element.removeEventListener('click', restartTimer);
-
-          resolve(true);
+          cleanup();
         }, duration);
       };
-      // consider keyup and clicks on element as activity
-      element.addEventListener('keyup', restartTimer);
-      element.addEventListener('click', restartTimer);
+
+      const cleanup = () => {
+        clearTimeout(timeoutId); // clear any existing timeout
+
+        document.removeEventListener('click', restartTimer);
+        document.removeEventListener('click', onClick);
+        document.removeEventListener('keydown', restartTimer);
+        document.removeEventListener('keydown', onKeydown);
+
+        resolve(true);
+      };
+
+      // consider keydown and clicks on element as activity
+      document.addEventListener('click', restartTimer);
+      document.addEventListener('click', onClick);
+      document.addEventListener('keydown', restartTimer);
+      document.addEventListener('keydown', onKeydown);
+
       restartTimer();
     });
 
   // playwright: Dialogs are dismissed automatically, unless there is a page.on('dialog') listener
   page.on('dialog', () => {});
-  await page.evaluate(() => window.alert('Please complete captcha and wait for 3 seconds.'));
+  await page.evaluate(() => window.alert('Please complete captcha'));
 
   while (true) {
     // wait for inactivity on the captcha element
-    await locator.evaluate(waitForInactivity);
+    await page.evaluate(waitForInactivity, captchaElem);
     const isAccepted = await page.evaluate(() =>
       window.confirm(
         'If captcha has been completed successfully, please click OK to continue scan. Otherwise, click Cancel and complete captcha.',
@@ -743,7 +774,7 @@ const waitForCaptcha = async (page, locator) => {
       // TODO: maybe handle in multiple pages
       // const captchaRegex = /getBy.*(captcha|I'm not a robot)/i;
       const captchaRegex = /getBy.*captcha/i;
-      if (captchaRegex.test(line)) {
+      if (captchaRegex.test(line) && line.includes('.fill(')) {
         if (!hasCaptcha) {
           hasCaptcha = true;
           appendToGeneratedScript(`const captchaElem = ${getLocator(line)}`);
