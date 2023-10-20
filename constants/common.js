@@ -250,6 +250,16 @@ const requestToUrl = async url => {
         res.url = url;
       }
 
+      const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?([^"]*)"/i.exec(response.data);
+      if (metaRefreshMatch && metaRefreshMatch[1]) {
+        const urlOrRelativePath = metaRefreshMatch[1]; 
+        if (urlOrRelativePath.includes('URL=')) {
+          res.url = urlOrRelativePath.split('URL=').pop(); 
+        } else {
+          const pathname = res.url.substring(0, res.url.lastIndexOf('/'));
+          res.url = urlOrRelativePath.replace('.', pathname);
+        }
+      }
       res.content = response.data;
     })
     .catch(async error => {
@@ -359,16 +369,10 @@ const checkUrlConnectivityWithBrowser = async (
         res.status = constants.urlCheckStatuses.success.code;
       }
 
-      // Check for redirect link
-      const redirectUrl = await response.request().url();
+      // set redirect link or final url 
+      res.url = page.url();
 
-      if (redirectUrl != null) {
-        res.url = redirectUrl;
-      } else {
-        res.url = url;
-      }
-
-      res.content = await page.content();
+      res.content = await page.content();      
     } catch (error) {
       silentLogger.error(error);
       res.status = constants.urlCheckStatuses.systemError.code;
