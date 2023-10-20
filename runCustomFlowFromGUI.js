@@ -1,6 +1,6 @@
 import { chromium, webkit, devices } from 'playwright';
 import { getComparator } from 'playwright-core/lib/utils';
-import { spawnSync, execSync } from 'child_process';
+import { execSync } from 'child_process';
 import { argv } from 'process';
 import fs from 'fs';
 import os from 'os';
