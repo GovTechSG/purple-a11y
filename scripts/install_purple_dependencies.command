@@ -15,15 +15,6 @@ if [ "$CURR_FOLDERNAME" = "scripts" ]; then
   CURR_FOLDERNAME="$(basename "$PWD")"
 fi
 
-if [[ $(uname -m) == 'arm64' ]]; then
-    export ROSETTA2_STATUS_RESULT=$(/usr/bin/pgrep -q oahd && echo true || echo false)
-    if ! $ROSETTA2_STATUS_RESULT; then   
-        echo "Installing Rosetta 2 dependency"
-        /usr/sbin/softwareupdate --install-rosetta --agree-to-license
-    fi
-
-fi
-
 if ! [ -f nodejs-mac-arm64/bin/node ]; then
   echo "Downloading NodeJS LTS (ARM64)"
   curl -o ./nodejs-mac-arm64.tar.gz --create-dirs https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-darwin-arm64.tar.gz  

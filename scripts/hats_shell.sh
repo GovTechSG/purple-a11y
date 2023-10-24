@@ -19,12 +19,6 @@ SHELL_COMMAND=$(ps -o comm= -p $$)
 SHELL_NAME="${SHELL_COMMAND#-}"
 
 if [[ $(uname -m) == 'arm64' ]]; then
-    export ROSETTA2_STATUS_RESULT=$(/usr/bin/pgrep -q oahd && echo true || echo false)
-    if ! $ROSETTA2_STATUS_RESULT; then   
-        echo "Installing Rosetta 2 dependency"
-        /usr/sbin/softwareupdate --install-rosetta --agree-to-license
-    fi
-
     echo "INFO: Setting path to node arm64 for this session"
     export PATH_TO_NODE="$PWD/nodejs-mac-arm64/bin"
 

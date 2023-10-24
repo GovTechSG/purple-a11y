@@ -126,7 +126,4 @@ username@hostname purple-hats % node index
 ```
 
  * Follow the steps at [Features](https://github.com/GovTechSG/purple-hats#features) for more information on how to run a scan.
- 
- * If you are running on an Apple Silicon Mac, you may be prompted to install [Rosetta 2](https://support.apple.com/en-sg/HT211861).  Click "Install" and try running Purple hats again.
- <img width="360" alt="Rosetta 2 alert prompt" src="https://support.apple.com/library/content/dam/edam/applecare/images/en_US/macos/Big-Sur/macos-big-sur-software-update-rosetta-alert.jpg">
 </details>
