@@ -43,9 +43,9 @@ category summary is clicked %>
 
   function expandRule(selectedCategory, selectedRule) {
     const conformanceLevels = {
-      wcag2a: 'Level A',
-      wcag2aa: 'Level AA',
-      wcag21aa: 'Level AA',
+      wcag2a: 'A',
+      wcag2aa: 'AA',
+      wcag21aa: 'AA',
     };
 
     document.getElementById('expandedRuleName').innerHTML = htmlEscapeString(
@@ -68,12 +68,21 @@ category summary is clicked %>
       expandedRuleHelpUrl.hidden = true;
     }
 
+    // will be read out by screen readers but invisible on the page
+    const spanForSr = `<span class="visually-hidden">Level&nbsp;</span>`;
+    const wcagLevel = selectedRule.conformance[0];
+    const aLevel = conformanceLevels[wcagLevel]; // the actual level (i.e. "A", "AA")
+    const bestPracIcon = `<img src="data:image/svg+xml,<svg width='11' height='15' viewBox='0 0 11 15' fill='none' xmlns='http://www.w3.org/2000/svg'><path fill-rule='evenodd' clip-rule='evenodd' d='M4.27122 14.4973C3.32493 14.4973 2.55693 13.7293 2.55693 12.7831V9.35449H7.69979V12.7831C7.69979 13.7293 6.93179 14.4973 5.9855 14.4973H4.27122Z' fill='white'/><path fill-rule='evenodd' clip-rule='evenodd' d='M7.69712 12.0171H5.98283V10.6234C5.98626 10.4297 6.00169 10.2497 6.03598 10.0766C6.14912 9.48343 6.47312 9.03771 6.79369 8.62971L7.20855 8.12057C7.38512 7.90457 7.5634 7.69029 7.7314 7.46743C8.43598 6.54171 8.67769 5.55257 8.47026 4.44343C8.18055 2.89371 6.74912 1.72114 5.14112 1.71429C3.5074 1.72114 2.07598 2.89371 1.78626 4.44343C1.58055 5.55257 1.82226 6.54171 2.52512 7.46743C2.69655 7.692 2.87483 7.90971 3.05483 8.12743L3.46283 8.63143C3.83312 9.08743 4.17255 9.50914 4.28226 10.0783C4.31483 10.2514 4.33026 10.4331 4.33369 10.6114V12.0171H2.6194V10.6234C2.61769 10.5566 2.61255 10.4794 2.59883 10.4023C2.56969 10.2531 2.38626 10.0269 2.22683 9.828L1.7314 9.216C1.53769 8.98114 1.34569 8.748 1.16055 8.50629C0.161118 7.19143 -0.195453 5.71886 0.101118 4.128C0.545118 1.74514 2.65198 0.0102857 5.10855 0C7.60455 0.0102857 9.7114 1.74514 10.1554 4.128C10.452 5.71886 10.0954 7.19143 9.09598 8.50629C8.91426 8.74457 8.72398 8.97771 8.53198 9.20914L8.1394 9.69429C7.94055 9.94457 7.75883 10.1863 7.7194 10.4006C7.70398 10.4811 7.69883 10.56 7.69712 10.6389V12.0171Z' fill='white'/></svg>" alt="" />`
+
     document.getElementById('expandedRuleConformance').replaceChildren(
       createElementFromString(`
       <div class="d-flex align-items-center">
-        <div aria-hidden="true" class="conformance-bubble ${selectedRule.conformance[0]}"></div>
+        <div ${aLevel ? "" : "aria-hidden=\"true\""} class="conformance-bubble ${wcagLevel}">
+          ${aLevel ? spanForSr : ""}
+          ${aLevel ? aLevel : bestPracIcon}
+        </div>
         ${
-          selectedRule.conformance[0] === 'best-practice'
+          !aLevel
             ? `<span>Best practice</span>`
             : generateWcagConformanceLinks(selectedRule.conformance)
         }
