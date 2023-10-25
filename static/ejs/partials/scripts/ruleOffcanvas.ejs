@@ -183,7 +183,7 @@ category summary is clicked %>
                   aria-expanded="false" 
                   aria-controls="${accordionId}-content"
                 >
-                  <span class="sr-only">${page.items.length} ${page.items.length === 1 ? 'occurrence' : 'occurrences'}</span>
+                  <span class="sr-only visually-hidden">${page.items.length} ${page.items.length === 1 ? 'occurrence' : 'occurrences'}</span>
                   <div class="me-3">${page.pageTitle}</div>
                   <div class="ms-auto counter">${page.items.length}</div>
                 </button>
@@ -194,8 +194,8 @@ category summary is clicked %>
                     ? 
                     `
                       <div class="custom-flow-screenshot-container">
-                        <img src=${page.pageImagePath} class="custom-flow-screenshot"/>
-                        <a href="${page.url}" target="_blank">${page.url}</a>
+                        <img alt="Screenshot of ${page.url}" src=${page.pageImagePath} class="custom-flow-screenshot"/>
+                        <div><a href="${page.url}" target="_blank">${page.url}</a></div>
                       </div>
                     `
                     : `<a href="${page.url}" target="_blank">${page.url}</a>`
@@ -219,7 +219,7 @@ category summary is clicked %>
         }
         customScreenshotElem.onclick = function(event) {
           event.preventDefault();
-          openLightbox(this.src, page.pageTitle);
+          openLightbox(this.src, page.pageTitle, page.url);
         }
       }
 
