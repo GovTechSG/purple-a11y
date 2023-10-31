@@ -375,6 +375,7 @@ export const generateArtifacts = async (
   const phAppVersion = getVersion();
   const storagePath = getStoragePath(randomToken);
   const directory = `${storagePath}/${constants.allIssueFileName}`;
+  const isCustomFlow = scanType === constants.scannerTypes.custom;
   const allIssues = {
     storagePath,
     purpleAi: {
@@ -384,6 +385,7 @@ export const generateArtifacts = async (
     startTime: getCurrentTime(),
     urlScanned,
     scanType,
+    isCustomFlow,
     viewport,
     pagesScanned,
     pagesNotScanned,
@@ -401,7 +403,6 @@ export const generateArtifacts = async (
     },
   };
   const allFiles = await extractFileNames(directory);
-  const isCustomFlow = scanType === 'Customized';
 
   const jsonArray = await Promise.all(
     allFiles.map(async file => parseContentToJson(`${directory}/${file}`)),
