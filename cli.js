@@ -206,19 +206,18 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return option;
   })
   .coerce('j', option => {
-    const {isValid, errorMessage} = validateCustomFlowLabel(option);
+    const { isValid, errorMessage } = validateCustomFlowLabel(option);
     if (!isValid) {
-      printMessage([errorMessage], messageOptions); 
+      printMessage([errorMessage], messageOptions);
       process.exit(1);
     }
-    return option; 
+    return option;
   })
-  // TODO: include/exclude screenshots
   .coerce('a', option => {
     const { choices } = cliOptions.a;
     if (!choices.includes(option)) {
       printMessage(
-        [`Invalid value for additional. Please provide valid keywords: ${choices.join(", ")}.`],
+        [`Invalid value for additional. Please provide valid keywords: ${choices.join(', ')}.`],
         messageOptions,
       );
       process.exit(1);
@@ -230,12 +229,12 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
       JSON.parse(option);
     } catch (e) {
       // default to empty object
-      return "{}";
+      return '{}';
     }
     return option;
   })
   .check(argvs => {
-    if (argvs.scanner === 'custom' && argvs.maxpages) {
+    if ((argvs.scanner === 'custom' || argvs.scanner === 'custom2') && argvs.maxpages) {
       throw new Error('-p or --maxpages is only available in website and sitemap scans.');
     }
     return true;
@@ -250,7 +249,13 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   .epilogue('').argv;
 
 const scanInit = async argvs => {
-  argvs.scanner = constants.scannerTypes[argvs.scanner];
+  let isNewCustomFlow = false;
+  if (constants.scannerTypes[argvs.scanner] === constants.scannerTypes.custom2) {
+    argvs.scanner = constants.scannerTypes.custom;
+    isNewCustomFlow = true;
+  } else {
+    argvs.scanner = constants.scannerTypes[argvs.scanner];
+  }
   argvs.headless = argvs.headless === 'yes';
   argvs.browserToRun = constants.browserTypes[argvs.browserToRun];
 
@@ -328,8 +333,8 @@ const scanInit = async argvs => {
   }
 
   if (process.env.RUNNING_FROM_PH_GUI) {
-    // url has been validated 
-    argvs.finalUrl = argvs.url; 
+    // url has been validated
+    argvs.finalUrl = argvs.url;
   }
 
   if (argvs.scanner === constants.scannerTypes.website && !argvs.strategy) {
@@ -340,8 +345,6 @@ const scanInit = async argvs => {
   // files will clone a second time below if url check passes
   deleteClonedProfiles(argvs.browserToRun);
 
-  // eslint-disable-next-line default-case
-  
   if (argvs.exportDirectory) {
     constants.exportDirectory = argvs.exportDirectory;
   }
@@ -358,7 +361,7 @@ const scanInit = async argvs => {
 
   printMessage([`Purple HATS version: ${appVersion}`, 'Starting scan...'], messageOptions);
 
-  if (argvs.scanner === constants.scannerTypes.custom) {
+  if (argvs.scanner === constants.scannerTypes.custom && !isNewCustomFlow) {
     try {
       await playwrightAxeGenerator(data);
     } catch (error) {

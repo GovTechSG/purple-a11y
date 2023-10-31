@@ -73,14 +73,18 @@ const startScanQuestions = [
 
       const statuses = constants.urlCheckStatuses;
       const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(constants.browserTypes.chrome);
-      const playwrightDeviceDetailsObject = getPlaywrightDeviceDetailsObject(answers.deviceChosen, answers.customDevice, answers.viewportWidth);
-      
+      const playwrightDeviceDetailsObject = getPlaywrightDeviceDetailsObject(
+        answers.deviceChosen,
+        answers.customDevice,
+        answers.viewportWidth,
+      );
+
       const res = await checkUrl(
-        answers.scanner, 
-        url, 
-        browserToRun, 
-        clonedBrowserDataDir, 
-        playwrightDeviceDetailsObject
+        answers.scanner,
+        url,
+        browserToRun,
+        clonedBrowserDataDir,
+        playwrightDeviceDetailsObject,
       );
 
       deleteClonedProfiles(browserToRun);
@@ -118,13 +122,13 @@ const startScanQuestions = [
     message: 'Give a preferred label to your custom scan flow (Optional)',
     when: answers => answers.scanner === constants.scannerTypes.custom,
     validate: label => {
-      const {isValid, errorMessage} = validateCustomFlowLabel(label); 
+      const { isValid, errorMessage } = validateCustomFlowLabel(label);
       if (!isValid) {
-        return errorMessage; 
+        return errorMessage;
       }
-      return true; 
-    }
-  }
+      return true;
+    },
+  },
 ];
 
 const newUserQuestions = [

@@ -1,11 +1,10 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-param-reassign */
-import crawlee, { playwrightUtils } from 'crawlee';
+import crawlee from 'crawlee';
 import axe from 'axe-core';
 import { axeScript, guiInfoStatusTypes, saflyIconSelector } from '../constants/constants.js';
 import { guiInfoLog } from '../logs.js';
 import { takeScreenshotForHTMLElements } from '../screenshotFunc/htmlScreenshotFunc.js';
-import fs from 'fs';
 
 export const filterAxeResults = (needsReview, results, pageTitle, customFlowDetails) => {
   const { violations, passes, incomplete, url } = results;
@@ -48,19 +47,17 @@ export const filterAxeResults = (needsReview, results, pageTitle, customFlowDeta
       if (html.includes('</script>')) {
         finalHtml = html.replaceAll('</script>', '&lt;/script>');
       }
-      
+
       const xpath = target.length === 1 && typeof target[0] === 'string' ? target[0] : null;
-      
-      // add in screenshot path 
-      category.rules[rule].items.push(
-        {
-          html: finalHtml, 
-          message,
-          screenshotPath,
-          ...(xpath && { xpath }),
-          ...(displayNeedsReview && { displayNeedsReview })
-        }
-      );
+
+      // add in screenshot path
+      category.rules[rule].items.push({
+        html: finalHtml,
+        message,
+        screenshotPath,
+        xpath: xpath || undefined,
+        displayNeedsReview: displayNeedsReview || undefined,
+      });
       category.rules[rule].totalItems += 1;
       category.totalItems += 1;
       totalItems += 1;
@@ -103,8 +100,8 @@ export const filterAxeResults = (needsReview, results, pageTitle, customFlowDeta
   return {
     url,
     pageTitle: customFlowDetails ? `${customFlowDetails.pageIndex}: ${pageTitle}` : pageTitle,
-    ...(customFlowDetails && { pageIndex: customFlowDetails.pageIndex }),
-    ...(customFlowDetails && { pageImagePath: customFlowDetails.pageImagePath }),
+    pageIndex: customFlowDetails ? customFlowDetails.pageIndex : undefined,
+    pageImagePath: customFlowDetails ? customFlowDetails.pageImagePath : undefined,
     totalItems,
     mustFix,
     goodToFix,
@@ -112,7 +109,14 @@ export const filterAxeResults = (needsReview, results, pageTitle, customFlowDeta
   };
 };
 
-export const runAxeScript = async (needsReview, includeScreenshots, page, randomToken, customFlowDetails, selectors = []) => {
+export const runAxeScript = async (
+  needsReview,
+  includeScreenshots,
+  page,
+  randomToken,
+  customFlowDetails,
+  selectors = [],
+) => {
   await crawlee.playwrightUtils.injectFile(page, axeScript);
 
   const results = await page.evaluate(
@@ -139,9 +143,9 @@ export const runAxeScript = async (needsReview, includeScreenshots, page, random
 
   if (includeScreenshots) {
     results.violations = await takeScreenshotForHTMLElements(results.violations, page, randomToken);
-    if (needsReview) results.incomplete = await takeScreenshotForHTMLElements(results.incomplete, page, randomToken);
+    results.incomplete = await takeScreenshotForHTMLElements(results.incomplete, page, randomToken);
   }
-  
+
   const pageTitle = await page.evaluate(() => document.title);
   return filterAxeResults(needsReview, results, pageTitle, customFlowDetails);
 };

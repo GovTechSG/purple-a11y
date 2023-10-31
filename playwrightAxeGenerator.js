@@ -431,7 +431,7 @@ const waitForCaptcha = async (page, captchaLocator) => {
             const basicFormHTMLSnippet = await generateArtifacts(
               ${formatScriptStringVar(randomToken)},
               ${formatScriptStringVar(data.url)},
-              'Customized',
+              ${formatScriptStringVar(constants.scannerTypes.custom)},
               ${formatScriptStringVar(
                 viewportWidth
                   ? `CustomWidth_${viewportWidth}px`
