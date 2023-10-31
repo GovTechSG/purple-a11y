@@ -312,6 +312,10 @@ const scanInit = async argvs => {
             file is a sitemap */
         if (isFileSitemap(argvs.url)) {
           argvs.isLocalSitemap = true;
+          if (process.env.VALIDATE_URL_PH_GUI) {
+            console.log('Url is valid');
+            process.exit(0);
+          }
           break;
         } else {
           res.status = statuses.notASitemap.code;
@@ -330,6 +334,11 @@ const scanInit = async argvs => {
   if (process.env.RUNNING_FROM_PH_GUI) {
     // url has been validated 
     argvs.finalUrl = argvs.url; 
+
+    // check if it is local sitemap
+    if (isFileSitemap(argvs.url)) {
+      argvs.isLocalSitemap = true;
+    }
   }
 
   if (argvs.scanner === constants.scannerTypes.website && !argvs.strategy) {
