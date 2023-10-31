@@ -184,12 +184,18 @@ export const isSkippedUrl = (pageUrl, whitelistedDomains) => {
   return matched;
 };
 
-export const isFileSitemap = filePath => {
+export const isFileSitemap = async filePath => {
+  if (filePath.startsWith('file://')) {
+    filePath = filePath.replace('file://', '').trim();
+  }     
+  
   if (!fs.existsSync(filePath)) {
-    return false;
+    return null; 
   }
+
   const file = fs.readFileSync(filePath, 'utf8');
-  return isSitemapContent(file);
+  const isLocalSitemap = await isSitemapContent(file);
+  return isLocalSitemap ? filePath : null;
 };
 
 export const getUrlMessage = scanner => {
@@ -488,7 +494,7 @@ export const prepareData = argv => {
 
   return {
     type: scanner,
-    url: isLocalSitemap ? url : finalUrl,
+    url: finalUrl,
     isHeadless: headless,
     deviceChosen,
     customDevice,

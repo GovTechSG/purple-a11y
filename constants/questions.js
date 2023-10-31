@@ -100,12 +100,14 @@ const startScanQuestions = [
           /* if sitemap scan is selected, treat this URL as a filepath
               isFileSitemap will tell whether the filepath exists, and if it does, whether the
               file is a sitemap */
-          if (isFileSitemap(url)) {
+          const finalFilePath = await isFileSitemap(url); 
+          if (finalFilePath) {
             answers.isLocalSitemap = true;
+            answers.finalUrl = finalFilePath;
             return true;
+          } else {
+            return statuses.notASitemap.message;
           }
-          res.status = statuses.notASitemap.code;
-
         case statuses.notASitemap.code:
           return statuses.notASitemap.message;
       }
