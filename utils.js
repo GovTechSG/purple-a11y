@@ -1,17 +1,9 @@
 import { execFileSync, execSync } from 'child_process';
 import path from 'path';
 import os from 'os';
-import { fileURLToPath } from 'url';
 import { destinationPath, getIntermediateScreenshotsPath } from './constants/constants.js';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 import fs from 'fs-extra';
-import crypto from 'crypto';
-
 import constants from './constants/constants.js';
-import { silentLogger } from './logs.js';
-import { get } from 'http';
 
 export const getVersion = () => {
   const loadJSON = path => JSON.parse(fs.readFileSync(new URL(path, import.meta.url)));
@@ -32,17 +24,17 @@ export const isWhitelistedContentType = contentType => {
   return whitelist.filter(type => contentType.trim().startsWith(type)).length === 1;
 };
 
-export const getStoragePath = (randomToken) => {
+export const getStoragePath = randomToken => {
   if (constants.exportDirectory === process.cwd()) {
-    return `results/${randomToken}`; 
+    return `results/${randomToken}`;
   } else {
     if (!path.isAbsolute(constants.exportDirectory)) {
       constants.exportDirectory = path.resolve(process.cwd(), constants.exportDirectory);
     }
     return `${constants.exportDirectory}/${randomToken}`;
   }
-}
-  
+};
+
 export const createDetailsAndLogs = async (scanDetails, randomToken) => {
   const storagePath = getStoragePath(randomToken);
   const logPath = `logs/${randomToken}`;
@@ -107,7 +99,7 @@ export const createAndUpdateResultsFolders = async randomToken => {
   await fs.ensureDir(`${storagePath}/reports`);
 
   const intermediateDatasetsPath = `${randomToken}/datasets/${randomToken}`;
-  const intermediatePdfResultsPath = `${randomToken}/${constants.pdfScanResultFileName}`; 
+  const intermediatePdfResultsPath = `${randomToken}/${constants.pdfScanResultFileName}`;
 
   const transferResults = async (intermPath, resultFile) => {
     if (fs.existsSync(intermPath)) {
@@ -154,12 +146,8 @@ export const createScreenshotsFolder = randomToken => {
   }
 };
 
-export const cleanUp = async (pathToDelete, setDefaultFolders = false) => {
-  await fs.pathExists(pathToDelete).then(exists => {
-    if (exists) {
-      fs.removeSync(pathToDelete);
-    }
-  });
+export const cleanUp = async pathToDelete => {
+  fs.removeSync(pathToDelete);
 };
 
 /* istanbul ignore next */
@@ -174,7 +162,8 @@ export const getCurrentTime = () =>
   });
 
 export const setHeadlessMode = (browser, isHeadless) => {
-  const isWindowsOSAndEdgeBrowser = browser === constants.browserTypes.edge && os.platform() === 'win32';
+  const isWindowsOSAndEdgeBrowser =
+    browser === constants.browserTypes.edge && os.platform() === 'win32';
   if (isHeadless || isWindowsOSAndEdgeBrowser) {
     process.env.CRAWLEE_HEADLESS = 1;
   } else {

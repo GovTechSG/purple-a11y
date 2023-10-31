@@ -14,7 +14,7 @@ export const alertMessageOptions = {
 export const cliOptions = {
   c: {
     alias: 'scanner',
-    describe: 'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow',
+    describe: 'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow, 4) custom flow 2.0',
     choices: Object.keys(constants.scannerTypes),
     demandOption: true,
   },
@@ -127,7 +127,8 @@ export const cliOptions = {
   },
   a: {
     alias: 'additional',
-    describe: 'Additional features to include in the report: \nscreenshots - Include element screenshots in the generated report \nnone - Exclude all additional features in the generated report',
+    describe:
+      'Additional features to include in the report: \nscreenshots - Include element screenshots in the generated report \nnone - Exclude all additional features in the generated report',
     type: 'string',
     default: 'screenshots',
     choices: ['screenshots', 'none'],
@@ -136,11 +137,12 @@ export const cliOptions = {
   },
   q: {
     alias: 'metadata',
-    describe: 'Json string that contains additional scan metadata for telemetry purposes. Defaults to "{}"',
+    describe:
+      'Json string that contains additional scan metadata for telemetry purposes. Defaults to "{}"',
     type: 'string',
     default: '{}',
     demandOption: false,
-  }
+  },
 };
 
 export const configureReportSetting = isEnabled => {

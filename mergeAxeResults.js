@@ -7,7 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import ejs from 'ejs';
 import constants from './constants/constants.js';
-import { getCurrentTime, getStoragePath, getVersion } from './utils.js';
+import { createScreenshotsFolder, getCurrentTime, getStoragePath, getVersion } from './utils.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import itemTypeDescription from './constants/itemTypeDescription.js';
 import { chromium } from 'playwright';
@@ -354,7 +354,7 @@ const createRuleIdJson = allIssues => {
   return compiledRuleJson;
 };
 
-const moveScreenshots = (randomToken, storagePath) => {
+const moveElemScreenshots = (randomToken, storagePath) => {
   const currentScreenshotsPath = `${randomToken}/elemScreenshots`;
   const resultsScreenshotsPath = `${storagePath}/reports/elemScreenshots`;
   if (fs.existsSync(currentScreenshotsPath)) {
@@ -370,7 +370,6 @@ export const generateArtifacts = async (
   pagesScanned,
   pagesNotScanned,
   customFlowLabel,
-  browserToRun,
 ) => {
   const phAppVersion = getVersion();
   const storagePath = getStoragePath(randomToken);
@@ -430,7 +429,10 @@ export const generateArtifacts = async (
   ]);
 
   // move screenshots folder to report folders
-  moveScreenshots(randomToken, storagePath);
+  moveElemScreenshots(randomToken, storagePath);
+  if (isCustomFlow) {
+    createScreenshotsFolder(randomToken);
+  }
 
   await writeResults(allIssues, storagePath);
   await writeCsv(allIssues, storagePath);
