@@ -13,7 +13,6 @@ import itemTypeDescription from './constants/itemTypeDescription.js';
 import { chromium } from 'playwright';
 import { createWriteStream } from 'fs';
 import { AsyncParser } from '@json2csv/node';
-import crypto from 'crypto';
 import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -78,7 +77,7 @@ const writeCsv = async (allIssues, storagePath) => {
 
   // transform allIssues into the form:
   // [['mustFix', rule1], ['mustFix', rule2], ['goodToFix', rule3], ...]
-  const getRulesByCategory = (allIssues) => {
+  const getRulesByCategory = allIssues => {
     return Object.entries(allIssues.items)
       .filter(([category]) => category !== 'passed')
       .reduce((prev, [category, value]) => {
@@ -88,14 +87,13 @@ const writeCsv = async (allIssues, storagePath) => {
         }
         return prev;
       }, [])
-      .sort((a, b) => { // sort rules according to severity, then ruleId
-        const compareCategory = -(a[0].localeCompare(b[0])); 
-        return compareCategory === 0
-          ? a[1].rule.localeCompare(b[1].rule)
-          : compareCategory;
+      .sort((a, b) => {
+        // sort rules according to severity, then ruleId
+        const compareCategory = -a[0].localeCompare(b[0]);
+        return compareCategory === 0 ? a[1].rule.localeCompare(b[1].rule) : compareCategory;
       });
   };
-  const flattenRule = (catAndRule) => {
+  const flattenRule = catAndRule => {
     const [severity, rule] = catAndRule;
     const results = [];
     const {
@@ -103,7 +101,7 @@ const writeCsv = async (allIssues, storagePath) => {
       description: issueDescription,
       conformance,
       pagesAffected,
-      helpUrl: learnMore
+      helpUrl: learnMore,
     } = rule;
     // we filter out the below as it represents the A/AA/AAA level, not the clause itself
     const clausesArr = conformance.filter(
@@ -131,7 +129,7 @@ const writeCsv = async (allIssues, storagePath) => {
           howToFix,
           learnMore,
         });
-      })
+      });
     }
     if (results.length === 0) return {};
     return results;
@@ -139,14 +137,14 @@ const writeCsv = async (allIssues, storagePath) => {
   const opts = {
     transforms: [getRulesByCategory, flattenRule],
     fields: [
-      "severity",
-      "issueId",
-      "issueDescription",
-      "wcagConformance",
-      "url",
-      "context",
-      "howToFix",
-      "learnMore",
+      'severity',
+      'issueId',
+      'issueDescription',
+      'wcagConformance',
+      'url',
+      'context',
+      'howToFix',
+      'learnMore',
     ],
     includeEmptyRows: true,
   };
@@ -154,13 +152,7 @@ const writeCsv = async (allIssues, storagePath) => {
   parser.parse(allIssues).pipe(csvOutput);
 };
 
-const writeHTML = async (
-  allIssues,
-  storagePath,
-  scanType,
-  customFlowLabel,
-  htmlFilename = 'report',
-) => {
+const writeHTML = async (allIssues, storagePath, htmlFilename = 'report') => {
   const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/report.ejs'), 'utf-8');
   const template = ejs.compile(ejsString, {
     filename: path.join(__dirname, './static/ejs/report.ejs'),
@@ -169,13 +161,7 @@ const writeHTML = async (
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
 };
 
-const writeSummaryHTML = async (
-  allIssues,
-  storagePath,
-  scanType,
-  customFlowLabel,
-  htmlFilename = 'summary',
-) => {
+const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary') => {
   const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/summary.ejs'), 'utf-8');
   const template = ejs.compile(ejsString, {
     filename: path.join(__dirname, './static/ejs/summary.ejs'),
@@ -194,7 +180,9 @@ if (os.platform() === 'linux') {
   browserChannel = 'chromium';
 }
 
-const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
+const writeSummaryPdf = async (storagePath, filename = 'summary') => {
+  const htmlFilePath = `${storagePath}/reports/${filename}.html`;
+  const fileDestinationPath = `${storagePath}/reports/${filename}.pdf`;
   const browser = await chromium.launch({
     headless: true,
     channel: browserChannel,
@@ -209,9 +197,6 @@ const writeSummaryPdf = async (htmlFilePath, fileDestinationPath) => {
 
   const data = fs.readFileSync(htmlFilePath, { encoding: 'utf-8' });
   await page.setContent(data);
-  // fs.readFile(htmlFilePath, 'utf8', async (err, data) => {
-  //   await page.setContent(data);
-  // });
 
   await page.waitForLoadState('networkidle', { timeout: 10000 });
 
@@ -282,14 +267,14 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
         const { pageIndex, pageImagePath } = pageResults;
         currRuleFromAllIssues.pagesAffected[pageIndex] = {
           url,
-          pageTitle, 
+          pageTitle,
           pageImagePath,
-          items: [], 
-        } 
+          items: [],
+        };
         currRuleFromAllIssues.pagesAffected[pageIndex].items.push(...items);
       } else {
         if (!(url in currRuleFromAllIssues.pagesAffected)) {
-          currRuleFromAllIssues.pagesAffected[url] = { 
+          currRuleFromAllIssues.pagesAffected[url] = {
             pageTitle,
             items: [],
             ...(filePath && { filePath }),
@@ -305,7 +290,7 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
             currCategoryFromAllIssues.totalItems -= 1;
           }*/
         }
-  
+
         currRuleFromAllIssues.pagesAffected[url].items.push(...items);
         // currRuleFromAllIssues.numberOfPagesAffectedAfterRedirects +=
         //   currRuleFromAllIssues.pagesAffected.length;
@@ -323,7 +308,7 @@ const flattenAndSortResults = (allIssues, isCustomFlow) => {
         ruleInfo.pagesAffected = Object.entries(ruleInfo.pagesAffected)
           .map(pageEntry => {
             if (isCustomFlow) {
-              const [pageIndex, pageInfo] = pageEntry; 
+              const [pageIndex, pageInfo] = pageEntry;
               return { pageIndex, ...pageInfo };
             } else {
               const [url, pageInfo] = pageEntry;
@@ -370,12 +355,12 @@ const createRuleIdJson = allIssues => {
 };
 
 const moveScreenshots = (randomToken, storagePath) => {
-  const currentScreenshotsPath = `${randomToken}/elemScreenshots`; 
+  const currentScreenshotsPath = `${randomToken}/elemScreenshots`;
   const resultsScreenshotsPath = `${storagePath}/reports/elemScreenshots`;
   if (fs.existsSync(currentScreenshotsPath)) {
-    fs.moveSync(currentScreenshotsPath, resultsScreenshotsPath); 
+    fs.moveSync(currentScreenshotsPath, resultsScreenshotsPath);
   }
-}
+};
 
 export const generateArtifacts = async (
   randomToken,
@@ -385,7 +370,7 @@ export const generateArtifacts = async (
   pagesScanned,
   pagesNotScanned,
   customFlowLabel,
-  browserToRun
+  browserToRun,
 ) => {
   const phAppVersion = getVersion();
   const storagePath = getStoragePath(randomToken);
@@ -444,14 +429,12 @@ export const generateArtifacts = async (
   ]);
 
   // move screenshots folder to report folders
-  moveScreenshots(randomToken, storagePath); 
+  moveScreenshots(randomToken, storagePath);
 
-  const htmlFilename = `${storagePath}/reports/summary.html`;
-  const fileDestinationPath = `${storagePath}/reports/summary.pdf`;
   await writeResults(allIssues, storagePath);
   await writeCsv(allIssues, storagePath);
-  await writeHTML(allIssues, storagePath, scanType, customFlowLabel);
-  await writeSummaryHTML(allIssues, storagePath, scanType, customFlowLabel);
-  await writeSummaryPdf(htmlFilename, fileDestinationPath);
+  await writeHTML(allIssues, storagePath);
+  await writeSummaryHTML(allIssues, storagePath);
+  await writeSummaryPdf(storagePath);
   return createRuleIdJson(allIssues);
 };
