@@ -143,21 +143,6 @@ const crawlDomain = async (
       // loadedUrl is the URL after redirects
       const actualUrl = request.loadedUrl || request.url;
 
-      if (isBlacklistedFileExtensions(actualUrl, blackListedFileExtensions)) {
-        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-          numScanned: urlsCrawled.scanned.length,
-          urlScanned: request.url,
-        });
-        urlsCrawled.blacklisted.push(request.url);
-        return;
-      }
-
-      if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
-        urlsCrawled.userExcluded.push(request.url);
-        await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);
-        return;
-      }
-
       // handle pdfs
       if (request.skipNavigation && isUrlPdf(actualUrl)) {
         if (!isScanPdfs) {
@@ -177,6 +162,34 @@ const crawlDomain = async (
         );
 
         uuidToPdfMapping[pdfFileName] = trimmedUrl;
+        return;
+      }
+
+      const resHeaders = response.headers();
+      const contentType = resHeaders["content-type"];
+ 
+      // whitelist html and pdf document types
+      if (!contentType.includes("text/html") && !contentType.includes("application/pdf")) {
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
+        urlsCrawled.blacklisted.push(request.url);
+        return;
+      }
+
+      if (isBlacklistedFileExtensions(actualUrl, blackListedFileExtensions)) {
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
+        urlsCrawled.blacklisted.push(request.url);
+        return;
+      }
+
+      if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
+        urlsCrawled.userExcluded.push(request.url);
+        await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);
         return;
       }
 
