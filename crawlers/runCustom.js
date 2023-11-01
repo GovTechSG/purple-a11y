@@ -182,7 +182,7 @@ const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
         para.innerText = `Pages Scanned: ${vars.urlsCrawled.scanned.length || 0}`;
 
         const button = document.createElement('button');
-        button.innerText = 'Purple Hats Scan';
+        button.innerText = 'Scan this page';
         button.addEventListener('click', async () => {
           await window.handleOnScanClick();
         });
@@ -208,9 +208,10 @@ const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
         }
         
         .purple-hats-menu button {
-          background-color: #007bff;
+          background-color: #785ef0;
           color: #fff;
           border: none;
+          border-radius: 50rem!important;
           padding: 10px 20px;
           cursor: pointer;
         }
