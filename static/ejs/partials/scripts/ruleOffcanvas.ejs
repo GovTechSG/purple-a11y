@@ -192,6 +192,7 @@ category summary is clicked %>
                   aria-expanded="false" 
                   aria-controls="${accordionId}-content"
                 >
+                  <span class="sr-only visually-hidden">${page.items.length} ${page.items.length === 1 ? 'occurrence' : 'occurrences'}</span>
                   <div class="me-3">${page.pageTitle}</div>
                   <div class="ms-auto counter">${page.items.length}</div>
                 </button>
@@ -202,8 +203,8 @@ category summary is clicked %>
                     ? 
                     `
                       <div class="custom-flow-screenshot-container">
-                        <img src=${page.pageImagePath} class="custom-flow-screenshot"/>
-                        <a href="${page.url}" target="_blank">${page.url}</a>
+                        <img alt="Screenshot of ${page.url}" src=${page.pageImagePath} class="custom-flow-screenshot"/>
+                        <div><a href="${page.url}" target="_blank">${page.url}</a></div>
                       </div>
                     `
                     : `<a href="${page.url}" target="_blank">${page.url}</a>`
@@ -227,7 +228,7 @@ category summary is clicked %>
         }
         customScreenshotElem.onclick = function(event) {
           event.preventDefault();
-          openLightbox(this.src, page.pageTitle);
+          openLightbox(this.src, page.pageTitle, page.url);
         }
       }
 
@@ -276,25 +277,17 @@ category summary is clicked %>
                   <div class="d-flex justify-content-between g-one">
                     <div class="fw-bold">Path</div>
                     <div class="page-item-card-section-content">
-                        <div class="path-container">
+                        <div class="g-one path-container">
                           ${item.xpath}
                           <button 
-                            aria-describedby="copyTooltipDescription"
+                            aria-label="Copy path to clipboard"
                             class="copy-button"
+                            data-bs-toggle="tooltip" 
+                            data-bs-placement="top"
+                            data-bs-original-title="Copy"
                           >
-                            <svg 
-                              tabindex="-1"
-                              title="Copy" 
-                              class="copy-icon"
-                              data-bs-toggle="tooltip" 
-                              data-bs-placement="top"
-                              xmlns="http://www.w3.org/2000/svg" 
-                              width="14" 
-                              height="16" 
-                              viewBox="0 0 14 16" 
-                              fill="none"
-                            >
-                              <path d="M11.2188 0.5H4.65625C4.15897 0.5 3.68206 0.697544 3.33042 1.04917C2.97879 1.40081 2.78125 1.87772 2.78125 2.375C2.28397 2.375 1.80706 2.57254 1.45542 2.92417C1.10379 3.27581 0.90625 3.75272 0.90625 4.25V13.625C0.90625 14.1223 1.10379 14.5992 1.45542 14.9508C1.80706 15.3025 2.28397 15.5 2.78125 15.5H9.34375C9.84103 15.5 10.3179 15.3025 10.6696 14.9508C11.0212 14.5992 11.2188 14.1223 11.2188 13.625C11.716 13.625 12.1929 13.4275 12.5446 13.0758C12.8962 12.7242 13.0938 12.2473 13.0938 11.75V2.375C13.0938 1.87772 12.8962 1.40081 12.5446 1.04917C12.1929 0.697544 11.716 0.5 11.2188 0.5ZM11.2188 12.6875V4.25C11.2188 3.75272 11.0212 3.27581 10.6696 2.92417C10.3179 2.57254 9.84103 2.375 9.34375 2.375H3.71875C3.71875 2.12636 3.81752 1.8879 3.99334 1.71209C4.16915 1.53627 4.40761 1.4375 4.65625 1.4375H11.2188C11.4674 1.4375 11.7058 1.53627 11.8817 1.71209C12.0575 1.8879 12.1562 2.12636 12.1562 2.375V11.75C12.1562 11.9986 12.0575 12.2371 11.8817 12.4129C11.7058 12.5887 11.4674 12.6875 11.2188 12.6875ZM1.84375 4.25C1.84375 4.00136 1.94252 3.7629 2.11834 3.58709C2.29415 3.41127 2.53261 3.3125 2.78125 3.3125H9.34375C9.59239 3.3125 9.83085 3.41127 10.0067 3.58709C10.1825 3.7629 10.2812 4.00136 10.2812 4.25V13.625C10.2812 13.8736 10.1825 14.1121 10.0067 14.2879C9.83085 14.4637 9.59239 14.5625 9.34375 14.5625H2.78125C2.53261 14.5625 2.29415 14.4637 2.11834 14.2879C1.94252 14.1121 1.84375 13.8736 1.84375 13.625V4.25Z" fill="#333333"/>
+                            <svg class="copy-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M14.2188 2.5H7.65625C7.15897 2.5 6.68206 2.69754 6.33042 3.04917C5.97879 3.40081 5.78125 3.87772 5.78125 4.375C5.28397 4.375 4.80706 4.57254 4.45542 4.92417C4.10379 5.27581 3.90625 5.75272 3.90625 6.25V15.625C3.90625 16.1223 4.10379 16.5992 4.45542 16.9508C4.80706 17.3025 5.28397 17.5 5.78125 17.5H12.3438C12.841 17.5 13.3179 17.3025 13.6696 16.9508C14.0212 16.5992 14.2188 16.1223 14.2188 15.625C14.716 15.625 15.1929 15.4275 15.5446 15.0758C15.8962 14.7242 16.0938 14.2473 16.0938 13.75V4.375C16.0938 3.87772 15.8962 3.40081 15.5446 3.04917C15.1929 2.69754 14.716 2.5 14.2188 2.5ZM14.2188 14.6875V6.25C14.2188 5.75272 14.0212 5.27581 13.6696 4.92417C13.3179 4.57254 12.841 4.375 12.3438 4.375H6.71875C6.71875 4.12636 6.81752 3.8879 6.99334 3.71209C7.16915 3.53627 7.40761 3.4375 7.65625 3.4375H14.2188C14.4674 3.4375 14.7058 3.53627 14.8817 3.71209C15.0575 3.8879 15.1562 4.12636 15.1562 4.375V13.75C15.1562 13.9986 15.0575 14.2371 14.8817 14.4129C14.7058 14.5887 14.4674 14.6875 14.2188 14.6875ZM4.84375 6.25C4.84375 6.00136 4.94252 5.7629 5.11834 5.58709C5.29415 5.41127 5.53261 5.3125 5.78125 5.3125H12.3438C12.5924 5.3125 12.8308 5.41127 13.0067 5.58709C13.1825 5.7629 13.2812 6.00136 13.2812 6.25V15.625C13.2812 15.8736 13.1825 16.1121 13.0067 16.2879C12.8308 16.4637 12.5924 16.5625 12.3438 16.5625H5.78125C5.53261 16.5625 5.29415 16.4637 5.11834 16.2879C4.94252 16.1121 4.84375 15.8736 4.84375 15.625V6.25Z" fill="#333333"/>
                             </svg>
                           </button>
                         </div>
@@ -377,31 +370,23 @@ category summary is clicked %>
         `);
         elementCardsList.appendChild(itemCard);
 
-        const copyTooltip = itemCard.querySelector('.copy-icon'); 
-        const copyTooltipItem = new bootstrap.Tooltip(copyTooltip);
-
         const copyButtonElem = itemCard.getElementsByClassName('copy-button')[0];
+        const copyTooltipItem = new bootstrap.Tooltip(copyButtonElem);
         const textToCopy = createElementFromString(`<textarea>${item.xpath}</textarea>`)
         copyButtonElem.onclick = event => {
           textToCopy.select();
           // Copy the text inside the text field
           navigator.clipboard.writeText(textToCopy.value);
           
-          copyTooltip.setAttribute('data-bs-original-title', 'Copied');
+          copyButtonElem.setAttribute('data-bs-original-title', 'Copied');
           copyTooltipItem.update();
           copyTooltipItem.show();
 
           setTimeout(() => { 
-            copyTooltip.setAttribute('data-bs-original-title', 'Copy');
+            copyButtonElem.setAttribute('data-bs-original-title', 'Copy');
             copyTooltipItem.update();
           }, 1500)
         };
-        copyButtonElem.onmouseover = event => {
-          copyTooltip.dispatchEvent(new MouseEvent('mouseover')); 
-        };
-        copyButtonElem.onmouseout = event => {
-          copyTooltip.dispatchEvent(new MouseEvent('mouseout'));
-        }
         copyButtonElem.onmousedown = event => {
           event.preventDefault();
         }

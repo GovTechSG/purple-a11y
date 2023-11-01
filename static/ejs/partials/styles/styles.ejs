@@ -356,28 +356,26 @@
     display: none;
     position: fixed;
     z-index: 9999;
-    padding: 32px; 
+    padding: 2rem; 
     left: 0; 
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.8);
   }
   .lightbox-content {
     position: relative;
     margin: auto;
     display: block;
-    height: 100%;
-    width: 80%; 
     overflow: auto;
+    height: calc(100% - 4rem);
   }
   .lightbox-header {
     display: flex; 
     flex-direction: row;
     width: 100%;
     align-items: center; 
-    margin: 1rem 0;
+    margin-bottom: 2rem;
   }
   .lightbox-header button {
     background-color: rgba(0, 0, 0, 0.8);
@@ -386,6 +384,7 @@
     margin: 0;
     min-height: 36px;
     min-width: 36px;
+    line-height: 1rem;
   }
   .lightbox-header h5 {
     flex: 1; 
@@ -397,9 +396,6 @@
     object-fit: contain; 
     position: absolute; 
     width: 100%;
-  }
-  #lightbox-image:hover {
-    cursor: zoom-in;
   }
   
   #pagesScannedModalToggle {
@@ -486,16 +482,18 @@
 
   #pagesScannedModal .custom-flow-screenshot-container {
     flex-direction: row;
+    align-items: center;
   }
 
   #pagesScannedModal .custom-flow-screenshot-container img {
     height: 56px;
-    min-width: 20%;
+    width: 67px;
+    flex-shrink: 0;
   }
 
-  #pagesScannedModal .display-url-container {
-    min-width: 80%;;
-  } 
+  #pagesScannedModal .custom-flow-screenshot-container .display-url-container {
+   overflow: hidden;
+  }
 
   #wcag-compliance-card,
   #top-five-card {
@@ -1017,13 +1015,16 @@
   }
 
   .page-item-card-section-content .copy-button {
-    align-self: center;
-    all: unset; 
     border: 1px solid #97ADB5;
     border-radius: 4px;
     cursor: pointer;
-    margin-left: 0.5rem;
-    padding: 0 0.25rem;
+    background-color: #fff; 
+    padding: 0.25rem; 
+    line-height: 1rem;
+  }
+
+  button.copy-button:focus {
+    box-shadow: 0 0 0 0.125rem rgba(0,71,250,.5);
   }
 
   .page-item-card-section-content .path-container {
@@ -1048,11 +1049,11 @@
     height: 128px;
     object-fit: cover;
     object-position: 100% 0;
+    cursor: zoom-in;
   }
 
   .custom-flow-screenshot-container {
     display: flex;
-    align-items: top;
     gap: 1rem
   }
 
