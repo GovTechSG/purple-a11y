@@ -143,6 +143,11 @@ const crawlDomain = async (
       // loadedUrl is the URL after redirects
       const actualUrl = request.loadedUrl || request.url;
 
+      if (pagesCrawled === maxRequestsPerCrawl) {
+        urlsCrawled.exceededRequests.push(request.url);
+        return;
+      }
+
       // handle pdfs
       if (request.skipNavigation && isUrlPdf(actualUrl)) {
         if (!isScanPdfs) {
@@ -160,6 +165,8 @@ const crawlDomain = async (
           sendRequest,
           urlsCrawled,
         );
+
+        pagesCrawled++;
 
         uuidToPdfMapping[pdfFileName] = trimmedUrl;
         return;
@@ -211,10 +218,6 @@ const crawlDomain = async (
         return;
       }
 
-      if (pagesCrawled === maxRequestsPerCrawl) {
-        urlsCrawled.exceededRequests.push(request.url);
-        return;
-      }
       pagesCrawled += 1;
 
       const location = await page.evaluate('location');
