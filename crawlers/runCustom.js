@@ -1,5 +1,4 @@
 /* eslint-env browser */
-
 import { chromium } from 'playwright';
 import { createCrawleeSubFolders } from './commonCrawlerFunc.js';
 import { cleanUp } from '../utils.js';
@@ -63,7 +62,20 @@ const runCustom = async (
     const page = await context.newPage();
     await page.goto(url);
 
-    await Promise.all(pageClosePromises);
+    // to execute and wait for all pages to close
+    // idea is for promise to be pending until page.on('close') detected
+    const allPagesClosedPromise = async promises =>
+      Promise.all(promises)
+        // necessary to recheck as during time of execution, more pages added
+        .then(() => {
+          if (Object.keys(pagesDict).length > 0) {
+            return allPagesClosedPromise(promises);
+          }
+
+          return Promise.resolve(true);
+        });
+
+    await allPagesClosedPromise(pageClosePromises);
   } catch (error) {
     log('PLAYWRIGHT EXECUTION ERROR', error);
     process.exit(1);
