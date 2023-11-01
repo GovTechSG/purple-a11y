@@ -84,7 +84,6 @@ const crawlDomain = async (
       strategy,
       requestQueue,
       transformRequestFunction(req) {
-        req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
         if (isUrlPdf(req.url)) {
           // playwright headless mode does not support navigation to pdf document
           req.skipNavigation = true;
@@ -220,11 +219,12 @@ const crawlDomain = async (
 
       pagesCrawled += 1;
 
-      const location = await page.evaluate('location');
+      // const location = await page.evaluate('location');
 
       if (isBasicAuth) {
         isBasicAuth = false;
-      } else if (location.host.includes(host)) {
+      // } else if (location.host.includes(host)) {
+      } else {
         if (isScanHtml) {
           const results = await runAxeScript(needsReview, includeScreenshots, page, randomToken);
           guiInfoLog(guiInfoStatusTypes.SCANNED, {
@@ -273,13 +273,14 @@ const crawlDomain = async (
         }
 
         await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);
-      } else {
-        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-          numScanned: urlsCrawled.scanned.length,
-          urlScanned: request.url,
-        });
-        urlsCrawled.outOfDomain.push(request.url);
-      }
+      } 
+      // else {
+      //   guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+      //     numScanned: urlsCrawled.scanned.length,
+      //     urlScanned: request.url,
+      //   });
+      //   urlsCrawled.outOfDomain.push(request.url);
+      // }
     },
     failedRequestHandler: async ({ request }) => {
       guiInfoLog(guiInfoStatusTypes.ERROR, {
