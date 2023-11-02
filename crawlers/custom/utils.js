@@ -119,9 +119,10 @@ export const runAxeScan = async (
   });
 };
 
-export const processPage = async (
-  page,
-  {
+export const processPage = async (page, processPageParams) => {
+  // make sure to update processPageParams' scannedIdx
+  processPageParams.scannedIdx += 1;
+  const {
     scannedIdx,
     needsReviewItems,
     blacklistedPatterns,
@@ -130,8 +131,7 @@ export const processPage = async (
     intermediateScreenshotsPath,
     urlsCrawled,
     randomToken,
-  },
-) => {
+  } = processPageParams;
   try {
     await page.waitForLoadState('networkidle', { timeout: 10000 });
     await page.waitForLoadState('domcontentloaded');
@@ -168,7 +168,6 @@ export const processPage = async (
     y: window.scrollY,
   }));
 
-  scannedIdx += 1;
   const pageImagePath = await screenshotFullPage(page, intermediateScreenshotsPath, scannedIdx);
 
   guiInfoLog(guiInfoStatusTypes.SCANNED, {
