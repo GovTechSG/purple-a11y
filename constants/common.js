@@ -199,7 +199,7 @@ export const isSkippedUrl = (pageUrl, whitelistedDomains) => {
 };
 
 export const isFileSitemap = async filePath => {
-  if (filePath.startsWith('file://')) {
+  if (filePath.startsWith('file:///')) {
     if (os.platform() === 'win32') {
       filePath = filePath.match(/^file:\/\/\/([A-Z]:\/[^?#]+)/)[1];
     } else {
