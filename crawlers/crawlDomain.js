@@ -219,11 +219,8 @@ const crawlDomain = async (
 
       pagesCrawled += 1;
 
-      // const location = await page.evaluate('location');
-
       if (isBasicAuth) {
         isBasicAuth = false;
-      // } else if (location.host.includes(host)) {
       } else {
         if (isScanHtml) {
           const results = await runAxeScript(needsReview, includeScreenshots, page, randomToken);
@@ -274,13 +271,6 @@ const crawlDomain = async (
 
         await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);
       } 
-      // else {
-      //   guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-      //     numScanned: urlsCrawled.scanned.length,
-      //     urlScanned: request.url,
-      //   });
-      //   urlsCrawled.outOfDomain.push(request.url);
-      // }
     },
     failedRequestHandler: async ({ request }) => {
       guiInfoLog(guiInfoStatusTypes.ERROR, {
