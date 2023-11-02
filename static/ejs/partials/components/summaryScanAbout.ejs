@@ -136,6 +136,6 @@
         </clipPath>
       </defs>
     </svg>
-    <span><%= scanType === 'Customized' ? 'Custom Flow (' + totalPagesScanned + ' pages)' : totalPagesScanned + ' pages' %></span>
+    <span><%= isCustomFlow ? 'Custom Flow (' + totalPagesScanned + ' pages)' : totalPagesScanned + ' pages' %></span>
   </li>
 </ul>

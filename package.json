@@ -1,7 +1,7 @@
 {
   "name": "@govtechsg/purple-hats",
   "main": "npmIndex.js",
-  "version": "0.9.28",
+  "version": "0.9.29",
   "type": "module",
   "imports": {
     "#root/*.js": "./*.js"

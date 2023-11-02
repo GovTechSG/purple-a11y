@@ -1,6 +1,11 @@
 <%# functions used to show lightbox of screenshot when thumbnail is clicked on %>
 <script>
     const lightbox = document.getElementsByClassName('screenshot-lightbox')[0];
+    const lightboxHeader = document.getElementsByClassName('lightbox-header')[0];
+    const lightboxTitle = document.querySelector('.lightbox-header h5');
+    const lightboxContent = document.getElementsByClassName('lightbox-content')[0]; 
+    const lightboxImg = document.getElementById('lightbox-image');
+
     var customFlowScreenshots = document.getElementsByClassName('custom-flow-screenshot'); 
     Array.from(customFlowScreenshots).forEach(screenshot => {
         screenshot.onerror = function(event) {
@@ -10,13 +15,12 @@
         screenshot.onclick = event => {
             event.preventDefault();
             const pageTitle = screenshot.parentNode.getElementsByTagName('a')[0].textContent;
-            openLightbox(screenshot.src, pageTitle);
+            const pageUrl = screenshot.parentNode.getElementsByTagName('a')[0].href;
+            openLightbox(screenshot.src, pageTitle, pageUrl);
         }
     }) 
 
     lightbox.addEventListener('click', event => {
-        const lightboxHeader = document.getElementsByClassName('lightbox-header')[0];
-        const lightboxTitle = document.getElementById('lightbox-title');
         if (event.target === lightbox || event.target === lightboxHeader || event.target === lightboxTitle) {
             closeLightbox();
         }
@@ -52,15 +56,16 @@
       }
     })
 
-    const openLightbox = (imgSrc, pageTitle) => {
+    const openLightbox = (imgSrc, pageTitle, pageUrl) => {
         lightbox.style.display = 'block';
-        const lightboxImg = document.getElementById('lightbox-image');
+        
         lightboxImg.src = imgSrc;
-        const lightboxTitle = document.getElementById('lightbox-title');
+        lightboxImg.alt = `Screenshot of ${pageUrl}`;
+
         lightboxTitle.textContent = pageTitle;
     }
 
     const closeLightbox = () => {
-        lightbox.style.display = 'none';
+        lightbox.style.display = 'none'; 
     }
 </script>

@@ -9,7 +9,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h4 class="modal-title fw-bold" id="pagesScannedModalLabel">
-          <%= scanType === 'Customized' ? customFlowLabel + ' (' + totalPages + ' pages)' : scanType + ' crawl' + ' (' + totalPages + ' pages)'%>
+          <%= isCustomFlow ? customFlowLabel + ' (' + totalPages + ' pages)' : scanType + ' crawl' + ' (' + totalPages + ' pages)'%>
         </h4>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -57,9 +57,9 @@
             <ul class="unbulleted-list">
               <% pagesScanned.forEach((page, index) => { %> 
               <li>
-                <% if (scanType === 'Customized') {%>
+                <% if (isCustomFlow) {%>
                     <div class="custom-flow-screenshot-container">
-                      <img src="<%= page.pageImagePath %>" class="custom-flow-screenshot">
+                      <img src="<%= page.pageImagePath %>" alt="Screenshot of <%= page.url %>"class="custom-flow-screenshot">
                       <div class="display-url-container">
                         <a href="<%= page.url %>" target="_blank"><%= page.pageTitle.length > 0 ? page.pageTitle : page.url %></a>
                         <p><%= page.url %></p>

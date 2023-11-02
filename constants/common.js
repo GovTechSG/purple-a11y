@@ -44,24 +44,38 @@ export const validateDirPath = dirPath => {
   }
 };
 
-export const validateCustomFlowLabel = (customFlowLabel) => {
-  const containsReserveWithDot = constants.reserveFileNameKeywords.some(char => customFlowLabel.toLowerCase().includes(char.toLowerCase() + "."));
-  const containsForbiddenCharacters = constants.forbiddenCharactersInDirPath.some((char) => customFlowLabel.includes(char));
-  const exceedsMaxLength = customFlowLabel.length > 80; 
-  
+export const validateCustomFlowLabel = customFlowLabel => {
+  const containsReserveWithDot = constants.reserveFileNameKeywords.some(char =>
+    customFlowLabel.toLowerCase().includes(`${char.toLowerCase()}.`),
+  );
+  const containsForbiddenCharacters = constants.forbiddenCharactersInDirPath.some(char =>
+    customFlowLabel.includes(char),
+  );
+  const exceedsMaxLength = customFlowLabel.length > 80;
+
   if (containsForbiddenCharacters) {
-    const displayForbiddenCharacters = constants.forbiddenCharactersInDirPath.toString().replaceAll(',', ' , '); 
-    return { isValid: false, errorMessage: `Invalid label. Cannot contain ${displayForbiddenCharacters}`}
+    const displayForbiddenCharacters = constants.forbiddenCharactersInDirPath
+      .toString()
+      .replaceAll(',', ' , ');
+    return {
+      isValid: false,
+      errorMessage: `Invalid label. Cannot contain ${displayForbiddenCharacters}`,
+    };
   }
   if (exceedsMaxLength) {
-    return { isValid: false, errorMessage: `Invalid label. Cannot exceed 80 characters.`}
+    return { isValid: false, errorMessage: `Invalid label. Cannot exceed 80 characters.` };
   }
   if (containsReserveWithDot) {
-    const displayReserveKeywords = constants.reserveFileNameKeywords.toString().replaceAll(',', ' , ');
-    return { isValid: false, errorMessage: `Invalid label. Cannot have '.' appended to ${displayReserveKeywords} as they are reserved keywords.`};
+    const displayReserveKeywords = constants.reserveFileNameKeywords
+      .toString()
+      .replaceAll(',', ' , ');
+    return {
+      isValid: false,
+      errorMessage: `Invalid label. Cannot have '.' appended to ${displayReserveKeywords} as they are reserved keywords.`,
+    };
   }
-  return { isValid: true }
-}
+  return { isValid: true };
+};
 
 // validateFilePath validates a provided file path
 // returns null if no error
@@ -206,6 +220,7 @@ export const getUrlMessage = scanner => {
   switch (scanner) {
     case constants.scannerTypes.website:
     case constants.scannerTypes.custom:
+    case constants.scannerTypes.custom2:
       return 'Please enter URL of website: ';
     case constants.scannerTypes.sitemap:
       return 'Please enter URL or file path to sitemap, or drag and drop a sitemap file here: ';
@@ -260,11 +275,13 @@ const requestToUrl = async url => {
         res.url = url;
       }
 
-      const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?([^"]*)"/i.exec(response.data);
+      const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?([^"]*)"/i.exec(
+        response.data,
+      );
       if (metaRefreshMatch && metaRefreshMatch[1]) {
-        const urlOrRelativePath = metaRefreshMatch[1]; 
+        const urlOrRelativePath = metaRefreshMatch[1];
         if (urlOrRelativePath.includes('URL=')) {
-          res.url = urlOrRelativePath.split('URL=').pop(); 
+          res.url = urlOrRelativePath.split('URL=').pop();
         } else {
           const pathname = res.url.substring(0, res.url.lastIndexOf('/'));
           res.url = urlOrRelativePath.replace('.', pathname);
@@ -379,10 +396,10 @@ const checkUrlConnectivityWithBrowser = async (
         res.status = constants.urlCheckStatuses.success.code;
       }
 
-      // set redirect link or final url 
+      // set redirect link or final url
       res.url = page.url();
 
-      res.content = await page.content();      
+      res.content = await page.content();
     } catch (error) {
       silentLogger.error(error);
       res.status = constants.urlCheckStatuses.systemError.code;
@@ -487,7 +504,7 @@ export const prepareData = argv => {
     fileTypes,
     blacklistedPatternsFilename,
     additional,
-    metadata
+    metadata,
   } = argv;
 
   // construct filename for scan results
