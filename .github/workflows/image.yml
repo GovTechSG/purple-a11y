@@ -44,9 +44,15 @@ jobs:
             purple-hats-portable-windows.zip
             
   mac-install-purple:
-    runs-on: macos-latest  
-
+    runs-on: self-hosted
+    environment: macos
+    
     steps:
+      - name: Clean Workspace Folder
+        run: |
+         rm -rf ./* || true
+         rm -rf ./.??* || true
+         
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
@@ -64,6 +70,27 @@ jobs:
         run: |
           ./install_purple_dependencies.command
 
+      - name: Sign required binaries for MacOS
+        run: |
+          # Find a valid signing certificate in your keychain
+          CERTIFICATE=$(security find-identity -v -p codesigning -s - | tail -n +2 | grep -o '"[^"]*"' | sed 's/"//g')
+          
+          # Paths to the binaries you want to sign
+          BINARIES=(
+            "./purple-hats/node_modules/playwright/node_modules/fsevents/fsevents.node"
+            "./purple-hats/node_modules/fsevents/fsevents.node"
+          )
+
+          # Loop through the binary paths and sign each one with a secure timestamp
+          for binary in "${BINARIES[@]}"; do
+            codesign --timestamp -s "$CERTIFICATE" "$binary"
+            if [ $? -eq 0 ]; then
+              echo "Successfully signed (with secure timestamp): $binary"
+            else
+              echo "Failed to sign: $binary"
+            fi
+          done
+        
       - name: Zip entire Purple folder (Mac)
         run: |
           zip purple-hats-portable-mac.zip -y -r ./
