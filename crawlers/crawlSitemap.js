@@ -82,6 +82,15 @@ const crawlSitemap = async (
     requestHandler: async ({ page, request, response, sendRequest }) => {
       const actualUrl = request.loadedUrl || request.url;
 
+      if (pagesCrawled === maxRequestsPerCrawl) {
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
+        urlsCrawled.exceededRequests.push(request.url);
+        return;
+      }
+
       if (isUrlPdf(actualUrl)) {
         if (!isScanPdfs) {
           guiInfoLog(guiInfoStatusTypes.SKIPPED, {
@@ -99,6 +108,8 @@ const crawlSitemap = async (
           sendRequest,
           urlsCrawled,
         );
+
+        pagesCrawled++;
 
         uuidToPdfMapping[pdfFileName] = trimmedUrl;
         return;
@@ -127,15 +138,6 @@ const crawlSitemap = async (
           urlScanned: request.url,
         });
         urlsCrawled.invalid.push(request.url);
-        return;
-      }
-
-      if (pagesCrawled === maxRequestsPerCrawl) {
-        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-          numScanned: urlsCrawled.scanned.length,
-          urlScanned: request.url,
-        });
-        urlsCrawled.exceededRequests.push(request.url);
         return;
       }
 

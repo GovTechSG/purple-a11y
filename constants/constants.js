@@ -28,6 +28,7 @@ export const blackListedFileExtensions = [
   'woff',
   'zip',
   'webp',
+  'json',
 ];
 
 export const getIntermediateScreenshotsPath = datasetsPath => `${datasetsPath}/screenshots`;

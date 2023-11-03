@@ -84,7 +84,6 @@ const crawlDomain = async (
       strategy,
       requestQueue,
       transformRequestFunction(req) {
-        req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
         if (isUrlPdf(req.url)) {
           // playwright headless mode does not support navigation to pdf document
           req.skipNavigation = true;
@@ -143,18 +142,8 @@ const crawlDomain = async (
       // loadedUrl is the URL after redirects
       const actualUrl = request.loadedUrl || request.url;
 
-      if (isBlacklistedFileExtensions(actualUrl, blackListedFileExtensions)) {
-        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-          numScanned: urlsCrawled.scanned.length,
-          urlScanned: request.url,
-        });
-        urlsCrawled.blacklisted.push(request.url);
-        return;
-      }
-
-      if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
-        urlsCrawled.userExcluded.push(request.url);
-        await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);
+      if (pagesCrawled === maxRequestsPerCrawl) {
+        urlsCrawled.exceededRequests.push(request.url);
         return;
       }
 
@@ -176,7 +165,37 @@ const crawlDomain = async (
           urlsCrawled,
         );
 
+        pagesCrawled++;
+
         uuidToPdfMapping[pdfFileName] = trimmedUrl;
+        return;
+      }
+
+      const resHeaders = response.headers();
+      const contentType = resHeaders["content-type"];
+ 
+      // whitelist html and pdf document types
+      if (!contentType.includes("text/html") && !contentType.includes("application/pdf")) {
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
+        urlsCrawled.blacklisted.push(request.url);
+        return;
+      }
+
+      if (isBlacklistedFileExtensions(actualUrl, blackListedFileExtensions)) {
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
+        urlsCrawled.blacklisted.push(request.url);
+        return;
+      }
+
+      if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
+        urlsCrawled.userExcluded.push(request.url);
+        await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);
         return;
       }
 
@@ -198,17 +217,11 @@ const crawlDomain = async (
         return;
       }
 
-      if (pagesCrawled === maxRequestsPerCrawl) {
-        urlsCrawled.exceededRequests.push(request.url);
-        return;
-      }
       pagesCrawled += 1;
-
-      const location = await page.evaluate('location');
 
       if (isBasicAuth) {
         isBasicAuth = false;
-      } else if (location.host.includes(host)) {
+      } else {
         if (isScanHtml) {
           const results = await runAxeScript(needsReview, includeScreenshots, page, randomToken);
           guiInfoLog(guiInfoStatusTypes.SCANNED, {
@@ -257,13 +270,7 @@ const crawlDomain = async (
         }
 
         await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);
-      } else {
-        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-          numScanned: urlsCrawled.scanned.length,
-          urlScanned: request.url,
-        });
-        urlsCrawled.outOfDomain.push(request.url);
-      }
+      } 
     },
     failedRequestHandler: async ({ request }) => {
       guiInfoLog(guiInfoStatusTypes.ERROR, {
