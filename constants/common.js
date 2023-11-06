@@ -290,7 +290,7 @@ const requestToUrl = async url => {
       res.content = response.data;
     })
     .catch(async error => {
-      if (error.code === 'ECONNABORTED') {
+      if (error.code === 'ECONNABORTED' || error.code === 'ERR_FR_TOO_MANY_REDIRECTS' ) {
         res.status = constants.urlCheckStatuses.axiosTimeout.code;
       } else if (error.response) {
         if (error.response.status === 401) {
