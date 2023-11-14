@@ -9,7 +9,19 @@
   const purpleAiHtmlETL = <%- purpleAi.htmlETL %>;
   const purpleAiRules = <%- JSON.stringify(purpleAi.rules) %>;
 
-  const htmlTagAndAttributeRegex = new RegExp(/([a-zA-Z][^\s/>]*\b)|([\w-]+)\s*=\s*["']([^"']*)["']/g);
+  const getHtmlTagAndAttributes = (htmlString) => {
+    const regex = /<(\w+)(\s+(\w+)(\s*=\s*"[^"]*")?)*\s*\/?>/;
+    const match = htmlString.match(regex);
+
+    if (match) {
+      const tagName = match[1];
+      const attributes = match[0]
+        .match(/\w+\s*=\s*"[^"]*"/g)
+        .map((attr) => attr.match(/(\w+)\s*=/)[1]);
+      return [tagName, ...attributes];
+    }
+    return [];
+  };
 
   const rulesUsingRoles = [
     'aria-allowed-attr',
@@ -33,7 +45,7 @@
       return createLabelForRuleWithRole(html);
     }
 
-    return html.match(htmlTagAndAttributeRegex).toString().replaceAll(',', '_');;
+    return getHtmlTagAndAttributes(html).join("_");
   };
 
   const escapeHtmlForAI = html => {
@@ -258,8 +270,7 @@
         }
 
         // e.g. li_aria-controls_aria-selected_role
-        const currentLabelList = purpleAiHtmlETL(ruleHtml).match(htmlTagAndAttributeRegex);
-
+        const currentLabelList = getHtmlTagAndAttributes(purpleAiHtmlETL(ruleHtml));
         const currentLabel = currentLabelList.join('_');
 
         if (catalogData[ruleId].includes(currentLabel)) {

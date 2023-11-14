@@ -8,7 +8,7 @@ import { consoleLogger, guiInfoLog, silentLogger } from '../../logs.js';
 import { guiInfoStatusTypes } from '../../constants/constants.js';
 import { isSkippedUrl } from '../../constants/common.js';
 
-export const DEBUG = true;
+export const DEBUG = false;
 export const log = str => {
   if (DEBUG) {
     console.log(str);
