@@ -287,26 +287,26 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
         // TODO: separate out into css file if this gets too big
         sheet.replaceSync(`
         .purple-hats-menu {
-          position: fixed !important;
-          left: 0 !important;
-          width: 100% !important;
-          box-sizing: border-box !important;
-          background-color: rgba(0, 0, 0, 0.8) !important;
-          display: flex !important;
-          justify-content: space-between !important;
-          padding: 10px !important;
-          z-index: 2147483647 !important;
-          cursor: grab !important;
-          color: #fff !important;
+          position: fixed;
+          left: 0;
+          width: 100%;
+          box-sizing: border-box;
+          background-color: rgba(0, 0, 0, 0.8);
+          display: flex;
+          justify-content: space-between;
+          padding: 10px;
+          z-index: 2147483647;
+          cursor: grab;
+          color: #fff;
         }
         
         .purple-hats-menu button {
-          background-color: #785ef0 !important;
-          color: #fff !important;
-          border: none !important;
-          border-radius: 50rem !important;
-          padding: 10px 20px !important;
-          cursor: pointer !important;
+          background-color: #785ef0;
+          color: #fff;
+          border: none;
+          border-radius: 50rem;
+          padding: 10px 20px;
+          cursor: pointer;
         }
         `);
 
