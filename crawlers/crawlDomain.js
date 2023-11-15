@@ -1,3 +1,5 @@
+/* eslint-disable no-shadow */
+/* eslint-disable no-undef */
 import crawlee from 'crawlee';
 import {
   createCrawleeSubFolders,
@@ -77,7 +79,7 @@ const crawlDomain = async (
     pagesCrawled = 0;
   }
 
-  const enqueueProcess = async (enqueueLinks, enqueueLinksByClickingElements) => {
+  const enqueueProcess = async (page, enqueueLinks, enqueueLinksByClickingElements) => {
     await enqueueLinks({
       // set selector matches anchor elements with href but not contains # or starting with mailto:
       selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
@@ -92,13 +94,25 @@ const crawlDomain = async (
       },
     });
 
+    const handleOnWindowOpen = async url => {
+      await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+    };
+    await page.exposeFunction('handleOnWindowOpen', handleOnWindowOpen);
+
+    await page.evaluate(() => {
+      // Override window.open
+      window.open = url => {
+        window.handleOnWindowOpen(url);
+      };
+    });
+
     await enqueueLinksByClickingElements({
       // set selector matches
       // NOT <a>
       // IS role='link' or button onclick
       // enqueue new page URL
-      // handle onclick 
-      selector: ':not(a):is([role="link"], button[onclick]):not(button[onclick*="window."])',
+      // handle onclick
+      selector: ':not(a):is([role="link"], button[onclick])',
       transformRequestFunction(req) {
         req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
         if (isUrlPdf(req.url)) {
@@ -172,10 +186,10 @@ const crawlDomain = async (
       }
 
       const resHeaders = response.headers();
-      const contentType = resHeaders["content-type"];
- 
+      const contentType = resHeaders['content-type'];
+
       // whitelist html and pdf document types
-      if (!contentType.includes("text/html") && !contentType.includes("application/pdf")) {
+      if (!contentType.includes('text/html') && !contentType.includes('application/pdf')) {
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
@@ -195,7 +209,7 @@ const crawlDomain = async (
 
       if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
         urlsCrawled.userExcluded.push(request.url);
-        await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);
+        await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
         return;
       }
 
@@ -269,8 +283,8 @@ const crawlDomain = async (
           urlsCrawled.blacklisted.push(request.url);
         }
 
-        await enqueueProcess(enqueueLinks, enqueueLinksByClickingElements);
-      } 
+        await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
+      }
     },
     failedRequestHandler: async ({ request }) => {
       guiInfoLog(guiInfoStatusTypes.ERROR, {
