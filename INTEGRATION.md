@@ -161,7 +161,7 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
     import { defineConfig } from "cypress";
     import purpleHatsInit from "@govtechsg/purple-hats";
 
-    const viewportSettings = { width: 1920, height: 1000 };
+    const viewportSettings = { width: 1920, height: 1040 };
     const thresholds = { mustFix: 4, goodToFix: 5 };
     const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
 
