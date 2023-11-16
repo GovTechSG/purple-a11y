@@ -60,7 +60,7 @@ const runCustom = async (
     });
 
     const page = await context.newPage();
-    await page.goto(url);
+    await page.goto(url, { timeout: 0 });
 
     // to execute and wait for all pages to close
     // idea is for promise to be pending until page.on('close') detected

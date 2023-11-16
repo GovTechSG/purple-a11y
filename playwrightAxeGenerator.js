@@ -737,7 +737,7 @@ const waitForCaptcha = async (page, captchaLocator) => {
       }
       if (lastGoToUrl) {
         appendToGeneratedScript(`
-          await ${pageObj}.waitForURL('${lastGoToUrl}',{timeout: 60000});
+          await ${pageObj}.waitForURL(${formatScriptStringVar(lastGoToUrl)},{ timeout: 0 });
           await processPage(page);
         `);
 
@@ -756,8 +756,7 @@ const waitForCaptcha = async (page, captchaLocator) => {
           firstGoToUrl = true;
           const firstGoToAddress = line.split(`('`)[1].split(`')`)[0];
           appendToGeneratedScript(
-            `${line}
-            `,
+            `await page.goto(${formatScriptStringVar(firstGoToAddress)}, { timeout: 0 });`,
           );
           lastGoToUrl = firstGoToAddress;
           continue;
