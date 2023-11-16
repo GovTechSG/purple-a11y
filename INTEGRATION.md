@@ -96,7 +96,8 @@ Parameter(s):
 - `res`: Object consisting of the current page url, current page title and axe scan result. ` {pageUrl, pageTitle, axeScanResults}`
 - `metadata` (optional): Additional information to be displayed for each page scanned in the report
 - `elementsToClick` (optional): Elements clicked during the test to reveal hidden elements. Required to be able identify hidden elements if they were scanned for screenshot purposes. Ensure selectors resolve to a single element. 
-  Returns:
+
+Returns:
 - Object containing the number of mustFix and goodToFix issues for this scan run e.g. `{ mustFix: 1, goodToFix: 5 }`
 
 `testThresholdsAndReset()`
