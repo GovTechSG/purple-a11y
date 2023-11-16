@@ -50,6 +50,7 @@ const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResu
         url: p.url,
         totalOccurrencesInPage: p.items.length,
         occurrences: p.items,
+        metadata: p.metadata 
       })),
     };
   });
@@ -264,11 +265,12 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
       currRuleFromAllIssues.totalItems += count;
 
       if (isCustomFlow) {
-        const { pageIndex, pageImagePath } = pageResults;
+        const { pageIndex, pageImagePath, metadata } = pageResults;
         currRuleFromAllIssues.pagesAffected[pageIndex] = {
           url,
           pageTitle,
           pageImagePath,
+          metadata,
           items: [],
         };
         currRuleFromAllIssues.pagesAffected[pageIndex].items.push(...items);
@@ -370,6 +372,7 @@ export const generateArtifacts = async (
   pagesScanned,
   pagesNotScanned,
   customFlowLabel,
+  cypressScanAboutMetadata
 ) => {
   const phAppVersion = getVersion();
   const storagePath = getStoragePath(randomToken);
@@ -400,6 +403,7 @@ export const generateArtifacts = async (
       goodToFix: { description: itemTypeDescription.goodToFix, totalItems: 0, rules: {} },
       passed: { description: itemTypeDescription.passed, totalItems: 0, rules: {} },
     },
+    cypressScanAboutMetadata
   };
   const allFiles = await extractFileNames(directory);
 

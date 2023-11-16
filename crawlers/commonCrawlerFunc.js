@@ -101,6 +101,7 @@ export const filterAxeResults = (needsReview, results, pageTitle, customFlowDeta
     url,
     pageTitle: customFlowDetails ? `${customFlowDetails.pageIndex}: ${pageTitle}` : pageTitle,
     pageIndex: customFlowDetails ? customFlowDetails.pageIndex : undefined,
+    metadata: customFlowDetails?.metadata ? `${customFlowDetails.pageIndex}: ${customFlowDetails.metadata}` : undefined,
     pageImagePath: customFlowDetails ? customFlowDetails.pageImagePath : undefined,
     totalItems,
     mustFix,

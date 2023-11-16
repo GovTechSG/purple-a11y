@@ -161,6 +161,14 @@
       </svg>
       <span><%= 'Purple HATS Version ' + phAppVersion %></span>
     </li>
+    <% if (cypressScanAboutMetadata) { %>
+      <% const metadataItems = Object.keys(cypressScanAboutMetadata); %>
+      <% metadataItems.forEach((key) => { %>
+        <li>
+          <span><%= key[0].toUpperCase() + key.slice(1) + ': ' + cypressScanAboutMetadata[key] %></span>
+        </li>
+      <% }) %>  
+    <% } %>
   </ul>
   <hr class="my-4" />
   <iframe

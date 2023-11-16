@@ -59,7 +59,12 @@
               <li>
                 <% if (isCustomFlow) {%>
                     <div class="custom-flow-screenshot-container">
-                      <img src="<%= page.pageImagePath %>" alt="Screenshot of <%= page.url %>"class="custom-flow-screenshot">
+                      <img 
+                        src="<%= page.pageImagePath %>" 
+                        alt="Screenshot of <%= page.url %>"
+                        class="custom-flow-screenshot"
+                        onerror="this.onerror = null; this.remove();"
+                      >
                       <div class="display-url-container">
                         <a href="<%= page.url %>" target="_blank"><%= page.pageTitle.length > 0 ? page.pageTitle : page.url %></a>
                         <p><%= page.url %></p>
