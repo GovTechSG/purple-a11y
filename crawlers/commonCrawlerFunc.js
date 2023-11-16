@@ -138,7 +138,7 @@ export const runAxeScript = async (
         resultTypes: isReturnReviewItems,
       });
     },
-    { selectors, saflyIconSelector },
+    { selectors, saflyIconSelector, needsReview },
   );
 
   if (includeScreenshots) {
