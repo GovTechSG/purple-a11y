@@ -433,6 +433,9 @@ For example, to conduct a website scan to the URL `http://localhost:8000` and wr
 node cli.js -c 2 -o a11y-scan-results.zip -u http://localhost:8000 -w 360
 ```
 
+## Accessibility Scan Results
+For details on which accessibility scan results trigger "Must Fix" / "Good to Fix" findings, you may refer to [Scan Issue Details](https://github.com/GovTechSG/purple-hats/blob/master/DETAILS.md).
+
 ## Troubleshooting
 
 Please refer to the information below to exist in debugging. Most errors below are due to the switching between Node.js versions.
