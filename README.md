@@ -487,6 +487,10 @@ zsh: abort      node index.js
 1. Delete existing `node_modules` folder and re-install the NPM packages with `npm install`.
 2. Refer to this [GitHub issue](https://github.com/fsevents/fsevents/issues/313) for more alternative solutions
 
+### Element Screenshot Limitation
+
+**Limitation**: Due to animations causing elements to shift out of the viewport after an Axe scan, there's a risk of element screenshots timing out within 5 seconds if the element is not found. This known issue is particularly prevalent in scenarios like carousels with interval-based transitions.
+
 ## How do I limit number of pages scanned?
 
 If you find a scan takes too long to complete due to large website, or there are too many pages in a sitemap to scan, you may choose to limit number of pages scanned.
