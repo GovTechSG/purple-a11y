@@ -218,7 +218,7 @@ Create a sub-folder and file <code>cypress/support/e2e.js</code> with the follow
     Cypress.Commands.add("runPhScan", ({ elementsToScan, metadata, elementsToClick }) => {
         cy.window().then(async (win) => {
             const res = await win.runA11yScan(elements);
-            cy.task("pushPhScanResults", res);
+            cy.task("pushPhScanResults", res).then((count) => { return count });
         });
     });
 
