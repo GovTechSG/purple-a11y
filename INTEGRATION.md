@@ -161,7 +161,7 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
     import purpleHatsInit from "@govtechsg/purple-hats";
 
     const viewportSettings = { width: 1920, height: 1000 };
-    const thresholds = { mustFix: 1, goodToFix: 1 };
+    const thresholds = { mustFix: 4, goodToFix: 5 };
     const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
 
     const ph = await purpleHatsInit(
@@ -181,7 +181,7 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
         viewportHeight: viewportSettings.height,
         viewportWidth: viewportSettings.width,
         e2e: {
-            setupNodeEvents(on, config) {
+            setupNodeEvents(on, _config) {
                 on("task", {
                     getPhScripts() {
                         return ph.getScripts();
