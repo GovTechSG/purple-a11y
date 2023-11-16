@@ -49,12 +49,11 @@ Returns an instance of Purple HATS
 - `includeScreenshots` (optional)
   - Include screenshots of affected elements in the report. Defaults to false.
 - `viewportSettings` (optional)
-  - Viewport settings used in cypress tests needed to optimize screenshot function. Defaults to cypress’ default viewport settings. ` { width: 1000, height: 600 }`
+  - Viewport settings used in cypress tests needed to optimize screenshot function. Defaults to cypress’ default viewport settings. Example: ` { width: 1000, height: 600 }`
 - `thresholds` (optional)
   - Object containing the max number of mustFix or goodToFix issues before an error is thrown for test failure. Does not fail tests by default. Example: `{ mustFix: 1, goodToFix: 3 }`
 - `scanAboutMetadata` (optional)
-  - Include additional information in the Scan About section of the report by passing in a JSON object. Viewport included by default.
-
+  - Include additional information in the Scan About section of the report by passing in a JSON object. 
 #### Purple HATS Instance
 
 ##### Properties
@@ -96,7 +95,7 @@ Parameter(s):
 
 - `res`: Object consisting of the current page url, current page title and axe scan result. ` {pageUrl, pageTitle, axeScanResults}`
 - `metadata` (optional): Additional information to be displayed for each page scanned in the report
-- `elementsToClick` (optional): Elements clicked during the test to reveal hidden elements. Required to be able identify hidden elements if they were scanned for screenshot purposes.
+- `elementsToClick` (optional): Elements clicked during the test to reveal hidden elements. Required to be able identify hidden elements if they were scanned for screenshot purposes. Ensure selectors resolve to a single element. 
   Returns:
 - Object containing the number of mustFix and goodToFix issues for this scan run e.g. `{ mustFix: 1, goodToFix: 5 }`
 
@@ -162,8 +161,8 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
     import purpleHatsInit from "@govtechsg/purple-hats";
 
     const viewportSettings = { width: 1920, height: 1000 };
-    const thresholds = {};
-    const scanAboutMetadata = {};
+    const thresholds = { mustFix: 1, goodToFix: 1 };
+    const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
 
     const ph = await purpleHatsInit(
         "https://govtechsg.github.io",
@@ -180,7 +179,7 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
     export default defineConfig({
         taskTimeout: 120000, // need to extend as screenshot function requires some time
         viewportHeight: viewportSettings.height,
-        viewportWidth: viewportSettings,width
+        viewportWidth: viewportSettings.width,
         e2e: {
             setupNodeEvents(on, config) {
                 on("task", {
@@ -215,15 +214,16 @@ Create a sub-folder and file <code>cypress/support/e2e.js</code> with the follow
         });
     });
 
-    Cypress.Commands.add("runPhScan", ({ elementsToScan, metadata, elementsToClick }) => {
+    Cypress.Commands.add("runPhScan", (items={}) => {
         cy.window().then(async (win) => {
-            const res = await win.runA11yScan(elements);
-            cy.task("pushPhScanResults", res).then((count) => { return count });
+            const { elementsToScan, elementsToClick, metadata } = items; 
+            const res = await win.runA11yScan(elementsToScan);
+            cy.task("pushPhScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
         });
     });
 
-    Cypress.Commands.add(“finishPhTestCase”, () => {
-        cy.task(“finishPhTestCase”);
+    Cypress.Commands.add("finishPhTestCase", () => {
+        cy.task("finishPhTestCase");
     });
 
     Cypress.Commands.add("terminatePh", () => {
@@ -239,15 +239,16 @@ Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
             );
             cy.injectPhScripts();
             cy.runPhScan();
-            cy.get(“button”).click();
+             cy.get("button[onclick=\"toggleSecondSection()\"]").click();
             // Run a scan on <input> and <button> elements
             cy.runPhScan({
-                elementsToScan: ["input", "button"],
-                metadata: "Clicked button",
-                elementsToClick: ["button"]
+                elementsToScan: ["input", "button"], 
+                elementsToClick: ["button[onclick=\"toggleSecondSection()\"]"],
+                metadata: "Clicked button"
             });
 
             cy.finishPhTestCase();
+
             cy.terminatePh();
         });
     });
