@@ -14,7 +14,7 @@ import { generateArtifacts } from './mergeAxeResults.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const init = async (entryUrl, customFlowLabelTestString, name = "Your Name", email = "email@domain.com", needsReview = false ) => {
+export const init = async (entryUrl, customFlowLabelTestString, name = "Your Name", email = "email@domain.com", needsReview = false, thresholds=undefined) => {
   console.log('Starting Purple HATS');
 
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
@@ -23,6 +23,10 @@ export const init = async (entryUrl, customFlowLabelTestString, name = "Your Nam
     ? `_${customFlowLabelTestString.replaceAll(' ', '_')}`
     : '';
   const randomToken = `${date}_${time}${sanitisedLabel}_${domain}`;
+
+  // max numbers of mustFix/goodToFix occurrences before test returns a fail
+  const mustFixThreshold = thresholds ? thresholds.mustFix : undefined;
+  const goodToFixThreshold = thresholds ? thresholds.goodToFix : undefined;
 
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
@@ -36,6 +40,9 @@ export const init = async (entryUrl, customFlowLabelTestString, name = "Your Nam
   const urlsCrawled = { ...constants.urlsCrawledObj };
 
   const { dataset } = await createCrawleeSubFolders(randomToken);
+
+  let mustFixIssues = 0;
+  let goodToFixIssues = 0;
 
   let isInstanceTerminated = false;
   let numPagesScanned = 0;
@@ -74,7 +81,39 @@ export const init = async (entryUrl, customFlowLabelTestString, name = "Your Nam
     throwErrorIfTerminated();
     const filteredResults = filterAxeResults(needsReview, res.axeScanResults, res.pageTitle);
     urlsCrawled.scanned.push({ url: res.pageUrl, pageTitle: res.pageTitle });
+
+    mustFixIssues += filteredResults.mustFix ? filteredResults.mustFix.totalItems : 0;
+    goodToFixIssues += filteredResults.goodToFix ? filteredResults.goodToFix.totalItems : 0;
     await dataset.pushData(filteredResults);
+
+    // return counts for users to perform custom assertions if needed
+    return {
+      mustFix: filteredResults.mustFix ? filteredResults.mustFix.totalItems : 0,
+      goodToFix: filteredResults.goodToFix ? filteredResults.goodToFix.totalItems : 0,
+    };
+  };
+
+  const testThresholdsAndReset = () => {
+    // check against thresholds to fail tests
+    let isThresholdExceeded = false;
+    let thresholdFailMessage = "Exceeded thresholds:\n";
+    if (mustFixThreshold !== undefined && mustFixIssues > mustFixThreshold) {
+      isThresholdExceeded = true;
+      thresholdFailMessage += `mustFix occurrences found: ${mustFixIssues} > ${mustFixThreshold}\n`;
+    }
+
+    if (goodToFixThreshold !== undefined && goodToFixIssues > goodToFixThreshold) {
+      isThresholdExceeded = true;
+      thresholdFailMessage += `goodToFix occurrences found: ${goodToFixIssues} > ${goodToFixThreshold}\n`;
+    }
+
+    // reset counts
+    mustFixIssues = 0;
+    goodToFixIssues = 0;
+
+    if (isThresholdExceeded) {
+      throw new Error(thresholdFailMessage);
+    }
   };
 
   const terminate = async () => {
@@ -89,28 +128,31 @@ export const init = async (entryUrl, customFlowLabelTestString, name = "Your Nam
     } else {
       await createDetailsAndLogs(scanDetails, randomToken);
       await createAndUpdateResultsFolders(randomToken);
+      const pagesNotScanned = [...scanDetails.urlsCrawled.error, ...scanDetails.urlsCrawled.invalid];
       const basicFormHTMLSnippet = await generateArtifacts(
         randomToken,
         scanDetails.requestUrl,
         scanDetails.crawlType,
         null,
         scanDetails.urlsCrawled.scanned,
+        pagesNotScanned,
         customFlowLabelTestString,
       );
 
-      await submitForm(
-        constants.browserTypes.chromium,
-        '',
-        scanDetails.requestUrl,
-        scanDetails.crawlType,
-        email,
-        name,
-        JSON.stringify(basicFormHTMLSnippet),
-        urlsCrawled.scanned.length,
-        "{}",
-      )
+      // await submitForm(
+      //   constants.browserTypes.chromium,
+      //   '',
+      //   scanDetails.requestUrl,
+      //   scanDetails.crawlType,
+      //   email,
+      //   name,
+      //   JSON.stringify(basicFormHTMLSnippet),
+      //   urlsCrawled.scanned.length,
+      //   "{}",
+      // );
 
     }
+
     return null;
   };
 
@@ -120,6 +162,7 @@ export const init = async (entryUrl, customFlowLabelTestString, name = "Your Nam
     terminate,
     scanDetails,
     randomToken,
+    testThresholdsAndReset,
   };
 };
 
