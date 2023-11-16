@@ -51,7 +51,7 @@ Returns an instance of Purple HATS
 - `viewportSettings` (optional)
   - Viewport settings used in cypress tests needed to optimize screenshot function. Defaults to cypress’ default viewport settings. Example: `{ width: 1000, height: 600 }`
 - `thresholds` (optional)
-  - Object containing the max number of mustFix or goodToFix issues before an error is thrown for test failure. Does not fail tests by default. Example: `{ mustFix: 1, goodToFix: 3 }`
+  - Object containing the max number of mustFix or goodToFix issue occurrences before an error is thrown for test failure. Does not fail tests by default. Example: `{ mustFix: 1, goodToFix: 3 }`
 - `scanAboutMetadata` (optional)
   - Include additional information in the Scan About section of the report by passing in a JSON object. 
 #### Purple HATS Instance
@@ -102,9 +102,9 @@ Returns:
 
 `testThresholdsAndReset()`
 
-Checks the accumulated issues count against the specified threshold and resets the issues count
+Checks the accumulated issue occurrences count against the specified threshold and resets the issues count
 
-- Throws an error if the number of accumulated mustFix or goodToFix issues exceeds either of the specified thresholds
+- Throws an error if the number of accumulated mustFix or goodToFix issue occurrences exceeds either of the specified thresholds
 
 `async terminate()`
 
