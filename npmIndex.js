@@ -16,6 +16,7 @@ import {
 } from './utils.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 import { takeScreenshotForHTMLElements } from './screenshotFunc/htmlScreenshotFunc.js';
+import { silentLogger } from './logs.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -101,7 +102,6 @@ export const init = async (
       const browserContext = await constants.launcher.launchPersistentContext(
         clonedBrowserDataDir, 
         { viewport: scanAboutMetadata.viewport, 
-          headless: false,
           ...getPlaywrightLaunchOptions(browserToRun)}
       );
       const page = await browserContext.newPage(); 
@@ -109,7 +109,13 @@ export const init = async (
       await page.waitForLoadState('networkidle'); 
 
       // click on elements to reveal hidden elements so screenshots can be taken 
-      elementsToClick?.forEach(async elem => await page.locator(elem).click());
+      elementsToClick?.forEach(async elem => {
+        try {
+          await page.locator(elem).click()
+        } catch (e) {
+          silentLogger.info(e);
+        }
+      });
 
       res.axeScanResults.violations = await takeScreenshotForHTMLElements(res.axeScanResults.violations, page, randomToken, 3000);
       if (needsReview) res.axeScanResults.incomplete = await takeScreenshotForHTMLElements(res.axeScanResults.incomplete, page, randomToken, 3000);  
