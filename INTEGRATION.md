@@ -49,7 +49,7 @@ Returns an instance of Purple HATS
 - `includeScreenshots` (optional)
   - Include screenshots of affected elements in the report. Defaults to false.
 - `viewportSettings` (optional)
-  - Viewport settings used in cypress tests needed to optimize screenshot function. Defaults to cypress’ default viewport settings. Example: ` { width: 1000, height: 600 }`
+  - Viewport settings used in cypress tests needed to optimize screenshot function. Defaults to cypress’ default viewport settings. Example: `{ width: 1000, height: 600 }`
 - `thresholds` (optional)
   - Object containing the max number of mustFix or goodToFix issues before an error is thrown for test failure. Does not fail tests by default. Example: `{ mustFix: 1, goodToFix: 3 }`
 - `scanAboutMetadata` (optional)
