@@ -34,22 +34,6 @@
     'aria-allowed-role',
   ];
 
-  const createLabelForRuleWithRole = html => {
-    const htmlTagAndRoleAttributeRegex = new RegExp(/<\s*([a-zA-Z][^\s/>]*\b)|role="([^"]*)"/g);
-
-    const htmlLabel = html.match(htmlTagAndRoleAttributeRegex).toString().replaceAll(',', '_');
-
-    return htmlLabel || '';
-  };
-
-  const createBasicHTMLLabel = (ruleId, html) => {
-    if (rulesUsingRoles.includes(ruleId) && html.includes('role')) {
-      return createLabelForRuleWithRole(html);
-    }
-
-    return getHtmlTagAndAttributes(html).join("_");
-  };
-
   const escapeHtmlForAI = html => {
     return html
       .replace(/&/g, '&amp;')
@@ -259,12 +243,12 @@
         }
 
         if (rulesUsingRoles.includes(ruleId)) {
-          const ariaValidAttrValueHtml = ruleHtml.replace(/^<|>$/g, '');
+          const ariaValidAttrValueHtml = ruleHtml.replace(/<|>/g, '');
           const ariaValidAttrValueHtmlList = ariaValidAttrValueHtml.split(' ');
           const htmlElement = ariaValidAttrValueHtmlList[0];
           const roleForHtml = ariaValidAttrValueHtmlList.find(item => /^role="\w+"/.test(item));
           if (roleForHtml) {
-            const currentLabel = `${htmlElement}_${roleForHtml}`;
+            const currentLabel = `${htmlElement}_${roleForHtml}`.trim();
             const foundLabel = catalogData[ruleId].find(label => label === currentLabel);
             purpleAiQueryLabel.label = foundLabel ? escapeHtmlForAI(currentLabel) : null;
             return purpleAiQueryLabel;
