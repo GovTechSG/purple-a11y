@@ -22,7 +22,7 @@ const __dirname = path.dirname(__filename);
 
 export const init = async (
   entryUrl, 
-  customFlowLabelTestString, 
+  testLabel, 
   name = "Your Name", 
   email = "email@domain.com", 
   needsReview = false, 
@@ -35,8 +35,8 @@ export const init = async (
 
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
   const domain = new URL(entryUrl).hostname;
-  const sanitisedLabel = customFlowLabelTestString
-    ? `_${customFlowLabelTestString.replaceAll(' ', '_')}`
+  const sanitisedLabel = testLabel
+    ? `_${testLabel.replaceAll(' ', '_')}`
     : '';
   const randomToken = `${date}_${time}${sanitisedLabel}_${domain}`;
 
@@ -179,7 +179,7 @@ export const init = async (
         null,
         scanDetails.urlsCrawled.scanned,
         pagesNotScanned,
-        customFlowLabelTestString,
+        testLabel,
         scanAboutMetadata
       );
 
