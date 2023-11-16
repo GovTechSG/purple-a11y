@@ -283,9 +283,9 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
         menu.appendChild(p);
         menu.appendChild(button);
 
-        const styleTag = document.createElement('style');
+        const sheet = new CSSStyleSheet();
         // TODO: separate out into css file if this gets too big
-        styleTag.textContent = `
+        sheet.replaceSync(`
         .purple-hats-menu {
           position: fixed;
           left: 0;
@@ -304,18 +304,20 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
           background-color: #785ef0;
           color: #fff;
           border: none;
-          border-radius: 50rem!important;
+          border-radius: 50rem;
           padding: 10px 20px;
           cursor: pointer;
         }
-        `;
+        `);
 
         // shadow dom used to avoid styling from page
         const shadowHost = document.createElement('div');
         shadowHost.id = 'purple-hats-shadow-host';
         const shadowRoot = shadowHost.attachShadow({ mode: 'open' });
+
+        shadowRoot.adoptedStyleSheets = [sheet];
+
         shadowRoot.appendChild(menu);
-        shadowRoot.appendChild(styleTag);
 
         document.body.appendChild(shadowHost);
       },
