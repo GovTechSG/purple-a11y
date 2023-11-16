@@ -29,7 +29,7 @@ export const init = async (
   needsReview = false, 
   includeScreenshots = false, 
   viewportSettings = { width: 1000, height: 660 }, // cypress' default viewport settings
-  thresholds = undefined, 
+  thresholds = {}, 
   scanAboutMetadata = undefined, 
 ) => {
   console.log('Starting Purple HATS');
@@ -42,8 +42,10 @@ export const init = async (
   const randomToken = `${date}_${time}${sanitisedLabel}_${domain}`;
 
   // max numbers of mustFix/goodToFix occurrences before test returns a fail
-  const mustFixThreshold = thresholds ? thresholds.mustFix : undefined;
-  const goodToFixThreshold = thresholds ? thresholds.goodToFix : undefined;
+  const {
+    mustFix: mustFixThreshold,
+    goodToFix: goodToFixThreshold,
+  } = thresholds;
 
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
