@@ -274,10 +274,10 @@ const requestToUrl = async url => {
       } else {
         res.url = url;
       }
+      console.log(response);
 
-      const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?([^"]*)"/i.exec(
-        response.data,
-      );
+      let modifiedHTML = response.data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
+      const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?([^"]*)"/i.exec(modifiedHTML);
       if (metaRefreshMatch && metaRefreshMatch[1]) {
         const urlOrRelativePath = metaRefreshMatch[1];
         if (urlOrRelativePath.includes('URL=')) {
