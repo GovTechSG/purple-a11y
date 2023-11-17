@@ -274,8 +274,7 @@ const requestToUrl = async url => {
       } else {
         res.url = url;
       }
-      console.log(response);
-
+      
       let modifiedHTML = response.data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
       const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?([^"]*)"/i.exec(modifiedHTML);
       if (metaRefreshMatch && metaRefreshMatch[1]) {
