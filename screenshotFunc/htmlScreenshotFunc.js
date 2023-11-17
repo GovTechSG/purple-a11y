@@ -15,7 +15,7 @@ export const takeScreenshotForHTMLElements = async (violations, page, randomToke
                     const screenshotPath = generateScreenshotPath(page.url(), impact, rule, newViolationNodes.length);
                     const locator = page.locator(selector);
                     // catch uncommon cases where components are not found in screenshot line
-                    await locator.waitFor('visible', { timeout: locatorTimeout});
+                    await locator.waitFor({ state: 'visible', timeout: locatorTimeout});
                     await locator.scrollIntoViewIfNeeded({ timeout: locatorTimeout });
                     await locator.screenshot({ path: `${randomToken}/${screenshotPath}`, timeout: locatorTimeout });
                     node.screenshotPath = screenshotPath; 
