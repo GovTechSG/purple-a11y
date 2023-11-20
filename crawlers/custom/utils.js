@@ -372,8 +372,14 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
   // Detection of new url within page
   page.on('domcontentloaded', async () => {
     log(`Content loaded: ${page.url()}`);
-    await removeOverlayMenu(page);
-    await addOverlayMenu(page, processPageParams.urlsCrawled, menuPos);
+    try {
+      await page.waitForLoadState();
+      await removeOverlayMenu(page);
+      await addOverlayMenu(page, processPageParams.urlsCrawled, menuPos);
+    } catch (e) {
+      consoleLogger.info("Error in adding overlay menu to page");
+      silentLogger.info("Error in adding overlay menu to page");
+    }
   });
 
   // Window functions exposed in browser
