@@ -8,7 +8,7 @@ import { consoleLogger, guiInfoLog, silentLogger } from '../../logs.js';
 import { guiInfoStatusTypes } from '../../constants/constants.js';
 import { isSkippedUrl } from '../../constants/common.js';
 
-export const DEBUG = false;
+export const DEBUG = true;
 export const log = str => {
   if (DEBUG) {
     console.log(str);
@@ -332,6 +332,7 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
 };
 
 export const removeOverlayMenu = async page => {
+  console.log("REMOVING OVERLAY FROM", page.url());
   await page
     .evaluate(() => {
       const existingOverlay = document.querySelector('#purple-hats-shadow-host');
@@ -372,8 +373,16 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
   // Detection of new url within page
   page.on('domcontentloaded', async () => {
     log(`Content loaded: ${page.url()}`);
-    await removeOverlayMenu(page);
-    await addOverlayMenu(page, processPageParams.urlsCrawled, menuPos);
+    try {
+      await page.waitForLoadState();
+      console.log("removing overlay");
+      await removeOverlayMenu(page);
+      console.log("removed overlay, ading overlay");
+      await addOverlayMenu(page, processPageParams.urlsCrawled, menuPos);
+      console.log("added overlay");
+    } catch (e) {
+      console.log("Unable to wait for load state, continuing with scan");
+    }    
   });
 
   // Window functions exposed in browser
