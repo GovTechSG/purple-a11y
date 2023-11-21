@@ -256,7 +256,7 @@ export const sanitizeUrlInput = url => {
   return data;
 };
 
-const requestToUrl = async url => {
+const requestToUrl = async (url, isNewCustomFlow) => {
   // User-Agent is modified to emulate a browser to handle cases where some sites ban non browser agents, resulting in a 403 error
   const res = {};
   await axios
@@ -269,7 +269,7 @@ const requestToUrl = async url => {
       const redirectUrl = response.request.res.responseUrl;
       res.status = constants.urlCheckStatuses.success.code;
 
-      if (redirectUrl != null) {
+      if (redirectUrl != null && !isNewCustomFlow) {
         res.url = redirectUrl;
       } else {
         res.url = url;
@@ -286,6 +286,7 @@ const requestToUrl = async url => {
           res.url = urlOrRelativePath.replace('.', pathname);
         }
       }
+
       res.content = response.data;
     })
     .catch(async error => {
@@ -314,12 +315,12 @@ const requestToUrl = async url => {
   return res;
 };
 
-const checkUrlConnectivity = async url => {
+const checkUrlConnectivity = async (url, isNewCustomFlow) => {
   const data = sanitizeUrlInput(url);
 
   if (data.isValid) {
     // Validate the connectivity of URL if the string format is url format
-    const res = await requestToUrl(data.url);
+    const res = await requestToUrl(data.url, isNewCustomFlow);
     return res;
   }
 
@@ -332,6 +333,7 @@ const checkUrlConnectivityWithBrowser = async (
   browserToRun,
   clonedDataDir,
   playwrightDeviceDetailsObject,
+  isNewCustomFlow
 ) => {
   const res = {};
 
@@ -396,7 +398,11 @@ const checkUrlConnectivityWithBrowser = async (
       }
 
       // set redirect link or final url
-      res.url = page.url();
+      if (isNewCustomFlow) {
+        res.url = url;
+      } else {
+        res.url = page.url();
+      }
 
       res.content = await page.content();
     } catch (error) {
@@ -441,6 +447,7 @@ export const checkUrl = async (
   browser,
   clonedDataDir,
   playwrightDeviceDetailsObject,
+  isNewCustomFlow
 ) => {
   let res;
   if (proxy) {
@@ -449,9 +456,10 @@ export const checkUrl = async (
       browser,
       clonedDataDir,
       playwrightDeviceDetailsObject,
+      isNewCustomFlow
     );
   } else {
-    res = await checkUrlConnectivity(url);
+    res = await checkUrlConnectivity(url, isNewCustomFlow);
     if (res.status === constants.urlCheckStatuses.axiosTimeout.code) {
       if (browser || constants.launcher === webkit) {
         res = await checkUrlConnectivityWithBrowser(
@@ -459,6 +467,7 @@ export const checkUrl = async (
           browser,
           clonedDataDir,
           playwrightDeviceDetailsObject,
+          isNewCustomFlow
         );
       }
     }

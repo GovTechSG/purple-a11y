@@ -288,6 +288,7 @@ const scanInit = async argvs => {
     argvs.browserToRun,
     clonedDataDir,
     argvs.playwrightDeviceDetailsObject,
+    isNewCustomFlow
   );
   switch (res.status) {
     case statuses.success.code:
