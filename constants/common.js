@@ -269,15 +269,17 @@ const requestToUrl = async (url, isNewCustomFlow) => {
       const redirectUrl = response.request.res.responseUrl;
       res.status = constants.urlCheckStatuses.success.code;
 
-      if (redirectUrl != null && !isNewCustomFlow) {
-        res.url = redirectUrl;
-      } else {
-        res.url = url;
-      }
-      
       let modifiedHTML = response.data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
       const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?([^"]*)"/i.exec(modifiedHTML);
-      if (metaRefreshMatch && metaRefreshMatch[1]) {
+      const hasMetaRefresh = metaRefreshMatch && metaRefreshMatch[1];
+
+      if (redirectUrl != null && (hasMetaRefresh || !isNewCustomFlow)) {
+        res.url = redirectUrl; 
+      } else {
+        res.url = url; 
+      }
+
+      if (hasMetaRefresh) {
         const urlOrRelativePath = metaRefreshMatch[1];
         if (urlOrRelativePath.includes('URL=')) {
           res.url = urlOrRelativePath.split('URL=').pop();
