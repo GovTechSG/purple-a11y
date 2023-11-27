@@ -11,7 +11,7 @@
     "axe-core": "^4.8.2",
     "axios": "^1.2.2",
     "cheerio": "^1.0.0-rc.12",
-    "crawlee": "^3.5.8",
+    "crawlee": "^3.6.2",
     "ejs": "^3.1.9",
     "fs-extra": "^11.1.0",
     "glob": "^9.1.2",
@@ -39,7 +39,8 @@
   },
   "overrides": {
     "node-fetch": "^2.3.0",
-    "json5": "^2.2.3"
+    "json5": "^2.2.3",
+    "ansi-regex": "^6.0.1"
   },
   "scripts": {
     "test": "node --experimental-vm-modules ./node_modules/.bin/jest"
