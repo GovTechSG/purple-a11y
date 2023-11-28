@@ -98,7 +98,7 @@ Parameter(s):
 - `elementsToClick` (optional): Elements clicked during the test to reveal hidden elements. Required to be able identify hidden elements if they were scanned for screenshot purposes. Ensure selectors resolve to a single element. 
 
 Returns:
-- Object containing the number of mustFix and goodToFix issues for this scan run e.g. `{ mustFix: 1, goodToFix: 5 }`
+- Object containing the number of mustFix and goodToFix issue occurrences for this scan run e.g. `{ mustFix: 1, goodToFix: 5 }`
 
 `testThresholdsAndReset()`
 
@@ -161,17 +161,20 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
     import { defineConfig } from "cypress";
     import purpleHatsInit from "@govtechsg/purple-hats";
 
+    // viewport used in tests to optimise screenshots
     const viewportSettings = { width: 1920, height: 1040 };
+    // specifies the number of occurrences before error is thrown for test failure
     const thresholds = { mustFix: 4, goodToFix: 5 };
+    // additional information to include in the "Scan About" section of the report
     const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
 
     const ph = await purpleHatsInit(
-        "https://govtechsg.github.io",
-        "Demo Cypress Scan",
+        "https://govtechsg.github.io", // initial url to start scan
+        "Demo Cypress Scan", // label for test
         "Your Name",
         "email@domain.com",
-        false,
-        true,
+        false, // whether to show false positive issues in the report
+        true, // include screenshots of affected elements in the report
         viewportSettings,
         thresholds,
         scanAboutMetadata,
@@ -248,7 +251,7 @@ Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
                 metadata: "Clicked button"
             });
 
-            cy.finishPhTestCase();
+            cy.finishPhTestCase(); // test the number of issue occurrences against specified thresholds
 
             cy.terminatePh();
         });
@@ -276,11 +279,23 @@ On your project's root folder, create a Playwright test file <code>ph-playwright
     import { chromium } from "playwright";
     import purpleHatsInit from "@govtechsg/purple-hats";
 
+    // viewport used in tests to optimise screenshots
+    const viewportSettings = { width: 1920, height: 1040 };
+    // specifies the number of occurrences before error is thrown for test failure
+    const thresholds = { mustFix: 4, goodToFix: 5 };
+    // additional information to include in the "Scan About" section of the report
+    const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
+
     const ph = await purpleHatsInit(
-        "https://govtechsg.github.io",
-        "Demo Playwright Scan",
+        "https://govtechsg.github.io", // initial url to start scan
+        "Demo Playwright Scan", // label for test
         "Your Name",
-        "email@domain.com"
+        "email@domain.com",
+        false, // whether to show false positive issues in the report
+        true, // include screenshots of affected elements in the report
+        viewportSettings,
+        thresholds,
+        scanAboutMetadata,
     );
 
     (async () => {
@@ -305,6 +320,8 @@ On your project's root folder, create a Playwright test file <code>ph-playwright
         await page.getByRole('button', { name: 'Click Me' }).click();
         // Run a scan on <input> and <button> elements
         await runPhScan(['input', 'button'])
+
+        ph.testThresholdsAndReset(); // test the number of issue occurrences against specified thresholds
 
         // ---------------------
         await context.close();
