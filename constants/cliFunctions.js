@@ -90,7 +90,7 @@ export const cliOptions = {
   },
   k: {
     alias: 'nameEmail',
-    describe: `To personalise your experience, we will be collecting your name, email address and app usage data. Your information fully complies with GovTech’s Privacy Policy. Please provice your name and email address in this format "John Doe:john@domain.com".`,
+    describe: `To personalise your experience, we will be collecting your name, email address and app usage data. Your information fully complies with GovTech’s Privacy Policy. Please provide your name and email address in this format "John Doe:john@domain.com".`,
     type: 'string',
     demandOption: true,
   },

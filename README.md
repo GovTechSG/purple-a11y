@@ -217,7 +217,7 @@ Other options:
 
 #### Known Issues
 
-If the custom flow fails to start, you might be runnning multiple versions of Playwright. Re-install Playwright:
+If the custom flow fails to start, you might be running multiple versions of Playwright. Re-install Playwright:
 
 1. On Windows, delete the folder `%USERPROFILE%\AppData\Local\ms-playwright` where `%USERPROFILE%` is typically located at `C:\Users\<username>`.
 2. On MacOS, delete the folder `~/Library/Caches/ms-playwright` where `~` refers to `/Users/<username>`.
