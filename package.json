@@ -1,7 +1,7 @@
 {
   "name": "@govtechsg/purple-hats",
   "main": "npmIndex.js",
-  "version": "0.9.34",
+  "version": "0.9.35",
   "type": "module",
   "imports": {
     "#root/*.js": "./*.js"
@@ -9,25 +9,25 @@
   "dependencies": {
     "@json2csv/node": "^7.0.3",
     "axe-core": "^4.8.2",
-    "axios": "^1.2.2",
+    "axios": "^1.6.2",
     "cheerio": "^1.0.0-rc.12",
     "crawlee": "^3.6.2",
     "ejs": "^3.1.9",
-    "fs-extra": "^11.1.0",
-    "glob": "^9.1.2",
-    "inquirer": "^9.1.4",
+    "fs-extra": "^11.2.0",
+    "glob": "^10.3.10",
+    "inquirer": "^9.2.12",
     "jsdom": "^21.1.2",
     "lodash": "^4.17.21",
     "pdfjs-dist": "github:veraPDF/pdfjs-dist#v2.14.305-taggedPdf-0.1.11",
-    "playwright": "1.38.1",
-    "prettier": "^2.8.2",
+    "playwright": "1.40.0",
+    "prettier": "^3.1.0",
     "print-message": "^3.0.1",
     "safe-regex": "^2.1.1",
-    "validator": "^13.7.0",
-    "which": "^3.0.0",
-    "winston": "^3.8.2",
-    "xml2js": "^0.5.0",
-    "yargs": "^17.6.2"
+    "validator": "^13.11.0",
+    "which": "^4.0.0",
+    "winston": "^3.11.0",
+    "xml2js": "^0.6.2",
+    "yargs": "^17.7.2"
   },
   "devDependencies": {
     "eslint": "^8.31.0",
