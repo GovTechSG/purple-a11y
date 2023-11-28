@@ -9,7 +9,7 @@ $ErrorActionPreference = 'Stop'
 # Install NodeJS binaries
 if (-Not (Test-Path nodejs-win\node.exe)) {
     Write-Output "Downloading Node"
-    Invoke-WebRequest -o ./nodejs-win.zip "https://nodejs.org/dist/v18.18.0/node-v18.18.0-win-x64.zip"     
+    Invoke-WebRequest -o ./nodejs-win.zip "https://nodejs.org/dist/v20.10.0/node-v20.10.0-win-x64.zip"     
     
     Write-Output "Unzip Node"
     Expand-Archive .\nodejs-win.zip -DestinationPath .
