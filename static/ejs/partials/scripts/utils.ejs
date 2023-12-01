@@ -279,7 +279,7 @@
         return purpleAiQueryLabel;
       })
       .catch(err => {
-        console.error(`An error has occured while checking if ${ruleId} needs AI query`);
+        console.error(`An error has occurred while checking if ${ruleId} needs AI query`);
         if (err.message === 'Network Error') {
           return {
             label: null,

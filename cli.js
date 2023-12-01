@@ -155,7 +155,7 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     }
     if (!validEmail(email)) {
       printMessage(
-        [`Invalid emaill address. Please provide a valid email adress.`],
+        [`Invalid email address. Please provide a valid email address.`],
         messageOptions,
       );
       process.exit(1);
@@ -314,11 +314,11 @@ const scanInit = async argvs => {
       }
       /* if sitemap scan is selected, treat this URL as a filepath
           isFileSitemap will tell whether the filepath exists, and if it does, whether the
-          file is a sitemap */       
+          file is a sitemap */
       const finalFilePath = await isFileSitemap(argvs.url);
       if (finalFilePath) {
         argvs.isLocalSitemap = true;
-        argvs.finalUrl = finalFilePath; 
+        argvs.finalUrl = finalFilePath;
         if (process.env.VALIDATE_URL_PH_GUI) {
           console.log('Url is valid');
           process.exit(0);

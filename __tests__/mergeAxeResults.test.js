@@ -297,7 +297,7 @@ describe('test write results into HTML report', () => {
     await writeHTML(allIssues, expectedStoragePath, htmlFilename);
     expect(fs.readFile).toThrowError();
     expect(spyConsoleLogger.mock.calls[0][0]).toEqual(
-      'An error has ocurred when generating the report, please try again.',
+      'An error has occurred when generating the report, please try again.',
     );
     expect(spySilentLogger.mock.calls[0][0].toString()).toEqual('(writeHTML) - Error');
   });

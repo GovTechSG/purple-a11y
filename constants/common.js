@@ -203,12 +203,12 @@ export const isFileSitemap = async filePath => {
     if (os.platform() === 'win32') {
       filePath = filePath.match(/^file:\/\/\/([A-Z]:\/[^?#]+)/)?.[1];
     } else {
-      filePath = filePath.match(/^file:\/\/(\/[^?#]+)/)?.[1]; 
+      filePath = filePath.match(/^file:\/\/(\/[^?#]+)/)?.[1];
     }
-  }     
-  
+  }
+
   if (!fs.existsSync(filePath)) {
-    return null; 
+    return null;
   }
 
   const file = fs.readFileSync(filePath, 'utf8');
@@ -274,9 +274,9 @@ const requestToUrl = async (url, isNewCustomFlow) => {
       const hasMetaRefresh = metaRefreshMatch && metaRefreshMatch[1];
 
       if (redirectUrl != null && (hasMetaRefresh || !isNewCustomFlow)) {
-        res.url = redirectUrl; 
+        res.url = redirectUrl;
       } else {
-        res.url = url; 
+        res.url = url;
       }
 
       if (hasMetaRefresh) {
@@ -792,8 +792,8 @@ export const getBrowserToRun = (preferredBrowser, isCli) => {
 };
 /**
  * Cloning a second time with random token for parallel browser sessions
- * Also To mitigate agaisnt known bug where cookies are
- * overriden after each browser session - i.e. logs user out
+ * Also to mitigate against known bug where cookies are
+ * overridden after each browser session - i.e. logs user out
  * after checkingUrl and unable to utilise same cookie for scan
  * */
 export const getClonedProfilesWithRandomToken = (browser, randomToken) => {

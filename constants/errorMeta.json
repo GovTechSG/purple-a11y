@@ -230,7 +230,7 @@
             "30": {
                 "STATUS": "warning",
                 "CATEGORY": "code",
-                "RATIONALE": "Table of content items should point somwhere in the document."
+                "RATIONALE": "Table of content items should point somewhere in the document."
             },
             "31": {
                 "STATUS": "warning",
