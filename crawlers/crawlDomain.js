@@ -155,6 +155,7 @@ const crawlDomain = async (
         })
       })
 
+    // Try catch is necessary clicking links is best effort, it may result in new pages that cause browser load or navigation errors that PlaywrightCrawler does not handle
     try {
       await enqueueLinksByClickingElements({
         // set selector matches
