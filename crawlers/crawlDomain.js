@@ -20,8 +20,7 @@ import {
 import { areLinksEqual } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
 import fs from 'fs';
-import { guiInfoLog } from '../logs.js';
-import { chromium } from 'playwright';
+import { silentLogger, guiInfoLog } from '../logs.js';
 
 const crawlDomain = async (
   url,
@@ -106,22 +105,78 @@ const crawlDomain = async (
       };
     });
 
-    await enqueueLinksByClickingElements({
-      // set selector matches
-      // NOT <a>
-      // IS role='link' or button onclick
-      // enqueue new page URL
-      // handle onclick
-      selector: ':not(a):is([role="link"], button[onclick])',
-      transformRequestFunction(req) {
-        req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-        if (isUrlPdf(req.url)) {
-          // playwright headless mode does not support navigation to pdf document
-          req.skipNavigation = true;
+    const handleOnClickEvent = async () => {
+      // Intercepting click events to handle cases where request was issued before the frame is created 
+      // when a new tab is opened 
+      await page.context().route('**', async route => {
+        if (route.request().resourceType() === 'document') {
+          try {
+            const isTopFrameNavigationRequest = () => {
+              return route.request().isNavigationRequest() 
+                  && route.request().frame() === page.mainFrame();
+            }
+
+            if (isTopFrameNavigationRequest()) {
+              await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+              await route.abort('aborted');
+            } else {
+              route.continue();
+            }
+          } catch (e) {
+            silentLogger.info(e);
+            route.continue();
+          }
         }
-        return req;
-      },
-    });
+      })
+    }
+    await page.exposeFunction('handleOnClickEvent', handleOnClickEvent)
+
+    await page.evaluate(() => {
+      document.addEventListener('click', (event) => handleOnClickEvent(event));
+    })
+
+    page.on('request', async request => {
+      // Intercepting requests to handle cases where request was issued before the frame is created
+      await page.context().route(request.url(), async route => {
+          try {
+            const isTopFrameNavigationRequest = () => {
+            return route.request().isNavigationRequest() 
+                && route.request().frame() === page.mainFrame();
+            }
+
+            if (route.request().resourceType() === 'document') {
+              if (isTopFrameNavigationRequest()) {
+                await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+              }
+            }
+          } catch (e) {
+            silentLogger.info(e);
+          }
+        })
+      })
+
+    // Try catch is necessary clicking links is best effort, it may result in new pages that cause browser load or navigation errors that PlaywrightCrawler does not handle
+    try {
+      await enqueueLinksByClickingElements({
+        // set selector matches
+        // NOT <a>
+        // IS role='link' or button onclick
+        // enqueue new page URL
+        // handle onclick
+        selector: ':not(a):is([role="link"], button[onclick])',
+        transformRequestFunction(req) {
+          req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+          if (isUrlPdf(req.url)) {
+            // playwright headless mode does not support navigation to pdf document
+            req.skipNavigation = true;
+          }
+          return req;
+        },
+        waitForPageIdleSecs: 10000
+      })
+    } catch (e) {
+      silentLogger.info(e);
+    }
   };
 
   const crawler = new crawlee.PlaywrightCrawler({
@@ -233,57 +288,66 @@ const crawlDomain = async (
 
       pagesCrawled += 1;
 
-      if (isBasicAuth) {
-        isBasicAuth = false;
-      } else {
-        if (isScanHtml) {
-          const results = await runAxeScript(needsReview, includeScreenshots, page, randomToken);
-          guiInfoLog(guiInfoStatusTypes.SCANNED, {
-            numScanned: urlsCrawled.scanned.length,
-            urlScanned: request.url,
-          });
-
-          // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
-          const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
-          if (isRedirected) {
-            const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
-              item => (item.actualUrl || item.url) === request.loadedUrl,
-            );
-
-            if (isLoadedUrlInCrawledUrls) {
-              urlsCrawled.notScannedRedirects.push({
+      try {
+        if (isBasicAuth) {
+          isBasicAuth = false;
+        } else {
+          if (isScanHtml) {
+            const results = await runAxeScript(needsReview, includeScreenshots, page, randomToken);
+            guiInfoLog(guiInfoStatusTypes.SCANNED, {
+              numScanned: urlsCrawled.scanned.length,
+              urlScanned: request.url,
+            });
+  
+            // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
+            const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
+            if (isRedirected) {
+              const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
+                item => (item.actualUrl || item.url) === request.loadedUrl,
+              );
+  
+              if (isLoadedUrlInCrawledUrls) {
+                urlsCrawled.notScannedRedirects.push({
+                  fromUrl: request.url,
+                  toUrl: request.loadedUrl, // i.e. actualUrl
+                });
+                return;
+              }
+  
+              urlsCrawled.scanned.push({
+                url: request.url,
+                pageTitle: results.pageTitle,
+                actualUrl: request.loadedUrl, // i.e. actualUrl
+              });
+  
+              urlsCrawled.scannedRedirects.push({
                 fromUrl: request.url,
                 toUrl: request.loadedUrl, // i.e. actualUrl
               });
-              return;
+  
+              results.url = request.url;
+              results.actualUrl = request.loadedUrl;
+            } else {
+              urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
             }
-
-            urlsCrawled.scanned.push({
-              url: request.url,
-              pageTitle: results.pageTitle,
-              actualUrl: request.loadedUrl, // i.e. actualUrl
-            });
-
-            urlsCrawled.scannedRedirects.push({
-              fromUrl: request.url,
-              toUrl: request.loadedUrl, // i.e. actualUrl
-            });
-
-            results.url = request.url;
-            results.actualUrl = request.loadedUrl;
+            await dataset.pushData(results);
           } else {
-            urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
+            guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+              numScanned: urlsCrawled.scanned.length,
+              urlScanned: request.url,
+            });
+            urlsCrawled.blacklisted.push(request.url);
           }
-          await dataset.pushData(results);
-        } else {
-          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-            numScanned: urlsCrawled.scanned.length,
-            urlScanned: request.url,
-          });
-          urlsCrawled.blacklisted.push(request.url);
-        }
 
-        await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
+          await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
+        }
+      } catch (e) {
+        silentLogger.info(e);
+        guiInfoLog(guiInfoStatusTypes.ERROR, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
+        urlsCrawled.error.push({ url: request.url });
       }
     },
     failedRequestHandler: async ({ request }) => {
