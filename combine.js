@@ -132,7 +132,7 @@ const combineRun = async (details, deviceToScan) => {
       ...urlsCrawled.error, 
       ...urlsCrawled.invalid, 
       ...urlsCrawled.forbidden
-  ];
+    ];
     const basicFormHTMLSnippet = await generateArtifacts(
       randomToken,
       url,

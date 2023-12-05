@@ -1258,7 +1258,6 @@ export const submitForm = async (
     `${formDataFields.additionalPageDataField}=${encodeURIComponent(addtionalPageDataJson)}&` + 
     `${formDataFields.metadataField}=${encodeURIComponent(metadata)}`;
 
-  console.log(finalUrl);
   if (scannedUrl !== entryUrl) {
     finalUrl += `&${formDataFields.redirectUrlField}=${scannedUrl}`;
   }

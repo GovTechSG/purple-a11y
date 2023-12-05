@@ -428,6 +428,11 @@ const waitForCaptcha = async (page, captchaLocator) => {
             await createDetailsAndLogs(scanDetails, ${formatScriptStringVar(randomToken)});
             await createAndUpdateResultsFolders(${formatScriptStringVar(randomToken)});
             createScreenshotsFolder(${formatScriptStringVar(randomToken)});
+            const pagesNotScanned = [
+              ...urlsCrawled.error, 
+              ...urlsCrawled.invalid, 
+              ...urlsCrawled.forbidden
+          ];
             const basicFormHTMLSnippet = await generateArtifacts(
               ${formatScriptStringVar(randomToken)},
               ${formatScriptStringVar(data.url)},
@@ -438,7 +443,7 @@ const waitForCaptcha = async (page, captchaLocator) => {
                   : customDevice || deviceChosen || 'Desktop',
               )}, 
               urlsCrawled.scanned, 
-              urlsCrawled.error,
+              pagesNotScanned,
               ${formatScriptStringVar(customFlowLabel || 'Custom Flow')}
             );
 
@@ -446,12 +451,15 @@ const waitForCaptcha = async (page, captchaLocator) => {
     ${formatScriptStringVar(data.browser)},
     ${formatScriptStringVar(data.userDataDirectory)},
     ${formatScriptStringVar(data.url)},
+    ${formatScriptStringVar(data.entryUrl)},
     ${formatScriptStringVar(data.type)},
     // nameEmail = name:email
     ${formatScriptStringVar(data.nameEmail.split(':')[1])}, 
     ${formatScriptStringVar(data.nameEmail.split(':')[0])},
     JSON.stringify(basicFormHTMLSnippet),
     urlsCrawled.scanned.length,
+    urlsCrawled.scannedRedirects.length,
+    pagesNotScanned.length,
     "${data.metadata.replace(/"/g, '\\"')}",
   );
 
