@@ -53,16 +53,16 @@ const crawlDomain = async (
   }
 
   let finalUrl;
-  let pagesCrawled;
-  let requestLimit = maxRequestsPerCrawl;
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth = false;
+  let basicAuthPage = 0;
+
   /**
    * Regex to match http://username:password@hostname.com
    * utilised in scan strategy to ensure subsequent URLs within the same domain are scanned.
    * First time scan with original `url` containing credentials is strictly to authenticate for browser session
    * subsequent URLs are without credentials.
-   * pagesCrawled is set to -1 for basic auth URL to ensure it is not counted towards maxRequestsPerCrawl
+   * basicAuthPage is set to -1 for basic auth URL to ensure it is not counted towards maxRequestsPerCrawl
    */
 
   if (basicAuthRegex.test(url)) {
@@ -73,10 +73,10 @@ const crawlDomain = async (
     // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
     finalUrl = `${url.split('://')[0]}://${url.split('@')[1]}`;
     await requestQueue.addRequest({ url: finalUrl, skipNavigation: isUrlPdf(finalUrl) });
-    pagesCrawled = -1;
+    basicAuthPage = -1;
   } else {
     await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
-    pagesCrawled = 0;
+    basicAuthPage = 0;
   }
 
   const enqueueProcess = async (page, enqueueLinks, enqueueLinksByClickingElements) => {
@@ -213,9 +213,8 @@ const crawlDomain = async (
     }) => {
       // loadedUrl is the URL after redirects
       const actualUrl = request.loadedUrl || request.url;
-
-      if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
-        console.log('TERMINATE');
+      
+      if (urlsCrawled.scanned.length + basicAuthPage >= maxRequestsPerCrawl) {
         crawler.autoscaledPool.abort();
         return;
       }
@@ -223,11 +222,9 @@ const crawlDomain = async (
       // handle pdfs
       if (request.skipNavigation && isUrlPdf(actualUrl)) {
         if (!isScanPdfs) {
-          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-            type: 'blacklisted',
+          guiInfoLog(guiInfoStatusTypes.SKIPPED, {            
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
-            pagesCrawled
           });
           urlsCrawled.blacklisted.push(request.url);
           return;
@@ -250,10 +247,8 @@ const crawlDomain = async (
       // whitelist html and pdf document types
       if (!contentType.includes('text/html') && !contentType.includes('application/pdf')) {
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-          type: 'blacklisted',
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
-          pagesCrawled
         });
         urlsCrawled.blacklisted.push(request.url);
         return;
@@ -261,10 +256,8 @@ const crawlDomain = async (
 
       if (isBlacklistedFileExtensions(actualUrl, blackListedFileExtensions)) {
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-          type: 'blacklisted',
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
-          pagesCrawled
         });
         urlsCrawled.blacklisted.push(request.url);
         return;
@@ -277,24 +270,18 @@ const crawlDomain = async (
       }
 
       if (response.status() === 403) {
-        ++pagesCrawled;
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-          type: 'forbidden',
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
-          pagesCrawled
         });
         urlsCrawled.forbidden.push({ url: request.url });
         return;
       }
 
       if (response.status() !== 200) {
-        ++pagesCrawled;
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-          type: 'invalid',
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
-          pagesCrawled
         });
         urlsCrawled.invalid.push({ url: request.url });
         return;
@@ -307,12 +294,9 @@ const crawlDomain = async (
           if (isScanHtml) {
             const results = await runAxeScript(needsReview, includeScreenshots, page, randomToken);
             guiInfoLog(guiInfoStatusTypes.SCANNED, {
-              type: 'success',
               numScanned: urlsCrawled.scanned.length,
               urlScanned: request.url,
-              pagesCrawled
             });
-            // pagesCrawled ++;
   
             // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
             const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
@@ -348,10 +332,8 @@ const crawlDomain = async (
             await dataset.pushData(results);
           } else {
             guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-              type: 'blacklisted',
               numScanned: urlsCrawled.scanned.length,
               urlScanned: request.url,
-              pagesCrawled
             });
             urlsCrawled.blacklisted.push(request.url);
           }
@@ -361,39 +343,28 @@ const crawlDomain = async (
       } catch (e) {
         silentLogger.info(e);
         guiInfoLog(guiInfoStatusTypes.ERROR, {
-          type: 'error', 
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
-          pagesCrawled
         });
-
-        console.log('ERROR: ', request.url);
         const browser = browserController.browser;
         page = await browser.newPage();
         await page.goto(request.url);
 
         await page.route('**', async route => {
           const interceptedRequest = route.request();
-          console.log('METHOD: ', interceptedRequest.method());
           if (interceptedRequest.method() === 'POST' && interceptedRequest.resourceType() === 'document') {
-            console.log('REDIRECTED URL: ', interceptedRequest.url(), ' FROM: ', request.url);
             await requestQueue.addRequest({ url: interceptedRequest.url(), skipNavigation: isUrlPdf(interceptedRequest.url()) });
             return;
           }
         })
-        console.log('ADD URL TO ERRORS: ', request.url);
         urlsCrawled.error.push({ url: request.url });
       }
     },
     failedRequestHandler: async ({ request }) => {
-      ++pagesCrawled;
       guiInfoLog(guiInfoStatusTypes.ERROR, {
-        type: 'error',
         numScanned: urlsCrawled.scanned.length,
         urlScanned: request.url,
-        pagesCrawled
       });
-      crawler.maxRequestsPerCrawl++;
       urlsCrawled.error.push({ url: request.url });
       crawlee.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
     },
