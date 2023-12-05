@@ -890,7 +890,8 @@ const waitForCaptcha = async (page, captchaLocator) => {
 
     // format generated script
     const file = fs.readFileSync(generatedScript, 'utf8');
-    fs.writeFileSync(generatedScript, prettier.format(file, { parser: 'babel' }), 'utf8');
+    const formatter = await prettier.format(file, { parser: 'babel' })
+    fs.writeFileSync(generatedScript, formatter, 'utf8');
 
     fileStream.destroy();
     if (process.env.RUNNING_FROM_PH_GUI) {
