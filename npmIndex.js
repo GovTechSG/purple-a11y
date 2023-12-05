@@ -195,6 +195,7 @@ export const init = async (
         constants.browserTypes.chromium,
         '',
         scanDetails.requestUrl,
+        null,
         scanDetails.crawlType,
         email,
         name,

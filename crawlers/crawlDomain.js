@@ -211,9 +211,6 @@ const crawlDomain = async (
       enqueueLinks,
       enqueueLinksByClickingElements,
     }) => {
-      urlsCrawled.everything.push(request.url);
-      console.log('TOTAL URLS: ', urlsCrawled.everything.length, ' URLS SCANNED: ', urlsCrawled.scanned.length);
-      
       // loadedUrl is the URL after redirects
       const actualUrl = request.loadedUrl || request.url;
 
@@ -227,8 +224,10 @@ const crawlDomain = async (
       if (request.skipNavigation && isUrlPdf(actualUrl)) {
         if (!isScanPdfs) {
           guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+            type: 'blacklisted',
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
+            pagesCrawled
           });
           urlsCrawled.blacklisted.push(request.url);
           return;
@@ -251,8 +250,10 @@ const crawlDomain = async (
       // whitelist html and pdf document types
       if (!contentType.includes('text/html') && !contentType.includes('application/pdf')) {
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          type: 'blacklisted',
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
+          pagesCrawled
         });
         urlsCrawled.blacklisted.push(request.url);
         return;
@@ -260,8 +261,10 @@ const crawlDomain = async (
 
       if (isBlacklistedFileExtensions(actualUrl, blackListedFileExtensions)) {
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          type: 'blacklisted',
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
+          pagesCrawled
         });
         urlsCrawled.blacklisted.push(request.url);
         return;
@@ -274,18 +277,24 @@ const crawlDomain = async (
       }
 
       if (response.status() === 403) {
+        ++pagesCrawled;
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          type: 'forbidden',
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
+          pagesCrawled
         });
-        urlsCrawled.forbidden.push(request.url);
+        urlsCrawled.forbidden.push({ url: request.url });
         return;
       }
 
       if (response.status() !== 200) {
+        ++pagesCrawled;
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          type: 'invalid',
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
+          pagesCrawled
         });
         urlsCrawled.invalid.push({ url: request.url });
         return;
@@ -298,8 +307,10 @@ const crawlDomain = async (
           if (isScanHtml) {
             const results = await runAxeScript(needsReview, includeScreenshots, page, randomToken);
             guiInfoLog(guiInfoStatusTypes.SCANNED, {
+              type: 'success',
               numScanned: urlsCrawled.scanned.length,
               urlScanned: request.url,
+              pagesCrawled
             });
             // pagesCrawled ++;
   
@@ -337,8 +348,10 @@ const crawlDomain = async (
             await dataset.pushData(results);
           } else {
             guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+              type: 'blacklisted',
               numScanned: urlsCrawled.scanned.length,
               urlScanned: request.url,
+              pagesCrawled
             });
             urlsCrawled.blacklisted.push(request.url);
           }
@@ -348,8 +361,10 @@ const crawlDomain = async (
       } catch (e) {
         silentLogger.info(e);
         guiInfoLog(guiInfoStatusTypes.ERROR, {
+          type: 'error', 
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
+          pagesCrawled
         });
 
         console.log('ERROR: ', request.url);
@@ -371,9 +386,12 @@ const crawlDomain = async (
       }
     },
     failedRequestHandler: async ({ request }) => {
+      ++pagesCrawled;
       guiInfoLog(guiInfoStatusTypes.ERROR, {
+        type: 'error',
         numScanned: urlsCrawled.scanned.length,
         urlScanned: request.url,
+        pagesCrawled
       });
       crawler.maxRequestsPerCrawl++;
       urlsCrawled.error.push({ url: request.url });
