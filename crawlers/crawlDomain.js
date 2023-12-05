@@ -54,6 +54,7 @@ const crawlDomain = async (
 
   let finalUrl;
   let pagesCrawled;
+  let requestLimit = maxRequestsPerCrawl;
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth = false;
   /**
@@ -201,18 +202,24 @@ const crawlDomain = async (
     requestQueue,
     preNavigationHooks,
     requestHandler: async ({
+      browserController,
       page,
       request,
       response,
+      crawler,
       sendRequest,
       enqueueLinks,
       enqueueLinksByClickingElements,
     }) => {
+      urlsCrawled.everything.push(request.url);
+      console.log('TOTAL URLS: ', urlsCrawled.everything.length, ' URLS SCANNED: ', urlsCrawled.scanned.length);
+      
       // loadedUrl is the URL after redirects
       const actualUrl = request.loadedUrl || request.url;
 
-      if (pagesCrawled === maxRequestsPerCrawl) {
-        urlsCrawled.exceededRequests.push(request.url);
+      if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
+        console.log('TERMINATE');
+        crawler.autoscaledPool.abort();
         return;
       }
 
@@ -233,8 +240,6 @@ const crawlDomain = async (
           sendRequest,
           urlsCrawled,
         );
-
-        pagesCrawled++;
 
         uuidToPdfMapping[pdfFileName] = trimmedUrl;
         return;
@@ -286,8 +291,6 @@ const crawlDomain = async (
         return;
       }
 
-      pagesCrawled += 1;
-
       try {
         if (isBasicAuth) {
           isBasicAuth = false;
@@ -298,6 +301,7 @@ const crawlDomain = async (
               numScanned: urlsCrawled.scanned.length,
               urlScanned: request.url,
             });
+            // pagesCrawled ++;
   
             // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
             const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
@@ -347,6 +351,22 @@ const crawlDomain = async (
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
         });
+
+        console.log('ERROR: ', request.url);
+        const browser = browserController.browser;
+        page = await browser.newPage();
+        await page.goto(request.url);
+
+        await page.route('**', async route => {
+          const interceptedRequest = route.request();
+          console.log('METHOD: ', interceptedRequest.method());
+          if (interceptedRequest.method() === 'POST' && interceptedRequest.resourceType() === 'document') {
+            console.log('REDIRECTED URL: ', interceptedRequest.url(), ' FROM: ', request.url);
+            await requestQueue.addRequest({ url: interceptedRequest.url(), skipNavigation: isUrlPdf(interceptedRequest.url()) });
+            return;
+          }
+        })
+        console.log('ADD URL TO ERRORS: ', request.url);
         urlsCrawled.error.push({ url: request.url });
       }
     },
@@ -355,10 +375,11 @@ const crawlDomain = async (
         numScanned: urlsCrawled.scanned.length,
         urlScanned: request.url,
       });
+      crawler.maxRequestsPerCrawl++;
       urlsCrawled.error.push({ url: request.url });
       crawlee.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
     },
-    maxRequestsPerCrawl,
+    maxRequestsPerCrawl: Infinity,
     maxConcurrency: specifiedMaxConcurrency || maxConcurrency,
   });
 

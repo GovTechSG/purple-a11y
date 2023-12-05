@@ -422,7 +422,7 @@ export const generateArtifacts = async (
 
   flattenAndSortResults(allIssues, isCustomFlow);
 
-  allIssues.totalPages = allIssues.totalPagesScanned + allIssues.totalPagesNotScanned;
+  // allIssues.totalPages = allIssues.totalPagesScanned;
 
   printMessage([
     'Scan Summary',

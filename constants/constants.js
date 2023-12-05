@@ -157,6 +157,7 @@ const urlsCrawledObj = {
   exceededRequests: [],
   forbidden: [],
   userExcluded: [],
+  everything: [],
 };
 
 const scannerTypes = {
