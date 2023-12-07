@@ -81,10 +81,10 @@ PS C:\Users\username\Downloads\purple-a11y-portable-windows\purple-hats> node in
 #### Run Purple A11y
  * Navigate to the folder `purple-a11y-mac`, usually located at your Downloads folder.
  * Right-click `a11y_shell.command`. Then click `Open` in the context menu.
-  <img width="480" alt="Screenshot of right-click a11y_shell.command and Open" src="https://user-images.githubusercontent.com/2021525/225501586-2df8ba37-f58a-4d1f-b28c-e06865fec2b0.png">
+  <img width="480" alt="Screenshot of right-click a11y_shell.command and Open" src="https://github.com/GovTechSG/purple-hats/assets/152410523/15a0f577-c8c4-43e2-9c9d-ca4b960b8874">
 
  * A prompt as follows will appear like below. Click `Open`.
- <img width="240" alt="MacOS prompt for unidentified developer" src="https://user-images.githubusercontent.com/2021525/208457749-3a0a573d-5a6d-4905-b11e-c957d2073979.png">
+ <img width="240" alt="MacOS prompt for unidentified developer" src="https://github.com/GovTechSG/purple-hats/assets/152410523/85eb0d58-8dd9-477c-916a-b759cfb1afd6">
 
  * A Terminal window should open with contents as illustrated below. `a11y_shell` will automatically prepare your system to run Purple A11y.
 ```
