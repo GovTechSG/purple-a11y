@@ -1,8 +1,8 @@
-# Purple HATS
+# Purple A11y
 
-Purple HATS is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).
+Purple A11y is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).
 
-This is the engine and command-line interface (CLI) for Purple HATS.  For a desktop graphical user interface (GUI), check out [Purple HATS Desktop](https://github.com/GovTechSG/purple-hats-desktop).
+This is the engine and command-line interface (CLI) for Purple A11y.  For a desktop graphical user interface (GUI), check out [Purple A11y Desktop](https://github.com/GovTechSG/purple-hats-desktop).
 
 ## Technology Stack
 
@@ -14,15 +14,15 @@ This is the engine and command-line interface (CLI) for Purple HATS.  For a desk
 6. [Corretto](https://aws.amazon.com/corretto)
 7. [VeraPDF](https://github.com/veraPDF/veraPDF-apps)
 
-## Using Purple HATS as a NodeJS module
+## Using Purple A11y as a NodeJS module
 
-If you wish to use Purple HATS as a NodeJS module that can be integrated with end-to-end testing frameworks, refer to the [integration guide](./INTEGRATION.md) on how you can do so.
+If you wish to use Purple A11y as a NodeJS module that can be integrated with end-to-end testing frameworks, refer to the [integration guide](./INTEGRATION.md) on how you can do so.
 
 ## Prerequisites and Installations
 
-### Portable Purple hats
+### Portable Purple A11y
 
-Portable Purple hats is the recommended way to run Purple hats as it reduces the difficulty for installation. Refer to [Installation Guide](/INSTALLATION.md) for step-by-step instructions.
+Portable Purple A11y is the recommended way to run Purple A11y as it reduces the difficulty for installation. Refer to [Installation Guide](/INSTALLATION.md) for step-by-step instructions.
 
 ### Manual Installation
 
@@ -51,15 +51,15 @@ Please refer to [Troubleshooting section](#troubleshooting) for more information
 
 ## Features
 
-Purple HATS can perform the following to scan the target URL.
+Purple A11y can perform the following to scan the target URL.
 
 - Results will be compiled in JSON format, followed by generating a HTML report.
-- To start using Purple HATS, run `node index`. Questions will be prompted to assist you in providing the right inputs.
+- To start using Purple A11y, run `node index`. Questions will be prompted to assist you in providing the right inputs.
 
-> NOTE: For your initial scan, there may be some loading time required before use. Purple-HATS will also ask for your name and email address and collect your app usage data to personalise your experience. Your information fully complies with [GovTech’s Privacy Policy](https://www.tech.gov.sg/privacy/).
+> NOTE: For your initial scan, there may be some loading time required before use. Purple-A11y will also ask for your name and email address and collect your app usage data to personalise your experience. Your information fully complies with [GovTech’s Privacy Policy](https://www.tech.gov.sg/privacy/).
 > You may delete your cached name and e-mail address by running the following command to delete `userDtata.txt`:
-> - Windows (PowerShell): `rm "$env:APPDATA\Purple HATS\userData.txt"`
-> - MacOS (Terminal): `rm "$HOME/Library/Application Support/Purple HATS/userData.txt"`
+> - Windows (PowerShell): `rm "$env:APPDATA\Purple A11y\userData.txt"`
+> - MacOS (Terminal): `rm "$HOME/Library/Application Support/Purple A11y/userData.txt"`
 
 ### Scan Selection
 
@@ -68,7 +68,7 @@ You can interact via your arrow keys.
 ```shell
 % node index
 ┌────────────────────────────────────────────────────────────┐
-│  Purple HATS (ver      )                                   │
+│  Purple A11y (ver      )                                   │
 │  We recommend using Chrome browser for the best experience.│
 │                                                            │
 │ Welcome back User!!                                        │
@@ -87,14 +87,14 @@ Headless mode would allow you to run the scan in the background. If you would li
 ```shell
  % node index
 ┌────────────────────────────────────────────────────────────┐
-│ Purple HATS (ver      )                                    │
+│ Purple A11y (ver      )                                    │
 │ We recommend using Chrome browser for the best experience. │
 │                                                            │
 │ Welcome back User!                                         │
 │ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
 ? What would you like to scan? Sitemap
-? Do you want purple-hats to run in the background? (Y/n) Y
+? Do you want purple-a11y to run in the background? (Y/n) Y
 ```
 
 ### Sitemap Scan
@@ -102,14 +102,14 @@ Headless mode would allow you to run the scan in the background. If you would li
 ```shell
 % node index
 ┌────────────────────────────────────────────────────────────┐
-│ Purple HATS (ver      )                                     │
+│ Purple A11y (ver      )                                     │
 │ We recommend using Chrome browser for the best experience. │
 │                                                            │
 │ Welcome back User!                                         │
 │ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
 ? What would you like to scan? Sitemap
-? Do you want purple-hats to run in the background? Yes
+? Do you want purple-a11y to run in the background? Yes
 ? Which screen size would you like to scan? (Use arrow keys) Desktop
 ? Please enter URL or file path to sitemap, or drag and drop a sitemap file here:  https://www.sitemaps.org/sitemap.xml
 
@@ -122,7 +122,7 @@ Headless mode would allow you to run the scan in the background. If you would li
 
 Scanning website...
 
-#purple-hats will then start scraping from the file link provided above.
+#purple-a11y will then start scraping from the file link provided above.
 #Console results
 
 ```
@@ -138,14 +138,14 @@ If the sitemap URL provided is invalid, an error message will be prompted for yo
 ```shell
 % node index
 ┌────────────────────────────────────────────────────────────┐
-│ Purple HATS (ver      )                                    │
+│ Purple A11y (ver      )                                    │
 │ We recommend using Chrome browser for the best experience. │
 │                                                            │
 │ Welcome back User!                                         │
 │ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
 ? What would you like to scan? Website
-? Do you want purple-hats to run in the background? Yes
+? Do you want purple-a11y to run in the background? Yes
 ? Which screen size would you like to scan? (Use arrow keys) Desktop
 ? Please enter URL of website:  https://www.domain.org
 
@@ -162,14 +162,14 @@ If the website URL provided is invalid, an error message will be prompted for yo
 ``` shell
 % node index
 ┌────────────────────────────────────────────────────────────┐
-│ Purple HATS (ver      )                                   │
+│ Purple A11y (ver      )                                   │
 │ We recommend using Chrome browser for the best experience. │
 │                                                            │
 │ Welcome back User!                                         │
 │ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
 ? What would you like to scan? Website
-? Do you want purple-hats to run in the background? No
+? Do you want purple-a11y to run in the background? No
 ? Which screen size would you like to scan? (Use arrow keys) (Use arrow keys)
 ❯ Desktop 
   Mobile
@@ -180,14 +180,14 @@ Choose `Mobile` for a default mobile screen size scan and `Custom` to choose a d
 
 ### Custom flow (Preview)
 
-Custom flow allows you to record a series of actions in the browser and re-play them and Purple hats will trigger the accessibility scan at each step.  This is useful to scan websites that require user and form input.  The recorded script will be stored as `generatedScript*.js`.
+Custom flow allows you to record a series of actions in the browser and re-play them and Purple A11y will trigger the accessibility scan at each step.  This is useful to scan websites that require user and form input.  The recorded script will be stored as `generatedScript*.js`.
 
 1. Start by choosing the `Custom flow` in the menu selection.
 
 ```shell
 % node index
 ┌────────────────────────────────────────────────────────────┐
-│ Purple HATS (ver      )                                   │
+│ Purple A11y (ver      )                                   │
 │ We recommend using Chrome browser for the best experience. │
 │                                                            │
 │ Welcome back User!                                         │
@@ -201,7 +201,7 @@ Custom flow allows you to record a series of actions in the browser and re-play 
 
 1. Specify the URL of the starting page you wish to scan
 2. A Chrome and Playwright Inspector window will appear.  Navigate through the pages you would like to conduct an accessibility scan.
-3. Close the Chrome window.  Purple HATS will then proceed to re-run your recorded actions and scan each page for accessibility.
+3. Close the Chrome window.  Purple A11y will then proceed to re-run your recorded actions and scan each page for accessibility.
 
 Other options:
 
@@ -471,7 +471,7 @@ the module (for instance, using `npm rebuild` or `npm install`).
 
 ### dyld Error
 
-**Issue**: Not able to run Purple HATS due to the following error shown below
+**Issue**: Not able to run Purple A11y due to the following error shown below
 
 ```shell
 dyld: lazy symbol binding failed: Symbol not found: __ZN2v87Isolate37AdjustAmountOfExternalAllocatedMemoryEx
@@ -479,7 +479,7 @@ dyld: lazy symbol binding failed: Symbol not found: __ZN2v87Isolate37AdjustAmoun
   Expected in: flat namespace
 
 dyld: Symbol not found: __ZN2v87Isolate37AdjustAmountOfExternalAllocatedMemoryEx
-  Referenced from: <user_path>/PURPLE_HATS/purple-hats/node_modules/libxmljs/build/Release/xmljs.node
+  Referenced from: <user_path>/PURPLE_A11y/purple-hats/node_modules/libxmljs/build/Release/xmljs.node
   Expected in: flat namespace
 
 zsh: abort      node index.js
@@ -502,6 +502,6 @@ To do this, run CLI mode `node cli.js` with the needed settings and specify `-p 
 
 ## Additional Information on Data
 
-Purple HATS uses third-party open-source tools that may be downloaded over the Internet during the installation process of Purple HATS. Users should be aware of the libraries used by examining `package.json`.
+Purple A11y uses third-party open-source tools that may be downloaded over the Internet during the installation process of Purple A11y. Users should be aware of the libraries used by examining `package.json`.
 
-Purple HATS may send information to the website, URL and HTML code snippets where the user chooses to initiate a Purple HATS scan for telemetry purposes.
+Purple A11y may send information to the website, URL and HTML code snippets where the user chooses to initiate a Purple A11y scan for telemetry purposes.

@@ -31,7 +31,7 @@ if ! [ -f nodejs-mac-x64/bin/node ]; then
   rm node-*-darwin-x64.tar.gz
 fi
 
-export CORRETTO_BASEDIR="$HOME/Library/Application Support/Purple HATS"
+export CORRETTO_BASEDIR="$HOME/Library/Application Support/Purple A11y"
 mkdir -p "$CORRETTO_BASEDIR" 
 
 echo "INFO: Set path to Corretto-11 JDK"
@@ -73,7 +73,7 @@ if [ -d "/Applications/Cloudflare WARP.app" ]; then
   export NODE_EXTRA_CA_CERTS="/tmp/Cloudflare_CA.pem"
 fi
 
-source "${__dir}/hats_shell.sh"
+source "${__dir}/a11y_shell.sh"
 
 if ! [ -f package.json ] && [ -d purple-hats ]; then
   cd purple-hats

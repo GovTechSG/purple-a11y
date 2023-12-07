@@ -467,11 +467,11 @@ const waitForCaptcha = async (page, captchaLocator) => {
   //   : block2Code + `\n});`
 
   let tmpDir;
-  const appPrefix = 'purple-hats';
+  const appPrefix = 'purple-a11y';
 
   let customFlowScripts = './custom_flow_scripts';
   // if (process.env.RUNNING_FROM_PH_GUI && os.platform() === 'darwin') {
-  //   customFlowScripts = './Purple HATS Backend/purple-hats/custom_flow_scripts';
+  //   customFlowScripts = './Purple A11y Backend/purple-hats/custom_flow_scripts';
   // } else {
   //   customFlowScripts = './custom_flow_scripts'
   // }

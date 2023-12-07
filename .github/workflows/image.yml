@@ -28,20 +28,20 @@ jobs:
 
       - name: Zip entire Purple folder (Windows)
         shell: pwsh
-        run: Compress-Archive -Path ${{github.workspace}}/* -DestinationPath purple-hats-portable-windows.zip
+        run: Compress-Archive -Path ${{github.workspace}}/* -DestinationPath purple-a11y-portable-windows.zip
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v3
         with:
-          name: purple-hats-portable-windows
-          path: ./purple-hats-portable-windows.zip
+          name: purple-a11y-portable-windows
+          path: ./purple-a11y-portable-windows.zip
 
       - name: Release Windows artifact
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            purple-hats-portable-windows.zip
+            purple-a11y-portable-windows.zip
             
   mac-install-purple:
     runs-on: self-hosted
@@ -93,17 +93,17 @@ jobs:
         
       - name: Zip entire Purple folder (Mac)
         run: |
-          zip purple-hats-portable-mac.zip -y -r ./
+          zip purple-a11y-portable-mac.zip -y -r ./
       
       - name: Upload Mac artifact
         uses: actions/upload-artifact@v3
         with:
-          name: purple-hats-portable-mac
-          path: ./purple-hats-portable-mac.zip
+          name: purple-a11y-portable-mac
+          path: ./purple-a11y-portable-mac.zip
           
       - name: Release Mac artifact
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            purple-hats-portable-mac.zip
+            purple-a11y-portable-mac.zip

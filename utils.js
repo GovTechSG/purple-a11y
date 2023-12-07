@@ -53,12 +53,12 @@ export const createDetailsAndLogs = async (scanDetails, randomToken) => {
 export const getUserDataTxt = () => {
   const textFilePath =
     os.platform() === 'win32'
-      ? path.join(process.env.APPDATA, 'Purple HATS', 'userData.txt')
+      ? path.join(process.env.APPDATA, 'Purple A11y', 'userData.txt')
       : path.join(
           process.env.HOME,
           'Library',
           'Application Support',
-          'Purple HATS',
+          'Purple A11y',
           'userData.txt',
         );
   // check if textFilePath exists
@@ -72,12 +72,12 @@ export const getUserDataTxt = () => {
 export const writeToUserDataTxt = async (key, value) => {
   const textFilePath =
     os.platform() === 'win32'
-      ? path.join(process.env.APPDATA, 'Purple HATS', 'userData.txt')
+      ? path.join(process.env.APPDATA, 'Purple A11y', 'userData.txt')
       : path.join(
           process.env.HOME,
           'Library',
           'Application Support',
-          'Purple HATS',
+          'Purple A11y',
           'userData.txt',
         );
   // Create file if it doesn't exist

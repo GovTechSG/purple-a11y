@@ -270,7 +270,9 @@ const requestToUrl = async (url, isNewCustomFlow) => {
       res.status = constants.urlCheckStatuses.success.code;
 
       let modifiedHTML = response.data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
-      const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?([^"]*)"/i.exec(modifiedHTML);
+      const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?([^"]*)"/i.exec(
+        modifiedHTML,
+      );
       const hasMetaRefresh = metaRefreshMatch && metaRefreshMatch[1];
 
       if (redirectUrl != null && (hasMetaRefresh || !isNewCustomFlow)) {
@@ -292,7 +294,7 @@ const requestToUrl = async (url, isNewCustomFlow) => {
       res.content = response.data;
     })
     .catch(async error => {
-      if (error.code === 'ECONNABORTED' || error.code === 'ERR_FR_TOO_MANY_REDIRECTS' ) {
+      if (error.code === 'ECONNABORTED' || error.code === 'ERR_FR_TOO_MANY_REDIRECTS') {
         res.status = constants.urlCheckStatuses.axiosTimeout.code;
       } else if (error.response) {
         if (error.response.status === 401) {
@@ -335,7 +337,7 @@ const checkUrlConnectivityWithBrowser = async (
   browserToRun,
   clonedDataDir,
   playwrightDeviceDetailsObject,
-  isNewCustomFlow
+  isNewCustomFlow,
 ) => {
   const res = {};
 
@@ -449,7 +451,7 @@ export const checkUrl = async (
   browser,
   clonedDataDir,
   playwrightDeviceDetailsObject,
-  isNewCustomFlow
+  isNewCustomFlow,
 ) => {
   let res;
   if (proxy) {
@@ -458,7 +460,7 @@ export const checkUrl = async (
       browser,
       clonedDataDir,
       playwrightDeviceDetailsObject,
-      isNewCustomFlow
+      isNewCustomFlow,
     );
   } else {
     res = await checkUrlConnectivity(url, isNewCustomFlow);
@@ -469,7 +471,7 @@ export const checkUrl = async (
           browser,
           clonedDataDir,
           playwrightDeviceDetailsObject,
-          isNewCustomFlow
+          isNewCustomFlow,
         );
       }
     }
@@ -843,14 +845,14 @@ const cloneChromeProfileCookieFiles = (options, destDir) => {
   if (os.platform() === 'win32') {
     profileCookiesDir = globSync('**/Network/Cookies', {
       ...options,
-      ignore: ['Purple-HATS/**'],
+      ignore: ['Purple-A11y/**'],
     });
     profileNamesRegex = /User Data\\(.*?)\\Network/;
   } else if (os.platform() === 'darwin') {
-    // maxDepth 2 to avoid copying cookies from the Purple-HATS directory if it exists
+    // maxDepth 2 to avoid copying cookies from the Purple-A11y directory if it exists
     profileCookiesDir = globSync('**/Cookies', {
       ...options,
-      ignore: 'Purple-HATS/**',
+      ignore: 'Purple-A11y/**',
     });
     profileNamesRegex = /Chrome\/(.*?)\/Cookies/;
   }
@@ -903,18 +905,18 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
   // Cookies file per profile is located in .../User Data/<profile name>/Network/Cookies for windows
   // and ../Chrome/<profile name>/Cookies for mac
   let profileNamesRegex;
-  // Ignores the cloned Purple-HATS directory if exists
+  // Ignores the cloned Purple-A11y directory if exists
   if (os.platform() === 'win32') {
     profileCookiesDir = globSync('**/Network/Cookies', {
       ...options,
-      ignore: 'Purple-HATS/**',
+      ignore: 'Purple-A11y/**',
     });
     profileNamesRegex = /User Data\\(.*?)\\Network/;
   } else if (os.platform() === 'darwin') {
-    // Ignores copying cookies from the Purple-HATS directory if it exists
+    // Ignores copying cookies from the Purple-A11y directory if it exists
     profileCookiesDir = globSync('**/Cookies', {
       ...options,
-      ignore: 'Purple-HATS/**',
+      ignore: 'Purple-A11y/**',
     });
     profileNamesRegex = /Microsoft Edge\/(.*?)\/Cookies/;
   }
@@ -987,7 +989,7 @@ const cloneLocalStateFile = (options, destDir) => {
 
 /**
  * Checks if the Chrome data directory exists and creates a clone
- * of all profile within the Purple-HATS directory located in the
+ * of all profile within the Purple-A11y directory located in the
  * .../User Data directory for Windows and
  * .../Chrome directory for Mac.
  * @param {string} randomToken - random token to append to the cloned directory
@@ -1003,9 +1005,9 @@ export const cloneChromeProfiles = randomToken => {
   let destDir;
 
   if (randomToken) {
-    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
+    destDir = path.join(baseDir, `Purple-A11y-${randomToken}`);
   } else {
-    destDir = path.join(baseDir, 'Purple-HATS');
+    destDir = path.join(baseDir, 'Purple-A11y');
   }
 
   if (fs.existsSync(destDir)) {
@@ -1032,7 +1034,7 @@ export const cloneChromeProfiles = randomToken => {
 
 /**
  * Checks if the Edge data directory exists and creates a clone
- * of all profile within the Purple-HATS directory located in the
+ * of all profile within the Purple-A11y directory located in the
  * .../User Data directory for Windows and
  * .../Microsoft Edge directory for Mac.
  * @param {string} randomToken - random token to append to the cloned directory
@@ -1048,9 +1050,9 @@ export const cloneEdgeProfiles = randomToken => {
   let destDir;
 
   if (randomToken) {
-    destDir = path.join(baseDir, `Purple-HATS-${randomToken}`);
+    destDir = path.join(baseDir, `Purple-A11y-${randomToken}`);
   } else {
-    destDir = path.join(baseDir, 'Purple-HATS');
+    destDir = path.join(baseDir, 'Purple-A11y');
   }
 
   if (fs.existsSync(destDir)) {
@@ -1087,7 +1089,7 @@ export const deleteClonedProfiles = browser => {
 };
 
 /**
- * Deletes all the cloned Purple-HATS directories in the Chrome data directory
+ * Deletes all the cloned Purple-A11y directories in the Chrome data directory
  * @returns null
  */
 export const deleteClonedChromeProfiles = () => {
@@ -1097,8 +1099,8 @@ export const deleteClonedChromeProfiles = () => {
     return;
   }
 
-  // Find all the Purple-HATS directories in the Chrome data directory
-  const destDir = globSync('**/Purple-HATS*', {
+  // Find all the Purple-A11y directories in the Chrome data directory
+  const destDir = globSync('**/Purple-A11y*', {
     cwd: baseDir,
     recursive: true,
     absolute: true,
@@ -1118,12 +1120,12 @@ export const deleteClonedChromeProfiles = () => {
     return;
   }
 
-  silentLogger.warn('Unable to find Purple-HATS directory in the Chrome data directory.');
-  console.warn('Unable to find Purple-HATS directory in the Chrome data directory.');
+  silentLogger.warn('Unable to find Purple-A11y directory in the Chrome data directory.');
+  console.warn('Unable to find Purple-A11y directory in the Chrome data directory.');
 };
 
 /**
- * Deletes all the cloned Purple-HATS directories in the Edge data directory
+ * Deletes all the cloned Purple-A11y directories in the Edge data directory
  * @returns null
  */
 export const deleteClonedEdgeProfiles = () => {
@@ -1134,8 +1136,8 @@ export const deleteClonedEdgeProfiles = () => {
     return;
   }
 
-  // Find all the Purple-HATS directories in the Chrome data directory
-  const destDir = globSync('**/Purple-HATS*', {
+  // Find all the Purple-A11y directories in the Chrome data directory
+  const destDir = globSync('**/Purple-A11y*', {
     cwd: baseDir,
     recursive: true,
     absolute: true,

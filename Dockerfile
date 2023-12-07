@@ -1,7 +1,7 @@
 # Use Node LTS alpine distribution
 FROM node:lts-alpine
 
-# Installation of packages for purple-hats and chromium
+# Installation of packages for purple-a11y and chromium
 RUN apk add build-base gcompat g++ make python3 zip bash git chromium openjdk11-jre
 
 # Installation of VeraPDF
@@ -28,7 +28,7 @@ RUN latest_version=$(ls -d /opt/verapdf-greenfield-* | sort -V | tail -n 1) && [
     "$latest_version/verapdf-install" "/opt/verapdf-auto-install-docker.xml"
 RUN rm -rf /opt/verapdf-installer.zip /opt/verapdf-greenfield-*
 
-# Set purple-hats directory
+# Set purple-a11y directory
 WORKDIR /app
 
 # Copy package.json to working directory, perform npm install before copying the remaining files
