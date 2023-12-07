@@ -203,9 +203,9 @@ export const updateMenu = async (page, urlsCrawled) => {
   log(`Overlay menu: updating: ${page.url()}`);
   await page.evaluate(
     vars => {
-      const shadowHost = document.querySelector('#purple-hats-shadow-host');
+      const shadowHost = document.querySelector('#purple-a11y-shadow-host');
       if (shadowHost) {
-        const p = shadowHost.shadowRoot.querySelector('#purple-hats-p-pages-scanned');
+        const p = shadowHost.shadowRoot.querySelector('#purple-a11y-p-pages-scanned');
         if (p) {
           p.innerText = `Pages Scanned: ${vars.urlsCrawled.scanned.length || 0}`;
         }
@@ -225,7 +225,7 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
     .evaluate(
       async vars => {
         const menu = document.createElement('div');
-        menu.className = 'purple-hats-menu';
+        menu.className = 'purple-a11y-menu';
         if (vars.menuPos === vars.MENU_POSITION.top) {
           menu.style.top = '0';
         } else {
@@ -271,7 +271,7 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
         });
 
         const p = document.createElement('p');
-        p.id = 'purple-hats-p-pages-scanned';
+        p.id = 'purple-a11y-p-pages-scanned';
         p.innerText = `Pages Scanned: ${vars.urlsCrawled.scanned.length || 0}`;
 
         const button = document.createElement('button');
@@ -286,7 +286,7 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
         const sheet = new CSSStyleSheet();
         // TODO: separate out into css file if this gets too big
         sheet.replaceSync(`
-        .purple-hats-menu {
+        .purple-a11y-menu {
           position: fixed;
           left: 0;
           width: 100%;
@@ -300,7 +300,7 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
           color: #fff;
         }
         
-        .purple-hats-menu button {
+        .purple-a11y-menu button {
           background-color: #785ef0;
           color: #fff;
           border: none;
@@ -312,7 +312,7 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
 
         // shadow dom used to avoid styling from page
         const shadowHost = document.createElement('div');
-        shadowHost.id = 'purple-hats-shadow-host';
+        shadowHost.id = 'purple-a11y-shadow-host';
         const shadowRoot = shadowHost.attachShadow({ mode: 'open' });
 
         shadowRoot.adoptedStyleSheets = [sheet];
@@ -334,7 +334,7 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
 export const removeOverlayMenu = async page => {
   await page
     .evaluate(() => {
-      const existingOverlay = document.querySelector('#purple-hats-shadow-host');
+      const existingOverlay = document.querySelector('#purple-a11y-shadow-host');
       if (existingOverlay) {
         existingOverlay.remove();
         return true;
