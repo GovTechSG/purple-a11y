@@ -76,10 +76,10 @@ PS C:\Users\username\Downloads\purple-a11y-portable-windows\purple-hats> node in
 
 #### Download Portable Copy
  * Download and extract [purple-a11y-portable-mac.zip](https://github.com/GovTechSG/purple-hats/releases/latest/download/purple-a11y-portable-mac.zip) version.
- * Tip: To extract files in Mac, double-click on `purple-a11y-portable-mac.zip` file, usually located at your Downloads folder. A new folder with the name `purple-a11y-mac` will appear in Finder.
+ * Tip: To extract files in Mac, double-click on `purple-a11y-portable-mac.zip` file, usually located at your Downloads folder. A new folder with the name `purple-a11y-portable-mac` will appear in Finder.
 
 #### Run Purple A11y
- * Navigate to the folder `purple-a11y-mac`, usually located at your Downloads folder.
+ * Navigate to the folder `purple-a11y-portable-mac`, usually located at your Downloads folder.
  * Right-click `a11y_shell.command`. Then click `Open` in the context menu.
   <img width="480" alt="Screenshot of right-click a11y_shell.command and Open" src="https://github.com/GovTechSG/purple-hats/assets/152410523/15a0f577-c8c4-43e2-9c9d-ca4b960b8874">
 
