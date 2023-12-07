@@ -1,8 +1,8 @@
 # Purple A11y
 
-Purple A11y is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).
+[Purple A11y](https://go.gov.sg/purple-a11y-cli) is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).
 
-This is the engine and command-line interface (CLI) for Purple A11y.  For a desktop graphical user interface (GUI), check out [Purple A11y Desktop](https://github.com/GovTechSG/purple-hats-desktop).
+This is the engine and command-line interface (CLI) for Purple A11y.  For a desktop graphical user interface (GUI), check out [Purple A11y Desktop](https://go.gov.sg/purple-a11y).
 
 ## Technology Stack
 
