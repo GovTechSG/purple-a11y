@@ -20,9 +20,9 @@ Purple A11y is a customisable, automated accessibility testing tool that allows 
 * Tip: To extract files, right-click the Compressed zip file and click "Extract All…" in the context menu.
 
 #### Run Purple A11y
- * Navigate to the folder containing purple-a11y-portable.
+ * Navigate to the folder containing purple-a11y-portable-windows.
  * Double-click `a11y_shell.cmd` (Windows Command Script file).
-  <img width="480" alt="Screenshot of Windows Explorer with a11y_shell.cmd selected" src="https://user-images.githubusercontent.com/2021525/225506018-9f7a6684-ac14-4a69-a4f2-4d1a67a068c4.png">
+  <img width="480" alt="Screenshot of Windows Explorer with a11y_shell.cmd selected" src="https://github.com/GovTechSG/purple-hats/assets/50561219/872c9fce-0d7f-405d-b6b6-c8a196c3e81a">
 
  * A Windows Command Prompt window should open with contents as illustrated below. `a11y_shell` will automatically prepare your system to run Purple a11y.
 ```
@@ -42,13 +42,13 @@ PS C:\Users\username\Downloads\purple-a11y-portable-windows>
 ```
 
 
- * Type in the following commands into the window.  The following commands will navigate your Command Prompt window to the `purple-a11y` sub-directory and initiate a scan
+ * Type in the following commands into the window.  The following commands will navigate your Command Prompt window to the `purple-hats` sub-directory and initiate a scan
 ```
 cd purple-hats
 node index
 ```
  * If a Windows Firewall prompt appears, click "Allow access"
-<img width="261" alt="Windows Firewall prompt for Allow access" src="https://user-images.githubusercontent.com/2021525/208462360-ae9e1e3d-beca-4b78-af40-4126719432f0.png">
+<img width="261" alt="Windows Firewall prompt for Allow access" src="https://github.com/GovTechSG/purple-hats/assets/50561219/4ece401b-1195-4a90-a327-243c081690b9">
 
  * You should then see your Windows Command Prompt window updated with the following contents
 ```
