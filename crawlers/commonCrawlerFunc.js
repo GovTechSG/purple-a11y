@@ -36,9 +36,13 @@ export const filterAxeResults = (needsReview, results, pageTitle, customFlowDeta
 
     const addTo = (category, node) => {
       const { html, failureSummary, screenshotPath, target } = node;
+      //add it here - delete later
+      console.log(node.impact);
       if (!(rule in category.rules)) {
-        category.rules[rule] = { description, helpUrl, conformance, totalItems: 0, items: [] };
+        category.rules[rule] = {description, helpUrl, conformance, totalItems: 0, items: [] };
       }
+      console.log(category.rules[rule]);
+      return;
       const message = displayNeedsReview
         ? failureSummary.slice(failureSummary.indexOf('\n') + 1).trim()
         : failureSummary;

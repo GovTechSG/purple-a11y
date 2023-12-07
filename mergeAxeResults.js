@@ -94,6 +94,7 @@ const writeCsv = async (allIssues, storagePath) => {
         return compareCategory === 0 ? a[1].rule.localeCompare(b[1].rule) : compareCategory;
       });
   };
+  //seems to go into 
   const flattenRule = catAndRule => {
     const [severity, rule] = catAndRule;
     const results = [];
