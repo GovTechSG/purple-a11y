@@ -76,7 +76,6 @@ const writeCsv = async (allIssues, storagePath) => {
     if (pageNum < 0) return 'Document';
     return `Page ${pageNum}`;
   };
-  console.log(allIssues.items.mustFix.rules);
 
   // transform allIssues into the form:
   // [['mustFix', rule1], ['mustFix', rule2], ['goodToFix', rule3], ...]
@@ -126,15 +125,15 @@ const writeCsv = async (allIssues, storagePath) => {
 
         results.push({
           severity,
-          axeImpact,
           issueId,
           issueDescription,
           wcagConformance,
           url,
           context,
           howToFix,
-          learnMore,
+          axeImpact,
           xpath,
+          learnMore,
         });
       });
     }
@@ -145,15 +144,15 @@ const writeCsv = async (allIssues, storagePath) => {
     transforms: [getRulesByCategory, flattenRule],
     fields: [
       'severity',
-      'axeImpact',
       'issueId',
       'issueDescription',
       'wcagConformance',
       'url',
       'context',
       'howToFix',
-      'learnMore',
+      'axeImpact',
       'xpath',
+      'learnMore',
     ],
     includeEmptyRows: true,
   };
