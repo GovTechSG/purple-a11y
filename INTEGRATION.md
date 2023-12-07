@@ -18,19 +18,19 @@ In order to use this functionality, the testing framework must support:
 
 2. In the file of choice, import Purple A11y using:
 
-   `import purpleHatsInit from '@govtechsg/purple-hats'`
+   `import purpleA11yInit from '@govtechsg/purple-hats'`
 
    Note that Purple A11y should be imported in a script that runs in a NodeJS environment.
 
 3. Create an instance of Purple A11y with:
 
-   `const ph = await purpleHatsInit(entryUrl)`
+   `const ph = await purpleA11yInit(entryUrl)`
 
    `entryUrl` should be a valid URL referring to the domain of the website to be scanned with Purple A11y.
 
 ### API Reference
 
-#### `async purpleHatsInit(entryUrl, testLabel, name, email, needsReview, includeScreenshots, viewportSettings, thresholds, scanAboutMetadata)`
+#### `async purpleA11yInit(entryUrl, testLabel, name, email, needsReview, includeScreenshots, viewportSettings, thresholds, scanAboutMetadata)`
 
 Returns an instance of Purple A11y
 
@@ -159,7 +159,7 @@ Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm i
 Create <code>cypress.config.js</code> with the following contents, and change your Name, E-mail address, and boolean value for whether rule items requiring manual review in the report should be displayed below:
 
     import { defineConfig } from "cypress";
-    import purpleHatsInit from "@govtechsg/purple-hats";
+    import purpleA11yInit from "@govtechsg/purple-hats";
 
     // viewport used in tests to optimise screenshots
     const viewportSettings = { width: 1920, height: 1040 };
@@ -168,7 +168,7 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
     // additional information to include in the "Scan About" section of the report
     const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
 
-    const ph = await purpleHatsInit(
+    const ph = await purpleA11yInit(
         "https://govtechsg.github.io", // initial url to start scan
         "Demo Cypress Scan", // label for test
         "Your Name",
@@ -277,7 +277,7 @@ Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm i
 On your project's root folder, create a Playwright test file <code>ph-playwright-demo.js</code>:
 
     import { chromium } from "playwright";
-    import purpleHatsInit from "@govtechsg/purple-hats";
+    import purpleA11yInit from "@govtechsg/purple-hats";
 
     // viewport used in tests to optimise screenshots
     const viewportSettings = { width: 1920, height: 1040 };
@@ -286,7 +286,7 @@ On your project's root folder, create a Playwright test file <code>ph-playwright
     // additional information to include in the "Scan About" section of the report
     const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
 
-    const ph = await purpleHatsInit(
+    const ph = await purpleA11yInit(
         "https://govtechsg.github.io", // initial url to start scan
         "Demo Playwright Scan", // label for test
         "Your Name",
