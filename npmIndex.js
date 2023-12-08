@@ -32,7 +32,7 @@ export const init = async (
   thresholds = {}, 
   scanAboutMetadata = undefined, 
 ) => {
-  console.log('Starting Purple HATS');
+  console.log('Starting Purple A11y');
 
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
   const domain = new URL(entryUrl).hostname;
@@ -68,7 +68,7 @@ export const init = async (
 
   const throwErrorIfTerminated = () => {
     if (isInstanceTerminated) {
-      throw new Error('This instance of Purple HATS was terminated. Please start a new instance.');
+      throw new Error('This instance of Purple A11y was terminated. Please start a new instance.');
     }
   };
 
@@ -81,7 +81,7 @@ export const init = async (
     async function runA11yScan(elementsToScan = []) {
       axe.configure({
         branding: {
-          application: 'purple-hats',
+          application: 'purple-a11y',
         },
       });
       const axeScanResults = await axe.run(elementsToScan, {
@@ -165,7 +165,7 @@ export const init = async (
 
   const terminate = async () => {
     throwErrorIfTerminated();
-    console.log('Stopping Purple HATS');
+    console.log('Stopping Purple A11y');
     isInstanceTerminated = true;
     scanDetails.endTime = new Date().getTime();
     scanDetails.urlsCrawled = urlsCrawled;

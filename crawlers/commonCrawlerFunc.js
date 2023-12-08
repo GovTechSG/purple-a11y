@@ -127,7 +127,7 @@ export const runAxeScript = async (
 
       axe.configure({
         branding: {
-          application: 'purple-hats',
+          application: 'purple-a11y',
         },
       });
 

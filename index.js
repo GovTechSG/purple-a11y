@@ -82,7 +82,7 @@ const userData = getUserDataTxt();
 if (userData) {
   printMessage(
     [
-      `Purple HATS (ver ${getVersion()})`,
+      `Purple A11y (ver ${getVersion()})`,
       'We recommend using Chrome browser for the best experience.',
       '',
       `Welcome back ${userData.name}!`,
@@ -101,7 +101,7 @@ if (userData) {
 } else {
   printMessage(
     [
-      `Purple HATS (ver ${getVersion()})`,
+      `Purple A11y (ver ${getVersion()})`,
       'We recommend using Chrome browser for the best experience.',
     ],
     {

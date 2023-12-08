@@ -1,7 +1,7 @@
 {
   "name": "@govtechsg/purple-hats",
   "main": "npmIndex.js",
-  "version": "0.9.36",
+  "version": "0.9.38",
   "type": "module",
   "imports": {
     "#root/*.js": "./*.js"
@@ -47,7 +47,7 @@
   },
   "author": "",
   "license": "MIT",
-  "description": "Purple HATS is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).",
+  "description": "Purple A11y is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/GovTechSG/purple-hats-dev.git"

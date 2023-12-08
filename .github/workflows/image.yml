@@ -13,13 +13,13 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
-          path: purple-hats
+          path: purple-a11y
 
       - name: Copy scripts to parent directory
         run: |
-          cp ${{github.workspace}}/purple-hats/scripts/*.ps1 ${{github.workspace}}
-          cp ${{github.workspace}}/purple-hats/scripts/*.cmd ${{github.workspace}}      
-          cp ${{github.workspace}}/purple-hats/scripts/*.xml ${{github.workspace}}  
+          cp ${{github.workspace}}/purple-a11y/scripts/*.ps1 ${{github.workspace}}
+          cp ${{github.workspace}}/purple-a11y/scripts/*.cmd ${{github.workspace}}      
+          cp ${{github.workspace}}/purple-a11y/scripts/*.xml ${{github.workspace}}  
           
       - name: Install Purple dependencies for Windows
         shell: pwsh
@@ -28,20 +28,20 @@ jobs:
 
       - name: Zip entire Purple folder (Windows)
         shell: pwsh
-        run: Compress-Archive -Path ${{github.workspace}}/* -DestinationPath purple-hats-portable-windows.zip
+        run: Compress-Archive -Path ${{github.workspace}}/* -DestinationPath purple-a11y-portable-windows.zip
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v3
         with:
-          name: purple-hats-portable-windows
-          path: ./purple-hats-portable-windows.zip
+          name: purple-a11y-portable-windows
+          path: ./purple-a11y-portable-windows.zip
 
       - name: Release Windows artifact
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            purple-hats-portable-windows.zip
+            purple-a11y-portable-windows.zip
             
   mac-install-purple:
     runs-on: self-hosted
@@ -56,15 +56,15 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
-          path: purple-hats
+          path: purple-a11y
       
       - name: Grant execute permissions for user
         run: chmod ugo+rwx ./scripts/*.command ./scripts/*.sh
-        working-directory: purple-hats
+        working-directory: purple-a11y
 
       - name: Copy scripts to parent directory
         run: |
-          cp ./purple-hats/scripts/{*.command,*.sh,*.xml}  ${{ github.workspace }}
+          cp ./purple-a11y/scripts/{*.command,*.sh,*.xml}  ${{ github.workspace }}
 
       - name: Install Purple dependencies for MacOS
         run: |
@@ -77,8 +77,8 @@ jobs:
           
           # Paths to the binaries you want to sign
           BINARIES=(
-            "./purple-hats/node_modules/playwright/node_modules/fsevents/fsevents.node"
-            "./purple-hats/node_modules/fsevents/fsevents.node"
+            "./purple-a11y/node_modules/playwright/node_modules/fsevents/fsevents.node"
+            "./purple-a11y/node_modules/fsevents/fsevents.node"
           )
 
           # Loop through the binary paths and sign each one with a secure timestamp
@@ -93,17 +93,17 @@ jobs:
         
       - name: Zip entire Purple folder (Mac)
         run: |
-          zip purple-hats-portable-mac.zip -y -r ./
+          zip purple-a11y-portable-mac.zip -y -r ./
       
       - name: Upload Mac artifact
         uses: actions/upload-artifact@v3
         with:
-          name: purple-hats-portable-mac
-          path: ./purple-hats-portable-mac.zip
+          name: purple-a11y-portable-mac
+          path: ./purple-a11y-portable-mac.zip
           
       - name: Release Mac artifact
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            purple-hats-portable-mac.zip
+            purple-a11y-portable-mac.zip

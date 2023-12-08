@@ -37,7 +37,7 @@ const yargs = _yargs(hideBin(process.argv));
 const options = yargs
   .version(false)
   .usage(
-    `Purple HATS version: ${appVersion}
+    `Purple A11y version: ${appVersion}
 Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   )
   .strictOptions(true)
@@ -360,7 +360,7 @@ const scanInit = async argvs => {
   clonedDataDir = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
   data.userDataDirectory = clonedDataDir;
 
-  printMessage([`Purple HATS version: ${appVersion}`, 'Starting scan...'], messageOptions);
+  printMessage([`Purple A11y version: ${appVersion}`, 'Starting scan...'], messageOptions);
 
   if (argvs.scanner === constants.scannerTypes.custom && !isNewCustomFlow) {
     try {

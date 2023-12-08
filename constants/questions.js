@@ -27,7 +27,7 @@ const startScanQuestions = [
   {
     type: 'confirm',
     name: 'headless',
-    message: 'Do you want purple-hats to run in the background?',
+    message: 'Do you want purple-a11y to run in the background?',
     choices: ['Yes', 'No'],
   },
   {
