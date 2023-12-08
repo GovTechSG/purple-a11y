@@ -471,7 +471,7 @@ const waitForCaptcha = async (page, captchaLocator) => {
 
   let customFlowScripts = './custom_flow_scripts';
   // if (process.env.RUNNING_FROM_PH_GUI && os.platform() === 'darwin') {
-  //   customFlowScripts = './Purple A11y Backend/purple-hats/custom_flow_scripts';
+  //   customFlowScripts = './Purple A11y Backend/purple-a11y/custom_flow_scripts';
   // } else {
   //   customFlowScripts = './custom_flow_scripts'
   // }

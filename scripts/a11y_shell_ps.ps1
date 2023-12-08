@@ -29,15 +29,15 @@ $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 echo "INFO: Set path to VeraPDF for this session"
 $env:Path = "$path_to_hats\verapdf;$env:Path"
 
-if (Test-Path purple-hats) {
-   echo "INFO: Set path to purple-hats for this session"
-	$env:Path = "$path_to_hats\purple-hats;$env:Path"	
+if (Test-Path purple-a11y) {
+   echo "INFO: Set path to purple-a11y for this session"
+	$env:Path = "$path_to_hats\purple-a11y;$env:Path"	
 } else {
     if (Test-Path package.json) {
-    	echo "INFO: Set path to purple-hats for this session"
+    	echo "INFO: Set path to purple-a11y for this session"
 	$env:Path = "$path_to_hats;$env:Path"	
     } else {
-        Write-Output "Could not find purple-hats"
+        Write-Output "Could not find purple-a11y"
     }
 }
 
