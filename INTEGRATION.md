@@ -187,20 +187,20 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
         e2e: {
             setupNodeEvents(on, _config) {
                 on("task", {
-                    getPhScripts() {
+                    getPurpleA11yScipts() {
                         return purpleA11y.getScripts();
                     },
-                    async pushPhScanResults({res, metadata, elementsToClick}) {
+                    async pushPurpleA11yScanResults({res, metadata, elementsToClick}) {
                         return await purpleA11y.pushScanResults(res, metadata, elementsToClick);
                     },
                     returnResultsDir() {
                         return `results/${purpleA11y.randomToken}_${purpleA11y.scanDetails.urlsCrawled.scanned.length}pages/reports/report.html`;
                     },
-                    finishPhTestCase() {
+                    finishPurpleA11yTestCase() {
                         purpleA11y.testThresholdsAndReset();
                         return null;
                     },
-                    async terminatePh() {
+                    async terminatePurpleA11y() {
                         return await purpleA11y.terminate();
                     },
                 });
@@ -210,28 +210,28 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
 
 Create a sub-folder and file <code>cypress/support/e2e.js</code> with the following contents::
 
-    Cypress.Commands.add("injectPhScripts", () => {
-        cy.task("getPhScripts").then((s) => {
+    Cypress.Commands.add("injectPurpleA11yScripts", () => {
+        cy.task("getPurpleA11yScipts").then((s) => {
             cy.window().then((win) => {
                 win.eval(s);
             });
         });
     });
 
-    Cypress.Commands.add("runPhScan", (items={}) => {
+    Cypress.Commands.add("runPurpleA11yScan", (items={}) => {
         cy.window().then(async (win) => {
             const { elementsToScan, elementsToClick, metadata } = items; 
             const res = await win.runA11yScan(elementsToScan);
-            cy.task("pushPhScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
+            cy.task("pushPurpleA11yScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
         });
     });
 
-    Cypress.Commands.add("finishPhTestCase", () => {
-        cy.task("finishPhTestCase");
+    Cypress.Commands.add("finishPurpleA11yTestCase", () => {
+        cy.task("finishPurpleA11yTestCase");
     });
 
-    Cypress.Commands.add("terminatePh", () => {
-        cy.task("terminatePh");
+    Cypress.Commands.add("terminatePurpleA11y", () => {
+        cy.task("terminatePurpleA11y");
     });
 
 Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
@@ -241,19 +241,19 @@ Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
             cy.visit(
                 "https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm"
             );
-            cy.injectPhScripts();
-            cy.runPhScan();
+            cy.injectPurpleA11yScripts();
+            cy.runPurpleA11yScan();
              cy.get("button[onclick=\"toggleSecondSection()\"]").click();
             // Run a scan on <input> and <button> elements
-            cy.runPhScan({
+            cy.runPurpleA11yScan({
                 elementsToScan: ["input", "button"], 
                 elementsToClick: ["button[onclick=\"toggleSecondSection()\"]"],
                 metadata: "Clicked button"
             });
 
-            cy.finishPhTestCase(); // test the number of issue occurrences against specified thresholds
+            cy.finishPurpleA11yTestCase(); // test the number of issue occurrences against specified thresholds
 
-            cy.terminatePh();
+            cy.terminatePurpleA11y();
         });
     });
 
@@ -305,7 +305,7 @@ On your project's root folder, create a Playwright test file <code>purpleA11y-pl
         const context = await browser.newContext();
         const page = await context.newPage();
 
-        const runPhScan = async (elementsToScan) => {
+        const runPurpleA11yScan = async (elementsToScan) => {
             const scanRes = await page.evaluate(
                 async elementsToScan => await runA11yScan(elementsToScan),
                 elementsToScan,
@@ -315,11 +315,11 @@ On your project's root folder, create a Playwright test file <code>purpleA11y-pl
 
         await page.goto('https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm');
         await page.evaluate(purpleA11y.getScripts());
-        await runPhScan();
+        await runPurpleA11yScan();
 
         await page.getByRole('button', { name: 'Click Me' }).click();
         // Run a scan on <input> and <button> elements
-        await runPhScan(['input', 'button'])
+        await runPurpleA11yScan(['input', 'button'])
 
         purpleA11y.testThresholdsAndReset(); // test the number of issue occurrences against specified thresholds
 
