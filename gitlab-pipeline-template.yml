@@ -4,7 +4,7 @@ variables:
   # A11Y_SCAN_TYPE: [choices: "sitemap", "website"]
   A11Y_SCAN_TYPE: "website"
   # A11Y_SCAN_DEVICE: "Desktop"
-  # A full list of devices is available at https://github.com/GovTechSG/purple-hats#mobile-device-options
+  # A full list of devices is available at https://github.com/GovTechSG/purple-a11y#mobile-device-options
   A11Y_SCAN_DEVICE: "Desktop"
   # A11Y_SCAN_MAX_NUM_PAGES: 100
   A11Y_SCAN_MAX_NUM_PAGES: 100
@@ -18,7 +18,7 @@ a11y-scan:
   tags:
     # - some tag
   image:
-    name: <some registry>/purple-hats:latest
+    name: <some registry>/purple-a11y:latest
     entrypoint: [ "/bin/bash", "-lc" ] 
   script:
     - cd /app

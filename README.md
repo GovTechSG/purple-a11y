@@ -434,7 +434,7 @@ node cli.js -c 2 -o a11y-scan-results.zip -u http://localhost:8000 -w 360
 ```
 
 ## Accessibility Scan Results
-For details on which accessibility scan results trigger "Must Fix" / "Good to Fix" findings, you may refer to [Scan Issue Details](https://github.com/GovTechSG/purple-hats/blob/master/DETAILS.md).
+For details on which accessibility scan results trigger "Must Fix" / "Good to Fix" findings, you may refer to [Scan Issue Details](https://github.com/GovTechSG/purple-a11y/blob/master/DETAILS.md).
 
 ## Troubleshooting
 
@@ -456,7 +456,7 @@ SyntaxError: Invalid regular expression: /https?://(www\.)?[\p{L}0-9][-\p{L}0-9@
 **Issue**: When you switch between different versions of Node.js in your environment, you may face the following error.
 
 ```shell
-<user_path>/purple-hats/node_modules/bindings/bindings.js:91
+<user_path>/purple-a11y/node_modules/bindings/bindings.js:91
         throw e
         ^
 
@@ -475,11 +475,11 @@ the module (for instance, using `npm rebuild` or `npm install`).
 
 ```shell
 dyld: lazy symbol binding failed: Symbol not found: __ZN2v87Isolate37AdjustAmountOfExternalAllocatedMemoryEx
-  Referenced from: <user_path>/purple-hats/node_modules/libxmljs/build/Release/xmljs.node
+  Referenced from: <user_path>/purple-a11y/node_modules/libxmljs/build/Release/xmljs.node
   Expected in: flat namespace
 
 dyld: Symbol not found: __ZN2v87Isolate37AdjustAmountOfExternalAllocatedMemoryEx
-  Referenced from: <user_path>/PURPLE_A11y/purple-hats/node_modules/libxmljs/build/Release/xmljs.node
+  Referenced from: <user_path>/PURPLE_A11y/purple-a11y/node_modules/libxmljs/build/Release/xmljs.node
   Expected in: flat namespace
 
 zsh: abort      node index.js

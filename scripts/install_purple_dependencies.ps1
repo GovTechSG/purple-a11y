@@ -62,17 +62,17 @@ if (Test-Path -Path .\jdk -PathType Container) {
 }
 
 # Install Node dependencies
-if (Test-Path purple-hats) {
+if (Test-Path purple-a11y) {
     Write-Output "Installing node dependencies"
-    & ".\a11y_shell_ps.ps1" "cd purple-hats;npm ci --force"
+    & ".\a11y_shell_ps.ps1" "cd purple-a11y;npm ci --force"
 
     # Omit installing Playwright browsers as it is not reuqired
     # Write-Output "Install Playwright browsers"
     # & ".\a11y_shell_ps.ps1" "npx playwright install chromium"
     
-    if (Test-Path purple-hats\.git) {
+    if (Test-Path purple-a11y\.git) {
         Write-Output "Unhide .git folder"
-        attrib -s -h purple-hats\.git
+        attrib -s -h purple-a11y\.git
     }
 
 } else {
@@ -91,6 +91,6 @@ if (Test-Path purple-hats) {
         }
 
     } else {
-        Write-Output "Could not find purple-hats"
+        Write-Output "Could not find purple-a11y"
     }
 }

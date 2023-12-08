@@ -31,8 +31,8 @@ fi
 export PATH="$PATH_TO_NODE:$PATH"
 
 echo "INFO: Set path to node_modules for this session"
-if find ./purple-hats -name "node_modules" -maxdepth 1 -type l -ls &> /dev/null; then
-    export PATH="$PWD/purple-hats/node_modules/.bin:$PATH"
+if find ./purple-a11y -name "node_modules" -maxdepth 1 -type l -ls &> /dev/null; then
+    export PATH="$PWD/purple-a11y/node_modules/.bin:$PATH"
 else
     export PATH="$PWD/node_modules/.bin:$PATH"
 fi

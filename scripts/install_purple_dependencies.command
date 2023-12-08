@@ -75,8 +75,8 @@ fi
 
 source "${__dir}/a11y_shell.sh"
 
-if ! [ -f package.json ] && [ -d purple-hats ]; then
-  cd purple-hats
+if ! [ -f package.json ] && [ -d purple-a11y ]; then
+  cd purple-a11y
 fi
 
 if [ -d "node_modules" ]; then
