@@ -24,7 +24,7 @@ In order to use this functionality, the testing framework must support:
 
 3. Create an instance of Purple A11y with:
 
-   `const ph = await purpleA11yInit(entryUrl)`
+   `const purpleA11y = await purpleA11yInit(entryUrl)`
 
    `entryUrl` should be a valid URL referring to the domain of the website to be scanned with Purple A11y.
 
@@ -41,9 +41,9 @@ Returns an instance of Purple A11y
 - `testLabel`
   - Label for test in report
 - `name`
-  - For PH data collection purposes
+  - For Purple A11y data collection purposes
 - `email`
-  - For PH data collection purposes
+  - For Purple A11y data collection purposes
 - `needsReview` (optional)
   - Show potential false positive issues in the report. Defaults to false.
 - `includeScreenshots` (optional)
@@ -114,18 +114,18 @@ Stops the Purple A11y instance and generates the scan report and other scan resu
 
 Example usages for Cypress and Playwright can be found in [this section](#example-usages).
 
-With reference to an instance of Purple A11y as `ph`:
+With reference to an instance of Purple A11y as `purpleA11y`:
 
-1. Fetch the necessary scripts needed to be injected to document to be scanned by executing `ph.getScripts()`. The scripts will be returned as a string.
+1. Fetch the necessary scripts needed to be injected to document to be scanned by executing `purpleA11y.getScripts()`. The scripts will be returned as a string.
 2. Inject the scripts into the document to be scanned. The easiest way that this can be done is by using `eval()` in the document's environment.
    - Note that this step needs to be done for every page visited.
 3. Run a scan by executing `runA11yScan()` in the document's environment.
    - By default, the scan will be run for the entire page.
    - It is possible to run the scan for specific sections or elements in the page. One way to do this is to pass an array of CSS selectors of the elements to be scanned into `runA11yScan`. For example, `runA11yScan(['#my-component', 'button'])`. Other acceptable forms of argument can be found [here](https://github.com/dequelabs/axe-core/blob/develop/doc/API.md#context-parameter).
-4. Pass the scan results back into the NodeJS environment where `ph` is in.
-5. Push the results using `await ph.pushScanResults(scanResults)`.
+4. Pass the scan results back into the NodeJS environment where `purpleA11y` is in.
+5. Push the results using `await purpleA11y.pushScanResults(scanResults)`.
 6. Repeat steps 2-5 as many times as desired.
-7. Terminate Purple A11y by using `await ph.terminate()`. A folder containing the details and report of your scan will be created, under the directory `results` which can be found in your project's root directory.
+7. Terminate Purple A11y by using `await purpleA11y.terminate()`. A folder containing the details and report of your scan will be created, under the directory `results` which can be found in your project's root directory.
 
 ### Example usages
 
@@ -168,7 +168,7 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
     // additional information to include in the "Scan About" section of the report
     const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
 
-    const ph = await purpleA11yInit(
+    const purpleA11y = await purpleA11yInit(
         "https://govtechsg.github.io", // initial url to start scan
         "Demo Cypress Scan", // label for test
         "Your Name",
@@ -188,20 +188,20 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
             setupNodeEvents(on, _config) {
                 on("task", {
                     getPhScripts() {
-                        return ph.getScripts();
+                        return purpleA11y.getScripts();
                     },
                     async pushPhScanResults({res, metadata, elementsToClick}) {
-                        return await ph.pushScanResults(res, metadata, elementsToClick);
+                        return await purpleA11y.pushScanResults(res, metadata, elementsToClick);
                     },
                     returnResultsDir() {
-                        return `results/${ph.randomToken}_${ph.scanDetails.urlsCrawled.scanned.length}pages/reports/report.html`;
+                        return `results/${purpleA11y.randomToken}_${purpleA11y.scanDetails.urlsCrawled.scanned.length}pages/reports/report.html`;
                     },
                     finishPhTestCase() {
-                        ph.testThresholdsAndReset();
+                        purpleA11y.testThresholdsAndReset();
                         return null;
                     },
                     async terminatePh() {
-                        return await ph.terminate();
+                        return await purpleA11y.terminate();
                     },
                 });
             },
@@ -274,7 +274,7 @@ Install the following node dependencies by running <code>npm install playwright 
 
 Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> within the folder to install remaining Purple A11y dependencies.
 
-On your project's root folder, create a Playwright test file <code>ph-playwright-demo.js</code>:
+On your project's root folder, create a Playwright test file <code>purpleA11y-playwright-demo.js</code>:
 
     import { chromium } from "playwright";
     import purpleA11yInit from "@govtechsg/purple-hats";
@@ -286,7 +286,7 @@ On your project's root folder, create a Playwright test file <code>ph-playwright
     // additional information to include in the "Scan About" section of the report
     const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
 
-    const ph = await purpleA11yInit(
+    const purpleA11y = await purpleA11yInit(
         "https://govtechsg.github.io", // initial url to start scan
         "Demo Playwright Scan", // label for test
         "Your Name",
@@ -310,26 +310,26 @@ On your project's root folder, create a Playwright test file <code>ph-playwright
                 async elementsToScan => await runA11yScan(elementsToScan),
                 elementsToScan,
             );
-            await ph.pushScanResults(scanRes);
+            await purpleA11y.pushScanResults(scanRes);
         };
 
         await page.goto('https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm');
-        await page.evaluate(ph.getScripts());
+        await page.evaluate(purpleA11y.getScripts());
         await runPhScan();
 
         await page.getByRole('button', { name: 'Click Me' }).click();
         // Run a scan on <input> and <button> elements
         await runPhScan(['input', 'button'])
 
-        ph.testThresholdsAndReset(); // test the number of issue occurrences against specified thresholds
+        purpleA11y.testThresholdsAndReset(); // test the number of issue occurrences against specified thresholds
 
         // ---------------------
         await context.close();
         await browser.close();
-        await ph.terminate();
+        await purpleA11y.terminate();
     })();
 
-Run your test with <code>node ph-playwright-demo.js</code> .
+Run your test with <code>node purpleA11y-playwright-demo.js</code> .
 
 You will see Purple A11y results generated in <code>results</code> folder.
 
