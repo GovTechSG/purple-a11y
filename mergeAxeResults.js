@@ -14,6 +14,7 @@ import { chromium } from 'playwright';
 import { createWriteStream } from 'fs';
 import { AsyncParser } from '@json2csv/node';
 import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
+import { all } from 'axios';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -94,12 +95,14 @@ const writeCsv = async (allIssues, storagePath) => {
         return compareCategory === 0 ? a[1].rule.localeCompare(b[1].rule) : compareCategory;
       });
   };
+  //seems to go into 
   const flattenRule = catAndRule => {
     const [severity, rule] = catAndRule;
     const results = [];
     const {
       rule: issueId,
       description: issueDescription,
+      axeImpact,
       conformance,
       pagesAffected,
       helpUrl: learnMore,
@@ -114,12 +117,12 @@ const writeCsv = async (allIssues, storagePath) => {
     for (let page of pagesAffected) {
       const { url, items } = page;
       items.forEach(item => {
-        const { html, page, message } = item;
+        const {html, page, message, xpath } = item;
         const howToFix = message.replace(/(\r\n|\n|\r)/g, ' '); // remove newlines
-
         // page is a number, not string
         const violation = html ? html : formatPageViolation(page);
         const context = violation.replace(/(\r\n|\n|\r)/g, ''); // remove newlines
+
         results.push({
           severity,
           issueId,
@@ -128,6 +131,8 @@ const writeCsv = async (allIssues, storagePath) => {
           url,
           context,
           howToFix,
+          axeImpact,
+          xpath,
           learnMore,
         });
       });
@@ -145,6 +150,8 @@ const writeCsv = async (allIssues, storagePath) => {
       'url',
       'context',
       'howToFix',
+      'axeImpact',
+      'xpath',
       'learnMore',
     ],
     includeEmptyRows: true,
@@ -241,11 +248,11 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
     currCategoryFromAllIssues.totalItems += totalItems;
 
     Object.keys(rules).forEach(rule => {
-      const { description, helpUrl, conformance, totalItems: count, items } = rules[rule];
-
+      const { description, axeImpact, helpUrl, conformance, totalItems: count, items } = rules[rule];
       if (!(rule in currCategoryFromAllIssues.rules)) {
-        currCategoryFromAllIssues.rules[rule] = {
+        currCategoryFromAllIssues.rules[rule] = { 
           description,
+          axeImpact,
           helpUrl,
           conformance,
           totalItems: 0,
@@ -352,7 +359,6 @@ const createRuleIdJson = allIssues => {
 
   allIssues.items.mustFix.rules.forEach(ruleIterator);
   allIssues.items.goodToFix.rules.forEach(ruleIterator);
-
   return compiledRuleJson;
 };
 

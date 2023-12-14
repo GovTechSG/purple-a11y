@@ -36,8 +36,9 @@ export const filterAxeResults = (needsReview, results, pageTitle, customFlowDeta
 
     const addTo = (category, node) => {
       const { html, failureSummary, screenshotPath, target } = node;
+      const axeImpact = node.impact;
       if (!(rule in category.rules)) {
-        category.rules[rule] = { description, helpUrl, conformance, totalItems: 0, items: [] };
+        category.rules[rule] = {description,axeImpact, helpUrl, conformance, totalItems: 0, items: [] };
       }
       const message = displayNeedsReview
         ? failureSummary.slice(failureSummary.indexOf('\n') + 1).trim()
@@ -79,7 +80,7 @@ export const filterAxeResults = (needsReview, results, pageTitle, customFlowDeta
   }
 
   passes.forEach(item => {
-    const { id: rule, help: description, helpUrl, tags, nodes } = item;
+    const { id: rule, help: description, axeImpact, helpUrl, tags, nodes } = item;
 
     if (rule === 'frame-tested') return;
 
@@ -88,7 +89,7 @@ export const filterAxeResults = (needsReview, results, pageTitle, customFlowDeta
     nodes.forEach(node => {
       const { html } = node;
       if (!(rule in passed.rules)) {
-        passed.rules[rule] = { description, helpUrl, conformance, totalItems: 0, items: [] };
+        passed.rules[rule] = { description,axeImpact, helpUrl, conformance, totalItems: 0, items: [] };
       }
       passed.rules[rule].items.push({ html });
       passed.totalItems += 1;
