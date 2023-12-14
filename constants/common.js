@@ -528,6 +528,7 @@ export const prepareData = argv => {
   return {
     type: scanner,
     url: finalUrl,
+    entryUrl: url,
     isHeadless: headless,
     deviceChosen,
     customDevice,
@@ -1231,23 +1232,37 @@ export const submitFormViaPlaywright = async (browserToRun, userDataDirectory, f
 export const submitForm = async (
   browserToRun,
   userDataDirectory,
-  websiteUrl,
+  scannedUrl,
+  entryUrl,
   scanType,
   email,
   name,
   scanResultsJson,
   numberOfPagesScanned,
+  numberOfRedirectsScanned,
+  numberOfPagesNotScanned,
   metadata,
 ) => {
-  const finalUrl =
+
+  const addtionalPageDataJson = JSON.stringify({
+    redirectsScanned: numberOfRedirectsScanned, 
+    pagesNotScanned: numberOfPagesNotScanned
+  })
+
+  let finalUrl =
     `${formDataFields.formUrl}?` +
-    `${formDataFields.websiteUrlField}=${websiteUrl}&` +
+    `${formDataFields.entryUrlField}=${entryUrl}&` +
     `${formDataFields.scanTypeField}=${scanType}&` +
     `${formDataFields.emailField}=${email}&` +
     `${formDataFields.nameField}=${name}&` +
     `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}&` +
     `${formDataFields.numberOfPagesScannedField}=${numberOfPagesScanned}&` +
+    `${formDataFields.additionalPageDataField}=${encodeURIComponent(addtionalPageDataJson)}&` + 
     `${formDataFields.metadataField}=${encodeURIComponent(metadata)}`;
+
+  if (scannedUrl !== entryUrl) {
+    finalUrl += `&${formDataFields.redirectUrlField}=${scannedUrl}`;
+  }
 
   if (proxy) {
     await submitFormViaPlaywright(browserToRun, userDataDirectory, finalUrl);

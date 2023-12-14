@@ -53,15 +53,16 @@ const crawlDomain = async (
   }
 
   let finalUrl;
-  let pagesCrawled;
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth = false;
+  let basicAuthPage = 0;
+
   /**
    * Regex to match http://username:password@hostname.com
    * utilised in scan strategy to ensure subsequent URLs within the same domain are scanned.
    * First time scan with original `url` containing credentials is strictly to authenticate for browser session
    * subsequent URLs are without credentials.
-   * pagesCrawled is set to -1 for basic auth URL to ensure it is not counted towards maxRequestsPerCrawl
+   * basicAuthPage is set to -1 for basic auth URL to ensure it is not counted towards maxRequestsPerCrawl
    */
 
   if (basicAuthRegex.test(url)) {
@@ -72,10 +73,10 @@ const crawlDomain = async (
     // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
     finalUrl = `${url.split('://')[0]}://${url.split('@')[1]}`;
     await requestQueue.addRequest({ url: finalUrl, skipNavigation: isUrlPdf(finalUrl) });
-    pagesCrawled = -1;
+    basicAuthPage = -1;
   } else {
     await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
-    pagesCrawled = 0;
+    basicAuthPage = 0;
   }
 
   const enqueueProcess = async (page, enqueueLinks, enqueueLinksByClickingElements) => {
@@ -201,25 +202,27 @@ const crawlDomain = async (
     requestQueue,
     preNavigationHooks,
     requestHandler: async ({
+      browserController,
       page,
       request,
       response,
+      crawler,
       sendRequest,
       enqueueLinks,
       enqueueLinksByClickingElements,
     }) => {
       // loadedUrl is the URL after redirects
       const actualUrl = request.loadedUrl || request.url;
-
-      if (pagesCrawled === maxRequestsPerCrawl) {
-        urlsCrawled.exceededRequests.push(request.url);
+      
+      if (urlsCrawled.scanned.length + basicAuthPage >= maxRequestsPerCrawl) {
+        crawler.autoscaledPool.abort();
         return;
       }
 
       // handle pdfs
       if (request.skipNavigation && isUrlPdf(actualUrl)) {
         if (!isScanPdfs) {
-          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          guiInfoLog(guiInfoStatusTypes.SKIPPED, {            
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
@@ -233,8 +236,6 @@ const crawlDomain = async (
           sendRequest,
           urlsCrawled,
         );
-
-        pagesCrawled++;
 
         uuidToPdfMapping[pdfFileName] = trimmedUrl;
         return;
@@ -273,7 +274,7 @@ const crawlDomain = async (
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
         });
-        urlsCrawled.forbidden.push(request.url);
+        urlsCrawled.forbidden.push({ url: request.url });
         return;
       }
 
@@ -285,8 +286,6 @@ const crawlDomain = async (
         urlsCrawled.invalid.push({ url: request.url });
         return;
       }
-
-      pagesCrawled += 1;
 
       try {
         if (isBasicAuth) {
@@ -347,6 +346,17 @@ const crawlDomain = async (
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
         });
+        const browser = browserController.browser;
+        page = await browser.newPage();
+        await page.goto(request.url);
+
+        await page.route('**', async route => {
+          const interceptedRequest = route.request();
+          if (interceptedRequest.method() === 'POST' && interceptedRequest.resourceType() === 'document') {
+            await requestQueue.addRequest({ url: interceptedRequest.url(), skipNavigation: isUrlPdf(interceptedRequest.url()) });
+            return;
+          }
+        })
         urlsCrawled.error.push({ url: request.url });
       }
     },
@@ -358,7 +368,7 @@ const crawlDomain = async (
       urlsCrawled.error.push({ url: request.url });
       crawlee.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
     },
-    maxRequestsPerCrawl,
+    maxRequestsPerCrawl: Infinity,
     maxConcurrency: specifiedMaxConcurrency || maxConcurrency,
   });
 

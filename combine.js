@@ -14,6 +14,7 @@ const combineRun = async (details, deviceToScan) => {
   const {
     type,
     url,
+    entryUrl,
     nameEmail,
     randomToken,
     deviceChosen,
@@ -127,7 +128,11 @@ const combineRun = async (details, deviceToScan) => {
 
   if (scanDetails.urlsCrawled.scanned.length > 0) {
     await createAndUpdateResultsFolders(randomToken);
-    const pagesNotScanned = [...urlsCrawled.error, ...urlsCrawled.invalid];
+    const pagesNotScanned = [
+      ...urlsCrawled.error, 
+      ...urlsCrawled.invalid, 
+      ...urlsCrawled.forbidden
+    ];
     const basicFormHTMLSnippet = await generateArtifacts(
       randomToken,
       url,
@@ -138,15 +143,19 @@ const combineRun = async (details, deviceToScan) => {
       customFlowLabel,
     );
     const [name, email] = nameEmail.split(':');
+    
     await submitForm(
       browser,
       userDataDirectory,
       url,
+      entryUrl,
       type,
       email,
       name,
       JSON.stringify(basicFormHTMLSnippet),
       urlsCrawled.scanned.length,
+      urlsCrawled.scannedRedirects.length, 
+      pagesNotScanned.length,
       metadata,
     );
   } else {

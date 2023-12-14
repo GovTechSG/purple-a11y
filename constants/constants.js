@@ -157,6 +157,7 @@ const urlsCrawledObj = {
   exceededRequests: [],
   forbidden: [],
   userExcluded: [],
+  everything: [],
 };
 
 const scannerTypes = {
@@ -232,13 +233,15 @@ export const impactOrder = {
 
 export const formDataFields = {
   formUrl: `https://docs.google.com/forms/d/e/1FAIpQLSem5C8fyNs5TiU5Vv2Y63-SH7CHN86f-LEPxeN_1u_ldUbgUA/formResponse`, // prod
-  // formUrl: `https://docs.google.com/forms/d/e/1FAIpQLScNldkNEajZbAiXK5TmMy4DfMERC2Sd7aJJrD76vBNz4pm05g/formResponse`, // dev
-  websiteUrlField: 'entry.1562345227',
+  // formUrl: `https://docs.google.com/forms/d/e/1FAIpQLSf69h2C7pv8k4fl3x2isbA9UnUaXWBsgZyRILuq2UNrIMYTqA/formResponse`, // dev
+  entryUrlField: 'entry.1562345227',
+  redirectUrlField: 'entry.473072563', 
   scanTypeField: 'entry.1148680657',
   emailField: 'entry.52161304',
   nameField: 'entry.1787318910',
   resultsField: 'entry.904051439',
-  numberOfPagesScannedField: 'entry.238043773',
+  numberOfPagesScannedField: 'entry.238043773', 
+  additionalPageDataField: 'entry.2090887881',
   metadataField: 'entry.1027769131',
 };
 
