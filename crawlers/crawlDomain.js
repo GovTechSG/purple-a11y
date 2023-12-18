@@ -104,8 +104,8 @@ const crawlDomain = async (
 
     const handleOnClickEvent = async () => {
       // Intercepting click events to handle cases where request was issued before the frame is created 
-      // when a new tab is opened 
-      await page.context().route('**', async route => {
+      // when a new tab/window is opened 
+      await page.context().route('**/*', async route => {
         if (route.request().resourceType() === 'document') {
           try {
             const isTopFrameNavigationRequest = () => {
@@ -114,7 +114,8 @@ const crawlDomain = async (
             }
 
             if (isTopFrameNavigationRequest()) {
-              await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+              const url = route.request().url();
+              await requestQueue.addRequest({ url , skipNavigation: isUrlPdf(url) });
               await route.abort('aborted');
             } else {
               route.continue();
@@ -142,6 +143,7 @@ const crawlDomain = async (
             }
 
             if (route.request().resourceType() === 'document') {
+              const url = route.request().url();
               if (isTopFrameNavigationRequest()) {
                 await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
               }
@@ -346,9 +348,9 @@ const crawlDomain = async (
         page = await browser.newPage();
         await page.goto(request.url);
 
-        await page.route('**', async route => {
+        await page.route('**/*', async route => {
           const interceptedRequest = route.request();
-          if (interceptedRequest.method() === 'POST' && interceptedRequest.resourceType() === 'document') {
+          if (interceptedRequest.resourceType() === 'document') {
             await requestQueue.addRequest({ url: interceptedRequest.url(), skipNavigation: isUrlPdf(interceptedRequest.url()) });
             return;
           }
