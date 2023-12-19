@@ -667,7 +667,7 @@ export const getLinksFromSitemap = async (
   };
 
   const processNonStandardSitemap = data => {
-    const urlsFromData = crawlee.extractUrls({ string: data }).slice(0, maxLinksCount);
+    const urlsFromData = crawlee.extractUrls({ string: data, urlRegExp: new RegExp("^(http|https):/{2}.+$", "gmi") }).slice(0, maxLinksCount);
     urlsFromData.forEach(url => {
       addToUrlList(url);
     });
@@ -795,6 +795,7 @@ export const getLinksFromSitemap = async (
   };
 
   await fetchUrls(sitemapUrl);
+
   const requestList = Object.values(urls);
   return requestList;
 };
@@ -1327,7 +1328,7 @@ export const submitForm = async (
 ) => {
 
   const addtionalPageDataJson = JSON.stringify({
-    redirectsScanned: numberOfRedirectsScanned, 
+    redirectsScanned: numberOfRedirectsScanned,
     pagesNotScanned: numberOfPagesNotScanned
   })
 
@@ -1339,7 +1340,7 @@ export const submitForm = async (
     `${formDataFields.nameField}=${name}&` +
     `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}&` +
     `${formDataFields.numberOfPagesScannedField}=${numberOfPagesScanned}&` +
-    `${formDataFields.additionalPageDataField}=${encodeURIComponent(addtionalPageDataJson)}&` + 
+    `${formDataFields.additionalPageDataField}=${encodeURIComponent(addtionalPageDataJson)}&` +
     `${formDataFields.metadataField}=${encodeURIComponent(metadata)}`;
 
   if (scannedUrl !== entryUrl) {

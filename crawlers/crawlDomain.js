@@ -57,14 +57,12 @@ const crawlDomain = async (
   let finalUrl;
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth = false;
-  let basicAuthPage = 0;
 
   /**
    * Regex to match http://username:password@hostname.com
    * utilised in scan strategy to ensure subsequent URLs within the same domain are scanned.
    * First time scan with original `url` containing credentials is strictly to authenticate for browser session
    * subsequent URLs are without credentials.
-   * basicAuthPage is set to -1 for basic auth URL to ensure it is not counted towards maxRequestsPerCrawl
    */
 
   if (basicAuthRegex.test(url)) {
@@ -75,10 +73,8 @@ const crawlDomain = async (
     // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
     finalUrl = `${url.split('://')[0]}://${url.split('@')[1]}`;
     await requestQueue.addRequest({ url: finalUrl, skipNavigation: isUrlPdf(finalUrl) });
-    basicAuthPage = -1;
   } else {
     await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
-    basicAuthPage = 0;
   }
 
   const enqueueProcess = async (page, enqueueLinks, enqueueLinksByClickingElements) => {
@@ -126,8 +122,8 @@ const crawlDomain = async (
 
     const handleOnClickEvent = async () => {
       // Intercepting click events to handle cases where request was issued before the frame is created 
-      // when a new tab is opened 
-      await page.context().route('**', async route => {
+      // when a new tab/window is opened 
+      await page.context().route('**/*', async route => {
         if (route.request().resourceType() === 'document') {
           try {
             const isTopFrameNavigationRequest = () => {
@@ -167,6 +163,7 @@ const crawlDomain = async (
             }
 
             if (route.request().resourceType() === 'document') {
+              const url = route.request().url();
               if (isTopFrameNavigationRequest()) {
                 const url = route.request().url(); 
                 if (!isDisallowed(url)){
@@ -242,7 +239,7 @@ const crawlDomain = async (
       // loadedUrl is the URL after redirects
       const actualUrl = request.loadedUrl || request.url;
       
-      if (urlsCrawled.scanned.length + basicAuthPage >= maxRequestsPerCrawl) {
+      if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
         crawler.autoscaledPool.abort();
         return;
       }
@@ -378,9 +375,9 @@ const crawlDomain = async (
         page = await browser.newPage();
         await page.goto(request.url);
 
-        await page.route('**', async route => {
+        await page.route('**/*', async route => {
           const interceptedRequest = route.request();
-          if (interceptedRequest.method() === 'POST' && interceptedRequest.resourceType() === 'document') {
+          if (interceptedRequest.resourceType() === 'document') {
             await requestQueue.addRequest({ url: interceptedRequest.url(), skipNavigation: isUrlPdf(interceptedRequest.url()) });
             return;
           }
