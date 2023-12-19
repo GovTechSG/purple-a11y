@@ -257,6 +257,7 @@ const scanInit = async argvs => {
     argvs.scanner = constants.scannerTypes[argvs.scanner];
   }
   argvs.headless = argvs.headless === 'yes';
+  argvs.followRobots = argvs.followRobots === 'yes';
   argvs.browserToRun = constants.browserTypes[argvs.browserToRun];
 
   // let chromeDataDir = null;
@@ -350,7 +351,7 @@ const scanInit = async argvs => {
     constants.exportDirectory = argvs.exportDirectory;
   }
 
-  const data = prepareData(argvs);
+  const data = await prepareData(argvs);
 
   setHeadlessMode(data.browser, data.isHeadless);
 

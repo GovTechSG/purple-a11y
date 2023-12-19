@@ -36,7 +36,9 @@ const crawlDomain = async (
   fileTypes,
   blacklistedPatterns,
   includeScreenshots,
+  disallowedUrls
 ) => {
+  // console.log('DISALLOWED URLS: ', disallowedUrls);
   let needsReview = needsReviewItems;
   const isScanHtml = ['all', 'html-only'].includes(fileTypes);
   const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
@@ -80,12 +82,26 @@ const crawlDomain = async (
   }
 
   const enqueueProcess = async (page, enqueueLinks, enqueueLinksByClickingElements) => {
+    const isDisallowed = (requestUrl) => {
+      const result = disallowedUrls.filter(disallowedUrl => requestUrl.includes(disallowedUrl));
+      if (result.length > 0) {
+        console.log('REQ URL: ', requestUrl);
+        console.log('RESULT: ', result);
+      }
+      return result.length > 0; 
+    }
+
+    console.log('URL: ', page.url());
     await enqueueLinks({
       // set selector matches anchor elements with href but not contains # or starting with mailto:
       selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
       strategy,
       requestQueue,
+      exclude: disallowedUrls, 
       transformRequestFunction(req) {
+        // if (isDisallowed(req.url)) {
+        //   return; 
+        // }
         if (isUrlPdf(req.url)) {
           // playwright headless mode does not support navigation to pdf document
           req.skipNavigation = true;
@@ -95,7 +111,9 @@ const crawlDomain = async (
     });
 
     const handleOnWindowOpen = async url => {
-      await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+      if (!isDisallowed(url)) {
+        await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+      }
     };
     await page.exposeFunction('handleOnWindowOpen', handleOnWindowOpen);
 
@@ -118,7 +136,10 @@ const crawlDomain = async (
             }
 
             if (isTopFrameNavigationRequest()) {
-              await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+              const url = route.request().url(); 
+              if (!isDisallowed(url)) {
+                await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+              }
               await route.abort('aborted');
             } else {
               route.continue();
@@ -147,7 +168,10 @@ const crawlDomain = async (
 
             if (route.request().resourceType() === 'document') {
               if (isTopFrameNavigationRequest()) {
-                await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+                const url = route.request().url(); 
+                if (!isDisallowed(url)){
+                  await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+                }
               }
             }
           } catch (e) {
@@ -167,12 +191,16 @@ const crawlDomain = async (
         selector: ':not(a):is([role="link"], button[onclick])',
         transformRequestFunction(req) {
           req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+          // if (isDisallowed(req.url)) {
+          //   return; 
+          // }
           if (isUrlPdf(req.url)) {
             // playwright headless mode does not support navigation to pdf document
             req.skipNavigation = true;
           }
           return req;
         },
+        exclude: disallowedUrls, 
         waitForPageIdleSecs: 10000
       })
     } catch (e) {

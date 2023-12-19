@@ -13,7 +13,7 @@ import path from 'path';
 import safe from 'safe-regex';
 import * as https from 'https';
 import os from 'os';
-import { globSync } from 'glob';
+import { Glob, globSync } from 'glob';
 import { devices, webkit } from 'playwright';
 import printMessage from 'print-message';
 import constants, {
@@ -492,7 +492,7 @@ export const checkUrl = async (
 
 const isEmptyObject = obj => !Object.keys(obj).length;
 
-export const prepareData = argv => {
+export const prepareData = async argv => {
   if (isEmptyObject(argv)) {
     throw Error('No inputs should be provided');
   }
@@ -517,6 +517,7 @@ export const prepareData = argv => {
     blacklistedPatternsFilename,
     additional,
     metadata,
+    followRobots,
   } = argv;
 
   // construct filename for scan results
@@ -524,6 +525,11 @@ export const prepareData = argv => {
   const domain = argv.isLocalSitemap ? 'custom' : new URL(argv.url).hostname;
   const sanitisedLabel = customFlowLabel ? `_${customFlowLabel.replaceAll(' ', '_')}` : '';
   const resultFilename = `${date}_${time}${sanitisedLabel}_${domain}`;
+
+  let disallowedUrls = []; 
+  if (followRobots) {
+    disallowedUrls = await getDisallowedUrlsFromRobotsTxt(url, browserToRun); 
+  }
 
   return {
     type: scanner,
@@ -547,8 +553,84 @@ export const prepareData = argv => {
     blacklistedPatternsFilename,
     includeScreenshots: !(additional === 'none'),
     metadata,
+    disallowedUrls
   };
 };
+
+const getDisallowedUrlsFromRobotsTxt = async (url, browserToRun) => {
+  // const domain = new URL(url);
+  // console.log(domain);
+  const domain = new URL(url).origin;
+  const robotsUrl = domain.concat('/robots.txt');
+
+  let robotsTxt; 
+  if (proxy) {
+    robotsTxt = await getRobotsTxtViaPlaywright(robotsUrl);
+  } else {
+    robotsTxt = await getRobotsTxtViaAxios(robotsUrl, browserToRun);
+  }
+
+  const lines = robotsTxt.split(/\r?\n/);
+  let shouldCapture = false;
+  let disallowedUrls = []; 
+
+  for (const line of lines) {
+    if (line.toLowerCase().startsWith('user-agent: *')) {
+      shouldCapture = true;
+    } else if (line.toLowerCase().startsWith('user-agent:') && shouldCapture) {
+      break;
+    } else if (shouldCapture && line.toLowerCase().startsWith('disallow:')) {
+      let disallowed = line.substring('disallow: '.length).trim(); 
+
+      const directoryRegex = /^\/(?:[^?#/]+\/)*[^?#]*$/;  
+      const subdirWildcardRegex = /\/\*\//g;  
+      const filePathRegex =  /^\/(?:[^\/]+\/)*[^\/]+\.[a-zA-Z0-9]{1,6}$/
+
+      if (disallowed) {
+        if (subdirWildcardRegex.test(disallowed)) {
+          disallowed = disallowed.replace(subdirWildcardRegex, "/**/"); 
+        }
+        if (disallowed.match(directoryRegex) && !disallowed.match(filePathRegex)) {
+          if (disallowed.endsWith('*')) {
+            disallowed = disallowed.concat('*');
+          } else {
+            if (!disallowed.endsWith('/')) disallowed = disallowed.concat('/'); 
+            disallowed = disallowed.concat('**');
+          }
+        }
+        disallowed = domain.concat(disallowed);
+        disallowedUrls.push(disallowed); 
+      }
+    }
+  }
+  console.log('DISALLOWED URLS: ', disallowedUrls);
+  return disallowedUrls;  
+}
+
+const getRobotsTxtViaPlaywright = async (robotsUrl, browser) => {
+  console.log('ROBOTS URL: ', robotsUrl);
+  const browserContext = await constants.launcher.launchPersistentContext(
+    '', {...getPlaywrightLaunchOptions(browser)},
+  );
+
+  const page = await browserContext.newPage();
+  await page.goto(robotsUrl, { waitUntil: 'networkidle', timeout: 30000 });
+
+  const robotsTxt = await page.evaluate(() => document.body.textContent);
+  console.log('ROBOTS TXT: ', robotsTxt);
+  return robotsTxt;
+}
+
+const getRobotsTxtViaAxios = async (robotsUrl) => {
+  const instance = axios.create({
+    httpsAgent: new https.Agent({
+      rejectUnauthorized: false,
+    }),
+  });
+
+  const robotsTxt = await (await instance.get(robotsUrl, { timeout: 2000 })).data;
+  return robotsTxt;
+}
 
 export const getLinksFromSitemap = async (
   sitemapUrl,
@@ -601,7 +683,7 @@ export const getLinksFromSitemap = async (
     let sitemapType;
 
     const getDataUsingPlaywright = async () => {
-      const browserContext = await constants.launcher.launchPersistentContext(
+     const browserContext = await constants.launcher.launchPersistentContext(
         finalUserDataDirectory,
         {
           ...getPlaywrightLaunchOptions(browser),

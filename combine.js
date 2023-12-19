@@ -32,6 +32,7 @@ const combineRun = async (details, deviceToScan) => {
     blacklistedPatternsFilename,
     includeScreenshots,
     metadata,
+    disallowedUrls,
     customFlowLabel = 'Custom Flow',
   } = envDetails;
 
@@ -113,6 +114,7 @@ const combineRun = async (details, deviceToScan) => {
         fileTypes,
         blacklistedPatterns,
         includeScreenshots,
+        disallowedUrls
       );
       break;
 
