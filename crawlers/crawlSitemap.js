@@ -110,11 +110,7 @@ const crawlSitemap = async (
       const actualUrl = request.loadedUrl || request.url;
 
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
-        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-          numScanned: urlsCrawled.scanned.length,
-          urlScanned: request.url,
-        });
-        urlsCrawled.exceededRequests.push(request.url);
+        crawler.autoscaledPool.abort();
         return;
       }
 
