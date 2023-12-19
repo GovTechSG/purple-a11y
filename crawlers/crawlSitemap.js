@@ -33,6 +33,7 @@ const crawlSitemap = async (
   fileTypes,
   blacklistedPatterns,
   includeScreenshots,
+  disallowedUrls
 ) => {
 
    // Boolean to omit axe scan for basic auth URL
@@ -70,7 +71,7 @@ const crawlSitemap = async (
   const uuidToPdfMapping = {};
 
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
-  const linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory)
+  const linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory, disallowedUrls)
   finalLinks = [...finalLinks, ...linksFromSitemap];
 
   const requestList = new crawlee.RequestList({
@@ -204,7 +205,6 @@ const crawlSitemap = async (
           }
           await dataset.pushData(results);
         } else {
-          console.log('SKIPPED: ', status, ' WHITELISTED: ', isWhitelistedContentType(contentType));
           guiInfoLog(guiInfoStatusTypes.SKIPPED, {
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,

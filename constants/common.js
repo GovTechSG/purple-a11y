@@ -13,6 +13,7 @@ import path from 'path';
 import safe from 'safe-regex';
 import * as https from 'https';
 import os from 'os';
+import { minimatch } from 'minimatch';
 import { Glob, globSync } from 'glob';
 import { devices, webkit } from 'playwright';
 import printMessage from 'print-message';
@@ -558,8 +559,6 @@ export const prepareData = async argv => {
 };
 
 const getDisallowedUrlsFromRobotsTxt = async (url, browserToRun) => {
-  // const domain = new URL(url);
-  // console.log(domain);
   const domain = new URL(url).origin;
   const robotsUrl = domain.concat('/robots.txt');
 
@@ -632,11 +631,21 @@ const getRobotsTxtViaAxios = async (robotsUrl) => {
   return robotsTxt;
 }
 
+
+export const isDisallowedInRobotsTxt = (url, disallowedUrls) => {
+  const result = disallowedUrls.filter(disallowedUrl => {
+    const match = minimatch(url, disallowedUrl); 
+    return match;
+  })
+  return result.length > 0;
+}
+
 export const getLinksFromSitemap = async (
   sitemapUrl,
   maxLinksCount,
   browser,
   userDataDirectory,
+  disallowedUrls
 ) => {
   const urls = {}; // dictionary of requests to urls to be scanned
 
@@ -644,6 +653,7 @@ export const getLinksFromSitemap = async (
 
   const addToUrlList = url => {
     if (!url) return;
+    if (isDisallowedInRobotsTxt(url, disallowedUrls)) return; 
     const request = new Request({ url });
     if (isUrlPdf(url)) {
       request.skipNavigation = true;

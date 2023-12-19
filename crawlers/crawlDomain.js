@@ -16,6 +16,7 @@ import {
   getPlaywrightLaunchOptions,
   isBlacklistedFileExtensions,
   isSkippedUrl,
+  isDisallowedInRobotsTxt
 } from '../constants/common.js';
 import { areLinksEqual } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
@@ -38,7 +39,6 @@ const crawlDomain = async (
   includeScreenshots,
   disallowedUrls
 ) => {
-  // console.log('DISALLOWED URLS: ', disallowedUrls);
   let needsReview = needsReviewItems;
   const isScanHtml = ['all', 'html-only'].includes(fileTypes);
   const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
@@ -78,16 +78,6 @@ const crawlDomain = async (
   }
 
   const enqueueProcess = async (page, enqueueLinks, enqueueLinksByClickingElements) => {
-    const isDisallowed = (requestUrl) => {
-      const result = disallowedUrls.filter(disallowedUrl => requestUrl.includes(disallowedUrl));
-      if (result.length > 0) {
-        console.log('REQ URL: ', requestUrl);
-        console.log('RESULT: ', result);
-      }
-      return result.length > 0; 
-    }
-
-    console.log('URL: ', page.url());
     await enqueueLinks({
       // set selector matches anchor elements with href but not contains # or starting with mailto:
       selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
@@ -95,9 +85,6 @@ const crawlDomain = async (
       requestQueue,
       exclude: disallowedUrls, 
       transformRequestFunction(req) {
-        // if (isDisallowed(req.url)) {
-        //   return; 
-        // }
         if (isUrlPdf(req.url)) {
           // playwright headless mode does not support navigation to pdf document
           req.skipNavigation = true;
@@ -107,7 +94,7 @@ const crawlDomain = async (
     });
 
     const handleOnWindowOpen = async url => {
-      if (!isDisallowed(url)) {
+      if (!isDisallowedInRobotsTxt(url, disallowedUrls)) {
         await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
       }
     };
@@ -133,7 +120,7 @@ const crawlDomain = async (
 
             if (isTopFrameNavigationRequest()) {
               const url = route.request().url(); 
-              if (!isDisallowed(url)) {
+              if (!isDisallowedInRobotsTxt(url, disallowedUrls)) {
                 await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
               }
               await route.abort('aborted');

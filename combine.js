@@ -96,6 +96,7 @@ const combineRun = async (details, deviceToScan) => {
         fileTypes,
         blacklistedPatterns,
         includeScreenshots,
+        disallowedUrls
       );
       break;
 
