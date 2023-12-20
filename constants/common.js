@@ -559,7 +559,6 @@ export const prepareData = async argv => {
 };
 
 export const getUrlsFromRobotsTxt = async (url, browserToRun) => {
-  console.log(constants.robotsTxtUrls);
   if (!constants.robotsTxtUrls) return; 
 
   const domain = new URL(url).origin;
@@ -623,7 +622,6 @@ export const getUrlsFromRobotsTxt = async (url, browserToRun) => {
     }
   }
   constants.robotsTxtUrls[domain] = { disallowedUrls, allowedUrls };  
-  console.log(constants.robotsTxtUrls);
 }
 
 const getRobotsTxtViaPlaywright = async (robotsUrl, browser) => {
@@ -678,7 +676,6 @@ export const getLinksFromSitemap = async (
   maxLinksCount,
   browser,
   userDataDirectory,
-  disallowedUrls
 ) => {
   const urls = {}; // dictionary of requests to urls to be scanned
 
