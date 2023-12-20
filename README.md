@@ -286,6 +286,9 @@ Options:
                   telemetry purposes.
                   Defaults to "{}"
                                                         [string] [default: "{}"]
+  -r, --followRobots                 Option for crawler to adhere to robots.txt
+                                     rules if it exists
+                                 [string] [choices: "yes", "no"] [default: "no"]
 Examples:
   To scan sitemap of website:', 'node cli.js -c [ 1 | Sitemap ] -d <device> -u
    <url_link> -w <viewportWidth>
