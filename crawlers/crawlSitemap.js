@@ -32,8 +32,7 @@ const crawlSitemap = async (
   needsReviewItems,
   fileTypes,
   blacklistedPatterns,
-  includeScreenshots,
-  disallowedUrls
+  includeScreenshots
 ) => {
 
    // Boolean to omit axe scan for basic auth URL
@@ -71,7 +70,7 @@ const crawlSitemap = async (
   const uuidToPdfMapping = {};
 
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
-  const linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory, disallowedUrls)
+  const linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory)
   finalLinks = [...finalLinks, ...linksFromSitemap];
 
   const requestList = new crawlee.RequestList({

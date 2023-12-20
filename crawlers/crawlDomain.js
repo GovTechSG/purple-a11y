@@ -37,7 +37,6 @@ const crawlDomain = async (
   fileTypes,
   blacklistedPatterns,
   includeScreenshots,
-  disallowedUrls
 ) => {
   let needsReview = needsReviewItems;
   const isScanHtml = ['all', 'html-only'].includes(fileTypes);
@@ -83,8 +82,8 @@ const crawlDomain = async (
       selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
       strategy,
       requestQueue,
-      exclude: disallowedUrls, 
       transformRequestFunction(req) {
+        if (isDisallowedInRobotsTxt(req.url)) return null; 
         if (isUrlPdf(req.url)) {
           // playwright headless mode does not support navigation to pdf document
           req.skipNavigation = true;
@@ -94,7 +93,7 @@ const crawlDomain = async (
     });
 
     const handleOnWindowOpen = async url => {
-      if (!isDisallowedInRobotsTxt(url, disallowedUrls)) {
+      if (!isDisallowedInRobotsTxt(url)) {
         await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
       }
     };
@@ -120,7 +119,7 @@ const crawlDomain = async (
 
             if (isTopFrameNavigationRequest()) {
               const url = route.request().url(); 
-              if (!isDisallowedInRobotsTxt(url, disallowedUrls)) {
+              if (!isDisallowedInRobotsTxt(url)) {
                 await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
               }
               await route.abort('aborted');
@@ -150,10 +149,9 @@ const crawlDomain = async (
             }
 
             if (route.request().resourceType() === 'document') {
-              const url = route.request().url();
               if (isTopFrameNavigationRequest()) {
                 const url = route.request().url(); 
-                if (!isDisallowed(url)){
+                if (!isDisallowedInRobotsTxt(url)){
                   await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
                 }
               }
@@ -174,18 +172,14 @@ const crawlDomain = async (
         // handle onclick
         selector: ':not(a):is([role="link"], button[onclick])',
         transformRequestFunction(req) {
-          req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-          // if (isDisallowed(req.url)) {
-          //   return; 
-          // }
+          if (isDisallowedInRobotsTxt(req.url)) return null; 
+          req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');        
           if (isUrlPdf(req.url)) {
             // playwright headless mode does not support navigation to pdf document
             req.skipNavigation = true;
           }
           return req;
         },
-        exclude: disallowedUrls, 
-        waitForPageIdleSecs: 10000
       })
     } catch (e) {
       silentLogger.info(e);
@@ -229,6 +223,11 @@ const crawlDomain = async (
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
         crawler.autoscaledPool.abort();
         return;
+      }
+
+      if (isDisallowedInRobotsTxt(request.url)) {
+        await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
+        return; 
       }
 
       // handle pdfs

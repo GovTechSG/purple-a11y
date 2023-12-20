@@ -527,9 +527,10 @@ export const prepareData = async argv => {
   const sanitisedLabel = customFlowLabel ? `_${customFlowLabel.replaceAll(' ', '_')}` : '';
   const resultFilename = `${date}_${time}${sanitisedLabel}_${domain}`;
 
-  let disallowedUrls = []; 
   if (followRobots) {
-    disallowedUrls = await getDisallowedUrlsFromRobotsTxt(url, browserToRun); 
+    const urlPatterns = await getUrlsFromRobotsTxt(url, browserToRun); 
+    console.log('URL PATTERNS: ', urlPatterns);
+    constants.urlPatterns = urlPatterns; 
   }
 
   return {
@@ -554,11 +555,11 @@ export const prepareData = async argv => {
     blacklistedPatternsFilename,
     includeScreenshots: !(additional === 'none'),
     metadata,
-    disallowedUrls
+    followRobots
   };
 };
 
-const getDisallowedUrlsFromRobotsTxt = async (url, browserToRun) => {
+const getUrlsFromRobotsTxt = async (url, browserToRun) => {
   const domain = new URL(url).origin;
   const robotsUrl = domain.concat('/robots.txt');
 
@@ -571,7 +572,27 @@ const getDisallowedUrlsFromRobotsTxt = async (url, browserToRun) => {
 
   const lines = robotsTxt.split(/\r?\n/);
   let shouldCapture = false;
-  let disallowedUrls = []; 
+  let disallowedUrls = [], allowedUrls = []; 
+
+  const sanitisePattern = (pattern) => {
+    const directoryRegex = /^\/(?:[^?#/]+\/)*[^?#]*$/;  
+    const subdirWildcardRegex = /\/\*\//g;  
+    const filePathRegex =  /^\/(?:[^\/]+\/)*[^\/]+\.[a-zA-Z0-9]{1,6}$/
+
+    if (subdirWildcardRegex.test(pattern)) {
+      pattern = pattern.replace(subdirWildcardRegex, "/**/"); 
+    }
+    if (pattern.match(directoryRegex) && !pattern.match(filePathRegex)) {
+      if (pattern.endsWith('*')) {
+        pattern = pattern.concat('*');
+      } else {
+        if (!pattern.endsWith('/')) pattern = pattern.concat('/'); 
+        pattern = pattern.concat('**');
+      }
+    }
+    const final = domain.concat(pattern);
+    return final;
+  }
 
   for (const line of lines) {
     if (line.toLowerCase().startsWith('user-agent: *')) {
@@ -580,30 +601,21 @@ const getDisallowedUrlsFromRobotsTxt = async (url, browserToRun) => {
       break;
     } else if (shouldCapture && line.toLowerCase().startsWith('disallow:')) {
       let disallowed = line.substring('disallow: '.length).trim(); 
-
-      const directoryRegex = /^\/(?:[^?#/]+\/)*[^?#]*$/;  
-      const subdirWildcardRegex = /\/\*\//g;  
-      const filePathRegex =  /^\/(?:[^\/]+\/)*[^\/]+\.[a-zA-Z0-9]{1,6}$/
-
       if (disallowed) {
-        if (subdirWildcardRegex.test(disallowed)) {
-          disallowed = disallowed.replace(subdirWildcardRegex, "/**/"); 
-        }
-        if (disallowed.match(directoryRegex) && !disallowed.match(filePathRegex)) {
-          if (disallowed.endsWith('*')) {
-            disallowed = disallowed.concat('*');
-          } else {
-            if (!disallowed.endsWith('/')) disallowed = disallowed.concat('/'); 
-            disallowed = disallowed.concat('**');
-          }
-        }
-        disallowed = domain.concat(disallowed);
+        disallowed = sanitisePattern(disallowed); 
         disallowedUrls.push(disallowed); 
+      }
+    } else if (shouldCapture && line.toLowerCase().startsWith('allow:')) {
+      let allowed = line.substring('allow: '.length).trim();
+      if (allowed) {
+        allowed = sanitisePattern(allowed); 
+        allowedUrls.push(allowed);
       }
     }
   }
   console.log('DISALLOWED URLS: ', disallowedUrls);
-  return disallowedUrls;  
+  console.log('ALLOWED URLS', allowedUrls)
+  return { disallowedUrls, allowedUrls };  
 }
 
 const getRobotsTxtViaPlaywright = async (robotsUrl, browser) => {
@@ -631,13 +643,23 @@ const getRobotsTxtViaAxios = async (robotsUrl) => {
   return robotsTxt;
 }
 
+export const isDisallowedInRobotsTxt = (url) => {
+  if (constants.urlPatterns) {
+    const { disallowedUrls, allowedUrls } = constants.urlPatterns; 
 
-export const isDisallowedInRobotsTxt = (url, disallowedUrls) => {
-  const result = disallowedUrls.filter(disallowedUrl => {
-    const match = minimatch(url, disallowedUrl); 
-    return match;
-  })
-  return result.length > 0;
+    const isDisallowed = disallowedUrls.filter(disallowedUrl => {
+      const disallowed = minimatch(url, disallowedUrl); 
+      return disallowed;
+    }).length > 0; 
+
+     const isAllowed = allowedUrls.filter(allowedUrl => {
+      const allowed = minimatch(url, allowedUrl); 
+      return allowed; 
+    }).length > 0; 
+
+    return isDisallowed && !isAllowed;
+  }
+  return false; 
 }
 
 export const getLinksFromSitemap = async (
@@ -653,7 +675,7 @@ export const getLinksFromSitemap = async (
 
   const addToUrlList = url => {
     if (!url) return;
-    if (isDisallowedInRobotsTxt(url, disallowedUrls)) return; 
+    if (isDisallowedInRobotsTxt(url)) return; 
     const request = new Request({ url });
     if (isUrlPdf(url)) {
       request.skipNavigation = true;
