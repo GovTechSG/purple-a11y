@@ -528,9 +528,8 @@ export const prepareData = async argv => {
   const resultFilename = `${date}_${time}${sanitisedLabel}_${domain}`;
 
   if (followRobots) {
-    const urlPatterns = await getUrlsFromRobotsTxt(url, browserToRun); 
-    console.log('URL PATTERNS: ', urlPatterns);
-    constants.urlPatterns = urlPatterns; 
+    constants.robotsTxtUrls = {};
+    await getUrlsFromRobotsTxt(url, browserToRun); 
   }
 
   return {
@@ -559,16 +558,26 @@ export const prepareData = async argv => {
   };
 };
 
-const getUrlsFromRobotsTxt = async (url, browserToRun) => {
+export const getUrlsFromRobotsTxt = async (url, browserToRun) => {
+  console.log(constants.robotsTxtUrls);
+  if (!constants.robotsTxtUrls) return; 
+
   const domain = new URL(url).origin;
+  if (constants.robotsTxtUrls[domain]) return; 
   const robotsUrl = domain.concat('/robots.txt');
 
   let robotsTxt; 
-  if (proxy) {
-    robotsTxt = await getRobotsTxtViaPlaywright(robotsUrl);
-  } else {
-    robotsTxt = await getRobotsTxtViaAxios(robotsUrl, browserToRun);
+  try {
+    if (proxy) {
+      robotsTxt = await getRobotsTxtViaPlaywright(robotsUrl, browserToRun);
+    } else {
+      robotsTxt = await getRobotsTxtViaAxios(robotsUrl);
+    }
+  } catch(e) {
+    silentLogger.info(e);
   }
+
+  if (!robotsTxt) constants.robotsTxtUrls[domain] = {}; 
 
   const lines = robotsTxt.split(/\r?\n/);
   let shouldCapture = false;
@@ -613,9 +622,8 @@ const getUrlsFromRobotsTxt = async (url, browserToRun) => {
       }
     }
   }
-  console.log('DISALLOWED URLS: ', disallowedUrls);
-  console.log('ALLOWED URLS', allowedUrls)
-  return { disallowedUrls, allowedUrls };  
+  constants.robotsTxtUrls[domain] = { disallowedUrls, allowedUrls };  
+  console.log(constants.robotsTxtUrls);
 }
 
 const getRobotsTxtViaPlaywright = async (robotsUrl, browser) => {
@@ -644,8 +652,11 @@ const getRobotsTxtViaAxios = async (robotsUrl) => {
 }
 
 export const isDisallowedInRobotsTxt = (url) => {
-  if (constants.urlPatterns) {
-    const { disallowedUrls, allowedUrls } = constants.urlPatterns; 
+  if (!constants.robotsTxtUrls) return; 
+
+  const domain = new URL(url).origin; 
+  if (constants.robotsTxtUrls[domain]) {
+    const { disallowedUrls, allowedUrls } = constants.robotsTxtUrls[domain]; 
 
     const isDisallowed = disallowedUrls.filter(disallowedUrl => {
       const disallowed = minimatch(url, disallowedUrl); 

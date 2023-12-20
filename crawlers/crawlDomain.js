@@ -16,7 +16,8 @@ import {
   getPlaywrightLaunchOptions,
   isBlacklistedFileExtensions,
   isSkippedUrl,
-  isDisallowedInRobotsTxt
+  isDisallowedInRobotsTxt,
+  getUrlsFromRobotsTxt
 } from '../constants/common.js';
 import { areLinksEqual } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
@@ -37,6 +38,7 @@ const crawlDomain = async (
   fileTypes,
   blacklistedPatterns,
   includeScreenshots,
+  followRobots
 ) => {
   let needsReview = needsReviewItems;
   const isScanHtml = ['all', 'html-only'].includes(fileTypes);
@@ -349,6 +351,7 @@ const crawlDomain = async (
             urlsCrawled.blacklisted.push(request.url);
           }
 
+          if (followRobots) await getUrlsFromRobotsTxt(request.url, browser);
           await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
         }
       } catch (e) {
