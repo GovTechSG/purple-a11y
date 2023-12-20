@@ -576,8 +576,13 @@ export const getUrlsFromRobotsTxt = async (url, browserToRun) => {
     silentLogger.info(e);
   }
 
-  if (!robotsTxt) constants.robotsTxtUrls[domain] = {}; 
-
+  if (!robotsTxt) {
+    constants.robotsTxtUrls[domain] = {}; 
+    return;
+  }
+  
+  console.log('Found robots.txt: ', robotsUrl);
+  
   const lines = robotsTxt.split(/\r?\n/);
   let shouldCapture = false;
   let disallowedUrls = [], allowedUrls = []; 
@@ -625,7 +630,6 @@ export const getUrlsFromRobotsTxt = async (url, browserToRun) => {
 }
 
 const getRobotsTxtViaPlaywright = async (robotsUrl, browser) => {
-  console.log('ROBOTS URL: ', robotsUrl);
   const browserContext = await constants.launcher.launchPersistentContext(
     '', {...getPlaywrightLaunchOptions(browser)},
   );
@@ -634,7 +638,6 @@ const getRobotsTxtViaPlaywright = async (robotsUrl, browser) => {
   await page.goto(robotsUrl, { waitUntil: 'networkidle', timeout: 30000 });
 
   const robotsTxt = await page.evaluate(() => document.body.textContent);
-  console.log('ROBOTS TXT: ', robotsTxt);
   return robotsTxt;
 }
 
