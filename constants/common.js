@@ -13,7 +13,8 @@ import path from 'path';
 import safe from 'safe-regex';
 import * as https from 'https';
 import os from 'os';
-import { globSync } from 'glob';
+import { minimatch } from 'minimatch';
+import { Glob, globSync } from 'glob';
 import { devices, webkit } from 'playwright';
 import printMessage from 'print-message';
 import constants, {
@@ -492,7 +493,7 @@ export const checkUrl = async (
 
 const isEmptyObject = obj => !Object.keys(obj).length;
 
-export const prepareData = argv => {
+export const prepareData = async argv => {
   if (isEmptyObject(argv)) {
     throw Error('No inputs should be provided');
   }
@@ -517,6 +518,7 @@ export const prepareData = argv => {
     blacklistedPatternsFilename,
     additional,
     metadata,
+    followRobots,
   } = argv;
 
   // construct filename for scan results
@@ -524,6 +526,11 @@ export const prepareData = argv => {
   const domain = argv.isLocalSitemap ? 'custom' : new URL(argv.url).hostname;
   const sanitisedLabel = customFlowLabel ? `_${customFlowLabel.replaceAll(' ', '_')}` : '';
   const resultFilename = `${date}_${time}${sanitisedLabel}_${domain}`;
+
+  if (followRobots) {
+    constants.robotsTxtUrls = {};
+    await getUrlsFromRobotsTxt(url, browserToRun); 
+  }
 
   return {
     type: scanner,
@@ -547,8 +554,122 @@ export const prepareData = argv => {
     blacklistedPatternsFilename,
     includeScreenshots: !(additional === 'none'),
     metadata,
+    followRobots
   };
 };
+
+export const getUrlsFromRobotsTxt = async (url, browserToRun) => {
+  if (!constants.robotsTxtUrls) return; 
+
+  const domain = new URL(url).origin;
+  if (constants.robotsTxtUrls[domain]) return; 
+  const robotsUrl = domain.concat('/robots.txt');
+
+  let robotsTxt; 
+  try {
+    if (proxy) {
+      robotsTxt = await getRobotsTxtViaPlaywright(robotsUrl, browserToRun);
+    } else {
+      robotsTxt = await getRobotsTxtViaAxios(robotsUrl);
+    }
+  } catch(e) {
+    silentLogger.info(e);
+  }
+
+  if (!robotsTxt) constants.robotsTxtUrls[domain] = {}; 
+
+  const lines = robotsTxt.split(/\r?\n/);
+  let shouldCapture = false;
+  let disallowedUrls = [], allowedUrls = []; 
+
+  const sanitisePattern = (pattern) => {
+    const directoryRegex = /^\/(?:[^?#/]+\/)*[^?#]*$/;  
+    const subdirWildcardRegex = /\/\*\//g;  
+    const filePathRegex =  /^\/(?:[^\/]+\/)*[^\/]+\.[a-zA-Z0-9]{1,6}$/
+
+    if (subdirWildcardRegex.test(pattern)) {
+      pattern = pattern.replace(subdirWildcardRegex, "/**/"); 
+    }
+    if (pattern.match(directoryRegex) && !pattern.match(filePathRegex)) {
+      if (pattern.endsWith('*')) {
+        pattern = pattern.concat('*');
+      } else {
+        if (!pattern.endsWith('/')) pattern = pattern.concat('/'); 
+        pattern = pattern.concat('**');
+      }
+    }
+    const final = domain.concat(pattern);
+    return final;
+  }
+
+  for (const line of lines) {
+    if (line.toLowerCase().startsWith('user-agent: *')) {
+      shouldCapture = true;
+    } else if (line.toLowerCase().startsWith('user-agent:') && shouldCapture) {
+      break;
+    } else if (shouldCapture && line.toLowerCase().startsWith('disallow:')) {
+      let disallowed = line.substring('disallow: '.length).trim(); 
+      if (disallowed) {
+        disallowed = sanitisePattern(disallowed); 
+        disallowedUrls.push(disallowed); 
+      }
+    } else if (shouldCapture && line.toLowerCase().startsWith('allow:')) {
+      let allowed = line.substring('allow: '.length).trim();
+      if (allowed) {
+        allowed = sanitisePattern(allowed); 
+        allowedUrls.push(allowed);
+      }
+    }
+  }
+  constants.robotsTxtUrls[domain] = { disallowedUrls, allowedUrls };  
+}
+
+const getRobotsTxtViaPlaywright = async (robotsUrl, browser) => {
+  console.log('ROBOTS URL: ', robotsUrl);
+  const browserContext = await constants.launcher.launchPersistentContext(
+    '', {...getPlaywrightLaunchOptions(browser)},
+  );
+
+  const page = await browserContext.newPage();
+  await page.goto(robotsUrl, { waitUntil: 'networkidle', timeout: 30000 });
+
+  const robotsTxt = await page.evaluate(() => document.body.textContent);
+  console.log('ROBOTS TXT: ', robotsTxt);
+  return robotsTxt;
+}
+
+const getRobotsTxtViaAxios = async (robotsUrl) => {
+  const instance = axios.create({
+    httpsAgent: new https.Agent({
+      rejectUnauthorized: false,
+    }),
+  });
+
+  const robotsTxt = await (await instance.get(robotsUrl, { timeout: 2000 })).data;
+  return robotsTxt;
+}
+
+export const isDisallowedInRobotsTxt = (url) => {
+  if (!constants.robotsTxtUrls) return; 
+
+  const domain = new URL(url).origin; 
+  if (constants.robotsTxtUrls[domain]) {
+    const { disallowedUrls, allowedUrls } = constants.robotsTxtUrls[domain]; 
+
+    const isDisallowed = disallowedUrls.filter(disallowedUrl => {
+      const disallowed = minimatch(url, disallowedUrl); 
+      return disallowed;
+    }).length > 0; 
+
+     const isAllowed = allowedUrls.filter(allowedUrl => {
+      const allowed = minimatch(url, allowedUrl); 
+      return allowed; 
+    }).length > 0; 
+
+    return isDisallowed && !isAllowed;
+  }
+  return false; 
+}
 
 export const getLinksFromSitemap = async (
   sitemapUrl,
@@ -562,6 +683,7 @@ export const getLinksFromSitemap = async (
 
   const addToUrlList = url => {
     if (!url) return;
+    if (isDisallowedInRobotsTxt(url)) return; 
     const request = new Request({ url });
     if (isUrlPdf(url)) {
       request.skipNavigation = true;
@@ -585,7 +707,7 @@ export const getLinksFromSitemap = async (
   };
 
   const processNonStandardSitemap = data => {
-    const urlsFromData = crawlee.extractUrls({ string: data }).slice(0, maxLinksCount);
+    const urlsFromData = crawlee.extractUrls({ string: data, urlRegExp: new RegExp("^(http|https):/{2}.+$", "gmi") }).slice(0, maxLinksCount);
     urlsFromData.forEach(url => {
       addToUrlList(url);
     });
@@ -601,7 +723,7 @@ export const getLinksFromSitemap = async (
     let sitemapType;
 
     const getDataUsingPlaywright = async () => {
-      const browserContext = await constants.launcher.launchPersistentContext(
+     const browserContext = await constants.launcher.launchPersistentContext(
         finalUserDataDirectory,
         {
           ...getPlaywrightLaunchOptions(browser),
@@ -713,6 +835,7 @@ export const getLinksFromSitemap = async (
   };
 
   await fetchUrls(sitemapUrl);
+
   const requestList = Object.values(urls);
   return requestList;
 };
@@ -1245,7 +1368,7 @@ export const submitForm = async (
 ) => {
 
   const addtionalPageDataJson = JSON.stringify({
-    redirectsScanned: numberOfRedirectsScanned, 
+    redirectsScanned: numberOfRedirectsScanned,
     pagesNotScanned: numberOfPagesNotScanned
   })
 
@@ -1257,7 +1380,7 @@ export const submitForm = async (
     `${formDataFields.nameField}=${name}&` +
     `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}&` +
     `${formDataFields.numberOfPagesScannedField}=${numberOfPagesScanned}&` +
-    `${formDataFields.additionalPageDataField}=${encodeURIComponent(addtionalPageDataJson)}&` + 
+    `${formDataFields.additionalPageDataField}=${encodeURIComponent(addtionalPageDataJson)}&` +
     `${formDataFields.metadataField}=${encodeURIComponent(metadata)}`;
 
   if (scannedUrl !== entryUrl) {

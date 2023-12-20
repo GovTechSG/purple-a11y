@@ -143,6 +143,15 @@ export const cliOptions = {
     default: '{}',
     demandOption: false,
   },
+  r: {
+    alias: 'followRobots', 
+    describe: 'Option for crawler to adhere to robots.txt rules if it exists', 
+    type: 'string', 
+    choices: ['yes', 'no'],
+    requiresArg: true,
+    default: 'no',
+    demandOption: false,
+  }
 };
 
 export const configureReportSetting = isEnabled => {

@@ -16,6 +16,8 @@ import {
   getPlaywrightLaunchOptions,
   isBlacklistedFileExtensions,
   isSkippedUrl,
+  isDisallowedInRobotsTxt,
+  getUrlsFromRobotsTxt
 } from '../constants/common.js';
 import { areLinksEqual } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
@@ -36,6 +38,7 @@ const crawlDomain = async (
   fileTypes,
   blacklistedPatterns,
   includeScreenshots,
+  followRobots
 ) => {
   let needsReview = needsReviewItems;
   const isScanHtml = ['all', 'html-only'].includes(fileTypes);
@@ -55,14 +58,12 @@ const crawlDomain = async (
   let finalUrl;
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth = false;
-  let basicAuthPage = 0;
 
   /**
    * Regex to match http://username:password@hostname.com
    * utilised in scan strategy to ensure subsequent URLs within the same domain are scanned.
    * First time scan with original `url` containing credentials is strictly to authenticate for browser session
    * subsequent URLs are without credentials.
-   * basicAuthPage is set to -1 for basic auth URL to ensure it is not counted towards maxRequestsPerCrawl
    */
 
   if (basicAuthRegex.test(url)) {
@@ -73,10 +74,8 @@ const crawlDomain = async (
     // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
     finalUrl = `${url.split('://')[0]}://${url.split('@')[1]}`;
     await requestQueue.addRequest({ url: finalUrl, skipNavigation: isUrlPdf(finalUrl) });
-    basicAuthPage = -1;
   } else {
     await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
-    basicAuthPage = 0;
   }
 
   const enqueueProcess = async (page, enqueueLinks, enqueueLinksByClickingElements) => {
@@ -86,6 +85,7 @@ const crawlDomain = async (
       strategy,
       requestQueue,
       transformRequestFunction(req) {
+        if (isDisallowedInRobotsTxt(req.url)) return null; 
         if (isUrlPdf(req.url)) {
           // playwright headless mode does not support navigation to pdf document
           req.skipNavigation = true;
@@ -95,7 +95,9 @@ const crawlDomain = async (
     });
 
     const handleOnWindowOpen = async url => {
-      await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+      if (!isDisallowedInRobotsTxt(url)) {
+        await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+      }
     };
     await page.exposeFunction('handleOnWindowOpen', handleOnWindowOpen);
 
@@ -108,8 +110,8 @@ const crawlDomain = async (
 
     const handleOnClickEvent = async () => {
       // Intercepting click events to handle cases where request was issued before the frame is created 
-      // when a new tab is opened 
-      await page.context().route('**', async route => {
+      // when a new tab/window is opened 
+      await page.context().route('**/*', async route => {
         if (route.request().resourceType() === 'document') {
           try {
             const isTopFrameNavigationRequest = () => {
@@ -118,7 +120,10 @@ const crawlDomain = async (
             }
 
             if (isTopFrameNavigationRequest()) {
-              await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+              const url = route.request().url(); 
+              if (!isDisallowedInRobotsTxt(url)) {
+                await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+              }
               await route.abort('aborted');
             } else {
               route.continue();
@@ -147,7 +152,10 @@ const crawlDomain = async (
 
             if (route.request().resourceType() === 'document') {
               if (isTopFrameNavigationRequest()) {
-                await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+                const url = route.request().url(); 
+                if (!isDisallowedInRobotsTxt(url)){
+                  await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+                }
               }
             }
           } catch (e) {
@@ -166,14 +174,14 @@ const crawlDomain = async (
         // handle onclick
         selector: ':not(a):is([role="link"], button[onclick])',
         transformRequestFunction(req) {
-          req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+          if (isDisallowedInRobotsTxt(req.url)) return null; 
+          req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');        
           if (isUrlPdf(req.url)) {
             // playwright headless mode does not support navigation to pdf document
             req.skipNavigation = true;
           }
           return req;
         },
-        waitForPageIdleSecs: 10000
       })
     } catch (e) {
       silentLogger.info(e);
@@ -214,9 +222,14 @@ const crawlDomain = async (
       // loadedUrl is the URL after redirects
       const actualUrl = request.loadedUrl || request.url;
       
-      if (urlsCrawled.scanned.length + basicAuthPage >= maxRequestsPerCrawl) {
+      if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
         crawler.autoscaledPool.abort();
         return;
+      }
+
+      if (isDisallowedInRobotsTxt(request.url)) {
+        await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
+        return; 
       }
 
       // handle pdfs
@@ -338,6 +351,7 @@ const crawlDomain = async (
             urlsCrawled.blacklisted.push(request.url);
           }
 
+          if (followRobots) await getUrlsFromRobotsTxt(request.url, browser);
           await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
         }
       } catch (e) {
@@ -350,9 +364,9 @@ const crawlDomain = async (
         page = await browser.newPage();
         await page.goto(request.url);
 
-        await page.route('**', async route => {
+        await page.route('**/*', async route => {
           const interceptedRequest = route.request();
-          if (interceptedRequest.method() === 'POST' && interceptedRequest.resourceType() === 'document') {
+          if (interceptedRequest.resourceType() === 'document') {
             await requestQueue.addRequest({ url: interceptedRequest.url(), skipNavigation: isUrlPdf(interceptedRequest.url()) });
             return;
           }
