@@ -262,7 +262,10 @@ const requestToUrl = async (url, isNewCustomFlow) => {
   const res = {};
   await axios
     .get(url, {
-      headers: { 'User-Agent': devices['Desktop Chrome HiDPI'].userAgent },
+      headers: { 
+        'User-Agent': devices['Desktop Chrome HiDPI'].userAgent,
+        'Host': new URL(url).host 
+      },
       httpsAgent,
       timeout: 2000,
     })
