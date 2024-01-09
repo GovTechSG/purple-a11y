@@ -4,6 +4,8 @@
 
 This is the engine and command-line interface (CLI) for Purple A11y.  For a desktop graphical user interface (GUI), check out [Purple A11y Desktop](https://go.gov.sg/purple-a11y).
 
+Please note that it's recommended to download the software from the official source at [https://go.gov.sg/purple-a11y-cicd](https://go.gov.sg/purple-a11y-cicd). Using other sources may pose risks or lead to compromised versions.
+
 ## Technology Stack
 
 1. [Crawlee](https://crawlee.dev/)
