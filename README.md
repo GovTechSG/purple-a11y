@@ -2,9 +2,8 @@
 
 [Purple A11y](https://go.gov.sg/purple-a11y-cli) is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).
 
-This is the engine and command-line interface (CLI) for Purple A11y.  For a desktop graphical user interface (GUI), check out [Purple A11y Desktop](https://go.gov.sg/purple-a11y).
+This is the engine and command-line interface (CLI) for Purple A11y.  For a desktop graphical user interface (GUI), check out [Purple A11y Desktop](https://go.gov.sg/purple-a11y). The official application can only be downloaded at [https://go.gov.sg/purple-a11y-cicd](https://go.gov.sg/purple-a11y-cicd). We recommend that you download the software only from the official link, as other sources and/or third party links may pose risks and/or compromise your system.
 
-Please note that it's recommended to download the software from the official source at [https://go.gov.sg/purple-a11y-cicd](https://go.gov.sg/purple-a11y-cicd). Using other sources may pose risks or lead to compromised versions.
 
 ## Technology Stack
 
