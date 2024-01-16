@@ -14,12 +14,11 @@
   </head>
 
   <body class="d-flex flex-column">
-    <%- include('partials/scripts/checkViewportWidth') %> <%- include('partials/header') %> <%-
-    include('partials/main') %> <%- include('partials/scripts/popper') %> <%-
-    include('partials/scripts/bootstrap') %> <%- include('partials/scripts/highlightjs') %> <%-
-    include('partials/scripts/utils') %> <%- include('partials/scripts/categorySummary') %> <%-
-    include('partials/scripts/ruleOffcanvas') %> <%-
-    include('partials/scripts/screenshotLightbox')%>
+    <%- include('partials/header') %> <%- include('partials/main') %> <%-
+    include('partials/scripts/popper') %> <%- include('partials/scripts/bootstrap') %> <%-
+    include('partials/scripts/highlightjs') %> <%- include('partials/scripts/utils') %> <%-
+    include('partials/scripts/categorySummary') %> <%- include('partials/scripts/ruleOffcanvas') %>
+    <%- include('partials/scripts/screenshotLightbox')%>
     <script>
       const scanItems = <%- JSON.stringify(
           {
