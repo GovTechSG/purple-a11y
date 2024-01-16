@@ -14,11 +14,15 @@
   }
 
   .card {
-    background-color: #fff;
-    box-shadow: 0 2px 4px 0 rgb(0 0 0 / 20%);
-    border-width: 0;
+    /* background-color: #fff; */
+    /* box-shadow: 0 2px 4px 0 rgb(0 0 0 / 20%); */
+    border-width: 1px;
     border-radius: 0;
     color: unset;
+  }
+
+  #scan-about.card {
+    border-width: 0px 1px;
   }
 
   #accessibility-site-report body,
@@ -1281,6 +1285,10 @@
   }
 
   @media only screen and (max-width: 600px) {
+    .mobile-d-none {
+      display: none;
+    }
+
     #accessibility-site-report h1 {
       white-space: nowrap;
       font-size: 1.5rem;
@@ -1291,6 +1299,15 @@
     #scan-about {
       /* background-color: powderblue; */
       width: auto;
+    }
+    #scan-about.card {
+      border-width: 0;
+    }
+    #scan-about ul {
+      margin-bottom: 0;
+    }
+    #header .card {
+      border-width: 0px 0px 1px 0px;
     }
   }
 </style>
