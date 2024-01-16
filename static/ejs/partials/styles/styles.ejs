@@ -1284,9 +1284,22 @@
     background-color: #f6f8f9;
   }
 
+  .compliance-summary {
+    --bs-gutter-x: 1.5rem;
+    --bs-gutter-y: 0;
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 !important;
+    padding: 1.5rem 1rem;
+  }
+
   @media only screen and (max-width: 600px) {
     .mobile-d-none {
       display: none;
+    }
+
+    .compliance-summary {
+      padding-top: 0;
     }
 
     #accessibility-site-report h1 {
