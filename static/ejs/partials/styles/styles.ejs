@@ -1293,9 +1293,29 @@
     padding: 1.5rem 1rem;
   }
 
+  .mobile-view {
+    display: none;
+  }
+
+  @media only screen and (max-width: 767px) {
+    .compliance-summary {
+      flex-direction: column;
+    }
+  }
+
   @media only screen and (max-width: 600px) {
-    .mobile-d-none {
+    .desktop-view {
       display: none;
+    }
+
+    .mobile-view {
+      display: flex;
+    }
+
+    .wcag-compliance-passes-panel {
+      border: none;
+      padding: 0;
+      margin: 1rem 0;
     }
 
     .compliance-summary {
@@ -1304,7 +1324,16 @@
 
     #accessibility-site-report h1 {
       white-space: nowrap;
-      font-size: 1.5rem;
+      font-size: 1.5rem !important;
+    }
+
+    #accessibility-site-report h2 {
+      font-size: 1.2rem !important;
+    }
+
+    #accessibility-site-report p,
+    #accessibility-site-report a {
+      font-size: 1rem !important;
     }
     #reportMain {
       flex-direction: column;
