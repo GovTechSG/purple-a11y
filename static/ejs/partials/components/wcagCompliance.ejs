@@ -26,19 +26,25 @@
 %>
 
 <div id="wcag-compliance-card" class="card h-100 p-3">
-  <h2 class="mb-0">WCAG Compliance</h2>
+  <h2 class="mb-0 desktop-view">WCAG Compliance</h2>
+  <div class="justify-content-between mobile-view">
+    <h2 class="mb-0">WCAG Compliance</h2>
+    <a href="https://www.google.com">More details</a>
+  </div>
   <div class="wcag-compliance-passes-panel">
     <div class="d-flex justify-content-between align-items-center">
       <div class="d-flex align-items-center">
-        <span class="fw-bold">Automated: WCAG (A & AA) Passes</span>
+        <span class="mobile-view">WCAG (A & AA) Passes</span>
+        <span class="fw-bold desktop-view">Automated: WCAG (A & AA) Passes</span>
         <button
           aria-label="More on automated testing WCAG coverage"
           id="wcagModalToggle"
-          class="ms-2"
+          class="ms-2 desktop-view"
           data-bs-toggle="modal"
           data-bs-target="#wcagModal"
         >
           <svg
+          class="desktop-view"
             width="14"
             height="14"
             viewBox="0 0 14 14"
@@ -61,7 +67,7 @@
       ></div>
     </div>
   </div>
-  <p>
+  <p class="desktop-view">
     Only a subset of
     <a
       href="https://www.w3.org/WAI/WCAG21/quickref/?currentsidebar=%23col_customize&versions=2.1&levels=aaa"
