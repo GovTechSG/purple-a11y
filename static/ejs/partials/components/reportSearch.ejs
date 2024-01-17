@@ -10,7 +10,7 @@
   </svg>
     </span>
 
-    <input onfocus="showMyDiv()" oninput="showMyDiv()"  type="text" class="form-control" id="floatingInputGroup1" placeholder="Search..." style="border-left: none;">
+    <input onfocus="showFilter()" oninput="showFilter()" onclick="showFilter()" type="text" class="form-control" id="searchBarInput" placeholder="Search..." style="border-left: none;">
   </div>
 
 
@@ -24,19 +24,19 @@
     </div>
 
     <div  style="padding-left: 16px;">
-      <button id= "issueDescriptionsButton" onclick="changeButtonColor(this)" onmouseover="handleButtonHover(this)" onmouseout="resetButtonStyle(this)" class="btn btn-primary" style="width: 100%; height: 44px; gap: 10px; border-radius: 4px; border: 2px solid var(--A11Y-Grey-400, #B5C5CA); background:  #FFF;">
+      <button id= "issueDescriptionsButton" onclick="changeFilterColor(this)" onmouseover="handleFilterMouseOver(this)" onmouseout="handleFilterMouseOut(this)" class="btn btn-primary" style="width: 100%; height: 44px; gap: 10px; border-radius: 4px; border: 2px solid var(--A11Y-Grey-400, #B5C5CA); background:  #FFF;">
         <span id= "issueDescriptionsWords" style="color: #0047FA; font-size: 16px; font-family: 'Open Sans', sans-serif; font-weight: 400; line-height: 28px; ">Issue Descriptions</span>
       </button>
     </div>
 
 
     <div  style="padding-left: 16px;">
-      <button id= "pagesButton" onclick="changeButtonColor(this)" onmouseover="handleButtonHover(this)" onmouseout="resetButtonStyle(this)" class="btn btn-primary" style="width: 100%; height: 44px; gap: 10px; border-radius: 4px; border:1px solid var(--A11Y-Grey-400, #B5C5CA); background:  #F6F8F9;">
+      <button id= "pagesButton" onclick="changeFilterColor(this)" onmouseover="handleFilterMouseOver(this)" onmouseout="handleFilterMouseOut(this)" class="btn btn-primary" style="width: 100%; height: 44px; gap: 10px; border-radius: 4px; border:1px solid var(--A11Y-Grey-400, #B5C5CA); background:  #F6F8F9;">
     <span id= "pagesWords" style="color: #333333; font-size: 16px; font-family: 'Open Sans', sans-serif; font-weight: 400; line-height: 28px; word-wrap: break-word;">Pages</span>
   </button>
     </div>
     <div  style="padding-left: 16px;">
-      <button id= "htmlButton" onclick="changeButtonColor(this)" onmouseover="handleButtonHover(this)" onmouseout="resetButtonStyle(this)" class="btn btn-primary" style="width: 100%; height: 44px; gap: 10px; border-radius: 4px; border:1px solid var(--A11Y-Grey-400, #B5C5CA); background: #F6F8F9;">
+      <button id= "htmlButton" onclick="changeFilterColor(this)" onmouseover="handleFilterMouseOver(this)" onmouseout="handleFilterMouseOut(this)" class="btn btn-primary" style="width: 100%; height: 44px; gap: 10px; border-radius: 4px; border:1px solid var(--A11Y-Grey-400, #B5C5CA); background: #F6F8F9;">
     <span id= "htmlWords" style="color: #333333; font-size: 16px; font-family: 'Open Sans', sans-serif; font-weight: 400; line-height: 28px; word-wrap: break-word;">HTML elements/Paths</span>
   </button>
     </div>
@@ -45,125 +45,3 @@
   </div>
 
 
-  <script>
-
-
-    
-  let currentlyClickedButton = null;
-
-  function handleButtonHover(button) {
-    if (button!=currentlyClickedButton){
-    button.style.background = "#f2f6ff";
-    button.style.border = "1px solid #0047fa";
-  }}
-
-  function resetButtonStyle(button) {
-    if (button!=currentlyClickedButton){
-    button.style.background = "#FFF"; // Change this to the original background color
-    button.style.border = "1px solid var(--A11Y-Grey-400, #B5C5CA)"; // Change this to the original border color
-  }}
-
-  
-
-function changeButtonColor(clickedButton) {
-    // Reset all buttons to white
-    document.getElementById("issueDescriptionsButton").style.border = "1px solid var(--A11Y-Grey-400, #B5C5CA)";
-    document.getElementById("pagesButton").style.border = "1px solid var(--A11Y-Grey-400, #B5C5CA)";
-    document.getElementById("htmlButton").style.border = "1px solid var(--A11Y-Grey-400, #B5C5CA)";
-
-    // reset all words to white
-    document.getElementById("issueDescriptionsWords").style.color = "#333333";
-    document.getElementById("pagesWords").style.color = "#333333";
-    document.getElementById("htmlWords").style.color = "#333333";
-
-    // reset all backgrounds to grey
-    document.getElementById("issueDescriptionsButton").style.background = "#F6F8F9";
-    document.getElementById("pagesButton").style.background = "#F6F8F9";
-    document.getElementById("htmlButton").style.background = "#F6F8F9";
-
-    // Set the clicked button and word to #0047FA 
-    clickedButton.style.border = "2px solid var(--A11Y-Primary-Blue-600, #0047FA)";
-    clickedButton.style.background = "#FFF";
-    clickedButton.querySelector('span').style.color = '#0047FA';
-
-    currentlyClickedButton = clickedButton;
-    
-  }
-
-
- function showMyDiv() {
-    var x = document.getElementById("searchFilter");
-    x.style.display = "flex";
-  }
-//todo: not sure how to make searchFilter stay up when a button is clicked
-  // function hideMyDiv() {
-  //   var x = document.getElementById("searchFilter");
-  //   if (
-  //     document.getElementById("floatingInputGroup1").value === "" &&
-  //     !document.getElementById("floatingInputGroup1").matches(':focus') &&
-  //     !document.getElementById("searchFilter").matches(':focus') &&
-
-  //     !document.getElementById("issueDescriptionsButton").matches(':focus') &&
-  //     !document.getElementById("pagesButton").matches(':focus') &&
-  //     !document.getElementById("htmlButton").matches(':focus')
-  //   ) {
-  //     x.style.display = "none";
-  //   }
-  // }
-
-  function hideMyDiv() {
-    var x = document.getElementById("searchFilter");
-    if (
-      document.getElementById("floatingInputGroup1").value === "" 
-    ) {
-      x.style.display = "none";
-    }
-  }
-
-  document.addEventListener('click', function(event) {
-  var searchBarDiv = document.getElementById('searchBar');
-  var searchFilterDiv = document.getElementById('searchFilter');
-
-  // Check if the clicked element is outside the target div
-  if (!searchBarDiv.contains(event.target) && !searchFilterDiv.contains(event.target)) {
-    // Run your function here
-    hideMyDiv();
-  }
-});
-
-
-
-
-
-
-  let searchInput = ""
-
-  document.getElementById("issueDescriptionsButton").addEventListener("click", function () {
-    searchInput = document.getElementById("floatingInputGroup1").value
-    loadRulesSummary(currentCategory, searchInput)
-});
-
-  document.getElementById("pagesButton").addEventListener("click", function () {
-      searchInput = document.getElementById("floatingInputGroup1").value
-      loadRulesSummary(currentCategory, searchInput)
-  });
-
-  document.getElementById("htmlButton").addEventListener("click", function () {
-      searchInput = document.getElementById("floatingInputGroup1").value
-      loadRulesSummary(currentCategory, searchInput)
-  });
-
-
-
-  
-document.getElementById("floatingInputGroup1").addEventListener("input", function (event) {
-  console.log('keydown works', currentCategory);
-  searchInput = event.target.value;
-  console.log(document.getElementById("floatingInputGroup1").value.trim());
-    loadRulesSummary(currentCategory, searchInput);
-});
-
-
-
-
-</script>

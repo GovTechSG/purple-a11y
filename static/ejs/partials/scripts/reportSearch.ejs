@@ -1,0 +1,182 @@
+<script>
+    let searchInput = ""
+    let currentlyClickedButton = null;
+
+    function handleFilterMouseOver(button) {
+        if (button!=currentlyClickedButton){
+        button.style.background = "#f2f6ff";
+        button.style.border = "1px solid #0047fa";
+    }}
+
+    function handleFilterMouseOut(button) {
+        if (button!=currentlyClickedButton){
+        button.style.background = "#FFF"; 
+        button.style.border = "1px solid var(--A11Y-Grey-400, #B5C5CA)"; 
+    }}
+
+    function changeFilterColor(button) {
+        document.getElementById("issueDescriptionsButton").style.border = "1px solid var(--A11Y-Grey-400, #B5C5CA)";
+        document.getElementById("pagesButton").style.border = "1px solid var(--A11Y-Grey-400, #B5C5CA)";
+        document.getElementById("htmlButton").style.border = "1px solid var(--A11Y-Grey-400, #B5C5CA)";
+        document.getElementById("issueDescriptionsWords").style.color = "#333333";
+        document.getElementById("pagesWords").style.color = "#333333";
+        document.getElementById("htmlWords").style.color = "#333333";
+        document.getElementById("issueDescriptionsButton").style.background = "#F6F8F9";
+        document.getElementById("pagesButton").style.background = "#F6F8F9";
+        document.getElementById("htmlButton").style.background = "#F6F8F9";
+        button.style.border = "2px solid var(--A11Y-Primary-Blue-600, #0047FA)";
+        button.style.background = "#FFF";
+        button.querySelector('span').style.color = '#0047FA';
+        currentlyClickedButton = button;
+    }
+
+    function showFilter() {
+        var x = document.getElementById("searchFilter");
+        x.style.display = "flex";
+    }
+
+    function hideFilter() {
+        var x = document.getElementById("searchFilter");
+        if (document.getElementById("searchBarInput").value === "" ) {
+        x.style.display = "none";
+        }
+    }
+
+    document.addEventListener('click', function(event) {
+    var searchBarDiv = document.getElementById('searchBar');
+    var searchFilterDiv = document.getElementById('searchFilter');
+    if (!searchBarDiv.contains(event.target) && !searchFilterDiv.contains(event.target)) {
+        hideFilter();
+    }
+    });
+
+    document.getElementById("issueDescriptionsButton").addEventListener("click", function () {
+        searchInput = document.getElementById("searchBarInput").value
+        loadRulesSummary(currentCategory, searchInput)
+    });
+
+    document.getElementById("pagesButton").addEventListener("click", function () {
+        searchInput = document.getElementById("searchBarInput").value
+        loadRulesSummary(currentCategory, searchInput)
+    });
+
+    document.getElementById("htmlButton").addEventListener("click", function () {
+        searchInput = document.getElementById("searchBarInput").value
+        loadRulesSummary(currentCategory, searchInput)
+    });
+
+    document.getElementById("searchBarInput").addEventListener("input", function (event) {
+        searchInput = event.target.value;
+        loadRulesSummary(currentCategory, searchInput);
+    });
+  
+
+// for filtering search
+
+function handleSearch(category, searchVal, filteredItems) {
+    let normalizedSearchVal = searchVal.trim().toLowerCase();
+    let isExactSearch = (normalizedSearchVal.startsWith('"') && normalizedSearchVal.endsWith('"')) ||
+                            (normalizedSearchVal.startsWith("'") && normalizedSearchVal.endsWith("'"));
+    
+    if (currentlyClickedButton.id === 'issueDescriptionsButton') {
+        searchIssueDescription(category, filteredItems, isExactSearch, normalizedSearchVal);
+
+    } else if (currentlyClickedButton.id === 'pagesButton') {
+        searchPages(category, filteredItems, isExactSearch, normalizedSearchVal)
+    
+    } else if (currentlyClickedButton.id === 'htmlButton') {
+        searchHtml(category, filteredItems, isExactSearch, normalizedSearchVal)
+    }
+    updateIssueOccurence(category, filteredItems)  
+}
+
+
+    function searchIssueDescription(category, filteredItems, isExactSearch, normalizedSearchVal) {
+        filteredItems[category].rules = filteredItems[category].rules.filter(item => {
+        let normalizedDescription = item.description.toLowerCase();
+        return isExactSearch ? normalizedDescription === normalizedSearchVal.slice(1, -1) : normalizedDescription.includes(normalizedSearchVal);
+      })
+    }
+
+    function searchPages(category, filteredItems, isExactSearch, normalizedSearchVal) {
+        // Filter pagesAffected array to only include pages with URLs that match the searchTerm
+        filteredItems[category].rules = filteredItems[category].rules.map(item => {
+        if (Array.isArray(item.pagesAffected)) {
+            item.pagesAffected = item.pagesAffected.filter(page => {
+            let normalizedPageUrl = page.url.toLowerCase();
+            return isExactSearch ? normalizedPageUrl === normalizedSearchVal.slice(1, -1) :normalizedPageUrl.includes(normalizedSearchVal);
+        });
+        item.totalItems = item.pagesAffected.reduce((sum, page) => sum + (Array.isArray(page.items) ? page.items.length : 0), 0);
+        }else {
+          item.pagesAffected = [];
+          item.totalItems = 0;
+        }
+        return item;
+        }).filter(item => item.pagesAffected.length > 0);
+        // Update the totalItems value for the category
+        filteredItems[category].totalItems = filteredItems[category].rules.reduce((sum, rule) => sum + rule.totalItems, 0);
+    }
+
+
+    function searchHtml(category, filteredItems, isExactSearch, normalizedSearchVal) {
+        normalizedSearchVal = normalizedSearchVal.replace(/\s+/g, '') 
+        filteredItems[category].rules.forEach(item => {
+          if (Array.isArray(item.pagesAffected)) {
+            item.pagesAffected.forEach(page => {
+            // Update items array to only include items with xpath or html starting with searchVal
+            page.items = Array.isArray(page.items) ? page.items.filter(item =>
+                {
+                let normalizedHtml = item.html.replace(/\s+/g, '').toLowerCase();
+                let normalizedXpath = item.xpath.replace(/\s+/g, '').toLowerCase()
+                let filterHtml;
+                if (isExactSearch){
+                    filterHtml = normalizedXpath === normalizedSearchVal.slice(1, -1) || normalizedHtml === normalizedSearchVal.slice(1, -1);
+                }else{
+                    filterHtml = normalizedXpath.includes(normalizedSearchVal) || normalizedHtml.includes(normalizedSearchVal);
+                }
+                return filterHtml;
+                }
+            ) : [];
+          });
+                // Update totalItems to be the sum of the number of elements in the items array
+                item.totalItems = item.pagesAffected.reduce((sum, page) => sum + (Array.isArray(page.items) ? page.items.length : 0), 0);
+            } 
+        });
+        filteredItems[category].rules = filteredItems[category].rules.filter(rule => rule.totalItems > 0);
+        // Update the totalItems value for the category
+        filteredItems[category].totalItems = filteredItems[category].rules.reduce((sum, rule) => sum + rule.totalItems, 0);
+    }
+
+
+    function updateIssueOccurence(category, filteredItems) {
+        //update no. of issues/occurances for each category
+        let rules = filteredItems[category].rules;
+        let totalItemsSum = rules.reduce((sum, rule) => sum + rule.totalItems, 0);
+        filteredItems[category].totalItems = totalItemsSum;
+        let updatedIssueOccurence="";
+        if (category !== 'passed' && filteredItems[category].totalItems !== 0) { 
+            updatedIssueOccurence  = `${filteredItems[category].rules.length} issues / ${filteredItems[category].totalItems} occurrences`
+        } else if (category !== 'passed' && filteredItems[category].totalItems === 0) { 
+            updatedIssueOccurence = `0 issues`
+        } else { 
+            updatedIssueOccurence = `${filteredItems[category].totalItems} occurrences`
+        }        
+        document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurence;
+    }
+
+    function resetIssueOccurence(category, filteredItems) {
+        for (let category in filteredItems) {
+            let updatedIssueOccurence="";
+            if (category !== 'passed' && filteredItems[category].totalItems !== 0) { 
+                updatedIssueOccurence  = `${filteredItems[category].rules.length} issues / ${filteredItems[category].totalItems} occurrences`
+            } else if (category !== 'passed' && filteredItems[category].totalItems === 0) { 
+                updatedIssueOccurence = `0 issues`
+            } else { 
+                updatedIssueOccurence = `${filteredItems[category].totalItems} occurrences`
+            } 
+          document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurence;
+          }
+    }
+
+  </script>
+  
