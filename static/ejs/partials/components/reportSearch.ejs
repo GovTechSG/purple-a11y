@@ -3,14 +3,14 @@
 <p class="mb-16" style="color: #333333; font-size: 18px; font-family: 'Open Sans', sans-serif; font-weight: 700; line-height: 32px; word-wrap: break-word;">Issues</p>
 
   
-  <div class="input-group ">
+  <div id= "searchBar" class="input-group ">
     <span class="input-group-text" style="background-color: white;">
       <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
   <path d="M21.6143 19.5152C23.0668 17.5332 23.7173 15.0759 23.4358 12.6349C23.1543 10.1939 21.9615 7.94918 20.096 6.34987C18.2305 4.75056 15.83 3.91458 13.3746 4.00919C10.9192 4.1038 8.59012 5.12202 6.85325 6.86014C5.11637 8.59825 4.09982 10.9281 4.00697 13.3835C3.91412 15.839 4.75181 18.2389 6.35246 20.1032C7.95311 21.9676 10.1987 23.1588 12.6399 23.4386C15.0811 23.7183 17.5379 23.066 19.5188 21.6122H19.5173C19.5623 21.6722 19.6103 21.7292 19.6643 21.7847L25.4393 27.5597C25.7206 27.8411 26.1022 27.9993 26.5001 27.9995C26.898 27.9996 27.2796 27.8417 27.5611 27.5604C27.8426 27.2792 28.0008 26.8976 28.0009 26.4997C28.001 26.1018 27.8431 25.7201 27.5618 25.4387L21.7868 19.6637C21.7332 19.6094 21.6756 19.5592 21.6143 19.5137V19.5152ZM22.0013 13.7492C22.0013 14.8326 21.788 15.9054 21.3734 16.9063C20.9588 17.9072 20.3511 18.8167 19.585 19.5828C18.8189 20.3489 17.9094 20.9566 16.9085 21.3712C15.9075 21.7858 14.8348 21.9992 13.7513 21.9992C12.6679 21.9992 11.5951 21.7858 10.5942 21.3712C9.59327 20.9566 8.6838 20.3489 7.91772 19.5828C7.15163 18.8167 6.54394 17.9072 6.12934 16.9063C5.71474 15.9054 5.50135 14.8326 5.50135 13.7492C5.50135 11.5611 6.37054 9.46272 7.91772 7.91554C9.46489 6.36837 11.5633 5.49917 13.7513 5.49917C15.9394 5.49917 18.0378 6.36837 19.585 7.91554C21.1322 9.46272 22.0013 11.5611 22.0013 13.7492Z" fill="#B5C5CA"/>
   </svg>
     </span>
 
-    <input onfocus="showMyDiv()" oninput="showMyDiv()" onblur="hideMyDiv()" type="text" class="form-control" id="floatingInputGroup1" placeholder="Search..." style="border-left: none;">
+    <input onfocus="showMyDiv()" oninput="showMyDiv()"  type="text" class="form-control" id="floatingInputGroup1" placeholder="Search..." style="border-left: none;">
   </div>
 
 
@@ -24,19 +24,19 @@
     </div>
 
     <div  style="padding-left: 16px;">
-      <button id= "issueDescriptionsButton" onclick="changeButtonColor(this)" class="btn btn-primary" style="width: 100%; height: 44px; gap: 10px; border-radius: 4px; border: 2px solid var(--A11Y-Primary-Blue-600, #0047FA); background:  #FFF;">
+      <button id= "issueDescriptionsButton" onclick="changeButtonColor(this)" onmouseover="handleButtonHover(this)" onmouseout="resetButtonStyle(this)" class="btn btn-primary" style="width: 100%; height: 44px; gap: 10px; border-radius: 4px; border: 2px solid var(--A11Y-Grey-400, #B5C5CA); background:  #FFF;">
         <span id= "issueDescriptionsWords" style="color: #0047FA; font-size: 16px; font-family: 'Open Sans', sans-serif; font-weight: 400; line-height: 28px; ">Issue Descriptions</span>
       </button>
     </div>
 
 
     <div  style="padding-left: 16px;">
-      <button id= "pagesButton" onclick="changeButtonColor(this)" class="btn btn-primary" style="width: 100%; height: 44px; gap: 10px; border-radius: 4px; border:1px solid var(--A11Y-Grey-400, #B5C5CA); background:  #F6F8F9;">
+      <button id= "pagesButton" onclick="changeButtonColor(this)" onmouseover="handleButtonHover(this)" onmouseout="resetButtonStyle(this)" class="btn btn-primary" style="width: 100%; height: 44px; gap: 10px; border-radius: 4px; border:1px solid var(--A11Y-Grey-400, #B5C5CA); background:  #F6F8F9;">
     <span id= "pagesWords" style="color: #333333; font-size: 16px; font-family: 'Open Sans', sans-serif; font-weight: 400; line-height: 28px; word-wrap: break-word;">Pages</span>
   </button>
     </div>
     <div  style="padding-left: 16px;">
-      <button id= "htmlButton" onclick="changeButtonColor(this)"  class="btn btn-primary" style="width: 100%; height: 44px; gap: 10px; border-radius: 4px; border:1px solid var(--A11Y-Grey-400, #B5C5CA); background: #F6F8F9;">
+      <button id= "htmlButton" onclick="changeButtonColor(this)" onmouseover="handleButtonHover(this)" onmouseout="resetButtonStyle(this)" class="btn btn-primary" style="width: 100%; height: 44px; gap: 10px; border-radius: 4px; border:1px solid var(--A11Y-Grey-400, #B5C5CA); background: #F6F8F9;">
     <span id= "htmlWords" style="color: #333333; font-size: 16px; font-family: 'Open Sans', sans-serif; font-weight: 400; line-height: 28px; word-wrap: break-word;">HTML elements/Paths</span>
   </button>
     </div>
@@ -46,6 +46,24 @@
 
 
   <script>
+
+
+    
+  let currentlyClickedButton = null;
+
+  function handleButtonHover(button) {
+    if (button!=currentlyClickedButton){
+    button.style.background = "#f2f6ff";
+    button.style.border = "1px solid #0047fa";
+  }}
+
+  function resetButtonStyle(button) {
+    if (button!=currentlyClickedButton){
+    button.style.background = "#FFF"; // Change this to the original background color
+    button.style.border = "1px solid var(--A11Y-Grey-400, #B5C5CA)"; // Change this to the original border color
+  }}
+
+  
 
 function changeButtonColor(clickedButton) {
     // Reset all buttons to white
@@ -68,6 +86,7 @@ function changeButtonColor(clickedButton) {
     clickedButton.style.background = "#FFF";
     clickedButton.querySelector('span').style.color = '#0047FA';
 
+    currentlyClickedButton = clickedButton;
     
   }
 
@@ -77,18 +96,74 @@ function changeButtonColor(clickedButton) {
     x.style.display = "flex";
   }
 //todo: not sure how to make searchFilter stay up when a button is clicked
+  // function hideMyDiv() {
+  //   var x = document.getElementById("searchFilter");
+  //   if (
+  //     document.getElementById("floatingInputGroup1").value === "" &&
+  //     !document.getElementById("floatingInputGroup1").matches(':focus') &&
+  //     !document.getElementById("searchFilter").matches(':focus') &&
+
+  //     !document.getElementById("issueDescriptionsButton").matches(':focus') &&
+  //     !document.getElementById("pagesButton").matches(':focus') &&
+  //     !document.getElementById("htmlButton").matches(':focus')
+  //   ) {
+  //     x.style.display = "none";
+  //   }
+  // }
+
   function hideMyDiv() {
     var x = document.getElementById("searchFilter");
     if (
-      document.getElementById("floatingInputGroup1").value === "" &&
-      !document.getElementById("floatingInputGroup1").matches(':focus') &&
-      !document.getElementById("searchFilter").matches(':focus') &&
-
-      !document.getElementById("issueDescriptionsButton").matches(':focus') &&
-      !document.getElementById("pagesButton").matches(':focus') &&
-      !document.getElementById("htmlButton").matches(':focus')
+      document.getElementById("floatingInputGroup1").value === "" 
     ) {
       x.style.display = "none";
     }
   }
+
+  document.addEventListener('click', function(event) {
+  var searchBarDiv = document.getElementById('searchBar');
+  var searchFilterDiv = document.getElementById('searchFilter');
+
+  // Check if the clicked element is outside the target div
+  if (!searchBarDiv.contains(event.target) && !searchFilterDiv.contains(event.target)) {
+    // Run your function here
+    hideMyDiv();
+  }
+});
+
+
+
+
+
+
+  let searchInput = ""
+
+  document.getElementById("issueDescriptionsButton").addEventListener("click", function () {
+    searchInput = document.getElementById("floatingInputGroup1").value
+    loadRulesSummary(currentCategory, searchInput)
+});
+
+  document.getElementById("pagesButton").addEventListener("click", function () {
+      searchInput = document.getElementById("floatingInputGroup1").value
+      loadRulesSummary(currentCategory, searchInput)
+  });
+
+  document.getElementById("htmlButton").addEventListener("click", function () {
+      searchInput = document.getElementById("floatingInputGroup1").value
+      loadRulesSummary(currentCategory, searchInput)
+  });
+
+
+
+  
+document.getElementById("floatingInputGroup1").addEventListener("input", function (event) {
+  console.log('keydown works', currentCategory);
+  searchInput = event.target.value;
+  console.log(document.getElementById("floatingInputGroup1").value.trim());
+    loadRulesSummary(currentCategory, searchInput);
+});
+
+
+
+
 </script>
