@@ -111,9 +111,10 @@ category summary is clicked %>
       return changeSelected;
     })();
 
-    Object.keys(scanItems).forEach(category => {
-      const ruleInCategory = scanItems[category].rules.find(r => r.rule === selectedRule.rule);
-
+    // START search feat changes
+    Object.keys(filteredItems).forEach(category => {
+      const ruleInCategory = filteredItems[category].rules.find(r => r.rule === selectedRule.rule);
+    // END search feat changes
       if (ruleInCategory !== undefined) {
         if (category !== 'passed') {
           availableFixCategories.push(category);
@@ -184,12 +185,12 @@ category summary is clicked %>
           <div class="accordion mt-2 ${category}">
             <div class="accordion-item">
               <div class="accordion-header" id="${accordionId}-title">
-                <button 
-                  aria-label="Page ${index + 1}: ${page.pageTitle}, ${page.items.length} occurrences" class="accordion-button collapsed" 
-                  type="button" 
-                  data-bs-toggle="collapse" 
-                  data-bs-target="#${accordionId}-content" 
-                  aria-expanded="false" 
+                <button
+                  aria-label="Page ${index + 1}: ${page.pageTitle}, ${page.items.length} occurrences" class="accordion-button collapsed"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#${accordionId}-content"
+                  aria-expanded="false"
                   aria-controls="${accordionId}-content"
                 >
                   <span class="sr-only visually-hidden">${page.items.length} ${page.items.length === 1 ? 'occurrence' : 'occurrences'}</span>
@@ -200,7 +201,7 @@ category summary is clicked %>
               <div id="${accordionId}-content" class="accordion-collapse collapse" aria-labelledby="${accordionId}-title">
                 <div class="accordion-body p-3">
                   ${ isCustomFlow
-                    ? 
+                    ?
                     `
                       <div class="custom-flow-screenshot-container">
                         <img alt="Screenshot of ${page.url}" src=${page.pageImagePath} class="custom-flow-screenshot"/>
@@ -260,29 +261,29 @@ category summary is clicked %>
                   <div class="d-flex justify-content-between g-one">
                     <div class="fw-bold">Screenshot</div>
                     <div class="page-item-card-section-content bg-grey-w-border">
-                      <img 
-                        src=${item.screenshotPath} 
+                      <img
+                        src=${item.screenshotPath}
                         onerror="this.onerror = null; this.closest('div.hide-on-img-error').remove();"
                         alt="Screenshot of affected element" />
                     </div>
                   </div>
-                  <hr/> 
+                  <hr/>
                 </div>
                 `
                   : ``
                 }
                 ${ item.xpath
-                  ? 
+                  ?
                   `
                   <div class="d-flex justify-content-between g-one">
                     <div class="fw-bold">Path</div>
                     <div class="page-item-card-section-content">
                         <div class="g-one path-container">
                           ${item.xpath}
-                          <button 
+                          <button
                             aria-label="Copy path to clipboard"
                             class="copy-button"
-                            data-bs-toggle="tooltip" 
+                            data-bs-toggle="tooltip"
                             data-bs-placement="top"
                             data-bs-original-title="Copy"
                           >
@@ -329,28 +330,28 @@ category summary is clicked %>
                   <div class="fw-bold page-item-card-section-title">AI suggestion</div>
                   <div id="${accordionDivToAppendAI}" class="page-item-card-section-content">
                     ${purpleAiQueryLabel.hasNetworkError ?
-                      `<button 
-                        id=${buttonDivForAiFeedback} 
-                        class="aiGenerateResponseButton" 
+                      `<button
+                        id=${buttonDivForAiFeedback}
+                        class="aiGenerateResponseButton"
                         onClick="handleOfflinePurpleAi(
                           '${ruleInCategory.rule}',
-                          '${accordionDivToAppendAI}', 
-                          '${escapeHtmlStringForArg(item.html)}', 
-                          '${buttonDivForAiFeedback}', 
+                          '${accordionDivToAppendAI}',
+                          '${escapeHtmlStringForArg(item.html)}',
+                          '${buttonDivForAiFeedback}',
                           '${aiErrorDiv}')"
                         >
                           Generate response
                         </button>
-                        <div id=${aiErrorDiv}></div>` : 
+                        <div id=${aiErrorDiv}></div>` :
                         (purpleAiQueryLabel.label ?
-                          `<button 
-                          id=${buttonDivForAiFeedback} 
-                          class="aiGenerateResponseButton" 
+                          `<button
+                          id=${buttonDivForAiFeedback}
+                          class="aiGenerateResponseButton"
                           onClick="getPurpleAiAnswer(
                             '${ruleInCategory.rule}',
-                            '${accordionDivToAppendAI}', 
-                            '${purpleAiQueryLabel.label}', 
-                            '${buttonDivForAiFeedback}', 
+                            '${accordionDivToAppendAI}',
+                            '${purpleAiQueryLabel.label}',
+                            '${buttonDivForAiFeedback}',
                             '${aiErrorDiv}')"
                           >
                             Generate response
@@ -359,7 +360,7 @@ category summary is clicked %>
                           `<span class="processAI">
                             Processing AI suggestions, please check back later.
                           </span>`
-                        ) 
+                        )
                       }
                   </div>
                 </div>` : ``
@@ -377,12 +378,12 @@ category summary is clicked %>
           textToCopy.select();
           // Copy the text inside the text field
           navigator.clipboard.writeText(textToCopy.value);
-          
+
           copyButtonElem.setAttribute('data-bs-original-title', 'Copied');
           copyTooltipItem.update();
           copyTooltipItem.show();
 
-          setTimeout(() => { 
+          setTimeout(() => {
             copyButtonElem.setAttribute('data-bs-original-title', 'Copy');
             copyTooltipItem.update();
           }, 1500)
@@ -390,7 +391,7 @@ category summary is clicked %>
         copyButtonElem.onmousedown = event => {
           event.preventDefault();
         }
-        
+
         hljs.configure({
           ignoreUnescapedHTML: true
         });
@@ -530,7 +531,7 @@ category summary is clicked %>
     'aria-roles': '<p>\n  Elements assigned invalid ARIA role values are not interpreted by assistive\n  technology as intended by the developer.\n</p>',
     label: '<p>\n  Effective form labels are required to make forms accessible. The purpose of\n  form elements such as checkboxes, radio buttons, input fields, etcetera, is\n  often apparent to sighted users, even if the form element is not\n  programmatically labeled. Screen readers users require useful form labels to\n  identify form fields. Adding a label to all form elements eliminates ambiguity\n  and contributes to a more accessible product.\n</p>',
     'landmark-one-main': '<p>\n  Navigating a web page is far simpler for screen reader users if all of the\n  content splits between one or more high-level sections. Content outside of\n  these sections is difficult to find, and its purpose may be unclear.\n</p>',
-    'aria-braille-equivalent': '<p class="rule-desc-text">\nARIA braille attributes were introduced to allow adjusting how labels and role descriptions are rendered on a braille display. They cannot be the only attribute providing a label, or a role description. When used without a corresponding label or role description ARIA says to ignore these attributes, although this may not happen consistently in screen readers and other assistive technologies.\n</p>', 
+    'aria-braille-equivalent': '<p class="rule-desc-text">\nARIA braille attributes were introduced to allow adjusting how labels and role descriptions are rendered on a braille display. They cannot be the only attribute providing a label, or a role description. When used without a corresponding label or role description ARIA says to ignore these attributes, although this may not happen consistently in screen readers and other assistive technologies.\n</p>',
     'aria-conditional-attr': '<p class="rule-desc-text">\nUsing ARIA attributes on elements where they are not expected can result in unpredictable behavior for assistive technologies. This can lead to a poor user experience for people with disabilities who rely on these technologies. It is important to follow the ARIA specification to ensure that assistive technologies can properly interpret and communicate the intended meaning of the content.\n</p>',
     'aria-deprecated-role': '<p class="rule-desc-text">\nUsing deprecated WAI-ARIA roles is bad for accessibility. They will not be recognized or correctly processed by screen readers and other assistive technologies. Using these means not everyone will be able to access essential information.\n</p>',
     'aria-prohibited-attr': '<p class="rule-desc-text">\nUsing ARIA attributes in roles where they are prohibited can mean that important information is not communicated to users of assistive technologies. assistive technologies may also attempt to compensate for the issue, resulting in inconsistent and confusing behavior of these tools.\n</p>'
