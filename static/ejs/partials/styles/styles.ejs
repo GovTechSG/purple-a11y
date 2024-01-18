@@ -1284,6 +1284,17 @@
     background-color: #f6f8f9;
   }
 
+  .rule-item-description {
+    margin-right: auto;
+    padding-left: 0.5rem;
+    width: 80%;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 56px;
+  }
+
   .compliance-summary {
     --bs-gutter-x: 1.5rem;
     --bs-gutter-y: 0;
@@ -1304,6 +1315,9 @@
   }
 
   @media only screen and (max-width: 600px) {
+    .hello {
+      width: 70%;
+    }
     .desktop-view {
       display: none;
     }
