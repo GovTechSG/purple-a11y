@@ -111,8 +111,8 @@ category summary is clicked %>
       return changeSelected;
     })();
 
-    Object.keys(scanItems).forEach(category => {
-      const ruleInCategory = scanItems[category].rules.find(r => r.rule === selectedRule.rule);
+    Object.keys(filteredItems).forEach(category => {
+      const ruleInCategory = filteredItems[category].rules.find(r => r.rule === selectedRule.rule);
 
       if (ruleInCategory !== undefined) {
         if (category !== 'passed') {
