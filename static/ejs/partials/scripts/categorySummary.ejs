@@ -52,13 +52,16 @@
 
       const ruleItem = createElementFromString(`
         <li>
-          <button aria-label="${buttonAriaLabel}" class="rule-item" data-bs-toggle="offcanvas" data-bs-target="#expandedRule" aria-controls="expandedRule"
+          <button aria-label="${buttonAriaLabel}" class="rule-item" data-bs-toggle="offcanvas" data-bs-target="#expandedRule" aria-controls="expandedRule " onclick="OffCanvasSearchWarning()"
             ${isPurpleAiRule ?
               `aria-describedby="containsAISuggestions"
               onfocus="document.getElementById('${purpleAiSvgId}').dispatchEvent(new MouseEvent('mouseover'))"
               onblur="document.getElementById('${purpleAiSvgId}').dispatchEvent(new MouseEvent('mouseout'))"
               onmousedown="event.preventDefault()"` : ``
+              
+              
             }
+
           >
             <div class="text-start">
               <div class="rule-items-count ${category}">
@@ -117,4 +120,7 @@
     messageContainer.appendChild(message);
     return messageContainer;
   }
+
+
+  
 </script>

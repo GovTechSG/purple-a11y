@@ -178,5 +178,28 @@ function handleSearch(category, searchVal, filteredItems) {
           }
     }
 
+
+    function OffCanvasSearchWarning() {
+        var expandedRuleSearchWarning = document.getElementById("expandedRuleSearchWarning");
+        // Check if the element exists and has child elements
+        if (expandedRuleSearchWarning && expandedRuleSearchWarning.hasChildNodes()) {
+        // Remove all child elements
+        while (expandedRuleSearchWarning.firstChild) {
+            expandedRuleSearchWarning.removeChild(expandedRuleSearchWarning.firstChild);
+        }
+        }
+        if(searchInput) {
+        var warningDiv = document.createElement("div");
+        warningDiv.id = "test";
+        warningDiv.className = "btn btn-primary";
+        warningDiv.style.cssText = "width:100%;gap:10px;border-radius:4px;border:1px solid var(--A11Y-Grey-400,#648FFF);background:#E5EDFF;margin-bottom:32px;";
+        var spanElement = document.createElement("span");
+        spanElement.id = "testText";
+        spanElement.style.cssText = "color:#333333;font-size:16px;font-family:'Open Sans',sans-serif;font-weight:400;line-height:28px;";
+        spanElement.innerHTML = `The list below has been filtered according to the search term "<strong>${searchInput.trim()}</strong>" in <strong>${currentlyClickedButton.textContent}</strong>`;
+        warningDiv.appendChild(spanElement);
+        document.getElementById("expandedRuleSearchWarning").appendChild(warningDiv);}
+    }
+
   </script>
   
