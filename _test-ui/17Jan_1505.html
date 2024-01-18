@@ -13732,6 +13732,11 @@
     padding-left: 0.5rem;
     width: 80%;
     text-align: left;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    overflow:hidden;
+    text-overflow: ellipsis;
+    max-height: 56px;
   }
 
   .compliance-summary {
@@ -13760,6 +13765,9 @@
   }
 
   @media only screen and (max-width: 600px) {
+    .hello {
+      width: 70%;
+    }
     .desktop-view {
       display: none;
     }
@@ -14515,7 +14523,7 @@
         </div>
         
       </nav>
-      <!-- FIX: To limit text wrapping to just two lines -->
+      <!-- FIX: Ellipses for text overflow not showing -->
       <!-- Placeholder buttons -->
       <ul id="categorySummaryMobile" class="flex-column unbulleted-list px-3 py-4 mb-3 flex-grow-1 mobile-view">
         <button class="rule-item">
