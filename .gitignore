@@ -29,3 +29,6 @@ verapdf*
 amazon-corretto-11.jdk/
 jre
 
+# test folders
+/test-codes
+_test-ui
