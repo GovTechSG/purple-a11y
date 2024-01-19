@@ -47,8 +47,9 @@ PS C:\Users\username\Downloads\purple-a11y-portable-windows>
 cd purple-a11y
 node index
 ```
- * If a Windows Firewall prompt appears, click "Allow access"
-<img width="261" alt="Windows Firewall prompt for Allow access" src="https://github.com/GovTechSG/purple-a11y/assets/50561219/4ece401b-1195-4a90-a327-243c081690b9">
+ * If a Windows Firewall prompt appears, if you have administrator rights, click "Allow" or "Allow access". Click "Cancel" if you do not have administrator rights.
+<img width="261" alt="Newer Windows Firewall prompt for Allow" src="https://github.com/GovTechSG/purple-a11y/assets/50561219/4ece401b-1195-4a90-a327-243c081690b9">
+<img width="331" alt="Windows Firewall prompt for Allow access" src="https://github.com/GovTechSG/purple-a11y/assets/2021525/d6d435c4-f534-4416-b418-a8b8e15f3b3f">
 
  * You should then see your Windows Command Prompt window updated with the following contents
 ```
