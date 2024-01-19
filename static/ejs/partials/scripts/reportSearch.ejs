@@ -35,10 +35,9 @@
   }
 
   function showFilter() {
-    var x = document.querySelector('.searchFilter');
+    var x = document.getElementById('searchFilter');
 
     if (x) {
-        x.style.width = '100%';
         x.style.height = '76px';
         x.style.flexShrink = '0';
         x.style.borderRadius = '0px 0px 4px 4px';
@@ -47,8 +46,13 @@
         x.style.display = 'flex';
         x.style.alignItems = 'center';
         x.style.justifyContent = 'left';
+        x.style.flexDirection = 'row';
+        x.style.overflowX = 'auto';
+        x.style.maxWidth = '100%';
+        x.style.width = '90vw';
     }
 }
+
 
  
 
