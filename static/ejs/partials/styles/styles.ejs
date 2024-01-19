@@ -1420,7 +1420,6 @@
     }
     
     .searchFilter{
-      width: 100%;
       height: 76px;
       flex-shrink: 0;
       border-radius: 0px 0px 4px 4px;
@@ -1429,16 +1428,24 @@
       display: none;
       align-items: center;
       justify-content: left;
+      flex-direction: row; 
+      overflow-x: auto; 
+      max-width: 100%; 
+      width: 90vw;
     
     
 }
 .filterButton{
-        width: 100%;
-        height: 44px;
-        gap: 10px;
-        border-radius: 4px;
-        border: 2px solid var(--A11Y-Grey-400, #b5c5ca);
-        background: #fff;
+        white-space: nowrap; 
+        overflow: hidden; 
+        min-height: 50px; 
+        margin-right: 10px; 
+        width: 100%; 
+        height: 44px; 
+        gap: 10px; 
+        border-radius: 4px; 
+        border: 2px solid var(--A11Y-Primary-Blue-600, #0047FA); 
+        background: rgb(255, 255, 255);
     }
 
     .filterWords{
