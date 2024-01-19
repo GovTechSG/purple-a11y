@@ -59,7 +59,7 @@ const runScan = async answers => {
   if (answers.scanner === constants.scannerTypes.custom && !isNewCustomFlow) {
     await playwrightAxeGenerator(data);
   } else {
-    await combineRun(data, screenToScan);
+    await combineRun(await data, screenToScan);
   }
 
   // Delete cloned directory
