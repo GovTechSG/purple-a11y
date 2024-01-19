@@ -35,9 +35,22 @@
   }
 
   function showFilter() {
-    var x = document.getElementById('searchFilter');
-    x.style.display = 'flex';
-  }
+    var x = document.querySelector('.searchFilter');
+
+    if (x) {
+        x.style.width = '100%';
+        x.style.height = '76px';
+        x.style.flexShrink = '0';
+        x.style.borderRadius = '0px 0px 4px 4px';
+        x.style.border = '1px solid var(--A11Y-Grey-400, #b5c5ca)';
+        x.style.background = 'var(--A11Y-Grey-100, #f6f8f9)';
+        x.style.display = 'flex';
+        x.style.alignItems = 'center';
+        x.style.justifyContent = 'left';
+    }
+}
+
+ 
 
   function hideFilter() {
     var x = document.getElementById('searchFilter');
@@ -45,6 +58,8 @@
       x.style.display = 'none';
     }
   }
+
+  
 
   document.addEventListener('click', function (event) {
     var searchBarDiv = document.getElementById('searchBar');
