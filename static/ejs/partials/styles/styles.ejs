@@ -141,6 +141,96 @@
     text-align: right;
   }
 
+  /* reportSearch starts here */
+
+.issue-word{
+      color: #333333;
+      font-size: 18px;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 700;
+      line-height: 32px;
+      word-wrap: break-word;
+    }
+    
+    .search-filter-off{
+      
+      display: none;
+  
+    }
+    .search-filter-on{
+          display: flex;
+          flex-direction: row; 
+          align-items: center;
+          justify-content: flex-start;
+          gap: 16px;
+          overflow-x: auto; 
+          flex-wrap: nowrap;
+
+          height: 76px;
+          border-radius: 0px 0px 4px 4px;
+          border: 1px solid var(--A11Y-Grey-400, #b5c5ca);
+          background: var(--A11Y-Grey-100, #f6f8f9);
+          max-width: 100%; 
+          min-width: 100%;
+          
+        
+        
+    }
+    .filter-button-issue{
+            white-space: nowrap;  
+            min-height: 50px; 
+            margin-right: 10px; 
+            width: 158px; 
+            height: 44px; 
+            gap: 10px; 
+            border-radius: 4px; 
+            border: 2px solid var(--A11Y-Primary-Blue-600, #0047FA); 
+            background: rgb(255, 255, 255);
+        }
+        .filter-button-pages{
+            white-space: nowrap;  
+            min-height: 50px; 
+            margin-right: 10px; 
+            width: 68px; 
+            height: 44px; 
+            gap: 10px; 
+            border-radius: 4px; 
+            border: 2px solid var(--A11Y-Primary-Blue-600, #0047FA); 
+            background: rgb(255, 255, 255);
+        }
+        .filter-button-html{
+            white-space: nowrap;  
+            min-height: 50px; 
+            margin-right: 10px; 
+            width: 197px; 
+            height: 44px; 
+            gap: 10px; 
+            border-radius: 4px; 
+            border: 2px solid var(--A11Y-Primary-Blue-600, #0047FA); 
+            background: rgb(255, 255, 255);
+        }
+    
+
+    .filter-words{
+      color: #333333;
+          font-size: 16px;
+          font-family: 'Open Sans', sans-serif;
+          font-weight: 400;
+          line-height: 28px;
+          white-space: nowrap;
+
+    }
+
+    .d-none {
+    display: none !important;
+  }
+  .ps-xl-3 {
+      padding-left: 1rem !important;
+    }  
+
+    /* reportSearch ends here */
+
+
   @media (max-width: 767px) {
     .toggleWrapper {
       border-top: 1px solid #e1e7eb;
@@ -1409,57 +1499,12 @@
       margin-bottom: 0;
     }
 
-    /* search filter starts here */
-    .issueWord{
-      color: #333333;
-      font-size: 18px;
-      font-family: 'Open Sans', sans-serif;
-      font-weight: 700;
-      line-height: 32px;
-      word-wrap: break-word;
-    }
-    
-    .searchFilter{
-      height: 76px;
-      flex-shrink: 0;
-      border-radius: 0px 0px 4px 4px;
-      border: 1px solid var(--A11Y-Grey-400, #b5c5ca);
-      background: var(--A11Y-Grey-100, #f6f8f9);
-      display: none;
-      align-items: center;
-      justify-content: left;
-      flex-direction: row; 
-      overflow-x: auto; 
-      max-width: 100%; 
-      width: 90vw;
-    
-    
-}
-.filterButton{
-        white-space: nowrap; 
-        overflow: hidden; 
-        min-height: 50px; 
-        margin-right: 10px; 
-        width: 100%; 
-        height: 44px; 
-        gap: 10px; 
-        border-radius: 4px; 
-        border: 2px solid var(--A11Y-Primary-Blue-600, #0047FA); 
-        background: rgb(255, 255, 255);
-    }
+  /* reportSearch */
+    .search-filter-on{
+          width: 90vw;
 
-    .filterWords{
-      color: #333333;
-          font-size: 16px;
-          font-family: 'Open Sans', sans-serif;
-          font-weight: 400;
-          line-height: 28px;
-          word-wrap: break-word;
-
-    }
-    
-    /* search filter ends here */
   }
+}
 
 
 
