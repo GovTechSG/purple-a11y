@@ -36,7 +36,7 @@
 
 
 function showFilter() {
-    var x = document.getElementById('searchFilter');
+    let x = document.getElementById('searchFilter');
 
     if (x) {
         if (x.classList.contains('d-none')) {
@@ -50,7 +50,7 @@ function showFilter() {
  
 
   function hideFilter() {
-    var x = document.getElementById('searchFilter');
+    let x = document.getElementById('searchFilter');
     if (document.getElementById('searchBarInput').value === '' && x.classList.contains('search-filter-on')) {
       x.classList.remove('search-filter-on');
       x.classList.add('d-none');
@@ -59,8 +59,8 @@ function showFilter() {
   
 
   document.addEventListener('click', function (event) {
-    var searchBarDiv = document.getElementById('searchBar');
-    var searchFilterDiv = document.getElementById('searchFilter');
+    let searchBarDiv = document.getElementById('searchBar');
+    let searchFilterDiv = document.getElementById('searchFilter');
     if (!searchBarDiv.contains(event.target) && !searchFilterDiv.contains(event.target)) {
       hideFilter();
     }
@@ -214,7 +214,7 @@ function showFilter() {
   }
 
   function OffCanvasSearchWarning() {
-    var expandedRuleSearchWarning = document.getElementById('expandedRuleSearchWarning');
+    let expandedRuleSearchWarning = document.getElementById('expandedRuleSearchWarning');
     // Check if the element exists and has child elements
     if (expandedRuleSearchWarning && expandedRuleSearchWarning.hasChildNodes()) {
       // Remove all child elements
@@ -223,21 +223,21 @@ function showFilter() {
       }
     }
     if (searchInput) {
-      var warningDiv = document.createElement('div');
+      let warningDiv = document.createElement('div');
       warningDiv.id = 'test';
       warningDiv.className = 'btn btn-primary';
       warningDiv.style.cssText =
         'width:100%;gap:10px;border-radius:4px;border:1px solid var(--A11Y-Grey-400,#648FFF);background:#E5EDFF;margin-bottom:32px; pointer-events: none';
-      var spanElement = document.createElement('span');
+      let spanElement = document.createElement('span');
       spanElement.id = 'testText';
       spanElement.style.cssText =
         "color:#333333;font-size:16px;font-family:'Open Sans',sans-serif;font-weight:400;line-height:28px;";
-        var text1 = document.createTextNode('The list below has been filtered according to the search term "');
-        var boldText = document.createElement('span');
+        let text1 = document.createTextNode('The list below has been filtered according to the search term "');
+        let boldText = document.createElement('span');
         boldText.style.fontWeight = 'bold';
         boldText.textContent = searchInput.trim();
-        var text2 = document.createTextNode('" in ');
-        var boldText2 = document.createElement('span');
+        let text2 = document.createTextNode('" in ');
+        let boldText2 = document.createElement('span');
         boldText2.style.fontWeight = 'bold';
         boldText2.textContent = currentlyClickedButton.textContent;
         // Append the text nodes and elements to the span element
