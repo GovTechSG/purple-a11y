@@ -25,54 +25,41 @@
   ).toFixed(2);
 %>
 
-<div id="wcag-compliance-card" class="card h-100 p-3">
-  <h2 class="mb-0">WCAG Compliance</h2>
-  <div class="wcag-compliance-passes-panel">
-    <div class="d-flex justify-content-between align-items-center">
-      <div class="d-flex align-items-center">
-        <span class="fw-bold">Automated: WCAG (A & AA) Passes</span>
-        <button
-          aria-label="More on automated testing WCAG coverage"
-          id="wcagModalToggle"
-          class="ms-2"
-          data-bs-toggle="modal"
-          data-bs-target="#wcagModal"
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 14 14"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M11.9528 2.05329C9.22079 -0.68205 4.78867 -0.68477 2.0533 2.04718C-0.682042 4.7792 -0.684795 9.21135 2.04722 11.9467C4.77917 14.6821 9.21135 14.6848 11.9467 11.9528C14.682 9.22085 14.6848 4.78863 11.9528 2.05329ZM7.00216 11.2406C6.6319 11.2406 6.33174 10.9405 6.33174 10.5702C6.33174 10.1999 6.63187 9.89976 7.00216 9.89976C7.37243 9.89976 7.67259 10.1999 7.67259 10.5702C7.67255 10.9405 7.37243 11.2406 7.00216 11.2406ZM8.09214 7.20401C7.70918 7.42788 7.67645 7.7033 7.6748 8.49691C7.6747 8.54938 7.67453 8.60233 7.67423 8.65558C7.67185 9.03068 7.36712 9.33312 6.99253 9.33312C6.99105 9.33312 6.98957 9.33312 6.98813 9.33312C6.61159 9.33074 6.3083 9.02356 6.31066 8.64699C6.31099 8.59568 6.31109 8.54468 6.31119 8.49415C6.31287 7.67852 6.31492 6.66352 7.40395 6.02694C8.27777 5.51613 8.3879 5.18059 8.28543 4.74029C8.16503 4.2231 7.69273 4.08907 7.32418 4.1312C7.20042 4.14541 6.58322 4.24724 6.58322 4.85783C6.58322 5.23431 6.27795 5.5396 5.90141 5.5396C5.52487 5.5396 5.21964 5.23431 5.21964 4.85783C5.21964 3.76416 6.02107 2.90831 7.16859 2.77656C8.35043 2.64099 9.35515 3.32135 9.61338 4.4312C9.99939 6.08915 8.61379 6.89911 8.09214 7.20401Z"
-              fill="#B5C5CA"
-            />
-          </svg>
-        </button>
-      </div>
-      <span aria-label="Pass percentage" class="ms-2"><%= wcagPassPercentage %>%</span>
-    </div>
-    <div class="wcag-compliance-passes-bar">
-      <div
-        class="wcag-compliance-passes-bar-progress"
-        style="width: <%= wcagPassPercentage %>%"
-      ></div>
+<div id="wcag-compliance-card" class="card-body">
+  <h2>WCAG Compliance</h2>
+  <div class="d-flex align-items-center">
+    <span class="flex-grow-1"><span class="d-none d-md-inline">Automated: </span>WCAG (A & AA) Passes</span>
+    <span aria-label="Pass percentage" class="ms-2"><%= wcagPassPercentage %>%</span>
+  </div>
+  <div class="wcag-compliance-passes-bar">
+    <div
+      class="wcag-compliance-passes-bar-progress"
+      style="width: <%= wcagPassPercentage %>%"
+    >
     </div>
   </div>
-  <p>
+  <p class="d-none d-md-block">
     Only a subset of
-    <a
-      href="https://www.w3.org/WAI/WCAG21/quickref/?currentsidebar=%23col_customize&versions=2.1&levels=aaa"
-      target="_blank"
-      >WCAG 2.1</a
-    >
-    (Conformance Level A & AA) Success Criteria can be automatically checked so
-    <a aria-label="Manual testing guide" href="http://go.gov.sg/a11y-manual-testing" target="_blank">manual testing</a>
-    is still required.
+        <a
+        href="https://www.w3.org/WAI/WCAG21/quickref/?currentsidebar=%23col_customize&versions=2.1&levels=aaa"
+        target="_blank"
+        >WCAG 2.1</a
+        >
+        (Conformance Level A & AA) Success Criteria can be automatically checked so
+        <a aria-label="Manual testing guide" href="http://go.gov.sg/a11y-manual-testing" target="_blank">manual testing</a>
+        is still required.
   </p>
+  <button
+  id="wcagModalToggle"
+  type="button"
+  data-bs-toggle="modal"
+  data-bs-target="#wcagModal"
+  >
+    More details
+  </button>
+
 </div>
+<!-- START Modal Pop up -->
 <div
   id="wcagModal"
   class="modal fade"
@@ -130,3 +117,4 @@
     </div>
   </div>
 </div>
+<!-- END Modal Pop up -->
