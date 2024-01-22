@@ -221,7 +221,7 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
   log(`Overlay menu: adding to ${menuPos}...`);
 
   // Add the overlay menu with initial styling
-  return page
+    return page
     .evaluate(
       async vars => {
         const menu = document.createElement('div');
@@ -319,9 +319,18 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
 
         shadowRoot.appendChild(menu);
 
-        document.body.appendChild(shadowHost);
+
+        var head = document.head;
+        var nextSibling = head.nextElementSibling;
+        if (nextSibling && nextSibling.tagName.toLowerCase() === 'body') {
+            document.body.appendChild(shadowHost);
+        } else {
+            head.insertAdjacentElement('afterend', shadowHost);
+        }
       },
+      
       { menuPos, MENU_POSITION, urlsCrawled },
+      
     )
     .then(() => {
       log('Overlay menu: successfully added');
@@ -412,4 +421,4 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
   await page.exposeFunction('updateMenuPos', updateMenuPos);
 
   return page;
-};
+  };
