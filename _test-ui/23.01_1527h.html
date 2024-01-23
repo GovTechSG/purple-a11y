@@ -1,12 +1,14 @@
 <!-- TESTCODES ONLY: remove when raising PR -->
 <!-- Report generated is updated till commit d32771eae180d56413f85b346df35844cf116b9c-->
-<!-- Last update 23.01 _____ -->
+<!-- Last update 23.01 at 1556h -->
 <!doctype html>
 <html lang="en" id="accessibility-site-report">
   <head lang="en">
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Accessibility Site Report</title>
+    <!-- [TESTCODE] Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" />
     <link
       rel="icon"
       type="image/svg+xml"
@@ -13859,6 +13861,105 @@
 
   /* Mobile UI Styles - KC*/
 
+    /* START: Accessible Dropdown Category Selector Styles */
+    .ally-button-container {
+      #announcement {
+      opacity: 0;
+      pointer-events: none;
+      }
+    select,
+    button,
+    ul{
+      display: block;
+      border: 0;
+      font-size: 1rem;      
+    }
+    button {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+
+      &::before {
+      font-family: "Font Awesome 5 Free";
+      content: "\f107";
+      vertical-align: middle;
+      font-weight: 900;
+      position: absolute;
+      right: .8rem;
+      }
+
+      &:focus-visible {
+        outline: 0;
+        box-shadow: 0 0 5px 2px rgba(251, 146, 60, 0.7) inset;
+      }
+    }
+
+    ul {
+      color: #3f403b;
+      position: absolute;
+      left: 0;
+      right: 0;
+      max-height: 10rem;
+      overflow-y: auto;
+      list-style-type: none;
+      padding: 0;
+      margin-top: .1rem;
+      opacity: 0;
+      transform: scale(1,0);
+      transform-origin: top left;
+      transition: all .3s ease-in;
+      pointer-events: none;
+      z-index: 2;
+
+      &.active {
+        opacity: 1;
+        transform: scale(1,1);
+        pointer-events: auto;
+      }
+      li {
+      margin: 0 0.5rem;
+      padding: .6rem .5rem;
+      border-top: 1px solid #e6e6e6;
+      cursor: pointer;
+      transition: all .3s ease-in;
+      position: relative;
+      background-color: rgb(255, 255, 255);
+        &::before {
+          font-family: "Font Awesome 5 Free";
+          content: "\f00c";
+          vertical-align: middle;
+          font-weight: 900;
+          position: absolute;
+          right: .8rem;
+          opacity: 0;
+          transition: opacity .300s ease-out;
+        }
+        &.current {
+          /* Color of list item when selected */
+          background: #e6e6e6;
+        }
+        &.active {
+          box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.7);
+        }
+        &.active::before {
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  .ally-toggle-button {
+    width: 100%;
+    padding: 10px;
+    text-align: left;
+    /* background-color: lightcoral; */
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+  }
+  /* END: Accessible Dropdown Category Selector Styles */
+
   .rule-item-description {
     margin-right: auto;
     padding-left: 0.5rem;
@@ -14740,6 +14841,30 @@
         </div>
         
       </nav>
+
+      <!-- Accessible Dropdown Category Selector Component -->
+      <!-- TODO: Make into separate ejs component -->
+      <!-- TODO: Match UI to Figma -->
+      <div class="d-md-none d-flex mt-4 mx-2 px-2 position-relative ally-button-container">
+        <label class="visually-hidden" for="select">Accessible Dropdown</label>
+        <button
+          class="ally-toggle-button"
+          role="combobox"
+          id="select"
+          value="Select"
+          aria-controls="listbox"
+          aria-haspopup="listbox"
+          tabindex="0"
+          aria-expanded="false"
+        >Accessible Dropdown</button>
+        <div class="visually-hidden" id="announcement" aria-live="assertive" role="alert"></div>
+        <ul role="listbox" id="listbox">
+          <li role="option">Must Fix</li>
+          <li role="option">Good To Fix</li>
+          <li role="option">Passed</li>
+        </ul>
+      </div>
+
       <ul id="categorySummary" class="unbulleted-list px-3 py-4 mb-3 flex-grow-1">
         <!-- dynamically generated section from scripts/categorySummary -->
         
@@ -15165,7 +15290,186 @@
     className:"tag",begin:a.concat(/<\//,a.lookahead(a.concat(n,/>/))),contains:[{
     className:"name",begin:n,relevance:0},{begin:/>/,relevance:0,endsParent:!0}]}]}}
     })();hljs.registerLanguage("xml",e)})();
-</script> 
+</script>
+
+<!-- Accessible Dropdown Category Selector Script -->
+<!-- TODO: Make into separate ejs script -->
+<!-- TODO: Functionality for loadSummary -->
+<script>
+  const elements = {
+    button: document.querySelector('[role="combobox"]'),
+    dropdown: document.querySelector('[role="listbox"]'),
+    options: document.querySelectorAll('[role="option"]'),
+    announcement: document.getElementById('announcement'),
+  };
+  
+  let isDropdownOpen = false;
+  let currentOptionIndex = 0;
+  let lastTypedChar = '';
+  let lastMatchingIndex = 0;
+  
+  const updateDropdownPosition = () => {
+    const buttonHeight = elements.button.offsetHeight;
+    elements.dropdown.style.top = `calc(${buttonHeight}px)`;
+  };
+  
+  const toggleAllyDropdown = () => {
+    elements.dropdown.classList.toggle('active');
+    isDropdownOpen = !isDropdownOpen;
+    elements.button.setAttribute('aria-expanded', isDropdownOpen.toString());
+  
+    if (isDropdownOpen) {
+      focusCurrentOption();
+      // Update the dropdown position when it's opened
+      updateDropdownPosition();
+    } else {
+      elements.button.focus();
+    }
+  };
+  
+  const handleKeyPress = (event) => {
+    event.preventDefault();
+    const { key } = event;
+    const openKeys = ['ArrowDown', 'ArrowUp', 'Enter', ' '];
+  
+    if (!isDropdownOpen && openKeys.includes(key)) {
+      toggleAllyDropdown();
+    } else if (isDropdownOpen) {
+      switch (key) {
+        case 'Escape':
+          toggleAllyDropdown();
+          break;
+        case 'ArrowDown':
+          moveFocusDown();
+          break;
+        case 'ArrowUp':
+          moveFocusUp();
+          break;
+        case 'Enter':
+        case ' ':
+          selectCurrentOption();
+          break;
+        default:
+          // Handle alphanumeric key presses for mini-search
+          handleAlphanumericKeyPress(key);
+          break;
+      }
+    }
+  };
+  
+  const handleDocumentInteraction = (event) => {
+    const isClickInsideButton = elements.button.contains(event.target);
+    const isClickInsideDropdown = elements.dropdown.contains(event.target);
+  
+    if (isClickInsideButton || (!isClickInsideDropdown && isDropdownOpen)) {
+      toggleAllyDropdown();
+    }
+  
+    // Check if the click is on an option
+    const clickedOption = event.target.closest('[role="option"]');
+    if (clickedOption) {
+      selectOptionByElement(clickedOption);
+    }
+  };
+  
+  const moveFocusDown = () => {
+    if (currentOptionIndex < elements.options.length - 1) {
+      currentOptionIndex++;
+    } else {
+      currentOptionIndex = 0;
+    }
+    focusCurrentOption();
+  };
+  
+  const moveFocusUp = () => {
+    if (currentOptionIndex > 0) {
+      currentOptionIndex--;
+    } else {
+      currentOptionIndex = elements.options.length - 1;
+    }
+    focusCurrentOption();
+  };
+  
+  const focusCurrentOption = () => {
+    const currentOption = elements.options[currentOptionIndex];
+      const optionLabel = currentOption.textContent;
+  
+    currentOption.classList.add('current');
+    currentOption.focus();
+  
+    // Scroll the current option into view
+    currentOption.scrollIntoView({
+      block: 'nearest',
+    });
+  
+    elements.options.forEach((option, index) => {
+      if (option !== currentOption) {
+        option.classList.remove('current');
+      }
+    });
+      announceOption(`You're currently focused on ${optionLabel}`); // Announce the selected option within a delayed period
+  };
+  
+  const selectCurrentOption = () => {
+    const selectedOption = elements.options[currentOptionIndex];
+    selectOptionByElement(selectedOption);
+  };
+  
+  const selectOptionByElement = (optionElement) => {
+    const optionValue = optionElement.textContent;
+  
+    elements.button.textContent = optionValue;
+    elements.options.forEach(option => {
+      option.classList.remove('active');
+      option.setAttribute('aria-selected', 'false');
+    });
+  
+    optionElement.classList.add('active');
+    optionElement.setAttribute('aria-selected', 'true');
+  
+    toggleAllyDropdown();
+    announceOption(optionValue); // Announce the selected option
+  };
+  
+  const handleAlphanumericKeyPress = (key) => {
+    const typedChar = key.toLowerCase();
+    
+    if (lastTypedChar !== typedChar) {
+      lastMatchingIndex = 0;
+    }
+  
+    const matchingOptions = Array.from(elements.options).filter((option) =>
+      option.textContent.toLowerCase().startsWith(typedChar)
+    );
+  
+    if (matchingOptions.length) {
+      if (lastMatchingIndex === matchingOptions.length) {
+        lastMatchingIndex = 0;
+      }
+      let value = matchingOptions[lastMatchingIndex]
+      const index = Array.from(elements.options).indexOf(value);
+      currentOptionIndex = index;
+      focusCurrentOption();
+      lastMatchingIndex += 1;
+    }
+    lastTypedChar = typedChar;
+  };
+  
+  const announceOption = (text) => {
+    elements.announcement.textContent = text;
+    elements.announcement.setAttribute('aria-live', 'assertive');
+    setTimeout(() => {
+      elements.announcement.textContent = '';
+      elements.announcement.setAttribute('aria-live', 'off');
+    }, 1000); // Announce and clear after 1 second (adjust as needed)
+  };
+  
+  
+  elements.button.addEventListener('keydown', handleKeyPress);
+  document.addEventListener('click', handleDocumentInteraction);
+  window.addEventListener('resize', updateDropdownPosition);
+</script>
+
 <script>
   function createElementFromString(htmlString) {
     const tempContainer = document.createElement('div');
