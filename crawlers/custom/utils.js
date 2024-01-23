@@ -319,7 +319,30 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
 
         shadowRoot.appendChild(menu);
 
-        document.body.appendChild(shadowHost);
+        let currentNode = document.body
+        if (document.body) {
+          // The <body> element exists
+          if ( document.body.nodeName.toLowerCase() === 'frameset') {
+              // if currentNode is a <frameset>
+              // Move the variable outside the frameset then appendChild the component
+              while (currentNode.nodeName.toLowerCase()=== 'frameset' ) {
+                currentNode = currentNode.parentElement
+              }
+              currentNode.appendChild(shadowHost);
+            } else {
+              // currentNode is a <body>
+              currentNode.appendChild(shadowHost);
+            }
+        } else if (document.head) {
+          // The <head> element exists
+          // Append the variable below the head
+          head.insertAdjacentElement('afterend', shadowHost);
+        } else {
+          // Neither <body> nor <head> nor <html> exists
+          // Append the variable to the document
+          document.documentElement.appendChild(shadowHost);
+        }
+
       },
       { menuPos, MENU_POSITION, urlsCrawled },
     )
