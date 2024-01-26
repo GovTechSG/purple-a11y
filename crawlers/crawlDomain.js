@@ -101,45 +101,50 @@ const crawlDomain = async (
     };
     await page.exposeFunction('handleOnWindowOpen', handleOnWindowOpen);
 
-    await page.evaluate(() => {
-      // Override window.open
-      window.open = url => {
-        window.handleOnWindowOpen(url);
-      };
-    });
+    try {
+      await page.evaluate(() => {
+        // Override window.open
+        window.open = url => {
+          window.handleOnWindowOpen(url);
+        };
+      });
 
-    const handleOnClickEvent = async () => {
-      // Intercepting click events to handle cases where request was issued before the frame is created 
-      // when a new tab/window is opened 
-      await page.context().route('**/*', async route => {
-        if (route.request().resourceType() === 'document') {
-          try {
-            const isTopFrameNavigationRequest = () => {
-              return route.request().isNavigationRequest() 
-                  && route.request().frame() === page.mainFrame();
-            }
-
-            if (isTopFrameNavigationRequest()) {
-              const url = route.request().url(); 
-              if (!isDisallowedInRobotsTxt(url)) {
-                await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+      const handleOnClickEvent = async () => {
+        // Intercepting click events to handle cases where request was issued before the frame is created 
+        // when a new tab/window is opened 
+        await page.context().route('**/*', async route => {
+          if (route.request().resourceType() === 'document') {
+            try {
+              const isTopFrameNavigationRequest = () => {
+                return route.request().isNavigationRequest() 
+                    && route.request().frame() === page.mainFrame();
               }
-              await route.abort('aborted');
-            } else {
+
+              if (isTopFrameNavigationRequest()) {
+                const url = route.request().url(); 
+                if (!isDisallowedInRobotsTxt(url)) {
+                  await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+                }
+                await route.abort('aborted');
+              } else {
+                route.continue();
+              }
+            } catch (e) {
+              silentLogger.info(e);
               route.continue();
             }
-          } catch (e) {
-            silentLogger.info(e);
-            route.continue();
           }
-        }
-      })
-    }
-    await page.exposeFunction('handleOnClickEvent', handleOnClickEvent)
+        })
+      }
+      await page.exposeFunction('handleOnClickEvent', handleOnClickEvent)
 
-    await page.evaluate(() => {
-      document.addEventListener('click', (event) => handleOnClickEvent(event));
-    })
+      await page.evaluate(() => {
+        document.addEventListener('click', (event) => handleOnClickEvent(event));
+      })
+    } catch (e) {
+      // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
+      // Handles browser page object been closed.
+    }
 
     page.on('request', async request => {
       // Intercepting requests to handle cases where request was issued before the frame is created
@@ -305,6 +310,7 @@ const crawlDomain = async (
           isBasicAuth = false;
         } else {
           if (isScanHtml) {
+
             const results = await runAxeScript(needsReview, includeScreenshots, page, randomToken);
             guiInfoLog(guiInfoStatusTypes.SCANNED, {
               numScanned: urlsCrawled.scanned.length,
@@ -355,23 +361,25 @@ const crawlDomain = async (
           await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
         }
       } catch (e) {
-        silentLogger.info(e);
-        guiInfoLog(guiInfoStatusTypes.ERROR, {
-          numScanned: urlsCrawled.scanned.length,
-          urlScanned: request.url,
-        });
-        const browser = browserController.browser;
-        page = await browser.newPage();
-        await page.goto(request.url);
-
-        await page.route('**/*', async route => {
-          const interceptedRequest = route.request();
-          if (interceptedRequest.resourceType() === 'document') {
-            await requestQueue.addRequest({ url: interceptedRequest.url(), skipNavigation: isUrlPdf(interceptedRequest.url()) });
-            return;
-          }
-        })
-        urlsCrawled.error.push({ url: request.url });
+        if (!e.message.contains("page.evaluate")) {
+          silentLogger.info(e);
+          guiInfoLog(guiInfoStatusTypes.ERROR, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: request.url,
+          });
+          const browser = browserController.browser;
+          page = await browser.newPage();
+          await page.goto(request.url);
+  
+          await page.route('**/*', async route => {
+            const interceptedRequest = route.request();
+            if (interceptedRequest.resourceType() === 'document') {
+              await requestQueue.addRequest({ url: interceptedRequest.url(), skipNavigation: isUrlPdf(interceptedRequest.url()) });
+              return;
+            }
+          })
+          urlsCrawled.error.push({ url: request.url });
+        }
       }
     },
     failedRequestHandler: async ({ request }) => {
