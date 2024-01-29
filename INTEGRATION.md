@@ -334,7 +334,8 @@ Run your test with <code>node purpleA11y-playwright-demo.js</code> .
 You will see Purple A11y results generated in <code>results</code> folder.
 
 </details>
-### Automating Web Crawler Login
+
+#### Automating Web Crawler Login
 <details>
     <summary>Click here to see an example automated web crawler login</summary>
 <code>purpleA11y-playwright-demo.js</code>:
