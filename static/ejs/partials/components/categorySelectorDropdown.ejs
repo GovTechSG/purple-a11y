@@ -1,0 +1,25 @@
+<% const formattedCategoryTitles = { 
+  mustFix: "Must Fix",
+  goodToFix: "Good to Fix",
+  passed: "Passed"
+} %>
+
+<li
+aria-labelledby="<%= category %>Title <%= category %>ItemsInformation"
+aria-describedby="<%= category %>AriaDescription"
+id="<%= category %>Selector"
+class="<%= category %>"
+ole="option"
+>    <span id="<%= category %>Title" class="d-flex align-items-center category-name fw-bold d-inline mb-0">
+  <%= formattedCategoryTitles[category] %>
+</span>
+<span id="<%= category %>ItemsInformation" class="category-information">
+  <% if (category !== 'passed' && items[category].totalItems !== 0) { %> 
+    <%= items[category].rules.length %> issues / <%= items[category].totalItems %> occurrences
+  <% } else if (category !== 'passed' && items[category].totalItems === 0) { %>
+    0 issues
+  <% } else { %>
+    <%= items[category].totalItems %> occurrences
+  <% } %>
+</span>
+</li>
