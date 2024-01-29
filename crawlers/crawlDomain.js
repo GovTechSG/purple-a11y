@@ -38,7 +38,8 @@ const crawlDomain = async (
   fileTypes,
   blacklistedPatterns,
   includeScreenshots,
-  followRobots
+  followRobots,
+  extraHTTPHeaders
 ) => {
   let needsReview = needsReviewItems;
   const isScanHtml = ['all', 'html-only'].includes(fileTypes);
@@ -213,7 +214,7 @@ const crawlDomain = async (
       ],
     },
     requestQueue,
-    preNavigationHooks,
+    preNavigationHooks: preNavigationHooks(extraHTTPHeaders),
     requestHandler: async ({
       browserController,
       page,

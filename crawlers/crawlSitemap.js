@@ -32,7 +32,8 @@ const crawlSitemap = async (
   needsReviewItems,
   fileTypes,
   blacklistedPatterns,
-  includeScreenshots
+  includeScreenshots,
+  extraHTTPHeaders
 ) => {
 
    // Boolean to omit axe scan for basic auth URL
@@ -105,7 +106,7 @@ const crawlSitemap = async (
       ],
     },
     requestList,
-    preNavigationHooks,
+    preNavigationHooks: preNavigationHooks(extraHTTPHeaders),
     requestHandler: async ({ page, request, response, sendRequest }) => {
       const actualUrl = request.loadedUrl || request.url;
 

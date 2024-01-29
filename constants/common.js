@@ -257,14 +257,15 @@ export const sanitizeUrlInput = url => {
   return data;
 };
 
-const requestToUrl = async (url, isNewCustomFlow) => {
+const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
   // User-Agent is modified to emulate a browser to handle cases where some sites ban non browser agents, resulting in a 403 error
   const res = {};
   await axios
     .get(url, {
       headers: { 
+        ...extraHTTPHeaders,
         'User-Agent': devices['Desktop Chrome HiDPI'].userAgent,
-        'Host': new URL(url).host 
+        'Host': new URL(url).host
       },
       httpsAgent,
       timeout: 2000,
@@ -323,12 +324,12 @@ const requestToUrl = async (url, isNewCustomFlow) => {
   return res;
 };
 
-const checkUrlConnectivity = async (url, isNewCustomFlow) => {
+const checkUrlConnectivity = async (url, isNewCustomFlow, extraHTTPHeaders) => {
   const data = sanitizeUrlInput(url);
 
   if (data.isValid) {
     // Validate the connectivity of URL if the string format is url format
-    const res = await requestToUrl(data.url, isNewCustomFlow);
+    const res = await requestToUrl(data.url, isNewCustomFlow, extraHTTPHeaders);
     return res;
   }
 
@@ -342,6 +343,7 @@ const checkUrlConnectivityWithBrowser = async (
   clonedDataDir,
   playwrightDeviceDetailsObject,
   isNewCustomFlow,
+  extraHTTPHeaders
 ) => {
   const res = {};
 
@@ -369,6 +371,7 @@ const checkUrlConnectivityWithBrowser = async (
         ...getPlaywrightLaunchOptions(browserToRun),
         ...(viewport && { viewport }),
         ...(userAgent && { userAgent }),
+        ...(extraHTTPHeaders && { extraHTTPHeaders })
       });
     } catch (err) {
       printMessage([`Unable to launch browser\n${err}`], messageOptions);
@@ -385,7 +388,7 @@ const checkUrlConnectivityWithBrowser = async (
       // playwright headless mode does not support navigation to pdf document
       if (isUrlPdf(url)) {
         // make http request to url to check
-        return await requestToUrl(url);
+        return await requestToUrl(url, false, extraHTTPHeaders);
       }
 
       const response = await page.goto(url, {
@@ -456,6 +459,7 @@ export const checkUrl = async (
   clonedDataDir,
   playwrightDeviceDetailsObject,
   isNewCustomFlow,
+  extraHTTPHeaders
 ) => {
   let res;
   if (proxy) {
@@ -465,9 +469,10 @@ export const checkUrl = async (
       clonedDataDir,
       playwrightDeviceDetailsObject,
       isNewCustomFlow,
+      extraHTTPHeaders
     );
   } else {
-    res = await checkUrlConnectivity(url, isNewCustomFlow);
+    res = await checkUrlConnectivity(url, isNewCustomFlow, extraHTTPHeaders);
     if (res.status === constants.urlCheckStatuses.axiosTimeout.code) {
       if (browser || constants.launcher === webkit) {
         res = await checkUrlConnectivityWithBrowser(
@@ -476,6 +481,7 @@ export const checkUrl = async (
           clonedDataDir,
           playwrightDeviceDetailsObject,
           isNewCustomFlow,
+          extraHTTPHeaders
         );
       }
     }
@@ -522,6 +528,7 @@ export const prepareData = async argv => {
     additional,
     metadata,
     followRobots,
+    header
   } = argv;
 
   // construct filename for scan results
@@ -557,7 +564,8 @@ export const prepareData = async argv => {
     blacklistedPatternsFilename,
     includeScreenshots: !(additional === 'none'),
     metadata,
-    followRobots
+    followRobots,
+    extraHTTPHeaders: header
   };
 };
 
