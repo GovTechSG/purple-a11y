@@ -338,7 +338,7 @@ You will see Purple A11y results generated in <code>results</code> folder.
 #### Automating Web Crawler Login
 <details>
     <summary>Click here to see an example automated web crawler login</summary>
-<code>purpleA11y-playwright-demo.js</code>:
+<code>automated-web-crawler-login.js</code>:
    
    
     import { chromium } from 'playwright';
