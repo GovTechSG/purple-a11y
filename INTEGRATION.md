@@ -334,3 +334,57 @@ Run your test with <code>node purpleA11y-playwright-demo.js</code> .
 You will see Purple A11y results generated in <code>results</code> folder.
 
 </details>
+### Automating Web Crawler Login
+<details>
+    <summary>Click here to see an example automated web crawler login</summary>
+<code>purpleA11y-playwright-demo.js</code>:
+   
+   
+    import { chromium } from 'playwright';
+    async function loginAndCaptureHeaders(url, email, password) {
+    const browser = await chromium.launch({ headless: false });
+    const page = await browser.newPage();
+
+    await page.goto(url);
+    await page.fill('input[name="email"]', email);
+    await page.fill('input[name="password"]', password);
+   
+   
+    const [response] = await Promise.all([
+      page.waitForNavigation(),
+      page.click('input[type="submit"]'),
+    ]);
+   
+   
+    const cookies = await page.context().cookies();
+    const headers = response.headers();
+   
+   
+    const formattedCookies = formatCookies(cookies);
+   
+   
+    headers['cookies'] = formattedCookies;
+   
+   
+    //await browser.close();
+    return { headers, formattedCookies };
+   }
+   
+   
+   function formatCookies(cookies) {
+    return cookies.map(cookie =>
+      `name ${cookie.name}, value ${cookie.value}, domain ${cookie.domain}, path ${cookie.path}, expires ${cookie.expires}, httpOnly ${cookie.httpOnly}, secure ${cookie.secure}, sameSite ${cookie.sameSite}`
+    ).join('; ');
+   }
+   
+   
+   loginAndCaptureHeaders('https://authenticationtest.com/simpleFormAuth/', 'simpleForm@authenticationtest.com', 'pa$$w0rd')
+    .then(({ headers, formattedCookies }) => {
+     
+      console.log('Headers:', JSON.stringify(headers, null, 2));
+    })
+    .catch(err => {
+      console.error('Error during login:', err);
+    });
+</details>
+
