@@ -1,4 +1,9 @@
+<%# functions to handle interaction for categorySelectorDropdown component and its screen-reader
+accessibility %>
+
 <script>
+  // FIX: screen-reader accessibility broken due to .textContent being undefined.
+  // FIX: This is because of the span children in the list items
   const elements = {
     button: document.querySelector('[role="combobox"]'),
     dropdown: document.querySelector('[role="listbox"]'),
