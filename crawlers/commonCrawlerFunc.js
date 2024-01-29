@@ -158,11 +158,15 @@ export const createCrawleeSubFolders = async randomToken => {
   return { dataset, requestQueue };
 };
 
-export const preNavigationHooks = [
-  async (_crawlingContext, gotoOptions) => {
+export const preNavigationHooks = (extraHTTPHeaders) => {
+  return [
+  async (crawlingContext, gotoOptions) => {
+    if (extraHTTPHeaders) {
+      crawlingContext.request.headers = extraHTTPHeaders;
+    }
     gotoOptions = { waitUntil: 'networkidle', timeout: 30000 };
   },
-];
+]};
 
 export const postNavigationHooks = [
   async _crawlingContext => {
