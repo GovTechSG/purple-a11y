@@ -80,11 +80,12 @@ export const writeToUserDataTxt = async (key, value) => {
           'Purple A11y',
           'userData.txt',
         );
+
   // Create file if it doesn't exist
   if (fs.existsSync(textFilePath)) {
     const userData = JSON.parse(fs.readFileSync(textFilePath, 'utf8'));
     userData[key] = value;
-    await fs.writeFile(textFilePath, JSON.stringify(userData, 0, 2));
+    fs.writeFileSync(textFilePath, JSON.stringify(userData, 0, 2));
   } else {
     const textFilePathDir = path.dirname(textFilePath);
     if (!fs.existsSync(textFilePathDir)) {
