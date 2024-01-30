@@ -238,8 +238,8 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     const allHeaders = {};
 
     headerValues.map(headerValue => {
-      const headerValuePair = headerValue.split(' ');
-      if (!headerValuePair.length === 2) {
+      const headerValuePair = headerValue.split(/ (.*)/s);
+      if (headerValuePair.length < 2) {
         printMessage(
           [
             `Invalid value for request header. Please provide valid keywords in the format: "<key> <value>". For multiple authentication headers, please provide the keywords in the format:  "<key> <value>, <key2> <value2>, ..." .`,
