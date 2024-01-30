@@ -242,14 +242,15 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
       if (headerValuePair.length < 2) {
         printMessage(
           [
-            `Invalid value for request header. Please provide valid keywords in the format: "<key> <value>". For multiple authentication headers, please provide the keywords in the format:  "<key> <value>, <key2> <value2>, ..." .`,
+            `Invalid value for authorisation request header. Please provide valid keywords in the format: "<header> <value>". For multiple authentication headers, please provide the keywords in the format:  "<header> <value>, <header2> <value2>, ..." .`,
           ],
           messageOptions,
         );
         process.exit(1);
       }
-      allHeaders[headerValuePair[0]] = headerValuePair[1]; // {key1: "val1", key2: val2,....,,,}  node 
+      allHeaders[headerValuePair[0]] = headerValuePair[1]; // {"header": "value", "header2": "value2", ...}
     });
+    
     return allHeaders;
   })
   .check(argvs => {
