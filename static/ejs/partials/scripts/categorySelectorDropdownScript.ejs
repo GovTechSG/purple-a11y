@@ -113,7 +113,7 @@ accessibility %>
         option.classList.remove('current');
       }
     });
-    announceOption(`You're currently focused on ${optionLabel}`); // Announce the selected option within a delayed period
+    announceOption(`You're currently focused on ${optionLabel}`);
   };
 
   const selectCurrentOption = () => {
@@ -134,7 +134,9 @@ accessibility %>
     optionElement.setAttribute('aria-selected', 'true');
 
     toggleAllyDropdown();
-    announceOption(optionValue); // Announce the selected option
+    announceOption(optionValue);
+    // FIX: Implement functionality with search function
+    loadRulesSummary(optionElement.classList[0], searchInput);
   };
 
   const handleAlphanumericKeyPress = key => {
