@@ -14830,6 +14830,7 @@
           </defs>
         </svg>
         </div>
+        <div class="visually-hidden" id="announcement" aria-live="assertive" role="alert"></div>
         <ul role="listbox" id="listbox">
           <!-- categorySelectorDropdown.ejs is rendered here -->
           
@@ -15876,6 +15877,7 @@ role="option"
 </script> 
 
 <script>
+  // Toggle Accessible Dropdown
   // FIX: screen-reader accessibility broken due to .textContent being undefined.
   // FIX: This is because of the span children in the list items
   const elements = {
