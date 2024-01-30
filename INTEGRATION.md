@@ -53,7 +53,8 @@ Returns an instance of Purple A11y
 - `thresholds` (optional)
   - Object containing the max number of mustFix or goodToFix issue occurrences before an error is thrown for test failure. Does not fail tests by default. Example: `{ mustFix: 1, goodToFix: 3 }`
 - `scanAboutMetadata` (optional)
-  - Include additional information in the Scan About section of the report by passing in a JSON object. 
+  - Include additional information in the Scan About section of the report by passing in a JSON object.
+
 #### Purple A11y Instance
 
 ##### Properties
@@ -61,6 +62,7 @@ Returns an instance of Purple A11y
 `scanDetails`
 
 Object containing details about the scan
+
 - E.g. `{
   startTime: 1700104789495,
   crawlType: 'Customized',
@@ -80,11 +82,13 @@ Get the axe-core script to be injected into the browser
 
 - `runA11yScan(elementsToScan)`
   Runs axe scan on the current page.
-  
+
   Parameter(s):
+
   - `elementsToScan`: Specifies which element should and which should not be tested
-  
+
   Returns:
+
   - Object consisting of the current page url, current page title and axe scan result. `{ pageUrl, pageTitle, axeScanResults }`
 
 `async pushScanResults(res, metadata, elementsToClick)`
@@ -95,9 +99,10 @@ Parameter(s):
 
 - `res`: Object consisting of the current page url, current page title and axe scan result. ` {pageUrl, pageTitle, axeScanResults}`
 - `metadata` (optional): Additional information to be displayed for each page scanned in the report
-- `elementsToClick` (optional): Elements clicked during the test to reveal hidden elements. Required to be able identify hidden elements if they were scanned for screenshot purposes. Ensure selectors resolve to a single element. 
+- `elementsToClick` (optional): Elements clicked during the test to reveal hidden elements. Required to be able identify hidden elements if they were scanned for screenshot purposes. Ensure selectors resolve to a single element.
 
 Returns:
+
 - Object containing the number of mustFix and goodToFix issue occurrences for this scan run e.g. `{ mustFix: 1, goodToFix: 5 }`
 
 `testThresholdsAndReset()`
@@ -220,7 +225,7 @@ Create a sub-folder and file <code>cypress/support/e2e.js</code> with the follow
 
     Cypress.Commands.add("runPurpleA11yScan", (items={}) => {
         cy.window().then(async (win) => {
-            const { elementsToScan, elementsToClick, metadata } = items; 
+            const { elementsToScan, elementsToClick, metadata } = items;
             const res = await win.runA11yScan(elementsToScan);
             cy.task("pushPurpleA11yScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
         });
@@ -246,7 +251,7 @@ Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
              cy.get("button[onclick=\"toggleSecondSection()\"]").click();
             // Run a scan on <input> and <button> elements
             cy.runPurpleA11yScan({
-                elementsToScan: ["input", "button"], 
+                elementsToScan: ["input", "button"],
                 elementsToClick: ["button[onclick=\"toggleSecondSection()\"]"],
                 metadata: "Clicked button"
             });
@@ -336,56 +341,75 @@ You will see Purple A11y results generated in <code>results</code> folder.
 </details>
 
 #### Automating Web Crawler Login
+
 <details>
     <summary>Click here to see an example automated web crawler login</summary>
 <code>automated-web-crawler-login.js</code>:
    
-   
     import { chromium } from 'playwright';
-    async function loginAndCaptureHeaders(url, email, password) {
-    const browser = await chromium.launch({ headless: false });
-    const page = await browser.newPage();
+    import { exec } from 'child_process';
 
-    await page.goto(url);
-    await page.fill('input[name="email"]', email);
-    await page.fill('input[name="password"]', password);
-   
-   
-    const [response] = await Promise.all([
-      page.waitForNavigation(),
-      page.click('input[type="submit"]'),
-    ]);
-   
-   
-    const cookies = await page.context().cookies();
-    const headers = response.headers();
-   
-   
-    const formattedCookies = formatCookies(cookies);
-   
-   
-    headers['cookies'] = formattedCookies;
-   
-   
-    //await browser.close();
-    return { headers, formattedCookies };
-   }
-   
-   
-   function formatCookies(cookies) {
-    return cookies.map(cookie =>
-      `name ${cookie.name}, value ${cookie.value}, domain ${cookie.domain}, path ${cookie.path}, expires ${cookie.expires}, httpOnly ${cookie.httpOnly}, secure ${cookie.secure}, sameSite ${cookie.sameSite}`
-    ).join('; ');
-   }
-   
-   
-   loginAndCaptureHeaders('https://authenticationtest.com/simpleFormAuth/', 'simpleForm@authenticationtest.com', 'pa$$w0rd')
-    .then(({ headers, formattedCookies }) => {
-     
-      console.log('Headers:', JSON.stringify(headers, null, 2));
-    })
-    .catch(err => {
-      console.error('Error during login:', err);
-    });
+    const loginAndCaptureHeaders = async (url, email, password) => {
+        const browser = await chromium.launch({ headless: true });
+        const page = await browser.newPage();
+
+        await page.goto(url);
+        await page.fill('input[name="email"]', email);
+        await page.fill('input[name="password"]', password);
+
+        const [response] = await Promise.all([
+            page.waitForNavigation(),
+            page.click('input[type="submit"]'),
+        ]);
+
+        // Format cookie retrieved from page
+        const formatCookies = cookies => {
+            return cookies.map(cookie => `cookie ${cookie.name}=${cookie.value}`).join('; ');
+        };
+
+        // Retrieve cookies after login
+        let cookies = await page.context().cookies();
+        cookies = formatCookies(cookies);
+
+        // Close browser
+        await browser.close();
+
+        return cookies;
+    };
+
+    const runPurpleA11yScan = command => {
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Error: ${error.message}`);
+                return;
+            }
+            if (stderr) {
+                console.error(stderr);
+            }
+            console.log(stdout);
+        });
+    };
+
+    const runScript = () => {
+        loginAndCaptureHeaders(
+            // Test example with authenticationtest.com
+            'https://authenticationtest.com/simpleFormAuth/',
+            'simpleForm@authenticationtest.com',
+            'pa$$w0rd',
+        )
+            .then(formattedCookies => {
+                console.log('Cookies retrieved.\n');
+                // where -m "..." are the headers needed in the format "header1 value1, header2 value2" etc
+                // where -u ".../loginSuccess/" is the destination page after login
+                const command = `node cli.js -c website -u "https://authenticationtest.com/loginSuccess/" -p 1 -k "Your Name:email@domain.com" -m "${formattedCookies}"`;
+                console.log(`Executing PurpleA11y scan command:\n> ${command}\n`);
+                runPurpleA11yScan(command);
+            })
+            .catch(err => {
+                console.error('Error:', err);
+            });
+    };
+
+    runScript();
+
 </details>
-
