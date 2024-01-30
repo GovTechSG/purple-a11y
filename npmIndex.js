@@ -140,7 +140,7 @@ export const init = async (
     };
   };
 
-  const testThresholdsAndReset = () => {
+  const testThresholds = () => {
     // check against thresholds to fail tests
     let isThresholdExceeded = false;
     let thresholdFailMessage = "Exceeded thresholds:\n";
@@ -154,11 +154,12 @@ export const init = async (
       thresholdFailMessage += `goodToFix occurrences found: ${goodToFixIssues} > ${goodToFixThreshold}\n`;
     }
 
-    // reset counts
-    mustFixIssues = 0;
-    goodToFixIssues = 0;
+    // uncomment to reset counts if you do not want violations count to be cumulative across other pages
+    // mustFixIssues = 0;
+    // goodToFixIssues = 0;
 
     if (isThresholdExceeded) {
+      terminate(); //terminate if threshold exceeded
       throw new Error(thresholdFailMessage);
     }
   };
@@ -215,7 +216,7 @@ export const init = async (
     terminate,
     scanDetails,
     randomToken,
-    testThresholdsAndReset,
+    testThresholds,
   };
 };
 
