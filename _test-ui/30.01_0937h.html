@@ -16011,6 +16011,7 @@ role="option"
 
     toggleAllyDropdown();
     announceOption(optionValue); // Announce the selected option
+    loadRulesSummary(optionElement.classList[0], searchInput);
   };
 
   const handleAlphanumericKeyPress = key => {
