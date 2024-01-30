@@ -14839,7 +14839,7 @@
 <li
 aria-labelledby="mustFixTitle mustFixItemsInformation"
 aria-describedby="mustFixAriaDescription"
-id="mustFixSelector"
+id="mustFixDropdownSelector"
 class="mustFix"
 role="option"
 >    <span id="mustFixTitle" class="align-items-center category-name fw-bold d-inline mb-0">
@@ -14857,7 +14857,7 @@ role="option"
 <li
 aria-labelledby="goodToFixTitle goodToFixItemsInformation"
 aria-describedby="goodToFixAriaDescription"
-id="goodToFixSelector"
+id="goodToFixDropdownSelector"
 class="goodToFix"
 role="option"
 >    <span id="goodToFixTitle" class="align-items-center category-name fw-bold d-inline mb-0">
@@ -14875,7 +14875,7 @@ role="option"
 <li
 aria-labelledby="passedTitle passedItemsInformation"
 aria-describedby="passedAriaDescription"
-id="passedSelector"
+id="passedDropdownSelector"
 class="passed"
 role="option"
 >    <span id="passedTitle" class="align-items-center category-name fw-bold d-inline mb-0">
@@ -15878,8 +15878,6 @@ role="option"
 
 <script>
   // Toggle Accessible Dropdown
-  // FIX: screen-reader accessibility broken due to .textContent being undefined.
-  // FIX: This is because of the span children in the list items
   const elements = {
     button: document.querySelector('[role="combobox"]'),
     dropdown: document.querySelector('[role="listbox"]'),
@@ -16057,6 +16055,7 @@ role="option"
   window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('mustFixSelector').click();
     document.getElementById('issueDescriptionsButton').click();
+    document.getElementById('mustFixDropdownSelector').click(), toggleAllyDropdown();
   });
 
   const changeSelectedCategory = (() => {
