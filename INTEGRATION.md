@@ -307,6 +307,7 @@ On your project's root folder, create a Playwright test file <code>purpleA11y-pl
                 elementsToScan,
             );
             await purpleA11y.pushScanResults(scanRes);
+            purpleA11y.testThresholds(); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate purpleA11y instance.
         };
 
         await page.goto('https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm');
@@ -317,7 +318,6 @@ On your project's root folder, create a Playwright test file <code>purpleA11y-pl
         // Run a scan on <input> and <button> elements
         await runPurpleA11yScan(['input', 'button'])
 
-        purpleA11y.testThresholds(); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate purpleA11y instance.
 
         // ---------------------
         await context.close();
