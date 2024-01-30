@@ -67,6 +67,8 @@
           </defs>
         </svg>
         </div>
+        <!-- Screen Reader Announcer -->
+        <div class="visually-hidden" id="announcement" aria-live="assertive" role="alert"></div>
         <ul role="listbox" id="listbox">
           <!-- categorySelectorDropdown.ejs is rendered here -->
           <% Object.keys(items).forEach((category) => { %>
