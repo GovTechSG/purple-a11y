@@ -39,7 +39,11 @@ const runScan = async answers => {
   let { browserToRun, clonedDataDir } = getBrowserToRun(constants.browserTypes.chrome);
   deleteClonedProfiles(browserToRun);
   answers.browserToRun = browserToRun;
-  answers.nameEmail = `${userData.name}:${userData.email}`;
+
+  if (!answers.nameEmail) {
+    answers.nameEmail = `${userData.name}:${userData.email}`;
+  }
+
   answers.fileTypes = 'html-only';
   answers.metadata = '{}';
 
@@ -49,7 +53,7 @@ const runScan = async answers => {
     isNewCustomFlow = true;
   }
 
-  const data = prepareData(answers);
+  const data = await prepareData(answers);
   clonedDataDir = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
   data.userDataDirectory = clonedDataDir;
 
@@ -122,8 +126,8 @@ if (userData) {
   );
 
   inquirer.prompt(questions).then(async answers => {
-    const { name, email } = answers;
-
+    const { name, email} = answers;
+    answers.nameEmail = `${name}:${email}`;
     await writeToUserDataTxt('name', name);
     await writeToUserDataTxt('email', email);
 
