@@ -100,11 +100,11 @@ Parameter(s):
 Returns:
 - Object containing the number of mustFix and goodToFix issue occurrences for this scan run e.g. `{ mustFix: 1, goodToFix: 5 }`
 
-`testThresholdsAndReset()`
+`testThresholds()`
 
-Checks the accumulated issue occurrences count against the specified threshold and resets the issues count
+Checks the accumulated issue occurrences count against the specified threshold.
 
-- Throws an error if the number of accumulated mustFix or goodToFix issue occurrences exceeds either of the specified thresholds
+- Terminates purpleA11y instance and throws an error if the number of accumulated mustFix or goodToFix issue occurrences exceeds either of the specified thresholds
 
 `async terminate()`
 
@@ -197,7 +197,7 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
                         return `results/${purpleA11y.randomToken}_${purpleA11y.scanDetails.urlsCrawled.scanned.length}pages/reports/report.html`;
                     },
                     finishPurpleA11yTestCase() {
-                        purpleA11y.testThresholdsAndReset();
+                        purpleA11y.testThresholds();
                         return null;
                     },
                     async terminatePurpleA11y() {
@@ -223,11 +223,9 @@ Create a sub-folder and file <code>cypress/support/e2e.js</code> with the follow
             const { elementsToScan, elementsToClick, metadata } = items; 
             const res = await win.runA11yScan(elementsToScan);
             cy.task("pushPurpleA11yScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
+            cy.task("pushPurpleA11yScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
+            cy.task("finishPurpleA11yTestCase"); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate purpleA11y instance.
         });
-    });
-
-    Cypress.Commands.add("finishPurpleA11yTestCase", () => {
-        cy.task("finishPurpleA11yTestCase");
     });
 
     Cypress.Commands.add("terminatePurpleA11y", () => {
@@ -250,8 +248,6 @@ Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
                 elementsToClick: ["button[onclick=\"toggleSecondSection()\"]"],
                 metadata: "Clicked button"
             });
-
-            cy.finishPurpleA11yTestCase(); // test the number of issue occurrences against specified thresholds
 
             cy.terminatePurpleA11y();
         });
@@ -311,6 +307,7 @@ On your project's root folder, create a Playwright test file <code>purpleA11y-pl
                 elementsToScan,
             );
             await purpleA11y.pushScanResults(scanRes);
+            purpleA11y.testThresholds(); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate purpleA11y instance.
         };
 
         await page.goto('https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm');
@@ -321,7 +318,6 @@ On your project's root folder, create a Playwright test file <code>purpleA11y-pl
         // Run a scan on <input> and <button> elements
         await runPurpleA11yScan(['input', 'button'])
 
-        purpleA11y.testThresholdsAndReset(); // test the number of issue occurrences against specified thresholds
 
         // ---------------------
         await context.close();
