@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import pdfjs from 'pdfjs-dist';
 import fs from 'fs';
-// import Canvas from 'canvas';
-// import assert from 'assert';
+import Canvas from 'canvas';
+import assert from 'assert';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { silentLogger } from '../logs.js';
@@ -13,163 +13,163 @@ const __dirname = path.dirname(__filename);
 // CONSTANTS
 const BBOX_PADDING = 50;
 
-// function NodeCanvasFactory() {}
-// NodeCanvasFactory.prototype = {
-//   create: function NodeCanvasFactory_create(width, height) {
-//     assert(width > 0 && height > 0, 'Invalid canvas size');
-//     const canvas = Canvas.createCanvas(width, height);
-//     const context = canvas.getContext('2d');
-//     return {
-//       canvas,
-//       context,
-//     };
-//   },
+function NodeCanvasFactory() {}
+NodeCanvasFactory.prototype = {
+  create: function NodeCanvasFactory_create(width, height) {
+    assert(width > 0 && height > 0, 'Invalid canvas size');
+    const canvas = Canvas.createCanvas(width, height);
+    const context = canvas.getContext('2d');
+    return {
+      canvas,
+      context,
+    };
+  },
 
-//   reset: function NodeCanvasFactory_reset(canvasAndContext, width, height) {
-//     assert(canvasAndContext.canvas, 'Canvas is not specified');
-//     assert(width > 0 && height > 0, 'Invalid canvas size');
-//     canvasAndContext.canvas.width = width;
-//     canvasAndContext.canvas.height = height;
-//   },
+  reset: function NodeCanvasFactory_reset(canvasAndContext, width, height) {
+    assert(canvasAndContext.canvas, 'Canvas is not specified');
+    assert(width > 0 && height > 0, 'Invalid canvas size');
+    canvasAndContext.canvas.width = width;
+    canvasAndContext.canvas.height = height;
+  },
 
-//   destroy: function NodeCanvasFactory_destroy(canvasAndContext) {
-//     assert(canvasAndContext.canvas, 'Canvas is not specified');
+  destroy: function NodeCanvasFactory_destroy(canvasAndContext) {
+    assert(canvasAndContext.canvas, 'Canvas is not specified');
 
-//     canvasAndContext.canvas.width = 0;
-//     canvasAndContext.canvas.height = 0;
-//     canvasAndContext.canvas = null;
-//     canvasAndContext.context = null;
-//   },
-// };
+    canvasAndContext.canvas.width = 0;
+    canvasAndContext.canvas.height = 0;
+    canvasAndContext.canvas = null;
+    canvasAndContext.context = null;
+  },
+};
 
-// const canvasFactory = new NodeCanvasFactory();
+const canvasFactory = new NodeCanvasFactory();
 
-// export async function getPdfScreenshots(pdfFilePath, items, screenshotPath) {
-//   const newItems = _.cloneDeep(items);
-//   const loadingTask = pdfjs.getDocument({
-//     url: pdfFilePath,
-//     canvasFactory,
-//     standardFontDataUrl: path.join(__dirname, '../node_modules/pdfjs-dist/standard_fonts/'),
-//     disableFontFace: true,
-//     verbosity: 0,
-//   });
-//   const pdf = await loadingTask.promise;
-//   const structureTree = await pdf._pdfInfo.structureTree;
+export async function getPdfScreenshots(pdfFilePath, items, screenshotPath) {
+  const newItems = _.cloneDeep(items);
+  const loadingTask = pdfjs.getDocument({
+    url: pdfFilePath,
+    canvasFactory,
+    standardFontDataUrl: path.join(__dirname, '../node_modules/pdfjs-dist/standard_fonts/'),
+    disableFontFace: true,
+    verbosity: 0,
+  });
+  const pdf = await loadingTask.promise;
+  const structureTree = await pdf._pdfInfo.structureTree;
 
-//   // save some resources by caching page canvases to be reused by diff violations
-//   const pageCanvasCache = {};
+  // save some resources by caching page canvases to be reused by diff violations
+  const pageCanvasCache = {};
 
-//   // iterate through each violation
-//   for (let i = 0; i < newItems.length; i++) {
-//     const { context } = newItems[i];
-//     const bbox = { location: context };
-//     const bboxMap = buildBboxMap([bbox], structureTree);
+  // iterate through each violation
+  for (let i = 0; i < newItems.length; i++) {
+    const { context } = newItems[i];
+    const bbox = { location: context };
+    const bboxMap = buildBboxMap([bbox], structureTree);
 
-//     for (const [pageNum, bboxList] of Object.entries(bboxMap)) {
-//       const page = await pdf.getPage(parseInt(pageNum, 10));
+    for (const [pageNum, bboxList] of Object.entries(bboxMap)) {
+      const page = await pdf.getPage(parseInt(pageNum, 10));
 
-//       // an array of length 1, containing location of current violation
-//       const bboxesWithCoords = await Promise.all([
-//         page.getOperatorList(),
-//         page.getAnnotations(),
-//       ]).then(getBboxesList(bboxList, page));
+      // an array of length 1, containing location of current violation
+      const bboxesWithCoords = await Promise.all([
+        page.getOperatorList(),
+        page.getAnnotations(),
+      ]).then(getBboxesList(bboxList, page));
 
-//       // Render the page on a Node canvas with 200% scale.
-//       const viewport = page.getViewport({ scale: 2.0 });
+      // Render the page on a Node canvas with 200% scale.
+      const viewport = page.getViewport({ scale: 2.0 });
 
-//       const canvasAndContext =
-//         pageCanvasCache[pageNum] ?? canvasFactory.create(viewport.width, viewport.height);
-//       if (!pageCanvasCache[pageNum]) {
-//         pageCanvasCache[pageNum] = canvasAndContext;
-//       }
-//       const { canvas: origCanvas, context: origCtx } = canvasAndContext;
+      const canvasAndContext =
+        pageCanvasCache[pageNum] ?? canvasFactory.create(viewport.width, viewport.height);
+      if (!pageCanvasCache[pageNum]) {
+        pageCanvasCache[pageNum] = canvasAndContext;
+      }
+      const { canvas: origCanvas, context: origCtx } = canvasAndContext;
 
-//       const renderContext = {
-//         canvasContext: origCtx,
-//         viewport,
-//       };
-//       const renderTask = page.render(renderContext); // render pdf page onto a canvas
-//       await renderTask.promise;
+      const renderContext = {
+        canvasContext: origCtx,
+        viewport,
+      };
+      const renderTask = page.render(renderContext); // render pdf page onto a canvas
+      await renderTask.promise;
 
-//       const finalScreenshotPath = annotateAndSave(
-//         origCanvas,
-//         screenshotPath,
-//         viewport,
-//       )(bboxesWithCoords[0]);
+      const finalScreenshotPath = annotateAndSave(
+        origCanvas,
+        screenshotPath,
+        viewport,
+      )(bboxesWithCoords[0]);
 
-//       newItems[i].screenshotPath = finalScreenshotPath;
-//       newItems[i].page = parseInt(pageNum, 10);
+      newItems[i].screenshotPath = finalScreenshotPath;
+      newItems[i].page = parseInt(pageNum, 10);
 
-//       page.cleanup();
-//     }
-//   }
-//   return newItems;
-// }
+      page.cleanup();
+    }
+  }
+  return newItems;
+}
 
-// const annotateAndSave = (origCanvas, screenshotPath, viewport) => {
-//   return ({ location }) => {
-//     const [left, bottom, width, height] = location.map(loc => loc * 2); // scale up by 2
-//     const rectParams = [left, viewport.height - bottom - height, width, height];
+const annotateAndSave = (origCanvas, screenshotPath, viewport) => {
+  return ({ location }) => {
+    const [left, bottom, width, height] = location.map(loc => loc * 2); // scale up by 2
+    const rectParams = [left, viewport.height - bottom - height, width, height];
 
-//     // create new canvas to annotate so we do not "pollute" the original
-//     const { context: highlightCtx, canvas: highlightCanvas } = canvasFactory.create(
-//       viewport.width,
-//       viewport.height,
-//     );
+    // create new canvas to annotate so we do not "pollute" the original
+    const { context: highlightCtx, canvas: highlightCanvas } = canvasFactory.create(
+      viewport.width,
+      viewport.height,
+    );
 
-//     highlightCtx.drawImage(origCanvas, 0, 0);
-//     highlightCtx.fillStyle = 'rgba(0, 255, 255, 0.2)';
-//     highlightCtx.fillRect(...rectParams);
+    highlightCtx.drawImage(origCanvas, 0, 0);
+    highlightCtx.fillStyle = 'rgba(0, 255, 255, 0.2)';
+    highlightCtx.fillRect(...rectParams);
 
-//     const rectParamsWithPadding = [
-//       left - BBOX_PADDING,
-//       viewport.height - bottom - height - BBOX_PADDING,
-//       width + BBOX_PADDING * 2,
-//       height + BBOX_PADDING * 2,
-//     ];
+    const rectParamsWithPadding = [
+      left - BBOX_PADDING,
+      viewport.height - bottom - height - BBOX_PADDING,
+      width + BBOX_PADDING * 2,
+      height + BBOX_PADDING * 2,
+    ];
 
-//     // create new canvas to crop image
-//     const { context: croppedCtx, canvas: croppedCanvas } = canvasFactory.create(
-//       rectParamsWithPadding[2],
-//       rectParamsWithPadding[3],
-//     );
+    // create new canvas to crop image
+    const { context: croppedCtx, canvas: croppedCanvas } = canvasFactory.create(
+      rectParamsWithPadding[2],
+      rectParamsWithPadding[3],
+    );
 
-//     croppedCtx.drawImage(
-//       highlightCanvas,
-//       ...rectParamsWithPadding,
-//       0,
-//       0,
-//       rectParamsWithPadding[2],
-//       rectParamsWithPadding[3],
-//     );
+    croppedCtx.drawImage(
+      highlightCanvas,
+      ...rectParamsWithPadding,
+      0,
+      0,
+      rectParamsWithPadding[2],
+      rectParamsWithPadding[3],
+    );
 
-//     // convert the canvas to an image
-//     const croppedImage = croppedCanvas.toBuffer();
+    // convert the canvas to an image
+    const croppedImage = croppedCanvas.toBuffer();
 
-//     // save image
-//     let counter = 0;
-//     let indexedScreenshotPath = `${screenshotPath}-${counter}.png`;
-//     let fileExists = fs.existsSync(indexedScreenshotPath);
-//     while (fileExists) {
-//       counter++;
-//       indexedScreenshotPath = `${screenshotPath}-${counter}.png`;
-//       fileExists = fs.existsSync(indexedScreenshotPath);
-//     }
-//     fs.writeFileSync(indexedScreenshotPath, croppedImage, error => {
-//       if (error) {
-//         silentLogger.error('Error in writing screenshot: ' + error);
-//       }
-//     });
+    // save image
+    let counter = 0;
+    let indexedScreenshotPath = `${screenshotPath}-${counter}.png`;
+    let fileExists = fs.existsSync(indexedScreenshotPath);
+    while (fileExists) {
+      counter++;
+      indexedScreenshotPath = `${screenshotPath}-${counter}.png`;
+      fileExists = fs.existsSync(indexedScreenshotPath);
+    }
+    fs.writeFileSync(indexedScreenshotPath, croppedImage, error => {
+      if (error) {
+        silentLogger.error('Error in writing screenshot: ' + error);
+      }
+    });
 
-//     canvasFactory.destroy({ canvas: croppedCanvas, context: croppedCtx });
-//     canvasFactory.destroy({ canvas: highlightCanvas, context: highlightCtx });
+    canvasFactory.destroy({ canvas: croppedCanvas, context: croppedCtx });
+    canvasFactory.destroy({ canvas: highlightCanvas, context: highlightCtx });
 
-//     // current screenshot path leads to a temp dir, so modify to save the final file path
-//     const [_, ...rest] = indexedScreenshotPath.split(path.sep);
-//     const finalScreenshotPath = path.join(...rest);
-//     return finalScreenshotPath;
-//   };
-// };
+    // current screenshot path leads to a temp dir, so modify to save the final file path
+    const [_, ...rest] = indexedScreenshotPath.split(path.sep);
+    const finalScreenshotPath = path.join(...rest);
+    return finalScreenshotPath;
+  };
+};
 
 // Below are methods adapted from
 // https://github.com/veraPDF/verapdf-js-viewer/blob/master/src/services/bboxService.ts
