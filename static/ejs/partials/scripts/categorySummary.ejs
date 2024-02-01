@@ -3,6 +3,7 @@
   window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('mustFixSelector').click();
     document.getElementById('issueDescriptionsButton').click();
+    document.getElementById('mustFixDropdownSelector').click();
   });
 
   const changeSelectedCategory = (() => {
@@ -17,6 +18,10 @@
         .setAttribute('aria-label', `${getFormattedCategoryTitle(category)} summary`);
       selected = event.currentTarget;
       window.currentCategory = JSON.parse(JSON.stringify(category));
+
+      // Ensures <category>DropdownSelector on mobile view matches
+      const matchingDropdownId = category + 'DropdownSelector';
+      document.getElementById(matchingDropdownId).click(), toggleAllyDropdown();
       loadRulesSummary(category, searchInput);
     };
   })();

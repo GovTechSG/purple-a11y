@@ -143,91 +143,82 @@
 
   /* reportSearch starts here */
 
-.issue-word{
-      color: #333333;
-      font-size: 18px;
-      font-family: 'Open Sans', sans-serif;
-      font-weight: 700;
-      line-height: 32px;
-      word-wrap: break-word;
-    }
-    
-    .search-filter-off{
-      
-      display: none;
-  
-    }
-    .search-filter-on{
-          display: flex;
-          flex-direction: row; 
-          align-items: center;
-          justify-content: flex-start;
-          gap: 16px;
-          overflow-x: auto; 
-          flex-wrap: nowrap;
+  .issue-word {
+    color: #333333;
+    font-size: 18px;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 700;
+    line-height: 32px;
+    word-wrap: break-word;
+  }
 
-          height: 76px;
-          border-radius: 0px 0px 4px 4px;
-          border: 1px solid var(--A11Y-Grey-400, #b5c5ca);
-          background: var(--A11Y-Grey-100, #f6f8f9);
-          max-width: 100%; 
-          min-width: 100%;
-          
-        
-        
-    }
-    .filter-button-issue{
-            white-space: nowrap;  
-            min-height: 50px; 
-            margin-right: 10px; 
-            width: 158px; 
-            height: 44px; 
-            gap: 10px; 
-            border-radius: 4px; 
-            border: 2px solid var(--A11Y-Primary-Blue-600, #0047FA); 
-            background: rgb(255, 255, 255);
-        }
-        .filter-button-pages{
-            white-space: nowrap;  
-            min-height: 50px; 
-            margin-right: 10px; 
-            width: 68px; 
-            height: 44px; 
-            gap: 10px; 
-            border-radius: 4px; 
-            border: 2px solid var(--A11Y-Primary-Blue-600, #0047FA); 
-            background: rgb(255, 255, 255);
-        }
-        .filter-button-html{
-            white-space: nowrap;  
-            min-height: 50px; 
-            margin-right: 10px; 
-            width: 197px; 
-            height: 44px; 
-            gap: 10px; 
-            border-radius: 4px; 
-            border: 2px solid var(--A11Y-Primary-Blue-600, #0047FA); 
-            background: rgb(255, 255, 255);
-        }
-    
+  .search-filter-off {
+    display: none;
+  }
+  .search-filter-on {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 16px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
 
-    .filter-words{
-      color: #333333;
-          font-size: 16px;
-          font-family: 'Open Sans', sans-serif;
-          font-weight: 400;
-          line-height: 28px;
-          white-space: nowrap;
+    height: 76px;
+    border-radius: 0px 0px 4px 4px;
+    border: 1px solid var(--A11Y-Grey-400, #b5c5ca);
+    background: var(--A11Y-Grey-100, #f6f8f9);
+    max-width: 100%;
+    min-width: 100%;
+  }
+  .filter-button-issue {
+    white-space: nowrap;
+    min-height: 50px;
+    margin-right: 10px;
+    width: 158px;
+    height: 44px;
+    gap: 10px;
+    border-radius: 4px;
+    border: 2px solid var(--A11Y-Primary-Blue-600, #0047fa);
+    background: rgb(255, 255, 255);
+  }
+  .filter-button-pages {
+    white-space: nowrap;
+    min-height: 50px;
+    margin-right: 10px;
+    width: 68px;
+    height: 44px;
+    gap: 10px;
+    border-radius: 4px;
+    border: 2px solid var(--A11Y-Primary-Blue-600, #0047fa);
+    background: rgb(255, 255, 255);
+  }
+  .filter-button-html {
+    white-space: nowrap;
+    min-height: 50px;
+    margin-right: 10px;
+    width: 197px;
+    height: 44px;
+    gap: 10px;
+    border-radius: 4px;
+    border: 2px solid var(--A11Y-Primary-Blue-600, #0047fa);
+    background: rgb(255, 255, 255);
+  }
 
-    }
+  .filter-words {
+    color: #333333;
+    font-size: 16px;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 400;
+    line-height: 28px;
+    white-space: nowrap;
+  }
 
-   
   .ps-xl-3 {
-      padding-left: 1rem !important;
-    }  
+    padding-left: 1rem !important;
+  }
 
-    /* reportSearch ends here */
-
+  /* reportSearch ends here */
 
   @media (max-width: 767px) {
     .toggleWrapper {
@@ -1416,6 +1407,104 @@
 
   /* Mobile UI Styles - KC*/
 
+  /* START: Accessible Dropdown Category Selector Styles */
+  .ally-button-container {
+    #announcement {
+      opacity: 0;
+      pointer-events: none;
+    }
+    select,
+    ul {
+      display: block;
+      border: 0;
+      font-size: 1rem;
+    }
+    button {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+
+      &::before {
+        font-family: 'Font Awesome 5 Free';
+        content: '\f107';
+        vertical-align: middle;
+        font-weight: 900;
+        position: absolute;
+        right: 0.8rem;
+      }
+
+      &:focus-visible {
+        outline: 0;
+        box-shadow: 0 0 5px 2px rgba(251, 146, 60, 0.7) inset;
+      }
+    }
+
+    ul {
+      color: #3f403b;
+      position: absolute;
+      left: 0;
+      right: 0;
+      max-height: 10rem;
+      overflow-y: auto;
+      list-style-type: none;
+      padding: 0;
+      margin-top: 0.1rem;
+      opacity: 0;
+      transform: scale(1, 0);
+      transform-origin: top left;
+      transition: all 0.3s ease-in;
+      pointer-events: none;
+      z-index: 2;
+
+      &.active {
+        opacity: 1;
+        transform: scale(1, 1);
+        pointer-events: auto;
+      }
+      li {
+        margin: 0 0.5rem;
+        padding: 0.6rem 0.5rem;
+        border-top: 1px solid #e6e6e6;
+        cursor: pointer;
+        transition: all 0.3s ease-in;
+        position: relative;
+        background-color: rgb(255, 255, 255);
+        &::before {
+          font-family: 'Font Awesome 5 Free';
+          content: '\f00c';
+          vertical-align: middle;
+          font-weight: 900;
+          position: absolute;
+          right: 0.8rem;
+          opacity: 0;
+          transition: opacity 0.3s ease-out;
+        }
+        &.current {
+          /* Color of list item when selected */
+          background: #e6e6e6;
+        }
+        &.active {
+          box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.7);
+        }
+        &.active::before {
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  .ally-toggle-button {
+    width: 100%;
+    padding: 10px;
+    text-align: left;
+    background-color: #fff;
+    border: 1px solid;
+    border-color: var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+  }
+  /* END: Accessible Dropdown Category Selector Styles */
+
   .rule-item-description {
     margin-right: auto;
     padding-left: 0.5rem;
@@ -1497,16 +1586,9 @@
       margin-bottom: 0;
     }
 
-  /* reportSearch */
-    .search-filter-on{
-          width: 90vw;
-
+    /* reportSearch */
+    .search-filter-on {
+      width: 90vw;
+    }
   }
-}
-
-
-
-
-
-
 </style>
