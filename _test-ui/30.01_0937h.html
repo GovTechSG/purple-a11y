@@ -1,6 +1,6 @@
 <!-- TESTCODES ONLY: remove when raising PR -->
 <!-- Report generated is updated till commit 02c36aea4d5dac29bee60f85eefd31f1f1226f24-->
-<!-- Last update 30.01 at 1600h -->
+<!-- Last update 01.02 at 1005h -->
 <!doctype html>
 <html lang="en" id="accessibility-site-report">
   <head lang="en">
@@ -16007,10 +16007,14 @@ role="option"
 
     optionElement.classList.add('active');
     optionElement.setAttribute('aria-selected', 'true');
-
     toggleAllyDropdown();
     announceOption(optionValue); // Announce the selected option
-    loadRulesSummary(optionElement.classList[0], searchInput);
+    
+    // Ensures <category>Selector on desktop view matches
+    const sharedCategory = optionElement.classList[0]
+    const matchingButtonId = sharedCategory + "Selector"
+    document.getElementById(matchingButtonId).click();
+    loadRulesSummary(sharedCategory, searchInput);
   };
 
   const handleAlphanumericKeyPress = key => {
@@ -16055,7 +16059,7 @@ role="option"
   window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('mustFixSelector').click();
     document.getElementById('issueDescriptionsButton').click();
-    document.getElementById('mustFixDropdownSelector').click(), toggleAllyDropdown();
+    document.getElementById('mustFixDropdownSelector').click();
   });
 
   const changeSelectedCategory = (() => {
@@ -16070,6 +16074,10 @@ role="option"
         .setAttribute('aria-label', `${getFormattedCategoryTitle(category)} summary`);
       selected = event.currentTarget;
       window.currentCategory = JSON.parse(JSON.stringify(category));
+
+      // Ensures <category>DropdownSelector on mobile view matches
+      const matchingDropdownId = category + 'DropdownSelector';
+      document.getElementById(matchingDropdownId).click(), toggleAllyDropdown();
       loadRulesSummary(category, searchInput);
     };
   })();
