@@ -144,14 +144,22 @@ export const cliOptions = {
     demandOption: false,
   },
   r: {
-    alias: 'followRobots', 
-    describe: 'Option for crawler to adhere to robots.txt rules if it exists', 
-    type: 'string', 
+    alias: 'followRobots',
+    describe: 'Option for crawler to adhere to robots.txt rules if it exists',
+    type: 'string',
     choices: ['yes', 'no'],
     requiresArg: true,
     default: 'no',
     demandOption: false,
-  }
+  },
+  m: {
+    alias: 'header',
+    describe:
+      'The HTTP authentication header keys and their respective values to enable crawler access to restricted resources.',
+    type: 'string',
+    requiresArg: true,
+    demandOption: false,
+  },
 };
 
 export const configureReportSetting = isEnabled => {

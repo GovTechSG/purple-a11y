@@ -290,13 +290,17 @@ Options:
   -r, --followRobots                 Option for crawler to adhere to robots.txt
                                      rules if it exists
                                  [string] [choices: "yes", "no"] [default: "no"]
+  -m, --header                       The HTTP authentication header keys and the
+                                     ir respective values to enable crawler acce
+                                     ss to restricted resources.        [string]
+
 Examples:
-  To scan sitemap of website:', 'node cli.js -c [ 1 | Sitemap ] -d <device> -u
-   <url_link> -w <viewportWidth>
-  To scan a website', 'node cli.js -c [ 2 | Website ] -d <device> -u <url_link
-  > -w <viewportWidth>
-  To start a custom flow scan', 'node cli.js -c [ 3 | Custom ] -d <device> -u
-  <url_link> -w <viewportWidth>
+  To scan sitemap of website:', 'node cli.js -c [ 1 | sitemap ] -u <url_link>
+  [ -d <device> | -w <viewport_width> ]
+  To scan a website', 'node cli.js -c [ 2 | website ] -u <url_link> [ -d <devi
+  ce> | -w <viewport_width> ]
+  To start a custom flow scan', 'node cli.js -c [ 3 | custom ] -u <url_link> [
+   -d <device> | -w <viewport_width> ]
 ```
 
 ### Device Options

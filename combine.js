@@ -34,6 +34,7 @@ const combineRun = async (details, deviceToScan) => {
     followRobots,
     metadata,
     customFlowLabel = 'Custom Flow',
+    extraHTTPHeaders
   } = envDetails;
 
   process.env.CRAWLEE_LOG_LEVEL = 'ERROR';
@@ -95,7 +96,8 @@ const combineRun = async (details, deviceToScan) => {
         needsReviewItems,
         fileTypes,
         blacklistedPatterns,
-        includeScreenshots
+        includeScreenshots,
+        extraHTTPHeaders
       );
       break;
 
@@ -114,7 +116,8 @@ const combineRun = async (details, deviceToScan) => {
         fileTypes,
         blacklistedPatterns,
         includeScreenshots,
-        followRobots
+        followRobots,
+        extraHTTPHeaders
       );
       break;
 
