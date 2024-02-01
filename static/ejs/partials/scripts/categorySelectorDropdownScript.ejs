@@ -26,7 +26,6 @@ accessibility %>
 
     if (isDropdownOpen) {
       focusCurrentOption();
-      // Update the dropdown position when it's opened
       updateDropdownPosition();
     } else {
       elements.button.focus();
@@ -56,7 +55,6 @@ accessibility %>
           selectCurrentOption();
           break;
         default:
-          // Handle alphanumeric key presses for mini-search
           handleAlphanumericKeyPress(key);
           break;
       }
@@ -71,7 +69,6 @@ accessibility %>
       toggleAllyDropdown();
     }
 
-    // Check if the click is on an option
     const clickedOption = event.target.closest('[role="option"]');
     if (clickedOption) {
       selectOptionByElement(clickedOption);
@@ -103,7 +100,6 @@ accessibility %>
     currentOption.classList.add('current');
     currentOption.focus();
 
-    // Scroll the current option into view
     currentOption.scrollIntoView({
       block: 'nearest',
     });
@@ -135,8 +131,14 @@ accessibility %>
 
     toggleAllyDropdown();
     announceOption(optionValue);
+
     // FIX: Implement functionality with search function
-    loadRulesSummary(optionElement.classList[0], searchInput);
+
+    // Ensures <category>Selector on desktop view matches
+    const sharedCategory = optionElement.classList[0];
+    const matchingButtonId = sharedCategory + 'Selector';
+    document.getElementById(matchingButtonId).click();
+    loadRulesSummary(sharedCategory, searchInput);
   };
 
   const handleAlphanumericKeyPress = key => {
@@ -169,7 +171,7 @@ accessibility %>
     setTimeout(() => {
       elements.announcement.textContent = '';
       elements.announcement.setAttribute('aria-live', 'off');
-    }, 1000); // Announce and clear after 1 second (adjust as needed)
+    }, 1000);
   };
 
   elements.button.addEventListener('keydown', handleKeyPress);
