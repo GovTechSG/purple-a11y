@@ -190,11 +190,11 @@ function showFilter() {
     filteredItems[category].totalItems = totalItemsSum;
     let updatedIssueOccurence = '';
     if (category !== 'passed' && filteredItems[category].totalItems !== 0) {
-      updatedIssueOccurence = `${filteredItems[category].rules.length} issues / ${filteredItems[category].totalItems} occurrences`;
+      updatedIssueOccurence = `<strong style="color: #0047FA;">${filteredItems[category].rules.length}</strong> issues / <strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong> occurrences`;
     } else if (category !== 'passed' && filteredItems[category].totalItems === 0) {
-      updatedIssueOccurence = `0 issues`;
+      updatedIssueOccurence = `<strong style="color: #0047FA;">0</strong> issues`;
     } else {
-      updatedIssueOccurence = `${filteredItems[category].totalItems} occurrences`;
+      updatedIssueOccurence = `<strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong> occurrences`;
     }
     document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurence;
   }
