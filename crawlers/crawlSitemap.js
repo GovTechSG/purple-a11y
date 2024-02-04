@@ -29,7 +29,6 @@ const crawlSitemap = async (
   browser,
   userDataDirectory,
   specifiedMaxConcurrency,
-  needsReviewItems,
   fileTypes,
   blacklistedPatterns,
   includeScreenshots,
@@ -60,7 +59,7 @@ const crawlSitemap = async (
       basicAuthPage = -2;
    } 
 
-  let needsReview = needsReviewItems;
+  
   const isScanHtml = ['all', 'html-only'].includes(fileTypes);
   const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
 
@@ -167,7 +166,7 @@ const crawlSitemap = async (
         basicAuthPage++;
       } else {
         if (isScanHtml && status === 200 && isWhitelistedContentType(contentType)) {
-          const results = await runAxeScript(needsReview, includeScreenshots, page, randomToken);
+          const results = await runAxeScript(includeScreenshots, page, randomToken);
           guiInfoLog(guiInfoStatusTypes.SCANNED, {
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,

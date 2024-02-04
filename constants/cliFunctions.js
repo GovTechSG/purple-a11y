@@ -101,13 +101,7 @@ export const cliOptions = {
     type: 'number',
     demandOption: false,
   },
-  f: {
-    alias: 'needsReviewItems',
-    describe: 'Whether to display items requiring manual review in report. Defaults to false.',
-    type: 'string',
-    choices: ['true', 'false'],
-    demandOption: false,
-  },
+  
   i: {
     alias: 'fileTypes',
     describe: 'File types to include in the scan. Defaults to html-only.',

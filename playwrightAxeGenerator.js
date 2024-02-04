@@ -48,7 +48,6 @@ const playwrightAxeGenerator = async data => {
     customDevice,
     viewportWidth,
     customFlowLabel,
-    needsReviewItems,
     blacklistedPatternsFilename,
     includeScreenshots,
   } = data;
@@ -245,8 +244,8 @@ const checkIfScanRequired = async page => {
   }
 };
 
-const runAxeScan = async (needsReviewItems, includeScreenshots, page, customFlowDetails) => {
-  const result = await runAxeScript(needsReviewItems, includeScreenshots, page, ${formatScriptStringVar(
+const runAxeScan = async (includeScreenshots, page, customFlowDetails) => {
+  const result = await runAxeScript(includeScreenshots, page, ${formatScriptStringVar(
     randomToken,
   )}, customFlowDetails);
   await dataset.pushData(result);
@@ -280,7 +279,7 @@ const processPage = async page => {
         numScanned: urlsCrawled.scanned.length,
         urlScanned: pageUrl,
       });
-      await runAxeScan(${needsReviewItems}, ${includeScreenshots}, page, { pageIndex: urlsCrawled.scanned.length + 1, pageImagePath });
+      await runAxeScan(${includeScreenshots}, page, { pageIndex: urlsCrawled.scanned.length + 1, pageImagePath });
     }
   }
 };

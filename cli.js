@@ -162,16 +162,6 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     }
     return nameEmail;
   })
-  .coerce('f', option => {
-    if (!cliOptions.f.choices.includes(option)) {
-      printMessage(
-        [`Invalid value for needsReviewItems. Please provide boolean value(true/false).`],
-        messageOptions,
-      );
-      process.exit(1);
-    }
-    return option;
-  })
   .coerce('e', option => {
     const validationErrors = validateDirPath(option);
     if (validationErrors) {

@@ -6,7 +6,7 @@ import { axeScript, guiInfoStatusTypes, saflyIconSelector } from '../constants/c
 import { guiInfoLog } from '../logs.js';
 import { takeScreenshotForHTMLElements } from '../screenshotFunc/htmlScreenshotFunc.js';
 
-export const filterAxeResults = (needsReview, results, pageTitle, customFlowDetails) => {
+export const filterAxeResults = (results, pageTitle, customFlowDetails) => {
   const { violations, passes, incomplete, url } = results;
 
   let totalItems = 0;
@@ -75,9 +75,8 @@ export const filterAxeResults = (needsReview, results, pageTitle, customFlowDeta
   };
 
   violations.forEach(item => process(item, false));
-  if (needsReview) {
-    incomplete.forEach(item => process(item, true));
-  }
+  incomplete.forEach(item => process(item, true));
+
 
   passes.forEach(item => {
     const { id: rule, help: description, axeImpact, helpUrl, tags, nodes } = item;
@@ -112,7 +111,6 @@ export const filterAxeResults = (needsReview, results, pageTitle, customFlowDeta
 };
 
 export const runAxeScript = async (
-  needsReview,
   includeScreenshots,
   page,
   randomToken,
@@ -122,7 +120,7 @@ export const runAxeScript = async (
   await crawlee.playwrightUtils.injectFile(page, axeScript);
 
   const results = await page.evaluate(
-    async ({ selectors, saflyIconSelector, needsReview }) => {
+    async ({ selectors, saflyIconSelector}) => {
       // remove so that axe does not scan
       document.querySelector(saflyIconSelector)?.remove();
 
@@ -132,15 +130,15 @@ export const runAxeScript = async (
         },
       });
 
-      isReturnReviewItems = needsReview
-        ? ['violations', 'passes', 'incomplete']
-        : ['violations', 'passes'];
+      //removed needsReview condition
+      defaultResultTypes = ['violations', 'passes', 'incomplete']
+        
 
       return axe.run(selectors, {
-        resultTypes: isReturnReviewItems,
+        resultTypes: defaultResultTypes,
       });
     },
-    { selectors, saflyIconSelector, needsReview },
+    { selectors, saflyIconSelector},
   );
 
   if (includeScreenshots) {
@@ -149,7 +147,7 @@ export const runAxeScript = async (
   }
 
   const pageTitle = await page.evaluate(() => document.title);
-  return filterAxeResults(needsReview, results, pageTitle, customFlowDetails);
+  return filterAxeResults(results, pageTitle, customFlowDetails);
 };
 
 export const createCrawleeSubFolders = async randomToken => {

@@ -13,7 +13,6 @@ const runCustom = async (
   url,
   randomToken,
   viewportSettings,
-  needsReviewItems,
   blacklistedPatterns,
   includeScreenshots,
 ) => {
@@ -26,7 +25,6 @@ const runCustom = async (
   const intermediateScreenshotsPath = getIntermediateScreenshotsPath(randomToken);
   const processPageParams = {
     scannedIdx: 0,
-    needsReviewItems,
     blacklistedPatterns,
     includeScreenshots,
     dataset,
