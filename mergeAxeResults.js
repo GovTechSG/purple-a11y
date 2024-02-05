@@ -238,13 +238,16 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
   const totalIssuesInPage = new Set();
   Object.keys(pageResults.mustFix.rules).forEach(k => totalIssuesInPage.add(k));
   Object.keys(pageResults.goodToFix.rules).forEach(k => totalIssuesInPage.add(k));
+  Object.keys(pageResults.needsReview.rules).forEach(k => totalIssuesInPage.add(k));
+
   allIssues.topFiveMostIssues.push({ url, pageTitle, totalIssues: totalIssuesInPage.size });
 
-  ['mustFix', 'goodToFix', 'passed'].forEach(category => {
+  ['mustFix', 'goodToFix', 'needsReview', 'passed'].forEach(category => {
     if (!pageResults[category]) return;
+
     const { totalItems, rules } = pageResults[category];
     const currCategoryFromAllIssues = allIssues.items[category];
-
+    
     currCategoryFromAllIssues.totalItems += totalItems;
 
     Object.keys(rules).forEach(rule => {
@@ -309,7 +312,7 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
 };
 
 const flattenAndSortResults = (allIssues, isCustomFlow) => {
-  ['mustFix', 'goodToFix', 'passed'].forEach(category => {
+  ['mustFix', 'goodToFix', 'needsReview', 'passed'].forEach(category => {
     allIssues.totalItems += allIssues.items[category].totalItems;
     allIssues.items[category].rules = Object.entries(allIssues.items[category].rules)
       .map(ruleEntry => {
@@ -359,6 +362,7 @@ const createRuleIdJson = allIssues => {
 
   allIssues.items.mustFix.rules.forEach(ruleIterator);
   allIssues.items.goodToFix.rules.forEach(ruleIterator);
+  allIssues.items.needsReview.rules.forEach(ruleIterator);
   return compiledRuleJson;
 };
 
@@ -407,6 +411,7 @@ export const generateArtifacts = async (
     items: {
       mustFix: { description: itemTypeDescription.mustFix, totalItems: 0, rules: {} },
       goodToFix: { description: itemTypeDescription.goodToFix, totalItems: 0, rules: {} },
+      needsReview: { description: itemTypeDescription.needsReview, totalItems: 0, rules: {} },
       passed: { description: itemTypeDescription.passed, totalItems: 0, rules: {} },
     },
     cypressScanAboutMetadata
@@ -430,11 +435,14 @@ export const generateArtifacts = async (
 
   // allIssues.totalPages = allIssues.totalPagesScanned;
 
+  // console.log(allIssues.items.mustFix);
+
   printMessage([
     'Scan Summary',
     '',
     `Must Fix: ${allIssues.items.mustFix.rules.length} issues / ${allIssues.items.mustFix.totalItems} occurrences`,
     `Good to Fix: ${allIssues.items.goodToFix.rules.length} issues / ${allIssues.items.goodToFix.totalItems} occurrences`,
+    `Needs Review: ${allIssues.items.needsReview.rules.length} issues / ${allIssues.items.needsReview.totalItems} occurrences`,
     `Passed: ${allIssues.items.passed.totalItems} occurrences`,
   ]);
 

@@ -34,14 +34,12 @@ const crawlDomain = async (
   userDataDirectory,
   strategy,
   specifiedMaxConcurrency,
-  needsReviewItems,
   fileTypes,
   blacklistedPatterns,
   includeScreenshots,
   followRobots,
   extraHTTPHeaders
 ) => {
-  let needsReview = needsReviewItems;
   const isScanHtml = ['all', 'html-only'].includes(fileTypes);
   const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
   const urlsCrawled = { ...constants.urlsCrawledObj };
@@ -312,7 +310,7 @@ const crawlDomain = async (
         } else {
           if (isScanHtml) {
 
-            const results = await runAxeScript(needsReview, includeScreenshots, page, randomToken);
+            const results = await runAxeScript(includeScreenshots, page, randomToken);
             guiInfoLog(guiInfoStatusTypes.SCANNED, {
               numScanned: urlsCrawled.scanned.length,
               urlScanned: request.url,

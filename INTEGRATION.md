@@ -30,7 +30,7 @@ In order to use this functionality, the testing framework must support:
 
 ### API Reference
 
-#### `async purpleA11yInit(entryUrl, testLabel, name, email, needsReview, includeScreenshots, viewportSettings, thresholds, scanAboutMetadata)`
+#### `async purpleA11yInit(entryUrl, testLabel, name, email, includeScreenshots, viewportSettings, thresholds, scanAboutMetadata)`
 
 Returns an instance of Purple A11y
 
@@ -44,8 +44,6 @@ Returns an instance of Purple A11y
   - For Purple A11y data collection purposes
 - `email`
   - For Purple A11y data collection purposes
-- `needsReview` (optional)
-  - Show potential false positive issues in the report. Defaults to false.
 - `includeScreenshots` (optional)
   - Include screenshots of affected elements in the report. Defaults to false.
 - `viewportSettings` (optional)
@@ -178,7 +176,6 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
         "Demo Cypress Scan", // label for test
         "Your Name",
         "email@domain.com",
-        false, // whether to show false positive issues in the report
         true, // include screenshots of affected elements in the report
         viewportSettings,
         thresholds,
@@ -292,7 +289,6 @@ On your project's root folder, create a Playwright test file <code>purpleA11y-pl
         "Demo Playwright Scan", // label for test
         "Your Name",
         "email@domain.com",
-        false, // whether to show false positive issues in the report
         true, // include screenshots of affected elements in the report
         viewportSettings,
         thresholds,

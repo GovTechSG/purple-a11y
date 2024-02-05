@@ -26,7 +26,6 @@ export const init = async (
   testLabel, 
   name = "Your Name", 
   email = "email@domain.com", 
-  needsReview = false, 
   includeScreenshots = false, 
   viewportSettings = { width: 1000, height: 660 }, // cypress' default viewport settings
   thresholds = {}, 
@@ -120,13 +119,13 @@ export const init = async (
       });
 
       res.axeScanResults.violations = await takeScreenshotForHTMLElements(res.axeScanResults.violations, page, randomToken, 3000);
-      if (needsReview) res.axeScanResults.incomplete = await takeScreenshotForHTMLElements(res.axeScanResults.incomplete, page, randomToken, 3000);  
+      res.axeScanResults.incomplete = await takeScreenshotForHTMLElements(res.axeScanResults.incomplete, page, randomToken, 3000);  
 
       await browserContext.close();
       deleteClonedProfiles(browserToRun);
     }
     const pageIndex = urlsCrawled.scanned.length + 1; 
-    const filteredResults = filterAxeResults(needsReview, res.axeScanResults, res.pageTitle, { pageIndex , metadata });
+    const filteredResults = filterAxeResults(res.axeScanResults, res.pageTitle, { pageIndex , metadata });
     urlsCrawled.scanned.push({ url: res.pageUrl, pageTitle: `${pageIndex}: ${res.pageTitle}` });
 
     mustFixIssues += filteredResults.mustFix ? filteredResults.mustFix.totalItems : 0;

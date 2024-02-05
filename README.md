@@ -267,9 +267,6 @@ Options:
   -t, --specifiedMaxConcurrency  Maximum number of pages to scan concurrently.
                                  Use for sites with throttling. Defaults to 25.
                                                                         [number]
-  -f, --needsReviewItems  Whether to display rule items requiring manual review 
-                          in report. Defaults to false.
-                                                      [choices: "true", "false"]
   -i, --fileTypes                    File types to include in the scan. Defaults
                                       to html-only.
        [string] [choices: "all", "pdf-only", "html-only"] [default: "html-only"]
