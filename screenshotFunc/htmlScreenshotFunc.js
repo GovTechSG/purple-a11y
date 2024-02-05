@@ -22,7 +22,7 @@ export const takeScreenshotForHTMLElements = async (violations, page, randomToke
                     await locator.waitFor({ state: 'visible', timeout: locatorTimeout});
                     await locator.scrollIntoViewIfNeeded({ timeout: locatorTimeout });
                     const buffer = await locator.screenshot({ timeout: locatorTimeout });
-                    const screenshotPath = getScreenshotPath(buffer, page.url(), randomToken);
+                    const screenshotPath = getScreenshotPath(buffer, randomToken);
                     node.screenshotPath = screenshotPath; 
                 } catch (e) {
                     silentLogger.info(e);
@@ -55,7 +55,7 @@ const getIdenticalScreenshotKey = (buffer) => {
     return undefined;
 }
 
-const getScreenshotPath = (buffer, url, randomToken) => {
+const getScreenshotPath = (buffer, randomToken) => {
     let hashKey = getIdenticalScreenshotKey(buffer);
     // If exists identical entry in screenshot map, get its filepath
     if (hashKey) {
@@ -63,7 +63,7 @@ const getScreenshotPath = (buffer, url, randomToken) => {
     }
     // Create new entry in screenshot map
     hashKey = generateBufferHash(buffer);
-    const path = generateScreenshotPath(hashKey, url);
+    const path = generateScreenshotPath(hashKey);
     screenshotMap[hashKey] = path;
 
     // Save image file to local storage
@@ -72,10 +72,8 @@ const getScreenshotPath = (buffer, url, randomToken) => {
     return path;
 }
 
-const generateScreenshotPath = (hashKey, url) => {
-    const pathname = new URL(url).pathname?.replaceAll('/', '-').replace('-', '');
-    const domain = pathname === '' ? new URL(url).hostname : pathname;
-    return `elemScreenshots/html/${domain}-${hashKey}.jpeg`;
+const generateScreenshotPath = (hashKey) => {
+    return `elemScreenshots/html/${hashKey}.jpeg`;
 }
 
 const saveImageBufferToFile = (buffer, fileName) => {
@@ -91,14 +89,6 @@ const saveImageBufferToFile = (buffer, fileName) => {
         });
     });
 }
-
-// const generateScreenshotPath = (url, impact, rule, index) => {
-//     const pathname = new URL(url).pathname?.replaceAll('/', '-').replace('-', '');
-//     const domain = pathname === '' ? new URL(url).hostname : pathname;
-//     const category = impact === 'critical' || impact === 'serious' ? 'mustFix' : 'goodToFix';
-//     const screenshotPath = `elemScreenshots/html/${domain}-${category}-${rule}-${index}.jpeg`;
-//     return screenshotPath; 
-// }
 
 // const hasMultipleLocators = async (locator) => await locator.count() > 1;
   
