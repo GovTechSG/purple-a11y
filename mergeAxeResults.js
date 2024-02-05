@@ -238,13 +238,16 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
   const totalIssuesInPage = new Set();
   Object.keys(pageResults.mustFix.rules).forEach(k => totalIssuesInPage.add(k));
   Object.keys(pageResults.goodToFix.rules).forEach(k => totalIssuesInPage.add(k));
+  Object.keys(pageResults.needsReviews.rules).forEach(k => totalIssuesInPage.add(k));
+
   allIssues.topFiveMostIssues.push({ url, pageTitle, totalIssues: totalIssuesInPage.size });
 
-  ['mustFix', 'goodToFix', 'passed'].forEach(category => {
+  ['mustFix', 'goodToFix', 'needsReviews', 'passed'].forEach(category => {
     if (!pageResults[category]) return;
+
     const { totalItems, rules } = pageResults[category];
     const currCategoryFromAllIssues = allIssues.items[category];
-
+    
     currCategoryFromAllIssues.totalItems += totalItems;
 
     Object.keys(rules).forEach(rule => {
@@ -407,6 +410,7 @@ export const generateArtifacts = async (
     items: {
       mustFix: { description: itemTypeDescription.mustFix, totalItems: 0, rules: {} },
       goodToFix: { description: itemTypeDescription.goodToFix, totalItems: 0, rules: {} },
+      needsReviews: { description: itemTypeDescription.needsReviews, totalItems: 0, rules: {} },
       passed: { description: itemTypeDescription.passed, totalItems: 0, rules: {} },
     },
     cypressScanAboutMetadata
