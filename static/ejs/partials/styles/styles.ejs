@@ -143,10 +143,24 @@
 
   /* reportSearch starts here */
 
-  .search-warning {
+.search-warning {
     background: rgb(229, 237, 255) ;
     border: 1px solid var(--A11Y-Grey-400,#648FFF); 
     margin-bottom: 2rem ;
+    text-align: center;
+    
+}
+.radio-screenreader {
+    opacity: 0;
+    position: absolute;
+    
+}
+.label-screenreader {
+    position: absolute;
+    font-size: 1px;
+    opacity: 0;
+    width: 0%;
+    height: 0%;
 }
   .input-search {
 	position: absolute;
