@@ -35,7 +35,7 @@ const generateScreenshotPath = (url, impact, rule, index) => {
     const pathname = new URL(url).pathname?.replaceAll('/', '-').replace('-', '');
     const domain = pathname === '' ? new URL(url).hostname : pathname;
     const category = impact === 'critical' || impact === 'serious' ? 'mustFix' : 'goodToFix';
-    const screenshotPath = `elemScreenshots/html/${domain}-${category}-${rule}-${index}.png`;
+    const screenshotPath = `elemScreenshots/html/${domain}-${category}-${rule}-${index}.jpeg`;
     return screenshotPath; 
 }
 
