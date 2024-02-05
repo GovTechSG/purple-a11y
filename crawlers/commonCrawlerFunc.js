@@ -13,6 +13,7 @@ export const filterAxeResults = (results, pageTitle, customFlowDetails) => {
   const mustFix = { totalItems: 0, rules: {} };
   const goodToFix = { totalItems: 0, rules: {} };
   const passed = { totalItems: 0, rules: {} };
+  const needsReviews = { totalItems: 0, rules: {} };
 
   const process = (item, displayNeedsReview) => {
     const { id: rule, help: description, helpUrl, tags, nodes } = item;
@@ -66,7 +67,9 @@ export const filterAxeResults = (results, pageTitle, customFlowDetails) => {
 
     nodes.forEach(node => {
       const { impact } = node;
-      if (impact === 'critical' || impact === 'serious') {
+      if (displayNeedsReview) {
+        addTo(needsReviews, node);
+      } else if (impact === 'critical' || impact === 'serious') {
         addTo(mustFix, node);
       } else {
         addTo(goodToFix, node);
@@ -106,6 +109,7 @@ export const filterAxeResults = (results, pageTitle, customFlowDetails) => {
     totalItems,
     mustFix,
     goodToFix,
+    needsReviews,
     passed,
   };
 };
