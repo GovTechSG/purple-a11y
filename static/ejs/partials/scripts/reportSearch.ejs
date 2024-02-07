@@ -186,7 +186,7 @@
     } else {
       updatedIssueOccurence = `<strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong> occurrences`;
     }
-    document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurence;
+    if (category !== 'passed') document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurence;
   }
 
   function resetIssueOccurence(category, filteredItems) {
@@ -199,7 +199,7 @@
       } else {
         updatedIssueOccurence = `${filteredItems[category].totalItems} occurrences`;
       }
-      document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurence;
+      if (category !== 'passed') document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurence;
     }
   }
 

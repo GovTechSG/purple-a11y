@@ -115,7 +115,7 @@ category summary is clicked %>
     Object.keys(filteredItems).forEach(category => {
       const ruleInCategory = filteredItems[category].rules.find(r => r.rule === selectedRule.rule);
     // END search feat changes
-      if (ruleInCategory !== undefined) {
+      if (ruleInCategory !== undefined && category !== 'passed') {
         if (category !== 'passed') {
           availableFixCategories.push(category);
         }

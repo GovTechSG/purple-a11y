@@ -18,17 +18,7 @@
     />
     <%- include('partials/styles/bootstrap') %> <%- include('partials/styles/highlightjs') %> <%-
     include('partials/styles/styles') %>
-  </head>
 
-  <body class="d-flex flex-column">
-    <%- include('partials/header') %> <%- include('partials/main') %> <%-
-    include('partials/scripts/popper') %> <%- include('partials/scripts/bootstrap') %> <%-
-    include('partials/scripts/highlightjs') %> <%- include('partials/scripts/utils') %> <%-
-    include('partials/scripts/categorySelectorDropdownScript') %> <%-
-    include('partials/scripts/categorySummary') %> <%- include('partials/scripts/ruleOffcanvas') %>
-    <%- include('partials/scripts/screenshotLightbox')%>
-    <!-- search feat changes -->
-    <%- include('partials/scripts/reportSearch') %>
     <script>
       const scanItems = <%- JSON.stringify(
           {
@@ -40,6 +30,17 @@
           }
         ) %>
     </script>
+  </head>
+
+  <body class="d-flex flex-column">
+    <%- include('partials/header') %> <%- include('partials/main') %> <%-
+    include('partials/scripts/popper') %> <%- include('partials/scripts/bootstrap') %> <%-
+    include('partials/scripts/highlightjs') %> <%- include('partials/scripts/utils') %> <%-
+    include('partials/scripts/categorySelectorDropdownScript') %> <%-
+    include('partials/scripts/categorySummary') %> <%- include('partials/scripts/ruleOffcanvas') %>
+    <%- include('partials/scripts/screenshotLightbox')%>
+    <!-- search feat changes -->
+    <%- include('partials/scripts/reportSearch') %>
     <script>
       function initTooltips() {
         const tooltipTriggerList = [].slice.call(
