@@ -1,5 +1,10 @@
 // import { JSDOM } from "jsdom";
 import { silentLogger } from '../logs.js';
+import { createHash } from 'crypto';
+import fs from 'fs';
+import path from 'path';
+
+const screenshotMap = {}; // Map of screenshot hashkey to its buffer value and screenshot path
 
 export const takeScreenshotForHTMLElements = async (violations, page, randomToken, locatorTimeout = 2000) => {
     let newViolations = [];
@@ -12,12 +17,12 @@ export const takeScreenshotForHTMLElements = async (violations, page, randomToke
             const selector = hasValidSelector ? target[0] : null; 
             if (selector) {
                 try {
-                    const screenshotPath = generateScreenshotPath(page.url(), impact, rule, newViolationNodes.length);
                     const locator = page.locator(selector);
                     // catch uncommon cases where components are not found in screenshot line
                     await locator.waitFor({ state: 'visible', timeout: locatorTimeout});
                     await locator.scrollIntoViewIfNeeded({ timeout: locatorTimeout });
-                    await locator.screenshot({ path: `${randomToken}/${screenshotPath}`, timeout: locatorTimeout });
+                    const buffer = await locator.screenshot({ timeout: locatorTimeout });
+                    const screenshotPath = getScreenshotPath(buffer, randomToken);
                     node.screenshotPath = screenshotPath; 
                 } catch (e) {
                     silentLogger.info(e);
@@ -31,12 +36,58 @@ export const takeScreenshotForHTMLElements = async (violations, page, randomToke
     return newViolations;
 }
 
-const generateScreenshotPath = (url, impact, rule, index) => {
-    const pathname = new URL(url).pathname?.replaceAll('/', '-').replace('-', '');
-    const domain = pathname === '' ? new URL(url).hostname : pathname;
-    const category = impact === 'critical' || impact === 'serious' ? 'mustFix' : 'goodToFix';
-    const screenshotPath = `elemScreenshots/html/${domain}-${category}-${rule}-${index}.png`;
-    return screenshotPath; 
+const generateBufferHash = (buffer) => {
+    const hash = createHash('sha256');
+    hash.update(buffer);
+    return hash.digest('hex');
+}
+
+const isSameBufferHash = (buffer, hash) => {
+    const bufferHash = generateBufferHash(buffer);
+    return hash === bufferHash;
+}
+
+const getIdenticalScreenshotKey = (buffer) => {
+    for (const hashKey in screenshotMap) {
+        const isIdentical = isSameBufferHash(buffer, hashKey);
+        if (isIdentical) return hashKey;
+    }
+    return undefined;
+}
+
+const getScreenshotPath = (buffer, randomToken) => {
+    let hashKey = getIdenticalScreenshotKey(buffer);
+    // If exists identical entry in screenshot map, get its filepath
+    if (hashKey) {
+        return screenshotMap[hashKey];
+    }
+    // Create new entry in screenshot map
+    hashKey = generateBufferHash(buffer);
+    const path = generateScreenshotPath(hashKey);
+    screenshotMap[hashKey] = path;
+
+    // Save image file to local storage
+    saveImageBufferToFile(buffer, `${randomToken}/${path}`);
+
+    return path;
+}
+
+const generateScreenshotPath = (hashKey) => {
+    return `elemScreenshots/html/${hashKey}.jpeg`;
+}
+
+const saveImageBufferToFile = (buffer, fileName) => {
+    if (!fileName) return;
+    // Find and create parent directories recursively if not exist
+    const absPath = path.resolve(fileName);
+    const dir = path.dirname(absPath);
+    fs.mkdir(dir, { recursive: true }, (err) => {
+        if (err) console.log("Error trying to create parent directory(s):", err);
+        // Write the image buffer to file
+        fs.writeFile(absPath, buffer, (err) => {
+            if (err) console.log("Error trying to write file:", err);
+        });
+    });
 }
 
 // const hasMultipleLocators = async (locator) => await locator.count() > 1;
