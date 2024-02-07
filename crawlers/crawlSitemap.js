@@ -214,6 +214,12 @@ const crawlSitemap = async (
       }
     },
     failedRequestHandler: async ({ request }) => {
+
+      // check if scanned pages have reached limit due to multi-instances of handler running
+      if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
+        return;
+      }
+      
       guiInfoLog(guiInfoStatusTypes.ERROR, {
         numScanned: urlsCrawled.scanned.length,
         urlScanned: request.url,
