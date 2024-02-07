@@ -120,7 +120,9 @@
     );
 
     let message;
-    if (filteredItems.mustFix.totalItems === 0 && filteredItems.goodToFix.totalItems === 0) {
+    if (category === 'passed') {
+      message = createElementFromString('<p>There are no passed occurrences here.</p>');
+    } else if (filteredItems.mustFix.totalItems === 0 && filteredItems.goodToFix.totalItems === 0) {
       message = createElementFromString(
         '<p id="no-issues-message">Good job! There are no issues here.</p>',
       );
