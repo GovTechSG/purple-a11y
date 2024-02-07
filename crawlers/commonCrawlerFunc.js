@@ -161,14 +161,88 @@ export const createCrawleeSubFolders = async randomToken => {
 };
 
 export const preNavigationHooks = (extraHTTPHeaders) => {
+//   let user_agents_list = [
+//     'Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148',
+//     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.83 Safari/537.36',
+//     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36',
+//     'Mozilla/5.0 (Linux; Android 11; SM-G975U) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.77 Mobile Safari/537.36',
+//     'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/99.0.4844.88 Mobile/15E148 Safari/604.1',
+//     'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0',
+//     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Safari/15.1',
+//     'Mozilla/5.0 (Linux; Android 10; Pixel 3 XL) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.88 Mobile Safari/537.36',
+//     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/99.0.1150.3 Safari/537.36',
+//     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Firefox/100.0'
+// ];
+
+
+// // Counter to keep track of the current index
+// let currentIndex = 0;
+
+// // Function to get the next user-agent in rotation
+// function getNextUserAgent() {
+//     const nextUserAgent = user_agents_list[currentIndex];
+//     currentIndex = (currentIndex + 1) % user_agents_list.length; // Rotate to the next index
+//     return nextUserAgent;
+// }
+
+// // Example usage in your Playwright script
+// extraHTTPHeaders = {
+//   'authority': 'www.google.com',
+//     'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+//     'accept-language': 'en-US,en;q=0.9',
+//     'cache-control': 'max-age=0',
+//     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+// };
+
+
+
   return [
   async (crawlingContext, gotoOptions) => {
+
     if (extraHTTPHeaders) {
+    //   extraHTTPHeaders = {
+    //     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0",
+    //     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    //     "Accept-Language": "en-US,en;q=0.5",
+    //     "Accept-Encoding": "gzip, deflate",
+    //     "Connection": "keep-alive",
+    //     "Upgrade-Insecure-Requests": "1",
+    //     "Sec-Fetch-Dest": "document",
+    //     "Sec-Fetch-Mode": "navigate",
+    //     "Sec-Fetch-Site": "none",
+    //     "Sec-Fetch-User": "?1",
+    //     "Cache-Control": "max-age=0",
+    // }
+
+    
+
+    
+
+
       crawlingContext.request.headers = extraHTTPHeaders;
+
     }
     gotoOptions = { waitUntil: 'networkidle', timeout: 30000 };
+
   },
 ]};
+
+
+// export const preNavigationHooks = (extraHTTPHeaders) => {
+ 
+  
+//     return [
+//     async (crawlingContext, gotoOptions) => {
+//       if (extraHTTPHeaders) {
+      
+  
+//       //put in the proxies here
+//         crawlingContext.request.headers = extraHTTPHeaders;
+  
+//       }
+//       gotoOptions = { waitUntil: 'networkidle', timeout: 30000 };
+//     },
+//   ]};
 
 export const postNavigationHooks = [
   async _crawlingContext => {
