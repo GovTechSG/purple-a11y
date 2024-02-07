@@ -64,7 +64,7 @@
             <% if (category !== 'passed' && items[category].totalItems !== 0) { %> 
               (<%= items[category].rules.length %> issues) 
             <% } else if (category !== 'passed' && items[category].totalItems === 0) { %>
-              0 issues
+              (0 issues)
             <% } else { %>
               (<%= items[category].totalItems %> occurrences)
             <% } %>
