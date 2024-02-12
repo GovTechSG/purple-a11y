@@ -233,7 +233,6 @@ const writeSummaryPdf = async (storagePath, filename = 'summary') => {
 const pushResults = async (pageResults, allIssues, isCustomFlow) => {
   const { url, pageTitle, filePath } = pageResults;
 
-  allIssues.totalPagesScanned += 1;
 
   const totalIssuesInPage = new Set();
   Object.keys(pageResults.mustFix.rules).forEach(k => totalIssuesInPage.add(k));
@@ -401,7 +400,7 @@ export const generateArtifacts = async (
     viewport,
     pagesScanned,
     pagesNotScanned,
-    totalPagesScanned: 0,
+    totalPagesScanned: pagesScanned.length,
     totalPagesNotScanned: pagesNotScanned.length,
     totalItems: 0,
     topFiveMostIssues: [],
