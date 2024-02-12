@@ -91,6 +91,7 @@ const crawlSitemap = async (
       launchOptions: getPlaywrightLaunchOptions(browser),
       userDataDir: userDataDirectory || '',
     },
+    retryOnBlocked:true,
     browserPoolOptions: {
       useFingerprints: false,
       preLaunchHooks: [
