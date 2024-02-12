@@ -355,6 +355,7 @@ const crawlSitemap = async (
     fs.mkdirSync(randomToken);
   }
 
+
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
       launcher: constants.launcher,
@@ -380,7 +381,8 @@ const crawlSitemap = async (
     requestList,
     preNavigationHooks: preNavigationHooks(extraHTTPHeaders),
     requestHandler: async ({ page, request, response, sendRequest }) => {
-      
+     
+
       // console.log('in request handler')
       
       // console.log("this is the request: ",request);
@@ -433,6 +435,7 @@ const crawlSitemap = async (
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
         });
+        console.log("error 403 at:",request.url);
         // urlsCrawled.forbidden.push(request.url);
         //josh changes starts here
         urlsCrawled.forbidden.push({ url: request.url });
@@ -456,6 +459,15 @@ const crawlSitemap = async (
         basicAuthPage++;
       } else {
         if (isScanHtml && status === 200 && isWhitelistedContentType(contentType)) {
+          // console.log("urls.scanned push, when urlsCrawled.scanned.length: ",urlsCrawled.scanned.length);
+          // josh changes starts here
+          urlsCrawled.scanned.push({
+            url: request.url,
+            pageTitle: await page.title(),
+            actualUrl: request.loadedUrl, // i.e. actualUrl
+          });
+          //josh changes ends here
+          
           const results = await runAxeScript(includeScreenshots, page, randomToken);
           guiInfoLog(guiInfoStatusTypes.SCANNED, {
             numScanned: urlsCrawled.scanned.length,
@@ -475,12 +487,12 @@ const crawlSitemap = async (
               });
               return;
             }
-  
-            urlsCrawled.scanned.push({
-              url: request.url,
-              pageTitle: results.pageTitle,
-              actualUrl: request.loadedUrl, // i.e. actualUrl
-            });
+            //josh changes remove
+            // urlsCrawled.scanned.push({
+            //   url: request.url,
+            //   pageTitle: results.pageTitle,
+            //   actualUrl: request.loadedUrl, // i.e. actualUrl
+            // });
   
             urlsCrawled.scannedRedirects.push({
               fromUrl: request.url,
@@ -489,10 +501,14 @@ const crawlSitemap = async (
   
             results.url = request.url;
             results.actualUrl = request.loadedUrl;
-          } else {
-            urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
-          }
+          } 
+          //josh changes remove
+          // else {
+          //   urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
+          // }
+
           await dataset.pushData(results);
+
         } else {
           guiInfoLog(guiInfoStatusTypes.SKIPPED, {
             numScanned: urlsCrawled.scanned.length,
@@ -519,7 +535,7 @@ const crawlSitemap = async (
   try{
   await crawler.run();
   }catch(e){
-    console.log('run error: ',e);
+    console.log('crawler.run error: ',e);
   }
 
 

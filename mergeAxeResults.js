@@ -165,6 +165,7 @@ const writeHTML = async (allIssues, storagePath, htmlFilename = 'report') => {
   const template = ejs.compile(ejsString, {
     filename: path.join(__dirname, './static/ejs/report.ejs'),
   });
+  
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
 };
@@ -232,8 +233,9 @@ const writeSummaryPdf = async (storagePath, filename = 'summary') => {
 
 const pushResults = async (pageResults, allIssues, isCustomFlow) => {
   const { url, pageTitle, filePath } = pageResults;
-
-  allIssues.totalPagesScanned += 1;
+  //josh changes starts here
+  // allIssues.totalPagesScanned = allIssues.pagesScanned.length;
+  //josh changes ends here
 
   const totalIssuesInPage = new Set();
   Object.keys(pageResults.mustFix.rules).forEach(k => totalIssuesInPage.add(k));
@@ -401,7 +403,10 @@ export const generateArtifacts = async (
     viewport,
     pagesScanned,
     pagesNotScanned,
-    totalPagesScanned: 0,
+    // totalPagesScanned: 0,
+    //josh changes starts here
+    totalPagesScanned: pagesScanned.length,
+    //josh changes ends here
     totalPagesNotScanned: pagesNotScanned.length,
     totalItems: 0,
     topFiveMostIssues: [],
@@ -435,7 +440,6 @@ export const generateArtifacts = async (
 
   // allIssues.totalPages = allIssues.totalPagesScanned;
 
-  // console.log(allIssues.items.mustFix);
 
   printMessage([
     'Scan Summary',
