@@ -150,7 +150,7 @@ const crawlSitemap = async (
           numScanned: urlsCrawled.scanned.length,
           urlScanned: request.url,
         });
-        urlsCrawled.forbidden.push(request.url);
+        urlsCrawled.forbidden.push({ url: request.url });
         return;
       }
 
