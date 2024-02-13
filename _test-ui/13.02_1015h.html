@@ -14077,6 +14077,16 @@
   }
 
   @media only screen and (max-width: 767px) {
+    .category-selector {
+      flex-direction: row;
+      width: unset;
+      border-radius: 0;
+    }
+
+    .category-selector .category-name {
+      line-height: unset;
+    }
+
     .compliance-summary {
       flex-direction: column;
     }
@@ -14969,9 +14979,9 @@
           aria-labelledby="mustFixTitle mustFixItemsInformation"
           aria-describedby="mustFixAriaDescription"
           id="mustFixDropdownSelector"
-          class="mustFix"
+          class="mustFix category-selector"
           role="option"
-          >    <span id="mustFixTitle" class="align-items-center category-name fw-bold d-inline mb-0">
+          >    <span id="mustFixTitle" class="d-flex align-items-center category-name fw-bold d-inline mb-0">
             Must Fix
           </span>
           <span id="mustFixItemsInformation" class="px-2 category-information">
@@ -14987,9 +14997,9 @@
           aria-labelledby="goodToFixTitle goodToFixItemsInformation"
           aria-describedby="goodToFixAriaDescription"
           id="goodToFixDropdownSelector"
-          class="goodToFix"
+          class="goodToFix category-selector"
           role="option"
-          >    <span id="goodToFixTitle" class="align-items-center category-name fw-bold d-inline mb-0">
+          >    <span id="goodToFixTitle" class="d-flex align-items-center category-name fw-bold d-inline mb-0">
             Good to Fix
           </span>
           <span id="goodToFixItemsInformation" class="px-2 category-information">
@@ -15005,9 +15015,9 @@
           aria-labelledby="needsReviewTitle needsReviewItemsInformation"
           aria-describedby="needsReviewAriaDescription"
           id="needsReviewDropdownSelector"
-          class="needsReview"
+          class="needsReview category-selector"
           role="option"
-          >    <span id="needsReviewTitle" class="align-items-center category-name fw-bold d-inline mb-0">
+          >    <span id="needsReviewTitle" class="d-flex align-items-center category-name fw-bold d-inline mb-0">
             Needs Review
           </span>
           <span id="needsReviewItemsInformation" class="px-2 category-information">
