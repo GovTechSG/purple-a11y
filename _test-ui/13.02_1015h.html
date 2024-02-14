@@ -14954,7 +14954,7 @@
     tabindex="0"
     aria-expanded="false"
   >
-  <li id="dropdownToggleContainer" class="mustFix category-selector">
+  <li id="dropdownToggleContainer">
     <span id="dropdownToggleCategoryTitle" class="d-flex align-items-center category-name fw-bold d-inline mb-0"> Category Title </span>
     <span id="dropdownToggleCategoryInfo" class="px-2 category-information"> (# issues) </span>
   </li>
@@ -16151,8 +16151,22 @@
     selectOptionByElement(selectedOption);
   };
 
-  const selectOptionByElement = optionElement => {
+    const selectOptionByElement = optionElement => {    
     const optionValue = optionElement.textContent;
+    const optionElementClassArray = [optionElement.classList[0], optionElement.classList[1]]
+    const optionElementCategoryTitle = optionElement.children[0].innerText;
+    const optionElementCategoryInfo = optionElement.children[1].innerText;
+
+    // Resets dropdownToggleContainer to empty class
+    document.getElementById('dropdownToggleContainer').classList.value = '';
+    
+    optionElementClassArray.forEach(className => {
+      document.getElementById('dropdownToggleContainer').classList.add(className);
+    })
+    
+    document.getElementById('dropdownToggleCategoryTitle').innerText = optionElementCategoryTitle;
+    document.getElementById('dropdownToggleCategoryInfo').innerText = optionElementCategoryInfo;
+
 
     // elements.button.textContent = optionValue;
     elements.options.forEach(option => {
