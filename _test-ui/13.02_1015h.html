@@ -14085,6 +14085,17 @@
 
     #listbox .category-selector .category-name {
       line-height: unset;
+      padding-left: 0.1rem;
+    }
+
+    #select .category-selector {
+      flex-direction: row;
+      border: none;
+      padding: 0;
+    }
+
+    #select .category-selector .category-name {
+      line-height: unset;
     }
 
     .compliance-summary {
@@ -14942,7 +14953,12 @@
     aria-haspopup="listbox"
     tabindex="0"
     aria-expanded="false"
-  >Accessible Dropdown</button>
+  >
+  <li id="dropdownToggleContainer" class="mustFix category-selector">
+    <span id="dropdownToggleCategoryTitle" class="d-flex align-items-center category-name fw-bold d-inline mb-0"> Category Title </span>
+    <span id="dropdownToggleCategoryInfo" class="px-2 category-information"> (# issues) </span>
+  </li>
+  </button>
   <div class="ps-2">
     <svg
       tabindex="-1"
@@ -16138,7 +16154,7 @@
   const selectOptionByElement = optionElement => {
     const optionValue = optionElement.textContent;
 
-    elements.button.textContent = optionValue;
+    // elements.button.textContent = optionValue;
     elements.options.forEach(option => {
       option.classList.remove('active');
       option.setAttribute('aria-selected', 'false');
