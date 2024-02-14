@@ -16154,8 +16154,8 @@
     const selectOptionByElement = optionElement => {    
     const optionValue = optionElement.textContent;
     const optionElementClassArray = [optionElement.classList[0], optionElement.classList[1]]
-    const optionElementCategoryTitle = optionElement.children[0].innerText;
-    const optionElementCategoryInfo = optionElement.children[1].innerText;
+    const optionElementCategoryTitle = optionElement.children[0].innerText.replace(/\n/g, '');
+    const optionElementCategoryInfo = optionElement.children[1].innerText.replace(/\n/g, '');   
 
     // Resets dropdownToggleContainer to empty class
     document.getElementById('dropdownToggleContainer').classList.value = '';
