@@ -16172,8 +16172,7 @@
 
     // Dynamically update dropdownIssueOccurrences
     const dropdownIssueOccurrencesString = document.getElementById(optionElement.classList[0]+'Selector').lastElementChild.innerText.replace(/\n/g, '');
-    let dropdownIssueOccurrencesInnerText = document.getElementById('dropdownIssuesOccurrences').innerText;
-    dropdownIssueOccurrencesInnerText = dropdownIssueOccurrencesString;
+    document.getElementById('dropdownIssuesOccurrences').innerText = dropdownIssueOccurrencesString; 
 
     // elements.button.textContent = optionValue;
     elements.options.forEach(option => {
