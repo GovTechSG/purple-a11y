@@ -14942,7 +14942,7 @@
       <!-- Dropdown Category Selector -->
       
 
-<div class="d-md-none d-flex mt-4 mx-2 px-2 position-relative ally-button-container" aria-label="Issue category">
+<div class="d-md-none d-flex my-3 mx-2 px-2 position-relative ally-button-container" aria-label="Issue category">
   <label class="visually-hidden" for="select">Accessible Dropdown</label>
   <button
     class="ally-toggle-button"
@@ -15047,6 +15047,9 @@
       
     
   </ul>
+</div>
+<div id="dropdownIssuesOccurrences"class="d-md-none d-flex mx-2 px-2">
+  # issues / # occurrences
 </div>
 
       <ul id="categorySummary" class="unbulleted-list px-3 py-4 mb-3 flex-grow-1">
@@ -16167,6 +16170,10 @@
     document.getElementById('dropdownToggleCategoryTitle').innerText = optionElementCategoryTitle;
     document.getElementById('dropdownToggleCategoryInfo').innerText = optionElementCategoryInfo;
 
+    // Dynamically update dropdownIssueOccurrences
+    const dropdownIssueOccurrencesString = document.getElementById(optionElement.classList[0]+'Selector').lastElementChild.innerText.replace(/\n/g, '');
+    let dropdownIssueOccurrencesInnerText = document.getElementById('dropdownIssuesOccurrences').innerText;
+    dropdownIssueOccurrencesInnerText = dropdownIssueOccurrencesString;
 
     // elements.button.textContent = optionValue;
     elements.options.forEach(option => {
