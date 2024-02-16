@@ -15000,7 +15000,7 @@
           >    <span id="mustFixTitle" class="d-flex align-items-center category-name fw-bold d-inline mb-0">
             Must Fix
           </span>
-          <span id="mustFixItemsInformation" class="px-2 category-information">
+          <span id="mustFixListboxItemsInformation" class="px-2 category-information">
              
               (4 issues) 
             
@@ -15018,7 +15018,7 @@
           >    <span id="goodToFixTitle" class="d-flex align-items-center category-name fw-bold d-inline mb-0">
             Good to Fix
           </span>
-          <span id="goodToFixItemsInformation" class="px-2 category-information">
+          <span id="goodToFixListboxItemsInformation" class="px-2 category-information">
              
               (6 issues) 
             
@@ -15036,7 +15036,7 @@
           >    <span id="needsReviewTitle" class="d-flex align-items-center category-name fw-bold d-inline mb-0">
             Needs Review
           </span>
-          <span id="needsReviewItemsInformation" class="px-2 category-information">
+          <span id="needsReviewListboxItemsInformation" class="px-2 category-information">
              
               (1 issues) 
             
@@ -17172,26 +17172,48 @@
     filteredItems[category].totalItems = totalItemsSum;
     let updatedIssueOccurence = '';
     if (category !== 'passed' && filteredItems[category].totalItems !== 0) {
-      updatedIssueOccurence = `<strong style="color: #0047FA;">${filteredItems[category].rules.length}</strong> issues / <strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong> occurrences`;
+      updatedIssueOccurence = `<strong style="color: #0047FA;">${filteredItems[category].rules.length}</strong>&nbspissues&nbsp/&nbsp<strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong>&nbspoccurrences`;
     } else if (category !== 'passed' && filteredItems[category].totalItems === 0) {
-      updatedIssueOccurence = `<strong style="color: #0047FA;">0</strong> issues`;
+      updatedIssueOccurence = `<strong style="color: #0047FA;">0</strong>&nbspissues`;
     } else {
-      updatedIssueOccurence = `<strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong> occurrences`;
+      updatedIssueOccurence = `<strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong>&nbspoccurrences`;
     }
-    if (category !== 'passed') document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurence;
+    if (category !== 'passed') {
+      document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurence;
+      
+      document.getElementById(`${category}ListboxItemsInformation`).innerText = document.getElementById(`${category}ItemsInformation`).innerText.split('/')[0].trim()
+
+      if (document.getElementById('dropdownToggleContainer').classList.contains(`${category}`)){
+        document.getElementById('dropdownIssuesOccurrences').innerHTML = updatedIssueOccurence;
+        document.getElementById('dropdownToggleCategoryInfo').innerHTML = `(${document.getElementById('dropdownIssuesOccurrences').children[0].innerHTML}&nbspissues)`;
+        document.getElementById(`${category}ItemsInformation`).classList.contains('list-box-issues').innerText = `(${document.getElementById('dropdownIssuesOccurrences').children[0].innerHTML}&nbspissues)`; 
+      }
+    } 
   }
 
   function resetIssueOccurence(category, filteredItems) {
     for (let category in filteredItems) {
       let updatedIssueOccurence = '';
       if (category !== 'passed' && filteredItems[category].totalItems !== 0) {
-        updatedIssueOccurence = `${filteredItems[category].rules.length} issues / ${filteredItems[category].totalItems} occurrences`;
+        updatedIssueOccurence = `${filteredItems[category].rules.length}&nbspissues&nbsp/&nbsp${filteredItems[category].totalItems}&nbspoccurrences`;
       } else if (category !== 'passed' && filteredItems[category].totalItems === 0) {
         updatedIssueOccurence = `0 issues`;
       } else {
-        updatedIssueOccurence = `${filteredItems[category].totalItems} occurrences`;
+        updatedIssueOccurence = `${filteredItems[category].totalItems}&nbspoccurrences`;
       }
-      if (category !== 'passed') document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurence;
+      if (category !== 'passed'){
+        document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurence;
+
+        document.getElementById(`${category}ListboxItemsInformation`).innerText = document.getElementById(`${category}ItemsInformation`).innerText.split('/')[0].trim()
+
+        if (document.getElementById('dropdownToggleContainer').classList.contains(`${category}`))
+        {
+          document.getElementById('dropdownIssuesOccurrences').innerHTML = updatedIssueOccurence;
+          const getInnerText = document.getElementById('dropdownIssuesOccurrences').innerText;
+          const reducedInnerText = getInnerText.substring(0, getInnerText.indexOf("/"))
+          document.getElementById('dropdownToggleCategoryInfo').innerText = `(${reducedInnerText.trim()})` 
+        }
+      }
     }
   }
 
