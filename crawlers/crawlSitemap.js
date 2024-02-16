@@ -14,6 +14,7 @@ import {
   getPlaywrightLaunchOptions,
   messageOptions,
   isSkippedUrl,
+  getLinksFromSitemapIntelligently,
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
@@ -32,45 +33,71 @@ const crawlSitemap = async (
   fileTypes,
   blacklistedPatterns,
   includeScreenshots,
-  extraHTTPHeaders
+  extraHTTPHeaders,
+  fromCrawlIntelligentSitemap = false,
+  userUrlInputFromIntelligent = null,
+  datasetFromIntelligent = null,
+  urlsCrawledFromIntelligent = null, 
+  
 ) => {
 
-   // Boolean to omit axe scan for basic auth URL
-   let isBasicAuth;
-   let basicAuthPage = 0;
-   let finalLinks = []; 
- 
-   /**
-    * Regex to match http://username:password@hostname.com
-    * utilised in scan strategy to ensure subsequent URLs within the same domain are scanned.
-    * First time scan with original `url` containing credentials is strictly to authenticate for browser session
-    * subsequent URLs are without credentials.
-    * basicAuthPage is set to -1 for basic auth URL to ensure it is not counted towards maxRequestsPerCrawl
-    */
- 
-   if (basicAuthRegex.test(sitemapUrl)) {
-      isBasicAuth = true;
-      // request to basic auth URL to authenticate for browser session
-      finalLinks.push(new Request({ url: sitemapUrl, uniqueKey: `auth:${sitemapUrl}` }));
-      const finalUrl = `${sitemapUrl.split('://')[0]}://${sitemapUrl.split('@')[1]}`;
-      
-      // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
-      finalLinks.push(new Request({ url: finalUrl }));
-      basicAuthPage = -2;
-   } 
+  let dataset;
+  let urlsCrawled;
+  let linksFromSitemap
 
   
+  // Boolean to omit axe scan for basic auth URL
+  let isBasicAuth;
+  let basicAuthPage = 0;
+  let finalLinks = []; 
+  
+  
+  if (fromCrawlIntelligentSitemap){
+    dataset=datasetFromIntelligent;
+    urlsCrawled = urlsCrawledFromIntelligent;
+    linksFromSitemap = await getLinksFromSitemapIntelligently(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory, userUrlInputFromIntelligent)
+  } else {
+    ({ dataset } = await createCrawleeSubFolders(randomToken));
+    urlsCrawled = { ...constants.urlsCrawledObj };
+    linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory)
+    
+    if (!fs.existsSync(randomToken)) {
+      fs.mkdirSync(randomToken);
+    }
+  }
+  
+  /**
+   * Regex to match http://username:password@hostname.com
+   * utilised in scan strategy to ensure subsequent URLs within the same domain are scanned.
+   * First time scan with original `url` containing credentials is strictly to authenticate for browser session
+   * subsequent URLs are without credentials.
+   * basicAuthPage is set to -1 for basic auth URL to ensure it is not counted towards maxRequestsPerCrawl
+  */
+ 
+ if (basicAuthRegex.test(sitemapUrl)) {
+   isBasicAuth = true;
+   // request to basic auth URL to authenticate for browser session
+   finalLinks.push(new Request({ url: sitemapUrl, uniqueKey: `auth:${sitemapUrl}` }));
+   const finalUrl = `${sitemapUrl.split('://')[0]}://${sitemapUrl.split('@')[1]}`;
+   
+   // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
+   finalLinks.push(new Request({ url: finalUrl }));
+   basicAuthPage = -2;
+  } 
+  
+  
+  let pdfDownloads = [];
+  let uuidToPdfMapping = {};
   const isScanHtml = ['all', 'html-only'].includes(fileTypes);
   const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
-
-  const urlsCrawled = { ...constants.urlsCrawledObj };
   const { playwrightDeviceDetailsObject } = viewportSettings;
   const { maxConcurrency } = constants;
-  const pdfDownloads = [];
-  const uuidToPdfMapping = {};
+
+
 
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
-  const linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory)
+
+
   finalLinks = [...finalLinks, ...linksFromSitemap];
 
   const requestList = new crawlee.RequestList({
@@ -79,11 +106,6 @@ const crawlSitemap = async (
   await requestList.initialize();
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
 
-  const { dataset } = await createCrawleeSubFolders(randomToken);
-
-  if (!fs.existsSync(randomToken)) {
-    fs.mkdirSync(randomToken);
-  }
 
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
@@ -91,7 +113,7 @@ const crawlSitemap = async (
       launchOptions: getPlaywrightLaunchOptions(browser),
       userDataDir: userDataDirectory || '',
     },
-    retryOnBlocked:true,
+    retryOnBlocked: true,
     browserPoolOptions: {
       useFingerprints: false,
       preLaunchHooks: [
@@ -236,6 +258,9 @@ const crawlSitemap = async (
 
   await requestList.isFinished();
 
+
+  
+
   if (pdfDownloads.length > 0) {
     // wait for pdf downloads to complete
     await Promise.all(pdfDownloads);
@@ -257,8 +282,13 @@ const crawlSitemap = async (
     await Promise.all(pdfResults.map(result => dataset.pushData(result)));
   }
 
-  guiInfoLog(guiInfoStatusTypes.COMPLETED);
+  
+  if (!fromCrawlIntelligentSitemap){
+    guiInfoLog(guiInfoStatusTypes.COMPLETED);
+  }
+
   return urlsCrawled;
+  
 };
 
 export default crawlSitemap;

@@ -1,12 +1,14 @@
 import printMessage from 'print-message';
 import crawlSitemap from './crawlers/crawlSitemap.js';
 import crawlDomain from './crawlers/crawlDomain.js';
+import crawlIntelligentSitemap from './crawlers/crawlIntelligentSitemap.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
 import constants, { basicAuthRegex } from './constants/constants.js';
 import { getBlackListedPatterns, submitForm } from './constants/common.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import runCustom from './crawlers/runCustom.js';
+
 
 const combineRun = async (details, deviceToScan) => {
   const envDetails = { ...details };
@@ -98,8 +100,8 @@ const combineRun = async (details, deviceToScan) => {
       );
       break;
 
-    case constants.scannerTypes.website:
-      urlsCrawled = await crawlDomain(
+    case constants.scannerTypes.intelligent:
+        urlsCrawled = await crawlIntelligentSitemap(
         url,
         randomToken,
         host,
@@ -117,6 +119,25 @@ const combineRun = async (details, deviceToScan) => {
       );
       break;
 
+    case constants.scannerTypes.website:
+      urlsCrawled = await crawlDomain(
+      url,
+      randomToken,
+      host,
+      viewportSettings,
+      maxRequestsPerCrawl,
+      browser,
+      userDataDirectory,
+      strategy,
+      specifiedMaxConcurrency,
+      fileTypes,
+      blacklistedPatterns,
+      includeScreenshots,
+      followRobots,
+      extraHTTPHeaders
+    );
+    break;
+
     default:
       consoleLogger.error(`type: ${type} not defined`);
       silentLogger.error(`type: ${type} not defined`);
@@ -126,7 +147,6 @@ const combineRun = async (details, deviceToScan) => {
   scanDetails.endTime = new Date().getTime();
   scanDetails.urlsCrawled = urlsCrawled;
   await createDetailsAndLogs(scanDetails, randomToken);
-
   if (scanDetails.urlsCrawled.scanned.length > 0) {
     await createAndUpdateResultsFolders(randomToken);
     const pagesNotScanned = [

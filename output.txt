@@ -1,0 +1,117 @@
+CRAWLDOMAIN 2
+requestQueue in crawlDomain: {
+  toScan: [],
+  scanned: [
+    {
+      url: 'https://www.tech.gov.sg/careers/how-we-hire/',
+      pageTitle: 'How We Hire'
+    }
+  ],
+  invalid: [],
+  scannedRedirects: [],
+  notScannedRedirects: [],
+  outOfDomain: [],
+  blacklisted: [],
+  error: [],
+  exceededRequests: [],
+  forbidden: [],
+  userExcluded: [],
+  everything: []
+}
+type of requestQueue in crawlDomain: object
+
+CRAWLDOMAIN 1
+requestQueue in crawlDomain: RequestQueue {
+  config: Configuration {
+    options: Map(0) {},
+    services: Map(2) {
+      'MemoryStorage-{}' => [MemoryStorage],
+      'eventManager' => [LocalEventManager]
+    },
+    storageManagers: Map(2) {
+      [class Dataset] => [StorageManager],
+      [class RequestQueue extends RequestProvider] => [StorageManager]
+    }
+  },
+  id: '31e38df3-07eb-454d-a875-3e306fd64b8d',
+  name: '20240216_121717_tech.gov.sg',
+  timeoutSecs: 30,
+  clientKey: 'jU5wJQU346PJzZoIR',
+  client: RequestQueueClient {
+    id: '31e38df3-07eb-454d-a875-3e306fd64b8d',
+    name: undefined,
+    createdAt: 2024-02-16T04:17:17.164Z,
+    accessedAt: 2024-02-16T04:17:17.164Z,
+    modifiedAt: 2024-02-16T04:17:17.164Z,
+    handledRequestCount: 0,
+    pendingRequestCount: 0,
+    requestQueueDirectory: '/Users/joshualai/Desktop/purple-a11y intelligent sitemap search/20240216_121717_tech.gov.sg/request_queues/31e38df3-07eb-454d-a875-3e306fd64b8d',
+    mutex: AsyncQueue { promises: [] },
+    requests: Map(0) {},
+    client: MemoryStorage {
+      localDataDirectory: '20240216_121717_tech.gov.sg',
+      datasetsDirectory: '/Users/joshualai/Desktop/purple-a11y intelligent sitemap search/20240216_121717_tech.gov.sg/datasets',
+      keyValueStoresDirectory: '/Users/joshualai/Desktop/purple-a11y intelligent sitemap search/20240216_121717_tech.gov.sg/key_value_stores',
+      requestQueuesDirectory: '/Users/joshualai/Desktop/purple-a11y intelligent sitemap search/20240216_121717_tech.gov.sg/request_queues',
+      writeMetadata: false,
+      persistStorage: true,
+      keyValueStoresHandled: [],
+      datasetClientsHandled: [Array],
+      requestQueuesHandled: [Array],
+      __purged: true
+    }
+  },
+  proxyConfiguration: undefined,
+  log: Log {
+    LEVELS: {
+      '0': 'OFF',
+      '1': 'ERROR',
+      '2': 'SOFT_FAIL',
+      '3': 'WARNING',
+      '4': 'INFO',
+      '5': 'DEBUG',
+      '6': 'PERF',
+      OFF: 0,
+      ERROR: 1,
+      SOFT_FAIL: 2,
+      WARNING: 3,
+      INFO: 4,
+      DEBUG: 5,
+      PERF: 6
+    },
+    warningsOnceLogged: Set(0) {},
+    options: {
+      level: 1,
+      maxDepth: 4,
+      maxStringLength: 2000,
+      prefix: 'RequestQueue',
+      suffix: null,
+      logger: [LoggerText],
+      data: {}
+    }
+  },
+  internalTimeoutMillis: 300000,
+  requestLockSecs: 180,
+  assumedTotalCount: 0,
+  assumedHandledCount: 0,
+  initialCount: 0,
+  queueHeadIds: ListDictionary {
+    linkedList: LinkedList { head: null, tail: null, length: 0 },
+    dictionary: {}
+  },
+  requestCache: LruCache {
+    options: { maxLength: 1000000 },
+    listDictionary: ListDictionary { linkedList: [LinkedList], dictionary: {} },
+    maxLength: 1000000
+  },
+  inProgress: Set(0) {},
+  recentlyHandledRequestsCache: LruCache {
+    options: { maxLength: 1000 },
+    listDictionary: ListDictionary { linkedList: [LinkedList], dictionary: {} },
+    maxLength: 1000
+  },
+  queuePausedForMigration: false,
+  queryQueueHeadPromise: null,
+  lastActivity: 2024-02-16T04:17:17.164Z
+}
+type of requestQueue in crawlDomain: object

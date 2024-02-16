@@ -852,6 +852,233 @@ export const getLinksFromSitemap = async (
   return requestList;
 };
 
+export const getLinksFromSitemapIntelligently = async (
+  sitemapUrl,
+  maxLinksCount,
+  browser,
+  userDataDirectory,
+  userInputUrl
+) => {
+
+  const urls = {}; // dictionary of requests to urls to be scanned
+
+  const isLimitReached = () => urls.size >= maxLinksCount;
+
+  const addToUrlList = url => {
+    if (!url) return;
+    if (isDisallowedInRobotsTxt(url)) return; 
+    const request = new Request({ url });
+    if (isUrlPdf(url)) {
+      request.skipNavigation = true;
+    }
+    urls[url] = request;
+  };
+
+const calculateCloseness = (sitemapUrl, userUrlInput) => {
+  // Remove 'http://', 'https://', and 'www.' prefixes from the URLs
+  const normalizedSitemapUrl = sitemapUrl.replace(/^(https?:\/\/)?(www\.)?/, '');
+  const normalizedUserUrlInput = userUrlInput.replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/$/, ''); // Remove trailing slash also
+
+  if (normalizedSitemapUrl == normalizedUserUrlInput){
+      return 2;
+  }else if (normalizedSitemapUrl.startsWith(normalizedUserUrlInput)) {
+      return 1;
+  } else {
+      return 0;
+  }
+}
+  const processXmlSitemap = async ($, sitemapType, selector) => {
+    const urlList = [];
+    // Iterate through each URL element in the sitemap, collect url and modified date
+    $("url").each((index, urlElement) => {
+      let url;
+      if (sitemapType === constants.xmlSitemapTypes.atom) {
+        url = $(urlElement).find(selector).prop('href')
+      } else { 
+        url = $(urlElement).find(selector).text();
+      }
+      let lastModified = $(urlElement).find('lastmod').text();
+      const lastModifiedDate = lastModified ? new Date(lastModified) : null;
+
+      urlList.push({ url, lastModifiedDate });
+    });
+    
+    urlList.sort((a, b) => {
+      const closenessA = calculateCloseness(a.url, userInputUrl);
+      const closenessB = calculateCloseness(b.url, userInputUrl);
+    
+      // Sort by closeness to userUrlInput in descending order
+      if (closenessA !== closenessB) {
+        return closenessB - closenessA;
+      }
+    
+      // If closeness is the same, sort by last modified date in descending order
+      const dateDifference = (b.lastModifiedDate || 0) - (a.lastModifiedDate || 0);
+      return dateDifference !== 0 ? dateDifference : 0; // Maintain original order for equal dates
+    });
+   
+    //test urlList
+    // console.log('urlList :', JSON.stringify(urlList, null, 2)); 
+
+    // Add the sorted URLs to the main URL list
+    for (const { url } of urlList.slice(0, maxLinksCount)) {
+      addToUrlList(url);
+    }
+
+    
+  };
+
+
+
+
+  const processNonStandardSitemap = data => {
+
+    const urlsFromData = crawlee.extractUrls({ string: data, urlRegExp: new RegExp("^(http|https):/{2}.+$", "gmi") }).slice(0, maxLinksCount);
+    urlsFromData.forEach(url => {
+      addToUrlList(url);
+    });
+  };
+
+  let finalUserDataDirectory = userDataDirectory;
+  if (userDataDirectory === null || userDataDirectory === undefined) {
+    finalUserDataDirectory = '';
+  }
+
+  const fetchUrls = async url => {
+    let data;
+    let sitemapType;
+
+    const getDataUsingPlaywright = async () => {
+     const browserContext = await constants.launcher.launchPersistentContext(
+        finalUserDataDirectory,
+        {
+          ...getPlaywrightLaunchOptions(browser),
+        },
+      );
+
+      const page = await browserContext.newPage();
+      await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+
+      if (constants.launcher === webkit) {
+        data = await page.locator('body').innerText();
+      } else {
+        const urlSet = page.locator('urlset');
+        const sitemapIndex = page.locator('sitemapindex');
+        const rss = page.locator('rss');
+        const feed = page.locator('feed');
+        const isRoot = async locator => (await locator.count()) > 0;
+
+        if (await isRoot(urlSet)) {
+          data = await urlSet.evaluate(elem => elem.outerHTML);
+        } else if (await isRoot(sitemapIndex)) {
+          data = await sitemapIndex.evaluate(elem => elem.outerHTML);
+        } else if (await isRoot(rss)) {
+          data = await rss.evaluate(elem => elem.outerHTML);
+        } else if (await isRoot(feed)) {
+          data = await feed.evaluate(elem => elem.outerHTML);
+        }
+      }
+
+      await browserContext.close();
+    };
+
+    if (validator.isURL(url, urlOptions)) {
+      if (isUrlPdf(url)) {
+        addToUrlList(url);
+        return;
+      }
+      if (proxy) {
+        await getDataUsingPlaywright();
+      } else {
+        try {
+          const instance = axios.create({
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false,
+            }),
+          });
+          data = await (await instance.get(url, { timeout: 2000 })).data;
+        } catch (error) {
+          if (error.code === 'ECONNABORTED') {
+            await getDataUsingPlaywright();
+          }
+        }
+      }
+    } else {
+      data = fs.readFileSync(url, 'utf8');
+    }
+    const $ = cheerio.load(data, { xml: true });
+
+    // This case is when the document is not an XML format document
+    if ($(':root').length === 0) {
+
+      processNonStandardSitemap(data);
+      return;
+    }
+
+    // Root element
+    const root = $(':root')[0];
+
+    const { xmlns } = root.attribs;
+    const xmlFormatNamespace = 'http://www.sitemaps.org/schemas/sitemap/0.9';
+
+    if (root.name === 'urlset' && xmlns === xmlFormatNamespace) {
+      sitemapType = constants.xmlSitemapTypes.xml;
+    } else if (root.name === 'sitemapindex' && xmlns === xmlFormatNamespace) {
+      sitemapType = constants.xmlSitemapTypes.xmlIndex;
+    } else if (root.name === 'rss') {
+      sitemapType = constants.xmlSitemapTypes.rss;
+    } else if (root.name === 'feed') {
+      sitemapType = constants.xmlSitemapTypes.atom;
+    } else {
+      sitemapType = constants.xmlSitemapTypes.unknown;
+
+    }
+
+
+    switch (sitemapType) {
+      case constants.xmlSitemapTypes.xmlIndex:
+        silentLogger.info(`This is a XML format sitemap index.`);
+        for (const childSitemapUrl of $('loc')) {
+          if (isLimitReached()) {
+
+            break;
+          }
+
+          await fetchUrls($(childSitemapUrl, false).text());
+        }
+        break;
+      case constants.xmlSitemapTypes.xml:
+
+        silentLogger.info(`This is a XML format sitemap.`);
+        await processXmlSitemap($, sitemapType, 'loc');
+        break;
+      case constants.xmlSitemapTypes.rss:
+
+        silentLogger.info(`This is a RSS format sitemap.`);
+        await processXmlSitemap($, sitemapType, 'link');
+        break;
+      case constants.xmlSitemapTypes.atom:
+
+        silentLogger.info(`This is a Atom format sitemap.`);
+        await processXmlSitemap($, sitemapType, 'link');
+        break;
+      default:
+
+        silentLogger.info(`This is an unrecognised XML sitemap format.`);
+        processNonStandardSitemap(data);
+    }
+  };
+
+  await fetchUrls(sitemapUrl);
+
+  const requestList = Object.values(urls);
+
+  return requestList;
+};
+
+
+
+
 export const validEmail = email => {
   const emailRegex = new RegExp(/^[A-Za-z0-9_!#$%&'*+\/=?`{|}~^.-]+@[A-Za-z0-9.-]+$/, 'gm');
 

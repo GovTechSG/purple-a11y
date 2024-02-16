@@ -47,7 +47,7 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
       `To scan sitemap of website:', 'node cli.js -c [ 1 | sitemap ] -u <url_link> [ -d <device> | -w <viewport_width> ]`,
     ],
     [
-      `To scan a website', 'node cli.js -c [ 2 | website ] -u <url_link> [ -d <device> | -w <viewport_width> ]`,
+      `To scan a website', 'node cli.js -c [ 2 | intelligent ] -u <url_link> [ -d <device> | -w <viewport_width> ]`,
     ],
     [
       `To start a custom flow scan', 'node cli.js -c [ 3 | custom ] -u <url_link> [ -d <device> | -w <viewport_width> ]`,

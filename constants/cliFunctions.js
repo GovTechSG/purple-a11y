@@ -14,7 +14,7 @@ export const alertMessageOptions = {
 export const cliOptions = {
   c: {
     alias: 'scanner',
-    describe: 'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow, 4) custom flow 2.0',
+    describe: 'Type of scan, 1) sitemap, 2) intelligent, 3) custom flow, 4) custom flow 2.0, 5) website crawl',
     choices: Object.keys(constants.scannerTypes),
     demandOption: true,
   },
