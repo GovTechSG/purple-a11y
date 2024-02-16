@@ -1,6 +1,6 @@
 <!-- TESTCODES ONLY: remove when raising PR -->
 <!-- Report generated is updated till commit d588ddfc51a05dfb9a80d6ea0f3b90e3c2d93d33-->
-<!-- Last update 16.02 at 1109h -->
+<!-- Last update 16.02 at 1527h -->
 <!doctype html>
 <html lang="en" id="accessibility-site-report">
   <head lang="en">
@@ -14725,6 +14725,8 @@
       </div>
       <hr class="my-4 mx-3" />
         <!-- Search Feat Input -->
+        <p id="jsOffMessage" class="mx-3"> Please open this file in a browser to experience the report's full functionality. </p>
+        <div id="jsOn" class="d-none">
         <div id= "searchGroup" class="row m-0 px-3">
           
 <h2 class="mb-3">Issues</h2>
@@ -15109,6 +15111,7 @@
       <p id="passedAriaDescription" class="d-none">
         Tooltip: Occurrences that passed the automated checks.
       </p>
+    </div>
     </section>
   </main>
 </div>
@@ -17267,5 +17270,10 @@
       }
       document.addEventListener('DOMContentLoaded', initTooltips);
     </script>
+<!-- Checks if js runs -->
+<script>
+  document.getElementById('jsOn').classList.remove('d-none');
+  document.getElementById('jsOffMessage').classList.add('d-none')
+</script>
   </body>
 </html>
