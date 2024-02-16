@@ -74,13 +74,7 @@
       usefulCountField = 'entry.809957654',
       notUsefulCountField = 'entry.89318735';
 
-    return `${formUrl}?
-      ${uuidField}=${uuid}&
-      ${websiteUrlField}=${websiteUrl}&
-      ${ruleIdField}=${ruleId}&
-      ${basicHtmlField}=${basicHtml}&
-      ${usefulCountField}=${usefulCount}&
-      ${notUsefulCountField}=${notUsefulCount}`;
+    return `${formUrl}?${uuidField}=${uuid}&${websiteUrlField}=${websiteUrl}&${ruleIdField}=${ruleId}&${basicHtmlField}=${basicHtml}&${usefulCountField}=${usefulCount}&${notUsefulCountField}=${notUsefulCount}`;
   }
 
   const logAiResponseFeedback = (feedbackType, ruleId, buttonsDiv, basicHtml) => {
