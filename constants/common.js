@@ -849,10 +849,10 @@ export const getLinksFromSitemap = async (
 
     const { xmlns } = root.attribs;
     
-    const xmlFormatNamespace = 'http://www.sitemaps.org/schemas/sitemap/0.9';
-    if (root.name === 'urlset' && xmlns === xmlFormatNamespace) {
+    const xmlFormatNamespace = '/schemas/sitemap';
+    if (root.name === 'urlset' && xmlns.includes(xmlFormatNamespace)) {
       sitemapType = constants.xmlSitemapTypes.xml;
-    } else if (root.name === 'sitemapindex' && xmlns === xmlFormatNamespace) {
+    } else if (root.name === 'sitemapindex' && xmlns.includes(xmlFormatNamespace)) {
       sitemapType = constants.xmlSitemapTypes.xmlIndex;
     } else if (root.name === 'rss') {
       sitemapType = constants.xmlSitemapTypes.rss;
