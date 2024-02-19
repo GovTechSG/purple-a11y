@@ -33,10 +33,10 @@ const crawlSitemap = async (
   blacklistedPatterns,
   includeScreenshots,
   extraHTTPHeaders,
-  fromCrawlIntelligentSitemap = false,
-  userUrlInputFromIntelligent = null,
-  datasetFromIntelligent = null,
-  urlsCrawledFromIntelligent = null, 
+  fromCrawlIntelligentSitemap = false, //optional
+  userUrlInputFromIntelligent = null, //optional
+  datasetFromIntelligent = null, //optional
+  urlsCrawledFromIntelligent = null, //optional
   
 ) => {
   let dataset;
