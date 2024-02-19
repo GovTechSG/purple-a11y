@@ -780,7 +780,6 @@ export const getLinksFromSitemap = async (
         finalUserDataDirectory,
         {
           ...getPlaywrightLaunchOptions(browser),
-          headless: false, //josh revert
         },
       );
 
