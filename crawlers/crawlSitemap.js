@@ -14,7 +14,6 @@ import {
   getPlaywrightLaunchOptions,
   messageOptions,
   isSkippedUrl,
-  getLinksFromSitemapIntelligently,
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
@@ -40,7 +39,6 @@ const crawlSitemap = async (
   urlsCrawledFromIntelligent = null, 
   
 ) => {
-
   let dataset;
   let urlsCrawled;
   let linksFromSitemap
@@ -55,16 +53,17 @@ const crawlSitemap = async (
   if (fromCrawlIntelligentSitemap){
     dataset=datasetFromIntelligent;
     urlsCrawled = urlsCrawledFromIntelligent;
-    linksFromSitemap = await getLinksFromSitemapIntelligently(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory, userUrlInputFromIntelligent)
+    
   } else {
     ({ dataset } = await createCrawleeSubFolders(randomToken));
     urlsCrawled = { ...constants.urlsCrawledObj };
-    linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory)
     
     if (!fs.existsSync(randomToken)) {
       fs.mkdirSync(randomToken);
     }
   }
+
+  linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory, userUrlInputFromIntelligent, fromCrawlIntelligentSitemap)
   
   /**
    * Regex to match http://username:password@hostname.com
