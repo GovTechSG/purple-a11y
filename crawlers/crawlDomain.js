@@ -46,7 +46,6 @@ const crawlDomain = async (
   urlsCrawledFromIntelligent = null, //optional
 
 ) => {
-
 let dataset;
 let urlsCrawled
 let requestQueue;

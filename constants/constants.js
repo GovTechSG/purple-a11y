@@ -162,10 +162,10 @@ const urlsCrawledObj = {
 
 const scannerTypes = {
   sitemap: 'Sitemap',
-  intelligent: 'intelligent',
+  website: 'Website',
   custom: 'Custom',
   custom2: 'Custom2',
-  website: 'Website',
+  intelligent: 'intelligent'
 };
 
 export const guiInfoStatusTypes = {
