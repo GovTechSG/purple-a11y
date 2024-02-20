@@ -247,8 +247,6 @@ export const formDataFields = {
 };
 
 export const sitemapPaths = [
-        
-  '/sitemap.xml.gz',
   '/sitemap/sitemap.xml',
   '/sitemap-index.xml',
   '/sitemap_index.xml',
@@ -260,16 +258,8 @@ export const sitemapPaths = [
   '/page-sitemap',
   '/sitemap.txt',
   '/sitemap.php',
-  '/sitemap_index.xml.gz',
-  '/sitemap-index.xml.gz',
-  '/sitemapindex.xml.gz',
-  '/sitemap-index.xml.gz',
-  '/sitemap.xml.tar',
-  '/sitemap.xml.zip',
   '/sitemap.xml.bz2',
   '/sitemap.xml.xz',
-  '/sitemap_index.xml.tar',
-  '/sitemap_index.xml.zip',
   '/sitemap_index.xml.bz2',
   '/sitemap_index.xml.xz',
   '/sitemap.xml'

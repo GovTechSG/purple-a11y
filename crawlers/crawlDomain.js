@@ -24,7 +24,7 @@ import { areLinksEqual } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
 import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
-import { log } from 'console';
+
 
 const crawlDomain = async (
   url,
