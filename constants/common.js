@@ -853,22 +853,32 @@ export const getLinksFromSitemap = async (
 };
 
 export const validEmail = email => {
-  const emailRegex = new RegExp(/^[A-Za-z0-9_!#$%&'*+\/=?`{|}~^.-]+@[A-Za-z0-9.-]+$/, 'gm');
+  const emailRegex = /^.+@.+\..+$/u;
 
   return emailRegex.test(email);
 };
 
 // For new user flow.
-export const validName = name => {
-  const maxLength = 50;
-  const regex = /^[\p{L}\p{Nd}-\s%\x21-\x7E]+$/;
+export const validName = (name) => {
+  // Allow only printable characters from any language
+  const regex = /^[\p{L}\p{N}\s'".,()\[\]{}!?:؛،؟…]+$/u;
 
-  if (name.length > maxLength) {
-    return false; // Reject names exceeding maxlength
+  // Check if the length is between 2 and 32000 characters
+  if (name.length < 2 || name.length > 32000) {
+    // Handle invalid name length
+    return false;
   }
 
   if (!regex.test(name)) {
-    return false; // Reject names with non-alphabetic or non-whitespace characters
+    // Handle invalid name format
+    return false;
+  }
+
+  // Include a check for specific characters to sanitize injection patterns
+  const preventInjectionRegex = /[<>'"\\/;|&!$*{}()\[\]\r\n\t]/;
+  if (preventInjectionRegex.test(name)) {
+    // Handle potential injection attempts
+    return false;
   }
 
   return true;
