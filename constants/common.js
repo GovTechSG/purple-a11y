@@ -861,7 +861,7 @@ export const validEmail = email => {
 // For new user flow.
 export const validName = name => {
   const maxLength = 50;
-  const regex = /^[A-Za-z-,\s]+$/;
+  const regex = /^[\p{L}\p{Nd}-\s%\x21-\x7E]+$/;
 
   if (name.length > maxLength) {
     return false; // Reject names exceeding maxlength
