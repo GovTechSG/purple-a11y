@@ -79,7 +79,7 @@ import {chromium} from 'playwright';
     try {
       sitemapUrl = await findSitemap(url)
     } catch (error) {
-      silentLogger.error(e);
+      silentLogger.error(error);
     }
 
     if (!sitemapExist){

@@ -459,6 +459,7 @@ if (process.env.RUNNING_FROM_MASS_SCANNER) {
     "url": allIssues.urlScanned,
     "startTime": formatDateTimeForMassScanner(allIssues.startTime),
     "endTime": formatDateTimeForMassScanner(scanDetails? getFormattedTime(scanDetails.endTime):getFormattedTime()),
+    "pagesScanned": allIssues.pagesScanned.length,
     "wcagPassPercentage": allIssues.wcagPassPercentage,
     "mustFix": {
       "issues": allIssues.items.mustFix.rules.length,

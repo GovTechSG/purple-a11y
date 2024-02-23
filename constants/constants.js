@@ -247,6 +247,7 @@ export const formDataFields = {
 };
 
 export const sitemapPaths = [
+  '/sitemap.xml',
   '/sitemap/sitemap.xml',
   '/sitemap-index.xml',
   '/sitemap_index.xml',
@@ -261,8 +262,7 @@ export const sitemapPaths = [
   '/sitemap.xml.bz2',
   '/sitemap.xml.xz',
   '/sitemap_index.xml.bz2',
-  '/sitemap_index.xml.xz',
-  '/sitemap.xml'
+  '/sitemap_index.xml.xz'
 ]
 
 const wcagLinks = {
