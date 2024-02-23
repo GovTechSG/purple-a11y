@@ -162,6 +162,8 @@ const combineRun = async (details, deviceToScan) => {
       urlsCrawled.scanned,
       pagesNotScanned,
       customFlowLabel,
+      undefined,
+      scanDetails
     );
     const [name, email] = nameEmail.split(':');
     

@@ -152,15 +152,61 @@ export const cleanUp = async pathToDelete => {
 };
 
 /* istanbul ignore next */
-export const getCurrentTime = () =>
-  new Date().toLocaleTimeString('en-GB', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour12: true,
-    hour: 'numeric',
-    minute: '2-digit',
-  });
+// export const getFormattedTime = () =>
+//   new Date().toLocaleTimeString('en-GB', {
+//     year: 'numeric',
+//     month: 'short',
+//     day: 'numeric',
+//     hour12: true,
+//     hour: 'numeric',
+//     minute: '2-digit',
+//   });
+
+export const getWcagPassPercentage = (wcagViolations)=> {
+  return parseFloat((Object.keys(constants.wcagLinks).length - wcagViolations.length) / Object.keys(constants.wcagLinks).length * 100).toFixed(2);
+  }
+
+export const getFormattedTime = (timestamp) => {
+  if (timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('en-GB', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour12: true,
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  } else {
+    return new Date().toLocaleTimeString('en-GB', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour12: true,
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  }
+};
+
+export const formatDateTimeForMassScanner = (dateTimeString) => {
+  const options = {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true
+  };
+
+  // Parse the input string to create a Date object
+  const parsedDate = new Date(dateTimeString.replace(/,/g, ''));
+
+  // Use toLocaleString with the desired options
+  const formattedDateTime = parsedDate.toLocaleString('en-GB', options).replace(',', '');
+
+  return formattedDateTime;
+}
 
 export const setHeadlessMode = (browser, isHeadless) => {
   const isWindowsOSAndEdgeBrowser =

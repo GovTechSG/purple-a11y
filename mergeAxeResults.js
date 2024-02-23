@@ -7,7 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import ejs from 'ejs';
 import constants from './constants/constants.js';
-import { createScreenshotsFolder, getCurrentTime, getStoragePath, getVersion } from './utils.js';
+import { createScreenshotsFolder, getFormattedTime, getStoragePath, getVersion, getWcagPassPercentage, formatDateTimeForMassScanner } from './utils.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import itemTypeDescription from './constants/itemTypeDescription.js';
 import { chromium } from 'playwright';
@@ -381,7 +381,9 @@ export const generateArtifacts = async (
   pagesScanned,
   pagesNotScanned,
   customFlowLabel,
-  cypressScanAboutMetadata
+  cypressScanAboutMetadata,
+  scanDetails
+
 ) => {
   const phAppVersion = getVersion();
   const storagePath = getStoragePath(randomToken);
@@ -393,7 +395,7 @@ export const generateArtifacts = async (
       htmlETL: purpleAiHtmlETL,
       rules: purpleAiRules,
     },
-    startTime: getCurrentTime(),
+    startTime: scanDetails.startTime? getFormattedTime(scanDetails.startTime) : getFormattedTime(),
     urlScanned,
     scanType,
     isCustomFlow,
@@ -413,7 +415,8 @@ export const generateArtifacts = async (
       needsReview: { description: itemTypeDescription.needsReview, totalItems: 0, rules: {} },
       passed: { description: itemTypeDescription.passed, totalItems: 0, rules: {} },
     },
-    cypressScanAboutMetadata
+    cypressScanAboutMetadata,
+    wcagLinks: constants.wcagLinks
   };
   const allFiles = await extractFileNames(directory);
 
@@ -432,10 +435,6 @@ export const generateArtifacts = async (
 
   flattenAndSortResults(allIssues, isCustomFlow);
 
-  // allIssues.totalPages = allIssues.totalPagesScanned;
-
-  // console.log(allIssues.items.mustFix);
-
   printMessage([
     'Scan Summary',
     '',
@@ -451,6 +450,40 @@ export const generateArtifacts = async (
     createScreenshotsFolder(randomToken);
   }
 
+  allIssues.wcagPassPercentage = getWcagPassPercentage(allIssues.wcagViolations);
+
+
+
+if (process.env.RUNNING_FROM_MASS_SCANNER) {
+  let scanData = {
+    "url": allIssues.urlScanned,
+    "startTime": formatDateTimeForMassScanner(allIssues.startTime),
+    "endTime": formatDateTimeForMassScanner(scanDetails? getFormattedTime(scanDetails.endTime):getFormattedTime()),
+    "wcagPassPercentage": allIssues.wcagPassPercentage,
+    "mustFix": {
+      "issues": allIssues.items.mustFix.rules.length,
+      "occurrence": allIssues.items.mustFix.totalItems
+    },
+    "goodToFix": {
+      "issues": allIssues.items.goodToFix.rules.length,
+      "occurrence": allIssues.items.goodToFix.totalItems
+    },
+    "needsReview": {
+      "issues": allIssues.items.needsReview.rules.length,
+      "occurrence": allIssues.items.needsReview.totalItems
+    },
+    "passed": {
+      "occurrence": allIssues.items.passed.totalItems
+    }
+  };
+  
+  let massScannerData = JSON.parse(process.env.MASS_SCANNER_DATA);
+  massScannerData.push(scanData);
+  process.env.MASS_SCANNER_DATA = JSON.stringify(massScannerData);
+  console.log(process.env.MASS_SCANNER_DATA)
+
+  }
+
   await writeResults(allIssues, storagePath);
   await writeCsv(allIssues, storagePath);
   await writeHTML(allIssues, storagePath);
@@ -458,3 +491,5 @@ export const generateArtifacts = async (
   await writeSummaryPdf(storagePath);
   return createRuleIdJson(allIssues);
 };
+
+ 
