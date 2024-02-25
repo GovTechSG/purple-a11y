@@ -41,7 +41,7 @@ import {chromium} from 'playwright';
       const homeUrl = getHomeUrl(link);
       let sitemapLinkFound = false;
       let sitemapLink = '';
-      const browser = await chromium.launch({headless: false});
+      const browser = await chromium.launch({headless: true, channel: 'chrome'});
       const page = await browser.newPage();
       for (let path of sitemapPaths) {
         sitemapLink = homeUrl + path;
@@ -83,6 +83,7 @@ import {chromium} from 'playwright';
     }
 
     if (!sitemapExist){
+      console.log('unable to find sitemap intelligently');
       //run crawlDomain as per normal
       urlsCrawledFinal = await crawlDomain(
         url,
@@ -101,8 +102,9 @@ import {chromium} from 'playwright';
         extraHTTPHeaders,
       )
     return urlsCrawledFinal
-      
+    
     } else {
+      console.log(`sitemap found intelligently at ${sitemapUrl}`);
       //run crawlSitemap then crawDomain subsequently if urlsCrawled.scanned.length < maxRequestsPerCrawl  
       urlsCrawledFinal = await crawlSitemap(
         sitemapUrl,
