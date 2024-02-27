@@ -1389,7 +1389,7 @@ export const submitForm = async (
   metadata,
 ) => {
 
-  const addtionalPageDataJson = JSON.stringify({
+  const additionalPageDataJson = JSON.stringify({
     redirectsScanned: numberOfRedirectsScanned,
     pagesNotScanned: numberOfPagesNotScanned
   })
@@ -1402,7 +1402,7 @@ export const submitForm = async (
     `${formDataFields.nameField}=${name}&` +
     `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}&` +
     `${formDataFields.numberOfPagesScannedField}=${numberOfPagesScanned}&` +
-    `${formDataFields.additionalPageDataField}=${encodeURIComponent(addtionalPageDataJson)}&` +
+    `${formDataFields.additionalPageDataField}=${encodeURIComponent(additionalPageDataJson)}&` +
     `${formDataFields.metadataField}=${encodeURIComponent(metadata)}`;
 
   if (scannedUrl !== entryUrl) {
