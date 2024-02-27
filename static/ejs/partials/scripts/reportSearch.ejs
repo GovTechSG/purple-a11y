@@ -91,7 +91,7 @@
     } else if (currentlyClickedButton.id === 'htmlButton') {
       searchHtml(category, filteredItems, isExactSearch, normalizedSearchVal);
     }
-    updateIssueOccurence(category, filteredItems);
+    updateIssueOccurrence(category, filteredItems);
   }
 
   function searchIssueDescription(category, filteredItems, isExactSearch, normalizedSearchVal) {
@@ -173,33 +173,33 @@
     );
   }
 
-  function updateIssueOccurence(category, filteredItems) {
+  function updateIssueOccurrence(category, filteredItems) {
     //update no. of issues/occurances for each category
     let rules = filteredItems[category].rules;
     let totalItemsSum = rules.reduce((sum, rule) => sum + rule.totalItems, 0);
     filteredItems[category].totalItems = totalItemsSum;
-    let updatedIssueOccurence = '';
+    let updatedIssueOccurrence = '';
     if (category !== 'passed' && filteredItems[category].totalItems !== 0) {
-      updatedIssueOccurence = `<strong style="color: #0047FA;">${filteredItems[category].rules.length}</strong> issues / <strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong> occurrences`;
+      updatedIssueOccurrence = `<strong style="color: #0047FA;">${filteredItems[category].rules.length}</strong> issues / <strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong> occurrences`;
     } else if (category !== 'passed' && filteredItems[category].totalItems === 0) {
-      updatedIssueOccurence = `<strong style="color: #0047FA;">0</strong> issues`;
+      updatedIssueOccurrence = `<strong style="color: #0047FA;">0</strong> issues`;
     } else {
-      updatedIssueOccurence = `<strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong> occurrences`;
+      updatedIssueOccurrence = `<strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong> occurrences`;
     }
-    if (category !== 'passed') document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurence;
+    if (category !== 'passed') document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurrence;
   }
 
-  function resetIssueOccurence(category, filteredItems) {
+  function resetIssueOccurrence(category, filteredItems) {
     for (let category in filteredItems) {
-      let updatedIssueOccurence = '';
+      let updatedIssueOccurrence = '';
       if (category !== 'passed' && filteredItems[category].totalItems !== 0) {
-        updatedIssueOccurence = `${filteredItems[category].rules.length} issues / ${filteredItems[category].totalItems} occurrences`;
+        updatedIssueOccurrence = `${filteredItems[category].rules.length} issues / ${filteredItems[category].totalItems} occurrences`;
       } else if (category !== 'passed' && filteredItems[category].totalItems === 0) {
-        updatedIssueOccurence = `0 issues`;
+        updatedIssueOccurrence = `0 issues`;
       } else {
-        updatedIssueOccurence = `${filteredItems[category].totalItems} occurrences`;
+        updatedIssueOccurrence = `${filteredItems[category].totalItems} occurrences`;
       }
-      if (category !== 'passed') document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurence;
+      if (category !== 'passed') document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurrence;
     }
   }
 
