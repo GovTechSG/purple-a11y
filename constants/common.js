@@ -1170,8 +1170,8 @@ export const cloneChromeProfiles = randomToken => {
     absolute: true,
     nodir: true,
   };
-  const cloneLocalStateFileSucess = cloneLocalStateFile(baseOptions, destDir);
-  if (cloneChromeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSucess) {
+  const cloneLocalStateFileSuccess = cloneLocalStateFile(baseOptions, destDir);
+  if (cloneChromeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSuccess) {
     return destDir;
   }
 
@@ -1217,9 +1217,9 @@ export const cloneEdgeProfiles = randomToken => {
   };
 
   console.log(destDir, 'destDir');
-  const cloneLocalStateFileSucess = cloneLocalStateFile(baseOptions, destDir);
-  console.log(cloneLocalStateFileSucess, 'cloneLocalStateFileSuccess');
-  if (cloneEdgeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSucess) {
+  const cloneLocalStateFileSuccess = cloneLocalStateFile(baseOptions, destDir);
+  console.log(cloneLocalStateFileSuccess, 'cloneLocalStateFileSuccess');
+  if (cloneEdgeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSuccess) {
     return destDir;
   }
 
