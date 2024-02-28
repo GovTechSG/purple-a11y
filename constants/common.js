@@ -25,6 +25,7 @@ import constants, {
 } from './constants.js';
 import { silentLogger } from '../logs.js';
 import { isUrlPdf } from '../crawlers/commonCrawlerFunc.js';
+import { randomThreeDigitNumberString } from '../utils.js';
 
 // validateDirPath validates a provided directory path
 // returns null if no error
@@ -534,7 +535,13 @@ export const prepareData = async argv => {
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
   const domain = argv.isLocalSitemap ? 'custom' : new URL(argv.url).hostname;
   const sanitisedLabel = customFlowLabel ? `_${customFlowLabel.replaceAll(' ', '_')}` : '';
-  const resultFilename = `${date}_${time}${sanitisedLabel}_${domain}`;
+  let resultFilename;
+  const randomThreeDigitNumber =randomThreeDigitNumberString()
+  if (process.env.RUNNING_FROM_MASS_SCANNER){
+    resultFilename = `${date}_${time}${sanitisedLabel}_${domain}_${randomThreeDigitNumber}`;
+  } else {
+    resultFilename = `${date}_${time}${sanitisedLabel}_${domain}`;
+  }
 
   if (followRobots) {
     constants.robotsTxtUrls = {};
@@ -1287,6 +1294,9 @@ export const deleteClonedProfiles = browser => {
  * @returns null
  */
 export const deleteClonedChromeProfiles = () => {
+  if(process.env.RUNNING_FROM_MASS_SCANNER){
+    return;
+  }
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
@@ -1323,6 +1333,9 @@ export const deleteClonedChromeProfiles = () => {
  * @returns null
  */
 export const deleteClonedEdgeProfiles = () => {
+  if (process.env.RUNNING_FROM_MASS_SCANNER){
+    return;
+  }
   const baseDir = getDefaultEdgeDataDir();
 
   if (!baseDir) {

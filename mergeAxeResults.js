@@ -478,11 +478,7 @@ if (process.env.RUNNING_FROM_MASS_SCANNER) {
     }
   };
   
-  let massScannerData = JSON.parse(process.env.MASS_SCANNER_DATA);
-  massScannerData.push(scanData);
-  process.env.MASS_SCANNER_DATA = JSON.stringify(massScannerData);
-  console.log(process.env.MASS_SCANNER_DATA)
-
+  process.send(JSON.stringify(scanData));
   }
 
   await writeResults(allIssues, storagePath);
