@@ -452,34 +452,67 @@ export const generateArtifacts = async (
 
   allIssues.wcagPassPercentage = getWcagPassPercentage(allIssues.wcagViolations);
 
+  // console.log('allIssues :',allIssues);
+  // console.log('allIssues.items.mustFix.rules :',allIssues.items.mustFix.rules);
+  // console.log('allIssues.items.mustFix.rules[0].pagesAffected :',allIssues.items.mustFix.rules[0].pagesAffected);
 
+  if (process.env.RUNNING_FROM_MASS_SCANNER) {
 
-if (process.env.RUNNING_FROM_MASS_SCANNER) {
-  let scanData = {
-    "url": allIssues.urlScanned,
-    "startTime": formatDateTimeForMassScanner(allIssues.startTime),
-    "endTime": formatDateTimeForMassScanner(scanDetails? getFormattedTime(scanDetails.endTime):getFormattedTime()),
-    "pagesScanned": allIssues.pagesScanned.length,
-    "wcagPassPercentage": allIssues.wcagPassPercentage,
-    "mustFix": {
-      "issues": allIssues.items.mustFix.rules.length,
-      "occurrence": allIssues.items.mustFix.totalItems
-    },
-    "goodToFix": {
-      "issues": allIssues.items.goodToFix.rules.length,
-      "occurrence": allIssues.items.goodToFix.totalItems
-    },
-    "needsReview": {
-      "issues": allIssues.items.needsReview.rules.length,
-      "occurrence": allIssues.items.needsReview.totalItems
-    },
-    "passed": {
-      "occurrence": allIssues.items.passed.totalItems
+    //old scan data
+    // let scanData = {
+    //   "url": allIssues.urlScanned,
+    //   "startTime": formatDateTimeForMassScanner(allIssues.startTime),
+    //   "endTime": formatDateTimeForMassScanner(scanDetails? getFormattedTime(scanDetails.endTime):getFormattedTime()),
+    //   "pagesScanned": allIssues.pagesScanned.length,
+    //   "wcagPassPercentage": allIssues.wcagPassPercentage,
+    //   "mustFix": {
+    //     "issues": allIssues.items.mustFix.rules.length,
+    //     "occurrence": allIssues.items.mustFix.totalItems
+    //   },
+    //   "goodToFix": {
+    //     "issues": allIssues.items.goodToFix.rules.length,
+    //     "occurrence": allIssues.items.goodToFix.totalItems
+    //   },
+    //   "needsReview": {
+    //     "issues": allIssues.items.needsReview.rules.length,
+    //     "occurrence": allIssues.items.needsReview.totalItems
+    //   },
+    //   "passed": {
+    //     "occurrence": allIssues.items.passed.totalItems
+    //   }
+    // };
+
+    //new scan data
+    let scanData = {
+      "url": allIssues.urlScanned,
+      "startTime": formatDateTimeForMassScanner(allIssues.startTime),
+      "endTime": formatDateTimeForMassScanner(scanDetails? getFormattedTime(scanDetails.endTime):getFormattedTime()),
+      "pagesScanned": allIssues.pagesScanned.length,
+      "wcagPassPercentage": allIssues.wcagPassPercentage,
+      "mustFix": {
+        "issues": allIssues.items.mustFix.rules.length,
+        "occurrence": allIssues.items.mustFix.totalItems,
+        "rules": allIssues.items.mustFix.rules,
+      },
+      "goodToFix": {
+        "issues": allIssues.items.goodToFix.rules.length,
+        "occurrence": allIssues.items.goodToFix.totalItems,
+        "rules": allIssues.items.goodToFix.rules,
+      },
+      "needsReview": {
+        "issues": allIssues.items.needsReview.rules.length,
+        "occurrence": allIssues.items.needsReview.totalItems,
+        "rules": allIssues.items.needsReview.rules,
+      },
+      "passed": {
+        "occurrence": allIssues.items.passed.totalItems
+      }
+    };
+    
+    process.send(JSON.stringify(scanData));
+
+    
     }
-  };
-  
-  process.send(JSON.stringify(scanData));
-  }
 
   await writeResults(allIssues, storagePath);
   await writeCsv(allIssues, storagePath);
