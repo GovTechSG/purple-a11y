@@ -452,10 +452,6 @@ export const generateArtifacts = async (
 
   allIssues.wcagPassPercentage = getWcagPassPercentage(allIssues.wcagViolations);
 
-  // console.log('allIssues :',allIssues);
-  // console.log('allIssues.items.mustFix.rules :',allIssues.items.mustFix.rules);
-  // console.log('allIssues.items.mustFix.rules[0].pagesAffected :',allIssues.items.mustFix.rules[0].pagesAffected);
-
   if (process.env.RUNNING_FROM_MASS_SCANNER) {
 
     //old scan data
@@ -517,9 +513,6 @@ export const generateArtifacts = async (
     let scanSummaryMessage = {
       type: 'scanSummary',
       payload: [
-        '',
-        '',
-        `${allIssues.scanType} scan at ${allIssues.urlScanned}`,
         `Must Fix: ${allIssues.items.mustFix.rules.length} issues / ${allIssues.items.mustFix.totalItems} occurrences`,
         `Good to Fix: ${allIssues.items.goodToFix.rules.length} issues / ${allIssues.items.goodToFix.totalItems} occurrences`,
         `Needs Review: ${allIssues.items.needsReview.rules.length} issues / ${allIssues.items.needsReview.totalItems} occurrences`,

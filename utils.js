@@ -190,23 +190,21 @@ export const getFormattedTime = (timestamp) => {
 };
 
 export const formatDateTimeForMassScanner = (dateTimeString) => {
-  const options = {
-      day: '2-digit',
-      month: '2-digit',
-      year: '2-digit',
-      hour: 'numeric',
-      minute: 'numeric',
-      hour12: true
-  };
-
   // Parse the input string to create a Date object
   const parsedDate = new Date(dateTimeString.replace(/,/g, ''));
 
-  // Use toLocaleString with the desired options
-  const formattedDateTime = parsedDate.toLocaleString('en-GB', options).replace(',', '');
+  // Format date and time parts separately
+  const year = parsedDate.getFullYear().toString().slice(-2); // Get the last two digits of the year
+  const month = ('0' + (parsedDate.getMonth() + 1)).slice(-2); // Month is zero-indexed
+  const day = ('0' + parsedDate.getDate()).slice(-2);
+  const hour = ('0' + parsedDate.getHours()).slice(-2);
+  const minute = ('0' + parsedDate.getMinutes()).slice(-2);
+
+  // Combine formatted date and time with a slash
+  const formattedDateTime = `${day}/${month}/${year} ${hour}${minute}`;
 
   return formattedDateTime;
-}
+};
 
 export const setHeadlessMode = (browser, isHeadless) => {
   const isWindowsOSAndEdgeBrowser =
