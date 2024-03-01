@@ -83,7 +83,7 @@ import {chromium} from 'playwright';
     }
 
     if (!sitemapExist){
-      console.log('unable to find sitemap intelligently');
+      console.log('Unable to find sitemap. Commencing website crawl instead.');
       //run crawlDomain as per normal
       urlsCrawledFinal = await crawlDomain(
         url,
@@ -104,7 +104,7 @@ import {chromium} from 'playwright';
     return urlsCrawledFinal
     
     } else {
-      console.log(`sitemap found intelligently at ${sitemapUrl}`);
+      console.log(`Sitemap found at ${sitemapUrl}`);
       //run crawlSitemap then crawDomain subsequently if urlsCrawled.scanned.length < maxRequestsPerCrawl  
       urlsCrawledFinal = await crawlSitemap(
         sitemapUrl,
@@ -126,7 +126,7 @@ import {chromium} from 'playwright';
       )
 
     if (urlsCrawled.scanned.length < maxRequestsPerCrawl){ 
-    // run crawl domain starting from root website, only on pages not scanned before
+      // run crawl domain starting from root website, only on pages not scanned before
       urlsCrawledFinal = await crawlDomain(
         url,
         randomToken,

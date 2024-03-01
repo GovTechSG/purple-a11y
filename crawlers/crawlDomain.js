@@ -258,7 +258,7 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
       // if URL has already been scanned
       if (urlsCrawled.scanned.some(item => item.url === request.url)){
         await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
-        return
+        return;
       }
 
       if (isDisallowedInRobotsTxt(request.url)) {
@@ -340,10 +340,6 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
         } else {
           if (isScanHtml) {
             const results = await runAxeScript(includeScreenshots, page, randomToken);
-            guiInfoLog(guiInfoStatusTypes.SCANNED, {
-              numScanned: urlsCrawled.scanned.length,
-              urlScanned: request.url,
-            });
 
             // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
             const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
@@ -362,6 +358,11 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
 
               // One more check if scanned pages have reached limit due to multi-instances of handler running
               if (urlsCrawled.scanned.length < maxRequestsPerCrawl) {
+                guiInfoLog(guiInfoStatusTypes.SCANNED, {
+                  numScanned: urlsCrawled.scanned.length,
+                  urlScanned: request.url,
+                });
+                
                 urlsCrawled.scanned.push({
                   url: request.url,
                   pageTitle: results.pageTitle,
@@ -381,6 +382,10 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
 
               // One more check if scanned pages have reached limit due to multi-instances of handler running
               if (urlsCrawled.scanned.length < maxRequestsPerCrawl) {
+                guiInfoLog(guiInfoStatusTypes.SCANNED, {
+                  numScanned: urlsCrawled.scanned.length,
+                  urlScanned: request.url,
+                });
                 urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
                 await dataset.pushData(results);
               }

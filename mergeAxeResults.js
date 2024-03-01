@@ -508,11 +508,29 @@ export const generateArtifacts = async (
         "occurrence": allIssues.items.passed.totalItems
       }
     };
-    
-    process.send(JSON.stringify(scanData));
 
-    
+    let scanDataMessage = {
+      type: 'scanData',
+      payload: scanData
     }
+    
+    let scanSummaryMessage = {
+      type: 'scanSummary',
+      payload: [
+        '',
+        '',
+        `${allIssues.scanType} scan at ${allIssues.urlScanned}`,
+        `Must Fix: ${allIssues.items.mustFix.rules.length} issues / ${allIssues.items.mustFix.totalItems} occurrences`,
+        `Good to Fix: ${allIssues.items.goodToFix.rules.length} issues / ${allIssues.items.goodToFix.totalItems} occurrences`,
+        `Needs Review: ${allIssues.items.needsReview.rules.length} issues / ${allIssues.items.needsReview.totalItems} occurrences`,
+        `Passed: ${allIssues.items.passed.totalItems} occurrences`,
+        `Results directory: ${storagePath}`,
+      ]
+    }
+
+    process.send(JSON.stringify(scanDataMessage));
+    process.send(JSON.stringify(scanSummaryMessage));
+  }
 
   await writeResults(allIssues, storagePath);
   await writeCsv(allIssues, storagePath);
