@@ -201,7 +201,7 @@ export const formatDateTimeForMassScanner = (dateTimeString) => {
   const minute = ('0' + parsedDate.getMinutes()).slice(-2);
 
   // Combine formatted date and time with a slash
-  const formattedDateTime = `${day}/${month}/${year} ${hour}${minute}`;
+  const formattedDateTime = `${day}/${month}/${year} ${hour}:${minute}`;
 
   return formattedDateTime;
 };
