@@ -451,40 +451,49 @@ export const generateArtifacts = async (
   }
 
   allIssues.wcagPassPercentage = getWcagPassPercentage(allIssues.wcagViolations);
+ 
+  const getAxeImpactCount = (data) => {
+    const impactCount = {
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0
+    };
+    Object.values(data.items).forEach(category =>{
+    if (category.totalItems>0) {
+      category.rules.forEach(rule => {
+        if (rule.axeImpact === 'critical') {
+          impactCount.critical += rule.totalItems;
+        } else if (rule.axeImpact === 'serious') {
+          impactCount.serious += rule.totalItems;
+        } else if (rule.axeImpact === 'moderate') {
+          impactCount.moderate += rule.totalItems;
+        } else if (rule.axeImpact === 'minor') {
+          impactCount.minor += rule.totalItems;
+        }
+      });
+    }
+  })
+  
+    return impactCount;
+  };
+
+
 
   if (process.env.RUNNING_FROM_MASS_SCANNER) {
 
-    //old scan data
-    // let scanData = {
-    //   "url": allIssues.urlScanned,
-    //   "startTime": formatDateTimeForMassScanner(allIssues.startTime),
-    //   "endTime": formatDateTimeForMassScanner(scanDetails? getFormattedTime(scanDetails.endTime):getFormattedTime()),
-    //   "pagesScanned": allIssues.pagesScanned.length,
-    //   "wcagPassPercentage": allIssues.wcagPassPercentage,
-    //   "mustFix": {
-    //     "issues": allIssues.items.mustFix.rules.length,
-    //     "occurrence": allIssues.items.mustFix.totalItems
-    //   },
-    //   "goodToFix": {
-    //     "issues": allIssues.items.goodToFix.rules.length,
-    //     "occurrence": allIssues.items.goodToFix.totalItems
-    //   },
-    //   "needsReview": {
-    //     "issues": allIssues.items.needsReview.rules.length,
-    //     "occurrence": allIssues.items.needsReview.totalItems
-    //   },
-    //   "passed": {
-    //     "occurrence": allIssues.items.passed.totalItems
-    //   }
-    // };
+    let axeImpactCount = getAxeImpactCount(allIssues)
 
-    //new scan data
     let scanData = {
       "url": allIssues.urlScanned,
       "startTime": formatDateTimeForMassScanner(allIssues.startTime),
       "endTime": formatDateTimeForMassScanner(scanDetails? getFormattedTime(scanDetails.endTime):getFormattedTime()),
       "pagesScanned": allIssues.pagesScanned.length,
       "wcagPassPercentage": allIssues.wcagPassPercentage,
+      "critical": axeImpactCount.critical,
+      "serious": axeImpactCount.serious,
+      "moderate": axeImpactCount.moderate,
+      "minor": axeImpactCount.minor,
       "mustFix": {
         "issues": allIssues.items.mustFix.rules.length,
         "occurrence": allIssues.items.mustFix.totalItems,
