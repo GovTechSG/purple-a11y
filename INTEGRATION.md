@@ -189,7 +189,7 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
         e2e: {
             setupNodeEvents(on, _config) {
                 on("task", {
-                    getPurpleA11yScipts() {
+                    getPurpleA11yScripts() {
                         return purpleA11y.getScripts();
                     },
                     async pushPurpleA11yScanResults({res, metadata, elementsToClick}) {
@@ -213,7 +213,7 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
 Create a sub-folder and file <code>cypress/support/e2e.js</code> with the following contents::
 
     Cypress.Commands.add("injectPurpleA11yScripts", () => {
-        cy.task("getPurpleA11yScipts").then((s) => {
+        cy.task("getPurpleA11yScripts").then((s) => {
             cy.window().then((win) => {
                 win.eval(s);
             });
