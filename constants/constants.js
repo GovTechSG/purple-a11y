@@ -165,6 +165,7 @@ const scannerTypes = {
   website: 'Website',
   custom: 'Custom',
   custom2: 'Custom2',
+  intelligent: 'Intelligent'
 };
 
 export const guiInfoStatusTypes = {
@@ -243,6 +244,46 @@ export const formDataFields = {
   numberOfPagesScannedField: 'entry.238043773', 
   additionalPageDataField: 'entry.2090887881',
   metadataField: 'entry.1027769131',
+};
+
+export const sitemapPaths = [
+  '/sitemap.xml',
+  '/sitemap/sitemap.xml',
+  '/sitemap-index.xml',
+  '/sitemap_index.xml',
+  '/sitemapindex.xml',
+  '/sitemap/index.xml',
+  '/sitemap1.xml',
+  '/sitemap/',
+  '/post-sitemap',
+  '/page-sitemap',
+  '/sitemap.txt',
+  '/sitemap.php',
+  '/sitemap.xml.bz2',
+  '/sitemap.xml.xz',
+  '/sitemap_index.xml.bz2',
+  '/sitemap_index.xml.xz'
+]
+
+const wcagLinks = {
+  'WCAG 1.1.1': 'https://www.w3.org/TR/WCAG21/#non-text-content',
+  'WCAG 1.2.2': 'https://www.w3.org/TR/WCAG21/#captions-prerecorded',
+  'WCAG 1.3.1': 'https://www.w3.org/TR/WCAG21/#info-and-relationships',
+  // 'WCAG 1.3.4': 'https://www.w3.org/TR/WCAG21/#orientation', - TODO: review for veraPDF
+  'WCAG 1.3.5': 'https://www.w3.org/TR/WCAG21/#use-of-color',
+  'WCAG 1.4.2': 'https://www.w3.org/TR/WCAG21/#audio-control',
+  'WCAG 1.4.3': 'https://www.w3.org/TR/WCAG21/#contrast-minimum',
+  'WCAG 1.4.4': 'https://www.w3.org/TR/WCAG21/#resize-text',
+  // 'WCAG 1.4.10': 'https://www.w3.org/TR/WCAG21/#reflow', - TODO: review for veraPDF
+  'WCAG 1.4.12': 'https://www.w3.org/TR/WCAG21/#text-spacing',
+  'WCAG 2.1.1': 'https://www.w3.org/TR/WCAG21/#pause-stop-hide',
+  'WCAG 2.4.1': 'https://www.w3.org/TR/WCAG21/#bypass-blocks',
+  'WCAG 2.4.2': 'https://www.w3.org/TR/WCAG21/#page-titled',
+  'WCAG 2.4.4': 'https://www.w3.org/TR/WCAG21/#link-purpose-in-context',
+  'WCAG 3.1.1': 'https://www.w3.org/TR/WCAG21/#language-of-page',
+  'WCAG 3.1.2': 'https://www.w3.org/TR/WCAG21/#labels-or-instructions',
+  'WCAG 4.1.1': 'https://www.w3.org/TR/WCAG21/#parsing',
+  'WCAG 4.1.2': 'https://www.w3.org/TR/WCAG21/#name-role-value'
 };
 
 const urlCheckStatuses = {
@@ -331,6 +372,7 @@ export default {
   pdfScanResultFileName: 'pdf-scan-results.json',
   forbiddenCharactersInDirPath,
   reserveFileNameKeywords,
+  wcagLinks,
 };
 
 export const rootPath = __dirname;

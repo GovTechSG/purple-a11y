@@ -25,6 +25,7 @@ import constants, {
 } from './constants.js';
 import { silentLogger } from '../logs.js';
 import { isUrlPdf } from '../crawlers/commonCrawlerFunc.js';
+import { randomThreeDigitNumberString } from '../utils.js';
 
 // validateDirPath validates a provided directory path
 // returns null if no error
@@ -534,7 +535,13 @@ export const prepareData = async argv => {
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
   const domain = argv.isLocalSitemap ? 'custom' : new URL(argv.url).hostname;
   const sanitisedLabel = customFlowLabel ? `_${customFlowLabel.replaceAll(' ', '_')}` : '';
-  const resultFilename = `${date}_${time}${sanitisedLabel}_${domain}`;
+  let resultFilename;
+  const randomThreeDigitNumber =randomThreeDigitNumberString()
+  if (process.env.RUNNING_FROM_MASS_SCANNER){
+    resultFilename = `${date}_${time}${sanitisedLabel}_${domain}_${randomThreeDigitNumber}`;
+  } else {
+    resultFilename = `${date}_${time}${sanitisedLabel}_${domain}`;
+  }
 
   if (followRobots) {
     constants.robotsTxtUrls = {};
@@ -688,7 +695,10 @@ export const getLinksFromSitemap = async (
   maxLinksCount,
   browser,
   userDataDirectory,
+  userUrlInput,
+  isIntelligent
 ) => {
+
   const urls = {}; // dictionary of requests to urls to be scanned
 
   const isLimitReached = () => urls.size >= maxLinksCount;
@@ -703,22 +713,59 @@ export const getLinksFromSitemap = async (
     urls[url] = request;
   };
 
-  const processXmlSitemap = async ($, sitemapType, selector) => {
-    for (const urlElement of $(selector)) {
-      if (isLimitReached()) {
-        return;
-      }
+  const calculateCloseness = (sitemapUrl) => {
+    // Remove 'http://', 'https://', and 'www.' prefixes from the URLs
+    const normalizedSitemapUrl = sitemapUrl.replace(/^(https?:\/\/)?(www\.)?/, '');
+    const normalizedUserUrlInput = userUrlInput.replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/$/, ''); // Remove trailing slash also
+
+    if (normalizedSitemapUrl == normalizedUserUrlInput){
+        return 2;
+    }else if (normalizedSitemapUrl.startsWith(normalizedUserUrlInput)) {
+        return 1;
+    } else {
+        return 0;
+    }
+  }
+  const processXmlSitemap = async ($, sitemapType, linkSelector , dateSelector, sectionSelector) => {
+    const urlList = [];
+    // Iterate through each URL element in the sitemap, collect url and modified date
+    $(sectionSelector).each((index, urlElement) => {
       let url;
       if (sitemapType === constants.xmlSitemapTypes.atom) {
-        url = $(urlElement).prop('href');
-      } else {
-        url = $(urlElement).text();
+        url = $(urlElement).find(linkSelector).prop('href')
+      } else { 
+        url = $(urlElement).find(linkSelector).text();
       }
+      let lastModified = $(urlElement).find(dateSelector).text();
+      const lastModifiedDate = lastModified ? new Date(lastModified) : null;
+
+      urlList.push({ url, lastModifiedDate });
+    });
+    if(isIntelligent){
+      // Sort by closeness to userUrlInput in descending order
+      urlList.sort((a, b) => {
+        const closenessA = calculateCloseness(a.url);
+        const closenessB = calculateCloseness(b.url);
+        if (closenessA !== closenessB) {
+          return closenessB - closenessA;
+        }
+      
+        // If closeness is the same, sort by last modified date in descending order
+        const dateDifference = (b.lastModifiedDate || 0) - (a.lastModifiedDate || 0);
+        return dateDifference !== 0 ? dateDifference : 0; // Maintain original order for equal dates
+      });
+    }
+    
+    // Add the sorted URLs to the main URL list
+    for (const { url } of urlList.slice(0, maxLinksCount)) {
       addToUrlList(url);
     }
+  
+    
   };
-
+  
   const processNonStandardSitemap = data => {
+
     const urlsFromData = crawlee.extractUrls({ string: data, urlRegExp: new RegExp("^(http|https):/{2}.+$", "gmi") }).slice(0, maxLinksCount);
     urlsFromData.forEach(url => {
       addToUrlList(url);
@@ -734,6 +781,7 @@ export const getLinksFromSitemap = async (
     let data;
     let sitemapType;
 
+
     const getDataUsingPlaywright = async () => {
      const browserContext = await constants.launcher.launchPersistentContext(
         finalUserDataDirectory,
@@ -743,7 +791,7 @@ export const getLinksFromSitemap = async (
       );
 
       const page = await browserContext.newPage();
-      await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+      await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
 
       if (constants.launcher === webkit) {
         data = await page.locator('body').innerText();
@@ -782,7 +830,7 @@ export const getLinksFromSitemap = async (
               rejectUnauthorized: false,
             }),
           });
-          data = await (await instance.get(url, { timeout: 2000 })).data;
+          data = await (await instance.get(url, { timeout: 80000 })).data;
         } catch (error) {
           if (error.code === 'ECONNABORTED') {
             await getDataUsingPlaywright();
@@ -796,19 +844,22 @@ export const getLinksFromSitemap = async (
 
     // This case is when the document is not an XML format document
     if ($(':root').length === 0) {
+
       processNonStandardSitemap(data);
       return;
     }
+
+
 
     // Root element
     const root = $(':root')[0];
 
     const { xmlns } = root.attribs;
-    const xmlFormatNamespace = 'http://www.sitemaps.org/schemas/sitemap/0.9';
-
-    if (root.name === 'urlset' && xmlns === xmlFormatNamespace) {
+    
+    const xmlFormatNamespace = '/schemas/sitemap';
+    if (root.name === 'urlset' && xmlns.includes(xmlFormatNamespace)) {
       sitemapType = constants.xmlSitemapTypes.xml;
-    } else if (root.name === 'sitemapindex' && xmlns === xmlFormatNamespace) {
+    } else if (root.name === 'sitemapindex' && xmlns.includes(xmlFormatNamespace)) {
       sitemapType = constants.xmlSitemapTypes.xmlIndex;
     } else if (root.name === 'rss') {
       sitemapType = constants.xmlSitemapTypes.rss;
@@ -817,40 +868,54 @@ export const getLinksFromSitemap = async (
     } else {
       sitemapType = constants.xmlSitemapTypes.unknown;
     }
+    
+
 
     switch (sitemapType) {
       case constants.xmlSitemapTypes.xmlIndex:
         silentLogger.info(`This is a XML format sitemap index.`);
         for (const childSitemapUrl of $('loc')) {
           if (isLimitReached()) {
+
             break;
           }
+
           await fetchUrls($(childSitemapUrl, false).text());
         }
         break;
       case constants.xmlSitemapTypes.xml:
         silentLogger.info(`This is a XML format sitemap.`);
-        await processXmlSitemap($, sitemapType, 'loc');
+        await processXmlSitemap($, sitemapType, 'loc', 'lastmod', 'url');
         break;
       case constants.xmlSitemapTypes.rss:
         silentLogger.info(`This is a RSS format sitemap.`);
-        await processXmlSitemap($, sitemapType, 'link');
+        await processXmlSitemap($, sitemapType, 'link', 'pubDate', 'item');
         break;
       case constants.xmlSitemapTypes.atom:
         silentLogger.info(`This is a Atom format sitemap.`);
-        await processXmlSitemap($, sitemapType, 'link');
+        await processXmlSitemap($, sitemapType, 'link', 'published', 'entry');
         break;
       default:
         silentLogger.info(`This is an unrecognised XML sitemap format.`);
         processNonStandardSitemap(data);
+
     }
   };
-
-  await fetchUrls(sitemapUrl);
+  
+  try {
+    await fetchUrls(sitemapUrl);
+  } catch (e) {
+    silentLogger.error(e)
+  }
+  
 
   const requestList = Object.values(urls);
+
   return requestList;
 };
+
+
+
 
 export const validEmail = email => {
   const emailRegex = /^.+@.+\..+$/u;
@@ -1239,6 +1304,9 @@ export const deleteClonedProfiles = browser => {
  * @returns null
  */
 export const deleteClonedChromeProfiles = () => {
+  if(process.env.RUNNING_FROM_MASS_SCANNER){
+    return;
+  }
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
@@ -1275,6 +1343,9 @@ export const deleteClonedChromeProfiles = () => {
  * @returns null
  */
 export const deleteClonedEdgeProfiles = () => {
+  if (process.env.RUNNING_FROM_MASS_SCANNER){
+    return;
+  }
   const baseDir = getDefaultEdgeDataDir();
 
   if (!baseDir) {

@@ -392,9 +392,13 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
   page.on('domcontentloaded', async () => {
     log(`Content loaded: ${page.url()}`);
     try {
-      await page.waitForLoadState();
       await removeOverlayMenu(page);
       await addOverlayMenu(page, processPageParams.urlsCrawled, menuPos);
+      await page.waitForLoadState();
+      const existingOverlay = await page.evaluate(() => {
+        return document.querySelector('#purple-a11y-shadow-host');
+      });
+      if (!existingOverlay) { await addOverlayMenu(page, processPageParams.urlsCrawled, menuPos);}
     } catch (e) {
       consoleLogger.info("Error in adding overlay menu to page");
       silentLogger.info("Error in adding overlay menu to page");

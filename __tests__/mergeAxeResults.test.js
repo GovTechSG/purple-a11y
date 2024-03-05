@@ -34,7 +34,7 @@ const {
   createFilenames,
   createFinalResultsInJson,
 } = require('../__mocks__/mockFunctions');
-const { getCurrentDate, getCurrentTime } = require('../utils');
+const { getCurrentDate, getFormattedTime } = require('../utils');
 const { consoleLogger, silentLogger } = require('../logs');
 
 let randomToken;
@@ -66,7 +66,7 @@ beforeEach(() => {
   expectedHTMLFilename = `${expectedStoragePath}/reports/${htmlFilename}.html`;
 
   // Mock the JSON result generated from the issues
-  dateTimeStamp = getCurrentTime();
+  dateTimeStamp = getFormattedTime();
   jsonOutput = createFinalResultsInJson(allIssues, dateTimeStamp);
 });
 

@@ -152,15 +152,59 @@ export const cleanUp = async pathToDelete => {
 };
 
 /* istanbul ignore next */
-export const getCurrentTime = () =>
-  new Date().toLocaleTimeString('en-GB', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour12: true,
-    hour: 'numeric',
-    minute: '2-digit',
-  });
+// export const getFormattedTime = () =>
+//   new Date().toLocaleTimeString('en-GB', {
+//     year: 'numeric',
+//     month: 'short',
+//     day: 'numeric',
+//     hour12: true,
+//     hour: 'numeric',
+//     minute: '2-digit',
+//   });
+
+export const getWcagPassPercentage = (wcagViolations)=> {
+  return parseFloat((Object.keys(constants.wcagLinks).length - wcagViolations.length) / Object.keys(constants.wcagLinks).length * 100).toFixed(2);
+  }
+
+export const getFormattedTime = (timestamp) => {
+  if (timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('en-GB', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour12: true,
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  } else {
+    return new Date().toLocaleTimeString('en-GB', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour12: true,
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  }
+};
+
+export const formatDateTimeForMassScanner = (dateTimeString) => {
+  // Parse the input string to create a Date object
+  const parsedDate = new Date(dateTimeString.replace(/,/g, ''));
+
+  // Format date and time parts separately
+  const year = parsedDate.getFullYear().toString().slice(-2); // Get the last two digits of the year
+  const month = ('0' + (parsedDate.getMonth() + 1)).slice(-2); // Month is zero-indexed
+  const day = ('0' + parsedDate.getDate()).slice(-2);
+  const hour = ('0' + parsedDate.getHours()).slice(-2);
+  const minute = ('0' + parsedDate.getMinutes()).slice(-2);
+
+  // Combine formatted date and time with a slash
+  const formattedDateTime = `${day}/${month}/${year} ${hour}:${minute}`;
+
+  return formattedDateTime;
+};
 
 export const setHeadlessMode = (browser, isHeadless) => {
   const isWindowsOSAndEdgeBrowser =
@@ -222,3 +266,15 @@ export const areLinksEqual = (link1, link2) => {
     return l1 === l2;
   }
 };
+
+export const randomThreeDigitNumberString = () => {
+  // Generate a random decimal between 0 (inclusive) and 1 (exclusive)
+  const randomDecimal = Math.random();
+  // Multiply by 900 to get a decimal between 0 (inclusive) and 900 (exclusive)
+  const scaledDecimal = randomDecimal * 900;
+  // Add 100 to ensure the result is between 100 (inclusive) and 1000 (exclusive)
+  const threeDigitNumber = Math.floor(scaledDecimal) + 100;
+  return String(threeDigitNumber);
+}
+
+

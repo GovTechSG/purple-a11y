@@ -188,7 +188,8 @@ export const init = async (
         scanDetails.urlsCrawled.scanned,
         pagesNotScanned,
         testLabel,
-        scanAboutMetadata
+        scanAboutMetadata,
+        scanDetails
       );
 
       await submitForm(

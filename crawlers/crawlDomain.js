@@ -1,5 +1,6 @@
 /* eslint-disable no-shadow */
 /* eslint-disable no-undef */
+
 import crawlee from 'crawlee';
 import {
   createCrawleeSubFolders,
@@ -24,6 +25,7 @@ import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.
 import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
 
+
 const crawlDomain = async (
   url,
   randomToken,
@@ -38,22 +40,36 @@ const crawlDomain = async (
   blacklistedPatterns,
   includeScreenshots,
   followRobots,
-  extraHTTPHeaders
+  extraHTTPHeaders,
+  fromCrawlIntelligentSitemap = false, //optional
+  datasetFromIntelligent = null, //optional
+  urlsCrawledFromIntelligent = null, //optional
+
 ) => {
-  const isScanHtml = ['all', 'html-only'].includes(fileTypes);
-  const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
-  const urlsCrawled = { ...constants.urlsCrawledObj };
-  const { maxConcurrency } = constants;
-  const { playwrightDeviceDetailsObject } = viewportSettings;
+let dataset;
+let urlsCrawled
+let requestQueue;
 
-  const { dataset, requestQueue } = await createCrawleeSubFolders(randomToken);
-  const pdfDownloads = [];
-  const uuidToPdfMapping = {};
+if (fromCrawlIntelligentSitemap){
+  dataset=datasetFromIntelligent;
+  urlsCrawled = urlsCrawledFromIntelligent;
+} else {
+  ({ dataset } = await createCrawleeSubFolders(randomToken));
+  urlsCrawled = { ...constants.urlsCrawledObj };
+}
 
-  if (!fs.existsSync(randomToken)) {
-    fs.mkdirSync(randomToken);
-  }
+({ requestQueue } = await createCrawleeSubFolders(randomToken));
 
+if (!fs.existsSync(randomToken)) {
+  fs.mkdirSync(randomToken);
+}
+
+let pdfDownloads = [];
+let uuidToPdfMapping = {};
+const isScanHtml = ['all', 'html-only'].includes(fileTypes);
+const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
+const { maxConcurrency } = constants;
+const { playwrightDeviceDetailsObject } = viewportSettings;
   let finalUrl;
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth = false;
@@ -65,6 +81,7 @@ const crawlDomain = async (
    * subsequent URLs are without credentials.
    */
 
+  
   if (basicAuthRegex.test(url)) {
     isBasicAuth = true;
     // request to basic auth URL to authenticate for browser session
@@ -77,6 +94,7 @@ const crawlDomain = async (
     await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
   }
 
+
   const enqueueProcess = async (page, enqueueLinks, enqueueLinksByClickingElements) => {
     await enqueueLinks({
       // set selector matches anchor elements with href but not contains # or starting with mailto:
@@ -84,6 +102,9 @@ const crawlDomain = async (
       strategy,
       requestQueue,
       transformRequestFunction(req) {
+        if (urlsCrawled.scanned.some(item => item.url === req.url)){
+          req.skipNavigation = true;
+        } 
         if (isDisallowedInRobotsTxt(req.url)) return null;
         if (isUrlPdf(req.url)) {
           // playwright headless mode does not support navigation to pdf document
@@ -178,9 +199,12 @@ const crawlDomain = async (
         // handle onclick
         selector: ':not(a):is([role="link"], button[onclick])',
         transformRequestFunction(req) {
+          if (urlsCrawled.scanned.some(item => item.url === req.url)){
+            req.skipNavigation = true;
+          }  
           if (isDisallowedInRobotsTxt(req.url)) return null;
           req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-          if (isUrlPdf(req.url)) {
+          if (isUrlPdf(req.url) || urlsCrawled.scanned.some(item => item.url === req.url)) {
             // playwright headless mode does not support navigation to pdf document
             req.skipNavigation = true;
           }
@@ -198,6 +222,7 @@ const crawlDomain = async (
       launchOptions: getPlaywrightLaunchOptions(browser),
       userDataDir: userDataDirectory || '',
     },
+    retryOnBlocked: true,
     browserPoolOptions: {
       useFingerprints: false,
       preLaunchHooks: [
@@ -225,9 +250,14 @@ const crawlDomain = async (
     }) => {
       // loadedUrl is the URL after redirects
       const actualUrl = request.loadedUrl || request.url;
-
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
         crawler.autoscaledPool.abort();
+        return;
+      }
+
+      // if URL has already been scanned
+      if (urlsCrawled.scanned.some(item => item.url === request.url)){
+        await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
         return;
       }
 
@@ -309,12 +339,7 @@ const crawlDomain = async (
           isBasicAuth = false;
         } else {
           if (isScanHtml) {
-
             const results = await runAxeScript(includeScreenshots, page, randomToken);
-            guiInfoLog(guiInfoStatusTypes.SCANNED, {
-              numScanned: urlsCrawled.scanned.length,
-              urlScanned: request.url,
-            });
 
             // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
             const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
@@ -333,6 +358,11 @@ const crawlDomain = async (
 
               // One more check if scanned pages have reached limit due to multi-instances of handler running
               if (urlsCrawled.scanned.length < maxRequestsPerCrawl) {
+                guiInfoLog(guiInfoStatusTypes.SCANNED, {
+                  numScanned: urlsCrawled.scanned.length,
+                  urlScanned: request.url,
+                });
+                
                 urlsCrawled.scanned.push({
                   url: request.url,
                   pageTitle: results.pageTitle,
@@ -352,6 +382,10 @@ const crawlDomain = async (
 
               // One more check if scanned pages have reached limit due to multi-instances of handler running
               if (urlsCrawled.scanned.length < maxRequestsPerCrawl) {
+                guiInfoLog(guiInfoStatusTypes.SCANNED, {
+                  numScanned: urlsCrawled.scanned.length,
+                  urlScanned: request.url,
+                });
                 urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
                 await dataset.pushData(results);
               }
@@ -404,6 +438,9 @@ const crawlDomain = async (
 
   await crawler.run();
 
+
+
+ 
   if (pdfDownloads.length > 0) {
     // wait for pdf downloads to complete
     await Promise.all(pdfDownloads);
@@ -425,8 +462,12 @@ const crawlDomain = async (
     await Promise.all(pdfResults.map(result => dataset.pushData(result)));
   }
 
-  guiInfoLog(guiInfoStatusTypes.COMPLETED);
-  return urlsCrawled;
-};
+  if (!fromCrawlIntelligentSitemap){
+    guiInfoLog(guiInfoStatusTypes.COMPLETED);
+  }
 
+  return urlsCrawled;
+
+
+};
 export default crawlDomain;

@@ -417,7 +417,19 @@ scanInit(options).then(async storagePath => {
           'Reports have been further broken down according to their respective impact level.',
         );
       }
+
+      if (process.env.RUNNING_FROM_MASS_SCANNER && process.env.REPORT_BREAKDOWN != '1') {
+        let zipFileNameMessage = {
+          type: 'zipFileName',
+          payload: `${constants.cliZipFileName}`
+        }
+        process.send(JSON.stringify(zipFileNameMessage));
+      }
+      
+
       printMessage(messageToDisplay);
+      
+
       process.exit(0);
     })
     .catch(error => {

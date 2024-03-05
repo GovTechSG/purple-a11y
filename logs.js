@@ -28,11 +28,12 @@ const consoleLogger = createLogger({
 
 // No display in consoles, this will mostly be used within the interactive script to avoid disrupting the flow
 // Also used in common functions to not link internal information
+//if running from mass scanner, log out errors in console
 const silentLogger = createLogger({
   format: combine(timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), logFormat),
   transports: [
-    new transports.File({ filename: 'errors.txt', level: 'warn', handleExceptions: true }),
-  ],
+    process.env.RUNNING_FROM_MASS_SCANNER?new transports.Console({handleExceptions: true}):new transports.File({ filename: 'errors.txt', level: 'warn', handleExceptions: true })
+  ].filter(Boolean),
 });
 
 // guiInfoLogger feeds the gui information via console log and is mainly used for scanning process

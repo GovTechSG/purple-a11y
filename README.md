@@ -239,9 +239,9 @@ ort> -u <url> OPTIONS
 Options:
       --help             Show help                                     [boolean]
   -c, --scanner          Type of scan, 1) sitemap, 2) website crawl, 3) custom f
-                         low, 4) custom flow 2.0
+                         low, 4) custom flow 2.0, 5) intelligent
                                                                       [required] 
-                             [choices: "sitemap", "website", "custom", "custom2]
+                             [choices: "sitemap", "website", "custom", "custom2", "intelligent"]
   -u, --url              Website URL you want to scan        [string] [required]
   -d, --customDevice     Device you want to scan   [string] [default: "Desktop"]
   -w, --viewportWidth    Viewport width (in pixels) you want to scan    [number]
