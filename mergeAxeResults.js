@@ -490,6 +490,7 @@ export const generateArtifacts = async (
       "endTime": formatDateTimeForMassScanner(scanDetails? getFormattedTime(scanDetails.endTime):getFormattedTime()),
       "pagesScanned": allIssues.pagesScanned.length,
       "wcagPassPercentage": allIssues.wcagPassPercentage,
+      "wcagViolations": allIssues.wcagViolations,
       "critical": axeImpactCount.critical,
       "serious": axeImpactCount.serious,
       "moderate": axeImpactCount.moderate,
