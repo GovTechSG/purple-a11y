@@ -1,2 +1,1 @@
-\.*singpass.gov.sg\.*
-\.*corppass.gov.sg\.*
+\.*login.singpass.gov.sg\.*
