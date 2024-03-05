@@ -209,7 +209,7 @@ Other options:
 - You can specify sites to exclude from accessibility scan (e.g. login page) by adding a pattern of the domain to `exclusions.txt`. An example of `exclusions.txt`:
 
 ``` txt
-\.*singpass.gov.sg\.*
+\.*login.singpass.gov.sg\.*
 ```
 
 - You can re-run your accessibility scan by running `node generatedScript-PHScan_...js` file that is generated.
