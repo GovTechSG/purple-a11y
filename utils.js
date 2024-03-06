@@ -277,4 +277,14 @@ export const randomThreeDigitNumberString = () => {
   return String(threeDigitNumber);
 }
 
-
+export const isFollowStrategy = (link1, link2, rule) =>{
+  if (rule === "same-domain"){
+    const link1Domain = link1.split('/')[2].split('.').slice(-2).join('.');
+    const link2Domain = link2.split('/')[2].split('.').slice(-2).join('.'); 
+    return link1Domain === link2Domain;
+  } else {
+    const parsedLink1 = new URL(link1);
+    const parsedLink2 = new URL(link2);
+    return parsedLink1.hostname === parsedLink2.hostname;
+  }
+}

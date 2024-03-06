@@ -20,7 +20,7 @@ import {
   isDisallowedInRobotsTxt,
   getUrlsFromRobotsTxt
 } from '../constants/common.js';
-import { areLinksEqual } from '../utils.js';
+import { areLinksEqual, isFollowStrategy } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
 import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
@@ -339,10 +339,21 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
           isBasicAuth = false;
         } else {
           if (isScanHtml) {
-            const results = await runAxeScript(includeScreenshots, page, randomToken);
-
             // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
             const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
+            
+            // check if redirected link is following strategy (same-domain/same-hostname)
+            const isLoadedUrlFollowStrategy = isFollowStrategy(request.loadedUrl, url, strategy);
+            if (isRedirected && !isLoadedUrlFollowStrategy) {
+              urlsCrawled.notScannedRedirects.push({
+                fromUrl: request.url,
+                toUrl: request.loadedUrl, // i.e. actualUrl
+              });
+              return;
+            }
+
+            const results = await runAxeScript(includeScreenshots, page, randomToken);
+
             if (isRedirected) {
               const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
                 item => (item.actualUrl || item.url) === request.loadedUrl,
