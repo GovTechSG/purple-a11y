@@ -1235,8 +1235,8 @@ export const cloneChromeProfiles = randomToken => {
     absolute: true,
     nodir: true,
   };
-  const cloneLocalStateFileSucess = cloneLocalStateFile(baseOptions, destDir);
-  if (cloneChromeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSucess) {
+  const cloneLocalStateFileSuccess = cloneLocalStateFile(baseOptions, destDir);
+  if (cloneChromeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSuccess) {
     return destDir;
   }
 
@@ -1282,9 +1282,9 @@ export const cloneEdgeProfiles = randomToken => {
   };
 
   console.log(destDir, 'destDir');
-  const cloneLocalStateFileSucess = cloneLocalStateFile(baseOptions, destDir);
-  console.log(cloneLocalStateFileSucess, 'cloneLocalStateFileSuccess');
-  if (cloneEdgeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSucess) {
+  const cloneLocalStateFileSuccess = cloneLocalStateFile(baseOptions, destDir);
+  console.log(cloneLocalStateFileSuccess, 'cloneLocalStateFileSuccess');
+  if (cloneEdgeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSuccess) {
     return destDir;
   }
 
@@ -1460,7 +1460,7 @@ export const submitForm = async (
   metadata,
 ) => {
 
-  const addtionalPageDataJson = JSON.stringify({
+  const additionalPageDataJson = JSON.stringify({
     redirectsScanned: numberOfRedirectsScanned,
     pagesNotScanned: numberOfPagesNotScanned
   })
@@ -1473,7 +1473,7 @@ export const submitForm = async (
     `${formDataFields.nameField}=${name}&` +
     `${formDataFields.resultsField}=${encodeURIComponent(scanResultsJson)}&` +
     `${formDataFields.numberOfPagesScannedField}=${numberOfPagesScanned}&` +
-    `${formDataFields.additionalPageDataField}=${encodeURIComponent(addtionalPageDataJson)}&` +
+    `${formDataFields.additionalPageDataField}=${encodeURIComponent(additionalPageDataJson)}&` +
     `${formDataFields.metadataField}=${encodeURIComponent(metadata)}`;
 
   if (scannedUrl !== entryUrl) {
