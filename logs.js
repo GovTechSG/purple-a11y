@@ -38,7 +38,7 @@ const silentLogger = createLogger({
 
 // guiInfoLogger feeds the gui information via console log and is mainly used for scanning process
 export const guiInfoLog = (status, data) => {
-  if (process.env.RUNNING_FROM_PH_GUI) {
+  if (process.env.RUNNING_FROM_PH_GUI || process.env.RUNNING_FROM_MASS_SCANNER) {
     switch (status) {
       case guiInfoStatusTypes.COMPLETED:
         console.log('Electron scan completed');
