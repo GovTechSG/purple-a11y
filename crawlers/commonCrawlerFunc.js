@@ -121,12 +121,20 @@ export const runAxeScript = async (
   customFlowDetails,
   selectors = [],
 ) => {
-  await crawlee.playwrightUtils.injectFile(page, axeScript);
+  // Check if the page represents a local file
+  const isLocalFile = page.url().startsWith('file://') || page.url.startsWith('/');
+
+  if (!isLocalFile) {
+    // If it's not a local file, inject axe script
+    await crawlee.playwrightUtils.injectFile(page, axeScript);
+  }
 
   const results = await page.evaluate(
-    async ({ selectors, saflyIconSelector}) => {
-      // remove so that axe does not scan
-      document.querySelector(saflyIconSelector)?.remove();
+    async ({ selectors, saflyIconSelector, isLocalFile }) => {
+      if (!isLocalFile) {
+        // If it's not a local file, remove safe icon
+        document.querySelector(saflyIconSelector)?.remove();
+      }
 
       axe.configure({
         branding: {
@@ -134,18 +142,18 @@ export const runAxeScript = async (
         },
       });
 
-      //removed needsReview condition
-      defaultResultTypes = ['violations', 'passes', 'incomplete']
-        
+      // Removed needsReview condition
+      const defaultResultTypes = ['violations', 'passes', 'incomplete'];
 
       return axe.run(selectors, {
         resultTypes: defaultResultTypes,
       });
     },
-    { selectors, saflyIconSelector},
+    { selectors, saflyIconSelector: '.safly-icon', isLocalFile },
   );
 
   if (includeScreenshots) {
+    // Capture screenshots for violations and incomplete results
     results.violations = await takeScreenshotForHTMLElements(results.violations, page, randomToken);
     results.incomplete = await takeScreenshotForHTMLElements(results.incomplete, page, randomToken);
   }
@@ -153,6 +161,7 @@ export const runAxeScript = async (
   const pageTitle = await page.evaluate(() => document.title);
   return filterAxeResults(results, pageTitle, customFlowDetails);
 };
+
 
 export const createCrawleeSubFolders = async randomToken => {
   const dataset = await crawlee.Dataset.open(randomToken);

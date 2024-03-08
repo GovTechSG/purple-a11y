@@ -201,7 +201,7 @@ export const isSkippedUrl = (pageUrl, whitelistedDomains) => {
 };
 
 export const isFileSitemap = async filePath => {
-  if (filePath.startsWith('file:///')) {
+  if (filePath.startsWith('file:///') || filesPath.startsWith('/')) {
     if (os.platform() === 'win32') {
       filePath = filePath.match(/^file:\/\/\/([A-Z]:\/[^?#]+)/)?.[1];
     } else {
@@ -267,71 +267,87 @@ export const sanitizeUrlInput = url => {
 };
 
 const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
-  // User-Agent is modified to emulate a browser to handle cases where some sites ban non browser agents, resulting in a 403 error
   const res = {};
-  await axios
-    .get(url, {
-      headers: { 
-        ...extraHTTPHeaders,
-        'User-Agent': devices['Desktop Chrome HiDPI'].userAgent,
-        'Host': new URL(url).host
-      },
-      httpsAgent,
-      timeout: 2000,
-    })
-    .then(async response => {
-      const redirectUrl = response.request.res.responseUrl;
+
+  // Check if URL is a local file path
+  if (url.startsWith('file://') || url.startsWith('/')) {
+    try {
+      const filePath = url.replace('file://', '');
+      const fileContent = fs.readFileSync(filePath, 'utf-8');
+      
+      // Mimic the response structure for local files
       res.status = constants.urlCheckStatuses.success.code;
+      res.url = url;
+      res.content = fileContent;
 
-      let modifiedHTML = response.data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
-      const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?([^"]*)"/i.exec(
-        modifiedHTML,
-      );
-      const hasMetaRefresh = metaRefreshMatch && metaRefreshMatch[1];
+      // Directly return the response for local files
+      return res;
+    } catch (error) {
+      console.error(`Error reading local file: ${error}`);
+      res.status = constants.urlCheckStatuses.cannotBeResolved.code;
+      return res;
+    }
+  }
 
-      if (redirectUrl != null && (hasMetaRefresh || !isNewCustomFlow)) {
-        res.url = redirectUrl;
+  // Continue with the original logic for HTTP/HTTPS URLs
+  await axios.get(url, {
+    headers: { 
+      ...extraHTTPHeaders,
+      'User-Agent': devices['Desktop Chrome HiDPI'].userAgent,
+      'Host': new URL(url).host
+    },
+    httpsAgent,
+    timeout: 2000,
+  })
+  .then(async response => {
+    const redirectUrl = response.request.res.responseUrl;
+    res.status = constants.urlCheckStatuses.success.code;
+
+    let modifiedHTML = response.data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
+    const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?([^"]*)"/i.exec(modifiedHTML);
+    const hasMetaRefresh = metaRefreshMatch && metaRefreshMatch[1];
+
+    if (redirectUrl != null && (hasMetaRefresh || !isNewCustomFlow)) {
+      res.url = redirectUrl;
+    } else {
+      res.url = url;
+    }
+
+    if (hasMetaRefresh) {
+      const urlOrRelativePath = metaRefreshMatch[1];
+      if (urlOrRelativePath.includes('URL=')) {
+        res.url = urlOrRelativePath.split('URL=').pop();
       } else {
-        res.url = url;
+        const pathname = res.url.substring(0, res.url.lastIndexOf('/'));
+        res.url = urlOrRelativePath.replace('.', pathname);
       }
+    }
 
-      if (hasMetaRefresh) {
-        const urlOrRelativePath = metaRefreshMatch[1];
-        if (urlOrRelativePath.includes('URL=')) {
-          res.url = urlOrRelativePath.split('URL=').pop();
-        } else {
-          const pathname = res.url.substring(0, res.url.lastIndexOf('/'));
-          res.url = urlOrRelativePath.replace('.', pathname);
-        }
-      }
-
-      res.content = response.data;
-    })
-    .catch(async error => {
-      if (error.code === 'ECONNABORTED' || error.code === 'ERR_FR_TOO_MANY_REDIRECTS') {
-        res.status = constants.urlCheckStatuses.axiosTimeout.code;
-      } else if (error.response) {
-        if (error.response.status === 401) {
-          // enters here if URL is protected by basic auth
-          res.status = constants.urlCheckStatuses.unauthorised.code;
-        } else {
-          // enters here if server responds with a status other than 2xx
-          // the scan should still proceed even if error codes are received, so that accessibility scans for error pages can be done too
-          res.status = constants.urlCheckStatuses.success.code;
-        }
-        res.url = url;
-        res.content = error.response.data;
-        return res;
-      } else if (error.request) {
-        // enters here if URL cannot be accessed
-        res.status = constants.urlCheckStatuses.cannotBeResolved.code;
+    res.content = response.data;
+  })
+  .catch(async error => {
+    if (error.code === 'ECONNABORTED' || error.code === 'ERR_FR_TOO_MANY_REDIRECTS') {
+      res.status = constants.urlCheckStatuses.axiosTimeout.code;
+    } else if (error.response) {
+      if (error.response.status === 401) {
+        res.status = constants.urlCheckStatuses.unauthorised.code;
       } else {
-        res.status = constants.urlCheckStatuses.systemError.code;
+        res.status = constants.urlCheckStatuses.success.code;
       }
-      silentLogger.error(error);
-    });
+      res.url = url;
+      res.content = error.response.data;
+      return res;
+    } else if (error.request) {
+      res.status = constants.urlCheckStatuses.cannotBeResolved.code;
+    } else {
+      res.status = constants.urlCheckStatuses.systemError.code;
+    }
+    silentLogger.error(error);
+  });
+  
   return res;
 };
+
 
 const checkUrlConnectivity = async (url, isNewCustomFlow, extraHTTPHeaders) => {
   const data = sanitizeUrlInput(url);
@@ -371,6 +387,7 @@ const checkUrlConnectivityWithBrowser = async (
 
   // Validate the connectivity of URL if the string format is url format
   const data = sanitizeUrlInput(url);
+  
 
   if (data.isValid) {
     let browserContext;
