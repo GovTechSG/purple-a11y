@@ -138,6 +138,25 @@ const combineRun = async (details, deviceToScan) => {
     );
     break;
 
+    case constants.scannerTypes.website:
+      urlsCrawled = await crawlPage(
+      url,
+      randomToken,
+      host,
+      viewportSettings,
+      maxRequestsPerCrawl,
+      browser,
+      userDataDirectory,
+      strategy,
+      specifiedMaxConcurrency,
+      fileTypes,
+      blacklistedPatterns,
+      includeScreenshots,
+      followRobots,
+      extraHTTPHeaders
+    );
+    break;
+
     default:
       consoleLogger.error(`type: ${type} not defined`);
       silentLogger.error(`type: ${type} not defined`);

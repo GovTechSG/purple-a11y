@@ -29,7 +29,7 @@ RUN latest_version=$(ls -d /opt/verapdf-greenfield-* | sort -V | tail -n 1) && [
 RUN rm -rf /opt/verapdf-installer.zip /opt/verapdf-greenfield-*
 
 # Set purple-a11y directory
-WORKDIR /app
+WORKDIR /app/purple-a11y
 
 # Copy package.json to working directory, perform npm install before copying the remaining files
 COPY package*.json ./
@@ -46,9 +46,24 @@ RUN npm ci --omit=dev
 # Install Playwright browsers
 RUN npx playwright install chromium webkit
 
+# Copy application and support files
+COPY . .
+
+WORKDIR /app
+
+# Clone the purple-a11y-runner repo
+RUN git clone https://github.com/younglim/purple-a11y-runner.git purple-a11y-runner
+
+# Change the working directory to the cloned repo
+WORKDIR /app/purple-a11y-runner
+
+# Install dependencies
+RUN npm install
+
 # Add non-privileged user
 RUN addgroup -S purple && adduser -S -G purple purple
-RUN chown -R purple:purple ./
+RUN chown -R purple:purple /app
+
 
 # Run everything after as non-privileged user.
 USER purple

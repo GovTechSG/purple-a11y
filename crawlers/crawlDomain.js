@@ -1,7 +1,7 @@
 /* eslint-disable no-shadow */
 /* eslint-disable no-undef */
-import path from 'path';
-import crawlee, {PlaywrightCrawler, BrowserCrawler} from 'crawlee';
+
+import crawlee from 'crawlee';
 import {
   createCrawleeSubFolders,
   preNavigationHooks,
@@ -22,23 +22,8 @@ import {
 } from '../constants/common.js';
 import { areLinksEqual } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
-import fs, {readFileSync} from 'fs';
+import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
-
-const isLocalFilePath = (url) => {
-  return url.startsWith('/') || url.startsWith('file://');
-};
-
-// Helper function to read local file content
-const readLocalFileContent = (filePath) => {
-  try {
-    const content = readFileSync(filePath, 'utf8');
-    return content;
-  } catch (error) {
-    silentLogger.error(`Failed to read local file: ${filePath}`, error);
-    throw error;
-  }
-};
 
 
 const crawlDomain = async (
@@ -230,39 +215,6 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
       silentLogger.info(e);
     }
   };
-
-  if (!fs.existsSync(randomToken)) {
-    fs.mkdirSync(randomToken);
-  }
-
-  if (isLocalFilePath(url)) {
-    const localFilePath = url.startsWith('file://') ? new URL(url).pathname : url;
-    const fileContent = readLocalFileContent(localFilePath);
-  
-    const crawler = new crawlee.PlaywrightCrawler({
-      launchContext: {
-        launcher: constants.launcher,
-        launchOptions: getPlaywrightLaunchOptions(browser),
-        userDataDir: userDataDirectory || '',
-      },
-      browserPoolOptions: {
-        useFingerprints: false,
-      },
-      preNavigationHooks: preNavigationHooks(extraHTTPHeaders),
-      requestHandler: async ({ page, request }) => {
-        await page.setContent(fileContent, {
-          waitUntil: 'domcontentloaded', // Adjust according to your needs
-        });
-        // Here, insert any page manipulation or analysis logic as needed, for example:
-        const results = await runAxeScript(includeScreenshots, page, randomToken);
-        await dataset.pushData(results);
-      },
-    });
-  
-    // Launch the crawler to process the local HTML file
-    await crawler.run();
-    return; // Exit the function early as the rest of the function is meant for HTTP/HTTPS URLs
-  }
 
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {

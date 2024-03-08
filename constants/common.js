@@ -245,10 +245,18 @@ export const isInputValid = inputString => {
 };
 
 export const sanitizeUrlInput = url => {
-  // Sanitize that there is no blacklist characters
+  // Allow file URLs when operating in crawlPage mode
+  const fileUrlRegex = /^file:\/\/\/?/;
+  const directFilePathRegex = /^\/|^[A-Za-z]:\\/;
+  const isFileUrl = fileUrlRegex.test(url);
+  const isDirectFilePath = directFilePathRegex.test(url);
+
+  // Sanitize that there are no blacklist characters
   const sanitizeUrl = validator.blacklist(url, blackListCharacters);
   const data = {};
-  if (validator.isURL(sanitizeUrl, urlOptions)) {
+
+  // Extend validation to allow file URLs
+  if (validator.isURL(sanitizeUrl, urlOptions) || isFileUrl || isDirectFilePath) {
     data.isValid = true;
   } else {
     data.isValid = false;
