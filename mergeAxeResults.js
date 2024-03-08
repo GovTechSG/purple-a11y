@@ -480,7 +480,7 @@ export const generateArtifacts = async (
 
 
 
-  if (process.env.RUNNING_FROM_MASS_SCANNER) {
+  if (process.env.PURPLE_A11Y_VERBOSE) {
 
     let axeImpactCount = getAxeImpactCount(allIssues)
 

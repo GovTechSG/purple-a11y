@@ -25,8 +25,8 @@ export const isWhitelistedContentType = contentType => {
 };
 
 export const getStoragePath = randomToken => {
-  if (process.env.RUNNING_FROM_MASS_SCANNER){
-    return `${process.env.MASS_SCANNER_STORAGE_PATH}/${randomToken}`
+  if (process.env.PURPLE_A11Y_VERBOSE){
+    return `${process.env.PURPLE_A11Y_VERBOSE_STORAGE_PATH}/${randomToken}`
   }
   if (constants.exportDirectory === process.cwd()) {
     return `results/${randomToken}`;
