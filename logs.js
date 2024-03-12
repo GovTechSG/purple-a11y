@@ -32,13 +32,13 @@ const consoleLogger = createLogger({
 const silentLogger = createLogger({
   format: combine(timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), logFormat),
   transports: [
-    process.env.RUNNING_FROM_MASS_SCANNER?new transports.Console({handleExceptions: true}):new transports.File({ filename: 'errors.txt', level: 'warn', handleExceptions: true })
+    process.env.PURPLE_A11Y_VERBOSE?new transports.Console({handleExceptions: true}):new transports.File({ filename: 'errors.txt', level: 'warn', handleExceptions: true })
   ].filter(Boolean),
 });
 
 // guiInfoLogger feeds the gui information via console log and is mainly used for scanning process
 export const guiInfoLog = (status, data) => {
-  if (process.env.RUNNING_FROM_PH_GUI) {
+  if (process.env.RUNNING_FROM_PH_GUI || process.env.PURPLE_A11Y_VERBOSE) {
     switch (status) {
       case guiInfoStatusTypes.COMPLETED:
         console.log('Electron scan completed');

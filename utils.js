@@ -25,6 +25,9 @@ export const isWhitelistedContentType = contentType => {
 };
 
 export const getStoragePath = randomToken => {
+  if (process.env.PURPLE_A11Y_VERBOSE){
+    return `${process.env.PURPLE_A11Y_VERBOSE_STORAGE_PATH}/${randomToken}`
+  }
   if (constants.exportDirectory === process.cwd()) {
     return `results/${randomToken}`;
   } else {
@@ -277,4 +280,14 @@ export const randomThreeDigitNumberString = () => {
   return String(threeDigitNumber);
 }
 
-
+export const isFollowStrategy = (link1, link2, rule) =>{
+  const parsedLink1 = new URL(link1);
+  const parsedLink2 = new URL(link2);
+  if (rule === "same-domain"){
+    const link1Domain = parsedLink1.hostname.split('.').slice(-2).join('.');
+    const link2Domain = parsedLink2.hostname.split('.').slice(-2).join('.'); 
+    return link1Domain === link2Domain;
+  } else {
+    return parsedLink1.hostname === parsedLink2.hostname;
+  }
+}

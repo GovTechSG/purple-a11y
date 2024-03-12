@@ -537,7 +537,7 @@ export const prepareData = async argv => {
   const sanitisedLabel = customFlowLabel ? `_${customFlowLabel.replaceAll(' ', '_')}` : '';
   let resultFilename;
   const randomThreeDigitNumber =randomThreeDigitNumberString()
-  if (process.env.RUNNING_FROM_MASS_SCANNER){
+  if (process.env.PURPLE_A11Y_VERBOSE){
     resultFilename = `${date}_${time}${sanitisedLabel}_${domain}_${randomThreeDigitNumber}`;
   } else {
     resultFilename = `${date}_${time}${sanitisedLabel}_${domain}`;
@@ -1304,7 +1304,7 @@ export const deleteClonedProfiles = browser => {
  * @returns null
  */
 export const deleteClonedChromeProfiles = () => {
-  if(process.env.RUNNING_FROM_MASS_SCANNER){
+  if(process.env.PURPLE_A11Y_VERBOSE){
     return;
   }
   const baseDir = getDefaultChromeDataDir();
@@ -1343,7 +1343,7 @@ export const deleteClonedChromeProfiles = () => {
  * @returns null
  */
 export const deleteClonedEdgeProfiles = () => {
-  if (process.env.RUNNING_FROM_MASS_SCANNER){
+  if (process.env.PURPLE_A11Y_VERBOSE){
     return;
   }
   const baseDir = getDefaultEdgeDataDir();

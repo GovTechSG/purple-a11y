@@ -480,7 +480,7 @@ export const generateArtifacts = async (
 
 
 
-  if (process.env.RUNNING_FROM_MASS_SCANNER) {
+  if (process.env.PURPLE_A11Y_VERBOSE) {
 
     let axeImpactCount = getAxeImpactCount(allIssues)
 
@@ -490,6 +490,7 @@ export const generateArtifacts = async (
       "endTime": formatDateTimeForMassScanner(scanDetails? getFormattedTime(scanDetails.endTime):getFormattedTime()),
       "pagesScanned": allIssues.pagesScanned.length,
       "wcagPassPercentage": allIssues.wcagPassPercentage,
+      "wcagViolations": allIssues.wcagViolations,
       "critical": axeImpactCount.critical,
       "serious": axeImpactCount.serious,
       "moderate": axeImpactCount.moderate,
