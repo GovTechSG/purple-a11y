@@ -1,6 +1,6 @@
 <!-- TESTCODES ONLY: remove when raising PR -->
 <!-- Report generated is updated till commit d588ddfc51a05dfb9a80d6ea0f3b90e3c2d93d33-->
-<!-- Last update 16.02 at 1109h -->
+<!-- Last update 12.03 at 1608h -->
 <!doctype html>
 <html lang="en" id="accessibility-site-report">
   <head lang="en">
@@ -13950,7 +13950,7 @@
 
   /* Mobile UI Styles - KC*/
 
-  /* START: Accessible Dropdown Category Selector Styles */
+  /* START: Styles categorySelectorDropdown */
   .ally-button-container {
     #announcement {
       opacity: 0;
@@ -14046,7 +14046,7 @@
     border-color: var(--bs-border-color);
     border-radius: var(--bs-border-radius);
   }
-  /* END: Accessible Dropdown Category Selector Styles */
+  /* END: Styles categorySelectorDropdown */
 
   .rule-item-description {
     margin-right: auto;
@@ -14936,12 +14936,7 @@
   
 </nav>
 
-
-
-
-      <!-- Dropdown Category Selector -->
-      
-
+<!-- START: Component categorySelectorDropdown  -->
 <div class="d-md-none d-flex my-3 mx-2 px-2 position-relative ally-button-container" aria-label="Issue category">
   <label class="visually-hidden" for="select">Accessible Dropdown</label>
   <button
@@ -15006,9 +15001,7 @@
             
           </span>
         </li>
-      
-    
-      
+
         <li
           aria-labelledby="goodToFixTitle goodToFixItemsInformation"
           aria-describedby="goodToFixAriaDescription"
@@ -15024,9 +15017,7 @@
             
           </span>
         </li>
-      
-    
-      
+
         <li
           aria-labelledby="needsReviewTitle needsReviewItemsInformation"
           aria-describedby="needsReviewAriaDescription"
@@ -15042,15 +15033,12 @@
             
           </span>
         </li>
-      
-    
-      
-    
   </ul>
 </div>
 <div id="dropdownIssuesOccurrences"class="d-md-none d-flex mx-2 px-2">
   # issues / # occurrences
 </div>
+<!-- END: Component categorySelectorDropdown  -->
 
       <ul id="categorySummary" class="unbulleted-list px-3 py-4 mb-3 flex-grow-1">
         <!-- dynamically generated section from scripts/categorySummary -->
@@ -16037,7 +16025,7 @@
   }
 </script>
  
-
+<!-- START: Script categorySelectorDropdown -->
 <script>
   const elements = {
     button: document.querySelector('[role="combobox"]'),
@@ -16238,6 +16226,8 @@
   document.addEventListener('click', handleDocumentInteraction);
   window.addEventListener('resize', updateDropdownPosition);
 </script>
+<!-- END: Script categorySelectorDropdown -->
+
  
 <script>
   window.addEventListener('DOMContentLoaded', () => {
