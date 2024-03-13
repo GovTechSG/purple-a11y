@@ -58,7 +58,7 @@ Purple A11y can perform the following to scan the target URL.
 - To start using Purple A11y, run `node index`. Questions will be prompted to assist you in providing the right inputs.
 
 > NOTE: For your initial scan, there may be some loading time required before use. Purple-A11y will also ask for your name and email address and collect your app usage data to personalise your experience. Your information fully complies with [GovTech’s Privacy Policy](https://www.tech.gov.sg/privacy/).
-> You may delete your cached name and e-mail address by running the following command to delete `userDtata.txt`:
+> You may delete your cached name and e-mail address by running the following command to delete `userData.txt`:
 > - Windows (PowerShell): `rm "$env:APPDATA\Purple A11y\userData.txt"`
 > - MacOS (Terminal): `rm "$HOME/Library/Application Support/Purple A11y/userData.txt"`
 
