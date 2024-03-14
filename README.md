@@ -426,10 +426,10 @@ Examples:
 If the device name contains ```(``` and ```)```, wrap the device name in single quotes when entered into the CLI.
 Please note that ```-d``` and ```-w``` are mutually exclusive. If none are specified, the default device used for the CLI scan is Desktop.
 
-For example, to conduct a website scan to the URL `http://localhost:8000` and write to `a11y-scan-results.zip` with an `iPad_(gen_7)_landscape` screen, run
+For example, to conduct a website scan to the URL `http://localhost:8000` and write to `a11y-scan-results.zip` with an `iPad (gen 7) landscape` screen, run
 
 ```shell
-node cli.js -c 2 -o a11y-scan-results.zip -u http://localhost:8000 -d 'iPad_(gen_7)_landscape'
+node cli.js -c 2 -o a11y-scan-results.zip -u http://localhost:8000 -d 'iPad (gen 7) landscape'
 ```
 
 For example, to conduct a website scan to the URL `http://localhost:8000` and write to `a11y-scan-results.zip` with a custom screen width `360`, run
