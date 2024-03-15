@@ -1,0 +1,174 @@
+<style>
+  .ally-button-container {
+    #announcement {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    select,
+    ul {
+      display: block;
+      border: 0;
+      font-size: 1rem;
+    }
+
+    button {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+
+      &::before {
+        font-family: 'Font Awesome 5 Free';
+        content: '\f107';
+        vertical-align: middle;
+        font-weight: 900;
+        position: absolute;
+        right: 0.8rem;
+      }
+
+      &:focus-visible {
+        outline: 0;
+        box-shadow: 0 0 5px 2px rgba(251, 146, 60, 0.7) inset;
+      }
+    }
+
+    ul {
+      color: #3f403b;
+      position: absolute;
+      left: 0;
+      right: 0;
+      max-height: 10rem;
+      overflow-y: auto;
+      list-style-type: none;
+      padding: 0;
+      margin-top: 0.1rem;
+      opacity: 0;
+      transform: scale(1, 0);
+      transform-origin: top left;
+      transition: all 0.3s ease-in;
+      pointer-events: none;
+      z-index: 2;
+
+      &.active {
+        opacity: 1;
+        transform: scale(1, 1);
+        pointer-events: auto;
+      }
+
+      li {
+        margin: 0 0.5rem;
+        padding: 0.6rem 0.5rem;
+        border-top: 1px solid #e6e6e6;
+        cursor: pointer;
+        transition: all 0.3s ease-in;
+        position: relative;
+        background-color: rgb(255, 255, 255);
+
+        &::before {
+          font-family: 'Font Awesome 5 Free';
+          content: '\f00c';
+          vertical-align: middle;
+          font-weight: 900;
+          position: absolute;
+          right: 0.8rem;
+          opacity: 0;
+          transition: opacity 0.3s ease-out;
+        }
+
+        &.current {
+          /* Color of list item when selected */
+          background: #e6e6e6;
+        }
+
+        &.active {
+          box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.7);
+        }
+
+        &.active::before {
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  ul#issueTypeListbox {
+    position: absolute;
+    padding: 0;
+    opacity: 0;
+    transform: scale(1, 0);
+    transform-origin: top left;
+    transition: all 0.3s ease-in;
+
+    &.active {
+      opacity: 1;
+      transform: scale(1, 1);
+      pointer-events: auto;
+    }
+
+    li {
+      padding: 0.5rem 1rem;
+      border-radius: 0;
+      border-top: 0;
+      cursor: pointer;
+      transition: all 0.3s ease-in;
+      background-color: rgb(255, 255, 255);
+
+      &[aria-selected='true']::after {
+        border-bottom: 1px solid #333;
+        border-right: 1px solid #333;
+        content: '';
+        height: 16px;
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translate(0, -50%) rotate(45deg);
+        width: 8px;
+      }
+
+      &:hover {
+        border-color: #b5c5ca;
+        background-color: #f2f6ff;
+      }
+
+      &:focus {
+        border-color: #b5c5ca;
+        background-color: #f2f6ff;
+      }
+    }
+  }
+
+  .ally-toggle-button {
+    width: 100%;
+    padding: 10px;
+    text-align: left;
+    background-color: #fff;
+    border: 1px solid;
+    border-color: var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+  }
+
+  /* ROYCE: Added special CSS to overwrite for mobile dropdown as we are reusing the same class. */
+  .ally-toggle-button-2 > .category-selector {
+    padding: 8px 16px;
+  }
+
+  .ally-toggle-button-2 > .category-selector:not(.selected):hover,
+  .ally-toggle-button-2 > .category-selector:not(.selected):focus {
+    background-color: #fff;
+  }
+
+  .ally-toggle-button-2::after {
+    border-bottom: 1px solid #333;
+    border-right: 1px solid #333;
+    content: '';
+    display: block;
+    height: 12px;
+    pointer-events: none;
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translate(0, -65%) rotate(45deg);
+    width: 12px;
+  }
+</style>
