@@ -92,6 +92,52 @@
     }
   }
 
+  ul#issueTypeListbox {
+    position: absolute;
+    padding: 0;
+    opacity: 0;
+    transform: scale(1, 0);
+    transform-origin: top left;
+    transition: all 0.3s ease-in;
+
+    &.active {
+      opacity: 1;
+      transform: scale(1, 1);
+      pointer-events: auto;
+    }
+
+    li {
+      padding: 0.5rem 1rem;
+      border-radius: 0;
+      border-top: 0;
+      cursor: pointer;
+      transition: all 0.3s ease-in;
+      background-color: rgb(255, 255, 255);
+
+      &[aria-selected='true']::after {
+        border-bottom: 1px solid #333;
+        border-right: 1px solid #333;
+        content: '';
+        height: 16px;
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translate(0, -50%) rotate(45deg);
+        width: 8px;
+      }
+
+      &:hover {
+        border-color: #b5c5ca;
+        background-color: #f2f6ff;
+      }
+
+      &:focus {
+        border-color: #b5c5ca;
+        background-color: #f2f6ff;
+      }
+    }
+  }
+
   .ally-toggle-button {
     width: 100%;
     padding: 10px;
@@ -100,5 +146,29 @@
     border: 1px solid;
     border-color: var(--bs-border-color);
     border-radius: var(--bs-border-radius);
+  }
+
+  /* Special CSS to overwrite for mobile dropdown as we are reusing the same class. */
+  .ally-toggle-button-2 > .category-selector {
+    padding: 8px 16px;
+  }
+
+  .ally-toggle-button-2 > .category-selector:not(.selected):hover,
+  .ally-toggle-button-2 > .category-selector:not(.selected):focus {
+    background-color: #fff;
+  }
+
+  .ally-toggle-button-2::after {
+    border-bottom: 1px solid #333;
+    border-right: 1px solid #333;
+    content: '';
+    display: block;
+    height: 12px;
+    pointer-events: none;
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translate(0, -65%) rotate(45deg);
+    width: 12px;
   }
 </style>
