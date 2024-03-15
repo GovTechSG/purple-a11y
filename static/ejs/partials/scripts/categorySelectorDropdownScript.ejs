@@ -49,6 +49,9 @@ accessibility %>
         case ' ':
           selectCurrentOption();
           break;
+        case 'Tab':
+          toggleAllyDropdown();
+          break;
         default:
           handleAlphanumericKeyPress(key);
           break;
