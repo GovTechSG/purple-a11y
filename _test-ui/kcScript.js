@@ -178,5 +178,5 @@ const handleAlphanumericKeyPress = key => {
   lastTypedChar = typedChar;
 };
 
-elements.button.addEventListener('keydown', handleKeyPress);
+elements.wrapper.addEventListener('keydown', handleKeyPress);
 document.addEventListener('click', handleDocumentInteraction);
