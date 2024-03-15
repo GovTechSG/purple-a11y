@@ -1,8 +1,8 @@
 const elements = {
-  button: document.querySelector('[role="combobox"]'),
-  dropdown: document.querySelector('[role="listbox"]'),
+  button: document.getElementById('issueTypeComboBox'),
+  wrapper: document.getElementById('issueTypeComboBoxWrapper'),
+  dropdown: document.getElementById('issueTypeListbox'),
   options: document.querySelectorAll('[role="option"]'),
-  announcement: document.getElementById('announcement'),
 };
 
 let isDropdownOpen = false;
