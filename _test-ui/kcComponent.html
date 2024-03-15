@@ -13,12 +13,14 @@
     aria-label="Issue type"
   >
     <span
-      id="dropdownToggleCategoryTitle"
-      class="d-flex align-items-center category-name fw-bold d-inline mb-0"
+      id="dropdownToggleContainer"
+      class="category-selector d-flex flex-row align-items-center gap-2"
     >
-      Category Title
+      <strong id="dropdownToggleCategoryTitle" class="category-name d-flex align-items-center"
+        >Category Title</strong
+      >
+      <span id="dropdownToggleCategoryInfo">(# issues)</span>
     </span>
-    <span id="dropdownToggleCategoryInfo" class="px-2 category-information"> (# issues) </span>
   </div>
   <div class="ps-2">
     <svg
