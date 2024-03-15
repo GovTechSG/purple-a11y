@@ -23,15 +23,16 @@ function toggleAllyDropdown() {
 }
 
 const handleKeyPress = event => {
-  event.preventDefault();
   const { key } = event;
   const openKeys = ['ArrowDown', 'ArrowUp', 'Enter', ' '];
 
   if (!isDropdownOpen && openKeys.includes(key)) {
     toggleAllyDropdown();
+    focusCurrentOption();
   } else if (isDropdownOpen) {
     switch (key) {
       case 'Escape':
+        event.preventDefault();
         toggleAllyDropdown();
         break;
       case 'ArrowDown':
