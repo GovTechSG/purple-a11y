@@ -6,16 +6,27 @@
 } %>
 
 <div class="d-md-none d-flex mt-4 mx-2 px-2 position-relative ally-button-container" aria-label="Issue category">
-  <button
-    class="ally-toggle-button"
-    role="combobox"
-    id="select"
-    value="Select"
-    aria-controls="listbox"
-    aria-haspopup="listbox"
-    tabindex="0"
-    aria-expanded="false"
-  >Accessible Dropdown</button>
+  <div
+  id="issueTypeComboBox"
+  class="ally-toggle-button-2"
+  role="combobox"
+  aria-controls="issueTypeListbox"
+  aria-haspopup="listbox"
+  tabindex="0"
+  aria-expanded="false"
+  aria-label="Issue type"
+  >
+  <span
+  id="dropdownToggleContainer"
+  class="category-selector d-flex flex-row align-items-center gap-2"
+>
+  <strong id="dropdownToggleCategoryTitle" class="category-name d-flex align-items-center"
+    >Category Title</strong
+  >
+  <span id="dropdownToggleCategoryInfo">(# issues)</span>
+</span>
+</div>
+
   <div>
     <svg
       tabindex="-1"
