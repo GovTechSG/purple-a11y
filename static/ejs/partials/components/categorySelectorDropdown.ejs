@@ -27,9 +27,8 @@
 </span>
 </div>
 
-
-  <ul role="listbox" id="listbox">
-    <% Object.keys(items).forEach((category) => { %>
+<ul role="listbox" id="issueTypeListbox" class="w-100" aria-label="Issue type">
+  <% Object.keys(items).forEach((category) => { %>
       <% if (category !== 'passed') { %>
         <li
           aria-labelledby="<%= category %>Title <%= category %>ItemsInformation"
