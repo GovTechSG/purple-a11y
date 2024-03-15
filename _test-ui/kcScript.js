@@ -10,11 +10,6 @@ let currentOptionIndex = 0;
 let lastTypedChar = '';
 let lastMatchingIndex = 0;
 
-const updateDropdownPosition = () => {
-  const buttonHeight = elements.button.offsetHeight;
-  elements.dropdown.style.top = `calc(${buttonHeight}px)`;
-};
-
 const toggleAllyDropdown = () => {
   elements.dropdown.classList.toggle('active');
   isDropdownOpen = !isDropdownOpen;
@@ -22,7 +17,7 @@ const toggleAllyDropdown = () => {
 
   if (isDropdownOpen) {
     focusCurrentOption();
-    updateDropdownPosition();
+    // updateDropdownPosition();
   } else {
     elements.button.focus();
   }
