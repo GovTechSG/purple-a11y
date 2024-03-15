@@ -132,15 +132,12 @@ const selectOptionByElement = optionElement => {
 
   // elements.button.textContent = optionValue;
   elements.options.forEach(option => {
-    option.classList.remove('active');
     option.setAttribute('aria-selected', 'false');
   });
 
-  optionElement.classList.add('active');
   optionElement.setAttribute('aria-selected', 'true');
 
   toggleAllyDropdown();
-  announceOption(optionValue);
 
   // Get categorySelector selected category
   const sharedCategory = optionElement.classList[0];
