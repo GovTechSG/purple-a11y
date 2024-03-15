@@ -6,7 +6,6 @@
 } %>
 
 <div class="d-md-none d-flex mt-4 mx-2 px-2 position-relative ally-button-container" aria-label="Issue category">
-  <label class="visually-hidden" for="select">Accessible Dropdown</label>
   <button
     class="ally-toggle-button"
     role="combobox"
@@ -44,8 +43,6 @@
     </defs>
   </svg>
   </div>
-  <!-- Screen Reader Announcer -->
-  <div class="visually-hidden" id="announcement" aria-live="assertive" role="alert"></div>
   <ul role="listbox" id="listbox">
     <% Object.keys(items).forEach((category) => { %>
       <% if (category !== 'passed') { %>
