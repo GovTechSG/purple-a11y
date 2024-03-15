@@ -113,7 +113,9 @@ const selectOptionByElement = optionElement => {
   const optionElementCategoryInfo = optionElement.children[1].innerText.replace(/\n/g, '');
 
   // Resets dropdownToggleContainer to empty class
-  document.getElementById('dropdownToggleContainer').classList.value = '';
+  document
+    .getElementById('dropdownToggleContainer')
+    .classList.remove('mustFix', 'goodToFix', 'needsReview');
 
   optionElementClassArray.forEach(className => {
     document.getElementById('dropdownToggleContainer').classList.add(className);
