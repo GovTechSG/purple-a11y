@@ -14,18 +14,17 @@ accessibility %>
   let lastTypedChar = '';
   let lastMatchingIndex = 0;
 
-  const toggleAllyDropdown = () => {
+  function toggleAllyDropdown() {
     elements.dropdown.classList.toggle('active');
     isDropdownOpen = !isDropdownOpen;
     elements.button.setAttribute('aria-expanded', isDropdownOpen.toString());
 
     if (isDropdownOpen) {
-      focusCurrentOption();
-      updateDropdownPosition();
-    } else {
-      elements.button.focus();
+      // focusCurrentOption();
+      elements.button.setAttribute('aria-activedescendant', 'issueTypeListbox');
+      // updateDropdownPosition();
     }
-  };
+  }
 
   const handleKeyPress = event => {
     event.preventDefault();
