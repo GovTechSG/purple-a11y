@@ -25,25 +25,21 @@
 
   <ul role="listbox" id="issueTypeListbox" class="w-100" aria-label="Issue type">
     <li
-      aria-labelledby="mustFixTitle mustFixItemsInformation"
-      aria-describedby="mustFixAriaDescription"
+      tabindex="-1"
       id="mustFixDropdownSelector"
-      class="mustFix category-selector"
+      class="mustFix category-selector d-flex flex-row align-items-center gap-2 position-relative"
       role="option"
     >
       <span id="mustFixTitle" class="d-flex align-items-center category-name fw-bold d-inline mb-0">
         Must Fix
       </span>
-      <span id="mustFixListboxItemsInformation" class="px-2 category-information">
-        (4 issues)
-      </span>
+      <span id="mustFixItemsInformation" class="category-information"> (4 issues) </span>
     </li>
 
     <li
-      aria-labelledby="goodToFixTitle goodToFixItemsInformation"
-      aria-describedby="goodToFixAriaDescription"
+      tabindex="-1"
       id="goodToFixDropdownSelector"
-      class="goodToFix category-selector"
+      class="goodToFix category-selector d-flex flex-row align-items-center gap-2 position-relative"
       role="option"
     >
       <span
@@ -52,16 +48,13 @@
       >
         Good to Fix
       </span>
-      <span id="goodToFixListboxItemsInformation" class="px-2 category-information">
-        (6 issues)
-      </span>
+      <span id="goodToFixItemsInformation" class="category-information"> (6 issues) </span>
     </li>
 
     <li
-      aria-labelledby="needsReviewTitle needsReviewItemsInformation"
-      aria-describedby="needsReviewAriaDescription"
+      tabindex="-1"
       id="needsReviewDropdownSelector"
-      class="needsReview category-selector"
+      class="needsReview category-selector d-flex flex-row align-items-center gap-2 position-relative"
       role="option"
     >
       <span
@@ -70,9 +63,7 @@
       >
         Needs Review
       </span>
-      <span id="needsReviewListboxItemsInformation" class="px-2 category-information">
-        (1 issues)
-      </span>
+      <span id="needsReviewItemsInformation" class="category-information"> (1 issues) </span>
     </li>
   </ul>
 </div>
