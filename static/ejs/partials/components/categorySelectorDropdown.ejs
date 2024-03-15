@@ -31,15 +31,18 @@
   <% Object.keys(items).forEach((category) => { %>
       <% if (category !== 'passed') { %>
         <li
-          aria-labelledby="<%= category %>Title <%= category %>ItemsInformation"
-          aria-describedby="<%= category %>AriaDescription"
+          tabindex="-1"
           id="<%= category %>DropdownSelector"
-          class="<%= category %>"
+          class="<%= category %> category-selector d-flex flex-row align-items-center gap-2 position-relative"
           role="option"
-          >    <span id="<%= category %>Title" class="align-items-center category-name fw-bold d-inline mb-0">
+          >
+          <span
+            id="<%= category %>Title"
+            class="d-flex align-items-center category-name fw-bold d-inline mb-0"
+            >
             <%= formattedCategoryTitles[category] %>
           </span>
-          <span id="<%= category %>ItemsInformation" class="px-2 category-information">
+          <span id="<%= category %>ItemsInformation" class="category-information">
             <% if (category !== 'passed' && items[category].totalItems !== 0) { %> 
               (<%= items[category].rules.length %> issues) 
             <% } else if (category !== 'passed' && items[category].totalItems === 0) { %>
