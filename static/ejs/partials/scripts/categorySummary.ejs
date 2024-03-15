@@ -2,8 +2,8 @@
 <script>
   window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('mustFixSelector').click();
-    document.getElementById('issueDescriptionsButton').click();
-    document.getElementById('mustFixDropdownSelector').click();
+    // document.getElementById('issueDescriptionsButton').click();
+    // document.getElementById('mustFixDropdownSelector').click();
   });
 
   const changeSelectedCategory = (() => {
@@ -21,7 +21,7 @@
 
       // Ensures <category>DropdownSelector on mobile view matches
       const matchingDropdownId = category + 'DropdownSelector';
-      document.getElementById(matchingDropdownId).click(), toggleAllyDropdown();
+      document.getElementById(matchingDropdownId).click();
       loadRulesSummary(category, searchInput);
     };
   })();
@@ -34,7 +34,7 @@
         handleSearch(category, searchVal, filteredItems);
       }
     } else {
-      resetIssueOccurrence(category, filteredItems);
+      resetIssueOccurence(category, filteredItems);
     }
 
     const formatItemsCount = count => {
