@@ -1,68 +1,74 @@
 <div class="d-flex m-3 d-md-none">
-  <div
-    id="issueTypeComboBox"
-    class="ally-toggle-button-2"
-    role="combobox"
-    aria-controls="issueTypeListbox"
-    aria-haspopup="listbox"
-    tabindex="0"
-    aria-expanded="false"
-    aria-label="Issue type"
-  >
-    <span
-      id="dropdownToggleContainer"
-      class="category-selector d-flex flex-row align-items-center gap-2"
+  <div id="issueTypeComboBoxWrapper" class="flex-grow-1 position-relative">
+    <div
+      id="issueTypeComboBox"
+      class="ally-toggle-button-2"
+      role="combobox"
+      aria-controls="issueTypeListbox"
+      aria-haspopup="listbox"
+      tabindex="0"
+      aria-expanded="false"
+      aria-label="Issue type"
     >
-      <strong id="dropdownToggleCategoryTitle" class="category-name d-flex align-items-center"
-        >Category Title</strong
+      <span
+        id="dropdownToggleContainer"
+        class="category-selector d-flex flex-row align-items-center gap-2"
       >
-      <span id="dropdownToggleCategoryInfo">(# issues)</span>
-    </span>
+        <strong id="dropdownToggleCategoryTitle" class="category-name d-flex align-items-center"
+          >Category Title</strong
+        >
+        <span id="dropdownToggleCategoryInfo">(# issues)</span>
+      </span>
+    </div>
+
+    <ul role="listbox" id="issueTypeListbox" class="w-100" aria-label="Issue type">
+      <li
+        tabindex="-1"
+        id="mustFixDropdownSelector"
+        class="mustFix category-selector d-flex flex-row align-items-center gap-2 position-relative"
+        role="option"
+      >
+        <span
+          id="mustFixTitle"
+          class="d-flex align-items-center category-name fw-bold d-inline mb-0"
+        >
+          Must Fix
+        </span>
+        <span id="mustFixItemsInformation" class="category-information"> (4 issues) </span>
+      </li>
+
+      <li
+        tabindex="-1"
+        id="goodToFixDropdownSelector"
+        class="goodToFix category-selector d-flex flex-row align-items-center gap-2 position-relative"
+        role="option"
+      >
+        <span
+          id="goodToFixTitle"
+          class="d-flex align-items-center category-name fw-bold d-inline mb-0"
+        >
+          Good to Fix
+        </span>
+        <span id="goodToFixItemsInformation" class="category-information"> (6 issues) </span>
+      </li>
+
+      <li
+        tabindex="-1"
+        id="needsReviewDropdownSelector"
+        class="needsReview category-selector d-flex flex-row align-items-center gap-2 position-relative"
+        role="option"
+      >
+        <span
+          id="needsReviewTitle"
+          class="d-flex align-items-center category-name fw-bold d-inline mb-0"
+        >
+          Needs Review
+        </span>
+        <span id="needsReviewItemsInformation" class="category-information"> (1 issues) </span>
+      </li>
+    </ul>
   </div>
 
-  <ul role="listbox" id="issueTypeListbox" class="w-100" aria-label="Issue type">
-    <li
-      tabindex="-1"
-      id="mustFixDropdownSelector"
-      class="mustFix category-selector d-flex flex-row align-items-center gap-2 position-relative"
-      role="option"
-    >
-      <span id="mustFixTitle" class="d-flex align-items-center category-name fw-bold d-inline mb-0">
-        Must Fix
-      </span>
-      <span id="mustFixItemsInformation" class="category-information"> (4 issues) </span>
-    </li>
-
-    <li
-      tabindex="-1"
-      id="goodToFixDropdownSelector"
-      class="goodToFix category-selector d-flex flex-row align-items-center gap-2 position-relative"
-      role="option"
-    >
-      <span
-        id="goodToFixTitle"
-        class="d-flex align-items-center category-name fw-bold d-inline mb-0"
-      >
-        Good to Fix
-      </span>
-      <span id="goodToFixItemsInformation" class="category-information"> (6 issues) </span>
-    </li>
-
-    <li
-      tabindex="-1"
-      id="needsReviewDropdownSelector"
-      class="needsReview category-selector d-flex flex-row align-items-center gap-2 position-relative"
-      role="option"
-    >
-      <span
-        id="needsReviewTitle"
-        class="d-flex align-items-center category-name fw-bold d-inline mb-0"
-      >
-        Needs Review
-      </span>
-      <span id="needsReviewItemsInformation" class="category-information"> (1 issues) </span>
-    </li>
-  </ul>
   <div class="ps-2">
     <svg
       tabindex="-1"
@@ -91,7 +97,6 @@
     </svg>
   </div>
 </div>
-
 <div id="dropdownIssuesOccurrences" class="d-md-none d-flex mx-2 px-2">
   # issues / # occurrences
 </div>
