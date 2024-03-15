@@ -10,18 +10,17 @@ let currentOptionIndex = 0;
 let lastTypedChar = '';
 let lastMatchingIndex = 0;
 
-const toggleAllyDropdown = () => {
+function toggleAllyDropdown() {
   elements.dropdown.classList.toggle('active');
   isDropdownOpen = !isDropdownOpen;
   elements.button.setAttribute('aria-expanded', isDropdownOpen.toString());
 
   if (isDropdownOpen) {
-    focusCurrentOption();
+    // focusCurrentOption();
+    elements.button.setAttribute('aria-activedescendant', 'issueTypeListbox');
     // updateDropdownPosition();
-  } else {
-    elements.button.focus();
   }
-};
+}
 
 const handleKeyPress = event => {
   event.preventDefault();
