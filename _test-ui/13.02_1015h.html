@@ -1,6 +1,6 @@
 <!-- TESTCODES ONLY: remove when raising PR -->
 <!-- Report generated is updated till commit d588ddfc51a05dfb9a80d6ea0f3b90e3c2d93d33-->
-<!-- Last update 12.03 at 1608h -->
+<!-- Last update 15.03 at 1224h -->
 <!doctype html>
 <html lang="en" id="accessibility-site-report">
   <head lang="en">
@@ -13956,12 +13956,14 @@
       opacity: 0;
       pointer-events: none;
     }
+
     select,
     ul {
       display: block;
       border: 0;
       font-size: 1rem;
     }
+
     button {
       display: flex;
       justify-content: space-between;
@@ -14005,6 +14007,7 @@
         transform: scale(1, 1);
         pointer-events: auto;
       }
+
       li {
         margin: 0 0.5rem;
         padding: 0.6rem 0.5rem;
@@ -14013,6 +14016,7 @@
         transition: all 0.3s ease-in;
         position: relative;
         background-color: rgb(255, 255, 255);
+
         &::before {
           font-family: 'Font Awesome 5 Free';
           content: '\f00c';
@@ -14023,16 +14027,65 @@
           opacity: 0;
           transition: opacity 0.3s ease-out;
         }
+
         &.current {
           /* Color of list item when selected */
           background: #e6e6e6;
         }
+
         &.active {
           box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.7);
         }
+
         &.active::before {
           opacity: 1;
         }
+      }
+    }
+  }
+
+  ul#issueTypeListbox {
+    position: absolute;
+    padding: 0;
+    opacity: 0;
+    transform: scale(1, 0);
+    transform-origin: top left;
+    transition: all 0.3s ease-in;
+
+    &.active {
+      opacity: 1;
+      transform: scale(1, 1);
+      pointer-events: auto;
+    }
+
+    li {
+      padding: 0.5rem 1rem;
+      border-radius: 0;
+      border-top: 0;
+      cursor: pointer;
+      transition: all 0.3s ease-in;
+      background-color: rgb(255, 255, 255);
+
+      &[aria-selected='true']::after {
+        border-bottom: 1px solid #333;
+        border-right: 1px solid #333;
+        content: '';
+        height: 16px;
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translate(0, -50%) rotate(45deg);
+        width: 8px;
+      }
+
+      &:hover {
+        border-color: #b5c5ca;
+        background-color: #f2f6ff;
+      }
+
+      &:focus {
+        border-color: #b5c5ca;
+        background-color: #f2f6ff;
       }
     }
   }
@@ -14045,6 +14098,30 @@
     border: 1px solid;
     border-color: var(--bs-border-color);
     border-radius: var(--bs-border-radius);
+  }
+
+  /* Special CSS to overwrite for mobile dropdown as we are reusing the same class. */
+  .ally-toggle-button-2 > .category-selector {
+    padding: 8px 16px;
+  }
+
+  .ally-toggle-button-2 > .category-selector:not(.selected):hover,
+  .ally-toggle-button-2 > .category-selector:not(.selected):focus {
+    background-color: #fff;
+  }
+
+  .ally-toggle-button-2::after {
+    border-bottom: 1px solid #333;
+    border-right: 1px solid #333;
+    content: '';
+    display: block;
+    height: 12px;
+    pointer-events: none;
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translate(0, -65%) rotate(45deg);
+    width: 12px;
   }
   /* END: Styles categorySelectorDropdown */
 
@@ -14937,23 +15014,76 @@
 </nav>
 
 <!-- START: Component categorySelectorDropdown  -->
-<div class="d-md-none d-flex my-3 mx-2 px-2 position-relative ally-button-container" aria-label="Issue category">
-  <label class="visually-hidden" for="select">Accessible Dropdown</label>
-  <button
-    class="ally-toggle-button"
-    role="combobox"
-    id="select"
-    value="Select"
-    aria-controls="listbox"
-    aria-haspopup="listbox"
-    tabindex="0"
-    aria-expanded="false"
-  >
-  <li id="dropdownToggleContainer">
-    <span id="dropdownToggleCategoryTitle" class="d-flex align-items-center category-name fw-bold d-inline mb-0"> Category Title </span>
-    <span id="dropdownToggleCategoryInfo" class="px-2 category-information"> (# issues) </span>
-  </li>
-  </button>
+<div class="d-flex m-3 d-md-none">
+  <div id="issueTypeComboBoxWrapper" class="flex-grow-1 position-relative">
+    <div
+      id="issueTypeComboBox"
+      class="ally-toggle-button-2"
+      role="combobox"
+      aria-controls="issueTypeListbox"
+      aria-haspopup="listbox"
+      tabindex="0"
+      aria-expanded="false"
+      aria-label="Issue type"
+    >
+      <span
+        id="dropdownToggleContainer"
+        class="category-selector d-flex flex-row align-items-center gap-2"
+      >
+        <strong id="dropdownToggleCategoryTitle" class="category-name d-flex align-items-center"
+          >Category Title</strong
+        >
+        <span id="dropdownToggleCategoryInfo">(# issues)</span>
+      </span>
+    </div>
+
+    <ul role="listbox" id="issueTypeListbox" class="w-100" aria-label="Issue type">
+      <li
+        tabindex="-1"
+        id="mustFixDropdownSelector"
+        class="mustFix category-selector d-flex flex-row align-items-center gap-2 position-relative"
+        role="option"
+      >
+        <span
+          id="mustFixTitle"
+          class="d-flex align-items-center category-name fw-bold d-inline mb-0"
+        >
+          Must Fix
+        </span>
+        <span id="mustFixItemsInformation" class="category-information"> (4 issues) </span>
+      </li>
+
+      <li
+        tabindex="-1"
+        id="goodToFixDropdownSelector"
+        class="goodToFix category-selector d-flex flex-row align-items-center gap-2 position-relative"
+        role="option"
+      >
+        <span
+          id="goodToFixTitle"
+          class="d-flex align-items-center category-name fw-bold d-inline mb-0"
+        >
+          Good to Fix
+        </span>
+        <span id="goodToFixItemsInformation" class="category-information"> (6 issues) </span>
+      </li>
+
+      <li
+        tabindex="-1"
+        id="needsReviewDropdownSelector"
+        class="needsReview category-selector d-flex flex-row align-items-center gap-2 position-relative"
+        role="option"
+      >
+        <span
+          id="needsReviewTitle"
+          class="d-flex align-items-center category-name fw-bold d-inline mb-0"
+        >
+          Needs Review
+        </span>
+        <span id="needsReviewItemsInformation" class="category-information"> (1 issues) </span>
+      </li>
+    </ul>
+  </div>
   <div class="ps-2">
     <svg
       tabindex="-1"
@@ -14968,76 +15098,24 @@
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-    <g clip-path="url(.clip0_1630_1670)">
-      <path
-        d="M11.9528 2.05329C9.22079 -0.68205 4.78867 -0.68477 2.0533 2.04718C-0.682042 4.7792 -0.684795 9.21135 2.04722 11.9467C4.77917 14.6821 9.21135 14.6848 11.9467 11.9528C14.682 9.22085 14.6848 4.78863 11.9528 2.05329ZM7.00216 11.2406C6.6319 11.2406 6.33174 10.9405 6.33174 10.5702C6.33174 10.1999 6.63187 9.89976 7.00216 9.89976C7.37243 9.89976 7.67259 10.1999 7.67259 10.5702C7.67255 10.9405 7.37243 11.2406 7.00216 11.2406ZM8.09214 7.20401C7.70918 7.42788 7.67645 7.7033 7.6748 8.49691C7.6747 8.54938 7.67453 8.60233 7.67423 8.65558C7.67185 9.03068 7.36712 9.33312 6.99253 9.33312C6.99105 9.33312 6.98957 9.33312 6.98813 9.33312C6.61159 9.33074 6.3083 9.02356 6.31066 8.64699C6.31099 8.59568 6.31109 8.54468 6.31119 8.49415C6.31287 7.67852 6.31492 6.66352 7.40395 6.02694C8.27777 5.51613 8.3879 5.18059 8.28543 4.74029C8.16503 4.2231 7.69273 4.08907 7.32418 4.1312C7.20042 4.14541 6.58322 4.24724 6.58322 4.85783C6.58322 5.23431 6.27795 5.5396 5.90141 5.5396C5.52487 5.5396 5.21964 5.23431 5.21964 4.85783C5.21964 3.76416 6.02107 2.90831 7.16859 2.77656C8.35043 2.64099 9.35515 3.32135 9.61338 4.4312C9.99939 6.08915 8.61379 6.89911 8.09214 7.20401Z"
-        fill="#B5C5CA"
-      />
-    </g>
-    <defs>
-      <clipPath class="clip0_1630_1670">
-        <rect width="14" height="14" fill="white" />
-      </clipPath>
-    </defs>
-  </svg>
+      <g clip-path="url(.clip0_1630_1670)">
+        <path
+          d="M11.9528 2.05329C9.22079 -0.68205 4.78867 -0.68477 2.0533 2.04718C-0.682042 4.7792 -0.684795 9.21135 2.04722 11.9467C4.77917 14.6821 9.21135 14.6848 11.9467 11.9528C14.682 9.22085 14.6848 4.78863 11.9528 2.05329ZM7.00216 11.2406C6.6319 11.2406 6.33174 10.9405 6.33174 10.5702C6.33174 10.1999 6.63187 9.89976 7.00216 9.89976C7.37243 9.89976 7.67259 10.1999 7.67259 10.5702C7.67255 10.9405 7.37243 11.2406 7.00216 11.2406ZM8.09214 7.20401C7.70918 7.42788 7.67645 7.7033 7.6748 8.49691C7.6747 8.54938 7.67453 8.60233 7.67423 8.65558C7.67185 9.03068 7.36712 9.33312 6.99253 9.33312C6.99105 9.33312 6.98957 9.33312 6.98813 9.33312C6.61159 9.33074 6.3083 9.02356 6.31066 8.64699C6.31099 8.59568 6.31109 8.54468 6.31119 8.49415C6.31287 7.67852 6.31492 6.66352 7.40395 6.02694C8.27777 5.51613 8.3879 5.18059 8.28543 4.74029C8.16503 4.2231 7.69273 4.08907 7.32418 4.1312C7.20042 4.14541 6.58322 4.24724 6.58322 4.85783C6.58322 5.23431 6.27795 5.5396 5.90141 5.5396C5.52487 5.5396 5.21964 5.23431 5.21964 4.85783C5.21964 3.76416 6.02107 2.90831 7.16859 2.77656C8.35043 2.64099 9.35515 3.32135 9.61338 4.4312C9.99939 6.08915 8.61379 6.89911 8.09214 7.20401Z"
+          fill="#B5C5CA"
+        />
+      </g>
+      <defs>
+        <clipPath class="clip0_1630_1670">
+          <rect width="14" height="14" fill="white" />
+        </clipPath>
+      </defs>
+    </svg>
   </div>
-  <!-- Screen Reader Announcer -->
-  <div class="visually-hidden" id="announcement" aria-live="assertive" role="alert"></div>
-  <ul role="listbox" id="listbox">
-    
-      
-        <li
-          aria-labelledby="mustFixTitle mustFixItemsInformation"
-          aria-describedby="mustFixAriaDescription"
-          id="mustFixDropdownSelector"
-          class="mustFix category-selector"
-          role="option"
-          >    <span id="mustFixTitle" class="d-flex align-items-center category-name fw-bold d-inline mb-0">
-            Must Fix
-          </span>
-          <span id="mustFixListboxItemsInformation" class="px-2 category-information">
-             
-              (4 issues) 
-            
-          </span>
-        </li>
-
-        <li
-          aria-labelledby="goodToFixTitle goodToFixItemsInformation"
-          aria-describedby="goodToFixAriaDescription"
-          id="goodToFixDropdownSelector"
-          class="goodToFix category-selector"
-          role="option"
-          >    <span id="goodToFixTitle" class="d-flex align-items-center category-name fw-bold d-inline mb-0">
-            Good to Fix
-          </span>
-          <span id="goodToFixListboxItemsInformation" class="px-2 category-information">
-             
-              (6 issues) 
-            
-          </span>
-        </li>
-
-        <li
-          aria-labelledby="needsReviewTitle needsReviewItemsInformation"
-          aria-describedby="needsReviewAriaDescription"
-          id="needsReviewDropdownSelector"
-          class="needsReview category-selector"
-          role="option"
-          >    <span id="needsReviewTitle" class="d-flex align-items-center category-name fw-bold d-inline mb-0">
-            Needs Review
-          </span>
-          <span id="needsReviewListboxItemsInformation" class="px-2 category-information">
-             
-              (1 issues) 
-            
-          </span>
-        </li>
-  </ul>
 </div>
-<div id="dropdownIssuesOccurrences"class="d-md-none d-flex mx-2 px-2">
+<div id="dropdownIssuesOccurrences" class="d-md-none d-flex mx-2 px-2">
   # issues / # occurrences
 </div>
+
 <!-- END: Component categorySelectorDropdown  -->
 
       <ul id="categorySummary" class="unbulleted-list px-3 py-4 mb-3 flex-grow-1">
@@ -16027,204 +16105,193 @@
  
 <!-- START: Script categorySelectorDropdown -->
 <script>
-  const elements = {
-    button: document.querySelector('[role="combobox"]'),
-    dropdown: document.querySelector('[role="listbox"]'),
-    options: document.querySelectorAll('[role="option"]'),
-    announcement: document.getElementById('announcement'),
-  };
+ const elements = {
+  button: document.getElementById('issueTypeComboBox'),
+  wrapper: document.getElementById('issueTypeComboBoxWrapper'),
+  dropdown: document.getElementById('issueTypeListbox'),
+  options: document.querySelectorAll('[role="option"]'),
+};
 
-  let isDropdownOpen = false;
-  let currentOptionIndex = 0;
-  let lastTypedChar = '';
-  let lastMatchingIndex = 0;
+let isDropdownOpen = false;
+let currentOptionIndex = 0;
+let lastTypedChar = '';
+let lastMatchingIndex = 0;
 
-  const updateDropdownPosition = () => {
-    const buttonHeight = elements.button.offsetHeight;
-    elements.dropdown.style.top = `calc(${buttonHeight}px)`;
-  };
+function toggleAllyDropdown() {
+  elements.dropdown.classList.toggle('active');
+  isDropdownOpen = !isDropdownOpen;
+  elements.button.setAttribute('aria-expanded', isDropdownOpen.toString());
 
-  const toggleAllyDropdown = () => {
-    elements.dropdown.classList.toggle('active');
-    isDropdownOpen = !isDropdownOpen;
-    elements.button.setAttribute('aria-expanded', isDropdownOpen.toString());
+  if (isDropdownOpen) {
+    // focusCurrentOption();
+    elements.button.setAttribute('aria-activedescendant', 'issueTypeListbox');
+    // updateDropdownPosition();
+  }
+}
 
-    if (isDropdownOpen) {
-      focusCurrentOption();
-      updateDropdownPosition();
-    } else {
-      elements.button.focus();
-    }
-  };
+const handleKeyPress = event => {
+  const { key } = event;
+  const openKeys = ['ArrowDown', 'ArrowUp', 'Enter', ' '];
 
-  const handleKeyPress = event => {
-    event.preventDefault();
-    const { key } = event;
-    const openKeys = ['ArrowDown', 'ArrowUp', 'Enter', ' '];
-
-    if (!isDropdownOpen && openKeys.includes(key)) {
-      toggleAllyDropdown();
-    } else if (isDropdownOpen) {
-      switch (key) {
-        case 'Escape':
-          toggleAllyDropdown();
-          break;
-        case 'ArrowDown':
-          moveFocusDown();
-          break;
-        case 'ArrowUp':
-          moveFocusUp();
-          break;
-        case 'Enter':
-        case ' ':
-          selectCurrentOption();
-          break;
-        default:
-          handleAlphanumericKeyPress(key);
-          break;
-      }
-    }
-  };
-
-  const handleDocumentInteraction = event => {
-    const isClickInsideButton = elements.button.contains(event.target);
-    const isClickInsideDropdown = elements.dropdown.contains(event.target);
-
-    if (isClickInsideButton || (!isClickInsideDropdown && isDropdownOpen)) {
-      toggleAllyDropdown();
-    }
-
-    const clickedOption = event.target.closest('[role="option"]');
-    if (clickedOption) {
-      selectOptionByElement(clickedOption);
-    }
-  };
-
-  const moveFocusDown = () => {
-    if (currentOptionIndex < elements.options.length - 1) {
-      currentOptionIndex++;
-    } else {
-      currentOptionIndex = 0;
-    }
-    focusCurrentOption();
-  };
-
-  const moveFocusUp = () => {
-    if (currentOptionIndex > 0) {
-      currentOptionIndex--;
-    } else {
-      currentOptionIndex = elements.options.length - 1;
-    }
-    focusCurrentOption();
-  };
-
-  const focusCurrentOption = () => {
-    const currentOption = elements.options[currentOptionIndex];
-    const optionLabel = currentOption.textContent;
-
-    currentOption.classList.add('current');
-    currentOption.focus();
-
-    currentOption.scrollIntoView({
-      block: 'nearest',
-    });
-
-    elements.options.forEach((option, index) => {
-      if (option !== currentOption) {
-        option.classList.remove('current');
-      }
-    });
-    announceOption(`You're currently focused on ${optionLabel}`);
-  };
-
-  const selectCurrentOption = () => {
-    const selectedOption = elements.options[currentOptionIndex];
-    selectOptionByElement(selectedOption);
-  };
-
-    const selectOptionByElement = optionElement => {    
-    const optionValue = optionElement.textContent;
-    const optionElementClassArray = [optionElement.classList[0], optionElement.classList[1]]
-    const optionElementCategoryTitle = optionElement.children[0].innerText.replace(/\n/g, '');
-    const optionElementCategoryInfo = optionElement.children[1].innerText.replace(/\n/g, '');   
-
-    // Resets dropdownToggleContainer to empty class
-    document.getElementById('dropdownToggleContainer').classList.value = '';
-    
-    optionElementClassArray.forEach(className => {
-      document.getElementById('dropdownToggleContainer').classList.add(className);
-    })
-    
-    document.getElementById('dropdownToggleCategoryTitle').innerText = optionElementCategoryTitle;
-    document.getElementById('dropdownToggleCategoryInfo').innerText = optionElementCategoryInfo;
-
-    // Dynamically update dropdownIssueOccurrences
-    const dropdownIssueOccurrencesString = document.getElementById(optionElement.classList[0]+'Selector').lastElementChild.innerText.replace(/\n/g, '');
-    document.getElementById('dropdownIssuesOccurrences').innerText = dropdownIssueOccurrencesString; 
-
-    // elements.button.textContent = optionValue;
-    elements.options.forEach(option => {
-      option.classList.remove('active');
-      option.setAttribute('aria-selected', 'false');
-    });
-
-    optionElement.classList.add('active');
-    optionElement.setAttribute('aria-selected', 'true');
-
+  if (!isDropdownOpen && openKeys.includes(key)) {
     toggleAllyDropdown();
-    announceOption(optionValue);
+    focusCurrentOption();
+  } else if (isDropdownOpen) {
+    switch (key) {
+      case 'Escape':
+        event.preventDefault();
+        toggleAllyDropdown();
+        break;
+      case 'ArrowDown':
+        moveFocusDown();
+        break;
+      case 'ArrowUp':
+        moveFocusUp();
+        break;
+      case 'Enter':
+      case ' ':
+        selectCurrentOption();
+        break;
+        
+        case 'Tab': // Add this case to handle Tab key
+        toggleAllyDropdown();
+        break;
+      default:
+        handleAlphanumericKeyPress(key);
+        break;
+    }
+  }
+};
 
-    // Get categorySelector selected category
-    const sharedCategory = optionElement.classList[0];
+const handleDocumentInteraction = event => {
+  const isClickInsideButton = elements.button.contains(event.target);
+  const isClickInsideDropdown = elements.dropdown.contains(event.target);
 
-    // Update tooltip
-    const svgElement = document.getElementById('categorySelectorDropdownToolipDescription');
-    svgElement.setAttribute('title', scanItems[sharedCategory].description);
-    const tooltip = new bootstrap.Tooltip(svgElement);
-    tooltip.update();
+  if (isClickInsideButton || (!isClickInsideDropdown && isDropdownOpen)) {
+    toggleAllyDropdown();
+  }
 
-    // Ensures categorySelector on desktop view matches with dropdown and load rules summary again
-    const matchingButtonId = sharedCategory + 'Selector';
-    document.getElementById(matchingButtonId).click();
-    loadRulesSummary(sharedCategory, searchInput);
-  };
+  const clickedOption = event.target.closest('[role="option"]');
+  if (clickedOption) {
+    selectOptionByElement(clickedOption);
+  }
+};
 
-  const handleAlphanumericKeyPress = key => {
-    const typedChar = key.toLowerCase();
+const moveFocusDown = () => {
+  if (currentOptionIndex < elements.options.length - 1) {
+    currentOptionIndex++;
+  } else {
+    currentOptionIndex = 0;
+  }
+  focusCurrentOption();
+};
 
-    if (lastTypedChar !== typedChar) {
+const moveFocusUp = () => {
+  if (currentOptionIndex > 0) {
+    currentOptionIndex--;
+  } else {
+    currentOptionIndex = elements.options.length - 1;
+  }
+  focusCurrentOption();
+};
+
+const focusCurrentOption = () => {
+  const currentOption = elements.options[currentOptionIndex];
+  // const optionLabel = currentOption.textContent;
+
+  currentOption.focus();
+
+  currentOption.scrollIntoView({
+    block: 'nearest',
+  });
+
+  // elements.options.forEach((option, index) => {
+  //   if (option !== currentOption) {
+  //     option.classList.remove('current');
+  //   }
+  // });
+};
+
+const selectCurrentOption = () => {
+  const selectedOption = elements.options[currentOptionIndex];
+  selectOptionByElement(selectedOption);
+};
+
+const selectOptionByElement = optionElement => {
+  const optionValue = optionElement.textContent;
+  const optionElementClassArray = [optionElement.classList[0], optionElement.classList[1]];
+  const optionElementCategoryTitle = optionElement.children[0].innerText.replace(/\n/g, '');
+  const optionElementCategoryInfo = optionElement.children[1].innerText.replace(/\n/g, '');
+
+  // Resets dropdownToggleContainer to empty class
+  document
+    .getElementById('dropdownToggleContainer')
+    .classList.remove('mustFix', 'goodToFix', 'needsReview');
+
+  optionElementClassArray.forEach(className => {
+    document.getElementById('dropdownToggleContainer').classList.add(className);
+  });
+
+  document.getElementById('dropdownToggleCategoryTitle').innerText = optionElementCategoryTitle;
+  document.getElementById('dropdownToggleCategoryInfo').innerText = optionElementCategoryInfo;
+
+  // Dynamically update dropdownIssueOccurrences
+  const dropdownIssueOccurrencesString = document
+    .getElementById(optionElement.classList[0] + 'Selector')
+    .lastElementChild.innerText.replace(/\n/g, '');
+  document.getElementById('dropdownIssuesOccurrences').innerText = dropdownIssueOccurrencesString;
+
+  // elements.button.textContent = optionValue;
+  elements.options.forEach(option => {
+    option.setAttribute('aria-selected', 'false');
+  });
+
+  optionElement.setAttribute('aria-selected', 'true');
+
+  toggleAllyDropdown();
+
+  // Get categorySelector selected category
+  const sharedCategory = optionElement.classList[0];
+
+  // Update tooltip
+  const svgElement = document.getElementById('categorySelectorDropdownToolipDescription');
+  svgElement.setAttribute('title', scanItems[sharedCategory].description);
+  const tooltip = new bootstrap.Tooltip(svgElement);
+  tooltip.update();
+
+  // Ensures categorySelector on desktop view matches with dropdown and load rules summary again
+  const matchingButtonId = sharedCategory + 'Selector';
+  document.getElementById(matchingButtonId).click();
+  loadRulesSummary(sharedCategory, searchInput);
+};
+
+const handleAlphanumericKeyPress = key => {
+  const typedChar = key.toLowerCase();
+
+  if (lastTypedChar !== typedChar) {
+    lastMatchingIndex = 0;
+  }
+
+  const matchingOptions = Array.from(elements.options).filter(option =>
+    option.textContent.toLowerCase().startsWith(typedChar),
+  );
+
+  if (matchingOptions.length) {
+    if (lastMatchingIndex === matchingOptions.length) {
       lastMatchingIndex = 0;
     }
+    let value = matchingOptions[lastMatchingIndex];
+    const index = Array.from(elements.options).indexOf(value);
+    currentOptionIndex = index;
+    focusCurrentOption();
+    lastMatchingIndex += 1;
+  }
+  lastTypedChar = typedChar;
+};
 
-    const matchingOptions = Array.from(elements.options).filter(option =>
-      option.textContent.toLowerCase().startsWith(typedChar),
-    );
+elements.wrapper.addEventListener('keydown', handleKeyPress);
+document.addEventListener('click', handleDocumentInteraction);
 
-    if (matchingOptions.length) {
-      if (lastMatchingIndex === matchingOptions.length) {
-        lastMatchingIndex = 0;
-      }
-      let value = matchingOptions[lastMatchingIndex];
-      const index = Array.from(elements.options).indexOf(value);
-      currentOptionIndex = index;
-      focusCurrentOption();
-      lastMatchingIndex += 1;
-    }
-    lastTypedChar = typedChar;
-  };
-
-  const announceOption = text => {
-    elements.announcement.textContent = text;
-    elements.announcement.setAttribute('aria-live', 'assertive');
-    setTimeout(() => {
-      elements.announcement.textContent = '';
-      elements.announcement.setAttribute('aria-live', 'off');
-    }, 1000);
-  };
-
-  elements.button.addEventListener('keydown', handleKeyPress);
-  document.addEventListener('click', handleDocumentInteraction);
-  window.addEventListener('resize', updateDropdownPosition);
 </script>
 <!-- END: Script categorySelectorDropdown -->
 
@@ -16232,8 +16299,8 @@
 <script>
   window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('mustFixSelector').click();
-    document.getElementById('issueDescriptionsButton').click();
-    document.getElementById('mustFixDropdownSelector').click();
+    // document.getElementById('issueDescriptionsButton').click();
+    // document.getElementById('mustFixDropdownSelector').click();
   });
 
   const changeSelectedCategory = (() => {
@@ -16251,7 +16318,7 @@
 
       // Ensures <category>DropdownSelector on mobile view matches
       const matchingDropdownId = category + 'DropdownSelector';
-      document.getElementById(matchingDropdownId).click(), toggleAllyDropdown();
+      document.getElementById(matchingDropdownId).click();
       loadRulesSummary(category, searchInput);
     };
   })();
@@ -16981,265 +17048,246 @@
 </script>
     <!-- search feat changes -->
     <!-- reportSearch.ejs script -->
-<script>
-  let searchInput = '';
-  let currentlyClickedButton = null;
-
-  function handleFilterMouseOver(button) {
-    if (button != currentlyClickedButton) {
-      button.style.background = '#f2f6ff';
-      button.style.border = '1px solid #0047fa';
-    }
-  }
-
-  function handleFilterMouseOut(button) {
-    if (button != currentlyClickedButton) {
-      button.style.background = '#FFF';
-      button.style.border = '1px solid var(--A11Y-Grey-400, #B5C5CA)';
-    }
-  }
-
-
-  function showFilter() {
-    let searchFilterGroup = document.getElementById('searchFilter');
-    let searchBarInput = document.getElementById('searchBarInput');
-
-    if (searchFilterGroup) {
-      if (searchFilterGroup.classList.contains('d-none')) {
-        searchFilterGroup.classList.remove('d-none');
-        searchFilterGroup.classList.add('search-filter-on');
-        searchBarInput.classList.add('rounded-bottom-0');
-      }
-
-    }
-  }
-
-  function hideFilter() {
-    let searchFilterGroup = document.getElementById('searchFilter');
-    let searchBarInput = document.getElementById('searchBarInput');
-    if (
-      document.getElementById('searchBarInput').value === '' &&
-      searchFilterGroup.classList.contains('search-filter-on')
-    ) {
-      searchFilterGroup.classList.remove('search-filter-on');
-      searchFilterGroup.classList.add('d-none');
-      searchBarInput.classList.remove('rounded-bottom-0')
-    }
-  }
-
-  document.addEventListener('click', function (event) {
-    let searchBarDiv = document.getElementById('searchBar');
-    let searchFilterDiv = document.getElementById('searchFilter');
-    if (!searchBarDiv.contains(event.target) && !searchFilterDiv.contains(event.target)) {
-      hideFilter();
-    }
-  });
-
-  document.getElementById('issueDescriptionsButton').addEventListener('click', function () {
-    currentlyClickedButton = this;
-    searchInput = document.getElementById('searchBarInput').value;
-    loadRulesSummary(currentCategory, searchInput);
-  });
-
-  document.getElementById('pagesButton').addEventListener('click', function () {
-    currentlyClickedButton = this;
-    searchInput = document.getElementById('searchBarInput').value;
-    loadRulesSummary(currentCategory, searchInput);
-  });
-
-  document.getElementById('htmlButton').addEventListener('click', function () {
-    currentlyClickedButton = this;
-    searchInput = document.getElementById('searchBarInput').value;
-    loadRulesSummary(currentCategory, searchInput);
-  });
-
-  document.getElementById('searchBarInput').addEventListener('input', function (event) {
-    searchInput = event.target.value;
-    loadRulesSummary(currentCategory, searchInput);
-  });
-
-  // for filtering search
-
-  function handleSearch(category, searchVal, filteredItems) {
-    let normalizedSearchVal = searchVal.trim().toLowerCase();
-    let isExactSearch =
-      (normalizedSearchVal.startsWith('"') && normalizedSearchVal.endsWith('"')) ||
-      (normalizedSearchVal.startsWith("'") && normalizedSearchVal.endsWith("'"));
-
-    if (currentlyClickedButton.id === 'issueDescriptionsButton') {
-      searchIssueDescription(category, filteredItems, isExactSearch, normalizedSearchVal);
-    } else if (currentlyClickedButton.id === 'pagesButton') {
-      searchPages(category, filteredItems, isExactSearch, normalizedSearchVal);
-    } else if (currentlyClickedButton.id === 'htmlButton') {
-      searchHtml(category, filteredItems, isExactSearch, normalizedSearchVal);
-    }
-    updateIssueOccurence(category, filteredItems);
-  }
-
-  function searchIssueDescription(category, filteredItems, isExactSearch, normalizedSearchVal) {
-    filteredItems[category].rules = filteredItems[category].rules.filter(item => {
-      let normalizedDescription = item.description.toLowerCase();
-      return isExactSearch
-        ? normalizedDescription === normalizedSearchVal.slice(1, -1)
-        : normalizedDescription.includes(normalizedSearchVal);
-    });
-  }
-
-  function searchPages(category, filteredItems, isExactSearch, normalizedSearchVal) {
-    // Filter pagesAffected array to only include pages with URLs that match the searchTerm
-    filteredItems[category].rules = filteredItems[category].rules
-      .map(item => {
-        if (Array.isArray(item.pagesAffected)) {
-          item.pagesAffected = item.pagesAffected.filter(page => {
-            let normalizedPageUrl = page.url.toLowerCase();
-            return isExactSearch
-              ? normalizedPageUrl === normalizedSearchVal.slice(1, -1)
-              : normalizedPageUrl.includes(normalizedSearchVal);
-          });
-          item.totalItems = item.pagesAffected.reduce(
-            (sum, page) => sum + (Array.isArray(page.items) ? page.items.length : 0),
-            0,
-          );
-        } else {
-          item.pagesAffected = [];
-          item.totalItems = 0;
+    <script>
+      let searchInput = '';
+      let currentlyClickedButton = null;
+    
+      function handleFilterMouseOver(button) {
+        if (button != currentlyClickedButton) {
+          button.style.background = '#f2f6ff';
+          button.style.border = '1px solid #0047fa';
         }
-        return item;
-      })
-      .filter(item => item.pagesAffected.length > 0);
-    // Update the totalItems value for the category
-    filteredItems[category].totalItems = filteredItems[category].rules.reduce(
-      (sum, rule) => sum + rule.totalItems,
-      0,
-    );
-  }
-
-  function searchHtml(category, filteredItems, isExactSearch, normalizedSearchVal) {
-    normalizedSearchVal = normalizedSearchVal.replace(/\s+/g, '');
-    filteredItems[category].rules.forEach(item => {
-      if (Array.isArray(item.pagesAffected)) {
-        item.pagesAffected.forEach(page => {
-          // Update items array to only include items with xpath or html starting with searchVal
-          page.items = Array.isArray(page.items)
-            ? page.items.filter(item => {
-                let normalizedHtml = item.html.replace(/\s+/g, '').toLowerCase();
-                let normalizedXpath = item.xpath.replace(/\s+/g, '').toLowerCase();
-                let filterHtml;
-                if (isExactSearch) {
-                  filterHtml =
-                    normalizedXpath === normalizedSearchVal.slice(1, -1) ||
-                    normalizedHtml === normalizedSearchVal.slice(1, -1);
-                } else {
-                  filterHtml =
-                    normalizedXpath.includes(normalizedSearchVal) ||
-                    normalizedHtml.includes(normalizedSearchVal);
-                }
-                return filterHtml;
-              })
-            : [];
+      }
+    
+      function handleFilterMouseOut(button) {
+        if (button != currentlyClickedButton) {
+          button.style.background = '#FFF';
+          button.style.border = '1px solid var(--A11Y-Grey-400, #B5C5CA)';
+        }
+      }
+    
+      function showFilter() {
+        let searchFilterGroup = document.getElementById('searchFilter');
+        let searchBarInput = document.getElementById('searchBarInput');
+    
+        if (searchFilterGroup) {
+          if (searchFilterGroup.classList.contains('d-none')) {
+            searchFilterGroup.classList.remove('d-none');
+            searchFilterGroup.classList.add('search-filter-on');
+            searchBarInput.classList.add('rounded-bottom-0');
+          }
+        }
+      }
+    
+      function hideFilter() {
+        let searchFilterGroup = document.getElementById('searchFilter');
+        let searchBarInput = document.getElementById('searchBarInput');
+        if (
+          document.getElementById('searchBarInput').value === '' &&
+          searchFilterGroup.classList.contains('search-filter-on')
+        ) {
+          searchFilterGroup.classList.remove('search-filter-on');
+          searchFilterGroup.classList.add('d-none');
+          searchBarInput.classList.remove('rounded-bottom-0');
+        }
+      }
+    
+      document.addEventListener('click', function (event) {
+        let searchBarDiv = document.getElementById('searchBar');
+        let searchFilterDiv = document.getElementById('searchFilter');
+        if (!searchBarDiv.contains(event.target) && !searchFilterDiv.contains(event.target)) {
+          hideFilter();
+        }
+      });
+    
+      document.getElementById('issueDescriptionsButton').addEventListener('click', function () {
+        currentlyClickedButton = this;
+        searchInput = document.getElementById('searchBarInput').value;
+        loadRulesSummary(currentCategory, searchInput);
+      });
+    
+      document.getElementById('pagesButton').addEventListener('click', function () {
+        currentlyClickedButton = this;
+        searchInput = document.getElementById('searchBarInput').value;
+        loadRulesSummary(currentCategory, searchInput);
+      });
+    
+      document.getElementById('htmlButton').addEventListener('click', function () {
+        currentlyClickedButton = this;
+        searchInput = document.getElementById('searchBarInput').value;
+        loadRulesSummary(currentCategory, searchInput);
+      });
+    
+      document.getElementById('searchBarInput').addEventListener('input', function (event) {
+        searchInput = event.target.value;
+        loadRulesSummary(currentCategory, searchInput);
+      });
+    
+      // for filtering search
+    
+      function handleSearch(category, searchVal, filteredItems) {
+        let normalizedSearchVal = searchVal.trim().toLowerCase();
+        let isExactSearch =
+          (normalizedSearchVal.startsWith('"') && normalizedSearchVal.endsWith('"')) ||
+          (normalizedSearchVal.startsWith("'") && normalizedSearchVal.endsWith("'"));
+    
+        if (currentlyClickedButton.id === 'issueDescriptionsButton') {
+          searchIssueDescription(category, filteredItems, isExactSearch, normalizedSearchVal);
+        } else if (currentlyClickedButton.id === 'pagesButton') {
+          searchPages(category, filteredItems, isExactSearch, normalizedSearchVal);
+        } else if (currentlyClickedButton.id === 'htmlButton') {
+          searchHtml(category, filteredItems, isExactSearch, normalizedSearchVal);
+        }
+        updateIssueOccurence(category, filteredItems);
+      }
+    
+      function searchIssueDescription(category, filteredItems, isExactSearch, normalizedSearchVal) {
+        filteredItems[category].rules = filteredItems[category].rules.filter(item => {
+          let normalizedDescription = item.description.toLowerCase();
+          return isExactSearch
+            ? normalizedDescription === normalizedSearchVal.slice(1, -1)
+            : normalizedDescription.includes(normalizedSearchVal);
         });
-        // Update totalItems to be the sum of the number of elements in the items array
-        item.totalItems = item.pagesAffected.reduce(
-          (sum, page) => sum + (Array.isArray(page.items) ? page.items.length : 0),
+      }
+    
+      function searchPages(category, filteredItems, isExactSearch, normalizedSearchVal) {
+        // Filter pagesAffected array to only include pages with URLs that match the searchTerm
+        filteredItems[category].rules = filteredItems[category].rules
+          .map(item => {
+            if (Array.isArray(item.pagesAffected)) {
+              item.pagesAffected = item.pagesAffected.filter(page => {
+                let normalizedPageUrl = page.url.toLowerCase();
+                return isExactSearch
+                  ? normalizedPageUrl === normalizedSearchVal.slice(1, -1)
+                  : normalizedPageUrl.includes(normalizedSearchVal);
+              });
+              item.totalItems = item.pagesAffected.reduce(
+                (sum, page) => sum + (Array.isArray(page.items) ? page.items.length : 0),
+                0,
+              );
+            } else {
+              item.pagesAffected = [];
+              item.totalItems = 0;
+            }
+            return item;
+          })
+          .filter(item => item.pagesAffected.length > 0);
+        // Update the totalItems value for the category
+        filteredItems[category].totalItems = filteredItems[category].rules.reduce(
+          (sum, rule) => sum + rule.totalItems,
           0,
         );
       }
-    });
-    filteredItems[category].rules = filteredItems[category].rules.filter(
-      rule => rule.totalItems > 0,
-    );
-    // Update the totalItems value for the category
-    filteredItems[category].totalItems = filteredItems[category].rules.reduce(
-      (sum, rule) => sum + rule.totalItems,
-      0,
-    );
-  }
-
-  function updateIssueOccurence(category, filteredItems) {
-    //update no. of issues/occurances for each category
-    let rules = filteredItems[category].rules;
-    let totalItemsSum = rules.reduce((sum, rule) => sum + rule.totalItems, 0);
-    filteredItems[category].totalItems = totalItemsSum;
-    let updatedIssueOccurence = '';
-    if (category !== 'passed' && filteredItems[category].totalItems !== 0) {
-      updatedIssueOccurence = `<strong style="color: #0047FA;">${filteredItems[category].rules.length}</strong>&nbspissues&nbsp/&nbsp<strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong>&nbspoccurrences`;
-    } else if (category !== 'passed' && filteredItems[category].totalItems === 0) {
-      updatedIssueOccurence = `<strong style="color: #0047FA;">0</strong>&nbspissues`;
-    } else {
-      updatedIssueOccurence = `<strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong>&nbspoccurrences`;
-    }
-    if (category !== 'passed') {
-      document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurence;
-      
-      document.getElementById(`${category}ListboxItemsInformation`).innerText = document.getElementById(`${category}ItemsInformation`).innerText.split('/')[0].trim()
-
-      if (document.getElementById('dropdownToggleContainer').classList.contains(`${category}`)){
-        document.getElementById('dropdownIssuesOccurrences').innerHTML = updatedIssueOccurence;
-        document.getElementById('dropdownToggleCategoryInfo').innerHTML = `(${document.getElementById('dropdownIssuesOccurrences').children[0].innerHTML}&nbspissues)`;
-        document.getElementById(`${category}ItemsInformation`).classList.contains('list-box-issues').innerText = `(${document.getElementById('dropdownIssuesOccurrences').children[0].innerHTML}&nbspissues)`; 
+    
+      function searchHtml(category, filteredItems, isExactSearch, normalizedSearchVal) {
+        normalizedSearchVal = normalizedSearchVal.replace(/\s+/g, '');
+        filteredItems[category].rules.forEach(item => {
+          if (Array.isArray(item.pagesAffected)) {
+            item.pagesAffected.forEach(page => {
+              // Update items array to only include items with xpath or html starting with searchVal
+              page.items = Array.isArray(page.items)
+                ? page.items.filter(item => {
+                    let normalizedHtml = item.html.replace(/\s+/g, '').toLowerCase();
+                    let normalizedXpath = item.xpath.replace(/\s+/g, '').toLowerCase();
+                    let filterHtml;
+                    if (isExactSearch) {
+                      filterHtml =
+                        normalizedXpath === normalizedSearchVal.slice(1, -1) ||
+                        normalizedHtml === normalizedSearchVal.slice(1, -1);
+                    } else {
+                      filterHtml =
+                        normalizedXpath.includes(normalizedSearchVal) ||
+                        normalizedHtml.includes(normalizedSearchVal);
+                    }
+                    return filterHtml;
+                  })
+                : [];
+            });
+            // Update totalItems to be the sum of the number of elements in the items array
+            item.totalItems = item.pagesAffected.reduce(
+              (sum, page) => sum + (Array.isArray(page.items) ? page.items.length : 0),
+              0,
+            );
+          }
+        });
+        filteredItems[category].rules = filteredItems[category].rules.filter(
+          rule => rule.totalItems > 0,
+        );
+        // Update the totalItems value for the category
+        filteredItems[category].totalItems = filteredItems[category].rules.reduce(
+          (sum, rule) => sum + rule.totalItems,
+          0,
+        );
       }
-    } 
-  }
-
-  function resetIssueOccurence(category, filteredItems) {
-    for (let category in filteredItems) {
-      let updatedIssueOccurence = '';
-      if (category !== 'passed' && filteredItems[category].totalItems !== 0) {
-        updatedIssueOccurence = `${filteredItems[category].rules.length}&nbspissues&nbsp/&nbsp${filteredItems[category].totalItems}&nbspoccurrences`;
-      } else if (category !== 'passed' && filteredItems[category].totalItems === 0) {
-        updatedIssueOccurence = `0 issues`;
-      } else {
-        updatedIssueOccurence = `${filteredItems[category].totalItems}&nbspoccurrences`;
+    
+      function updateIssueOccurence(category, filteredItems) {
+        //update no. of issues/occurances for each category
+        let rules = filteredItems[category].rules;
+        let totalItemsSum = rules.reduce((sum, rule) => sum + rule.totalItems, 0);
+        filteredItems[category].totalItems = totalItemsSum;
+        let updatedIssueOccurence = '';
+        if (category !== 'passed' && filteredItems[category].totalItems !== 0) {
+          updatedIssueOccurence = `<strong style="color: #0047FA;">${filteredItems[category].rules.length}</strong> issues / <strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong> occurrences`;
+        } else if (category !== 'passed' && filteredItems[category].totalItems === 0) {
+          updatedIssueOccurence = `<strong style="color: #0047FA;">0</strong> issues`;
+        } else {
+          updatedIssueOccurence = `<strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong> occurrences`;
+        }
+        if (category !== 'passed')
+          document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurence;
       }
-      if (category !== 'passed'){
-        document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurence;
-
-        document.getElementById(`${category}ListboxItemsInformation`).innerText = document.getElementById(`${category}ItemsInformation`).innerText.split('/')[0].trim()
-
-        if (document.getElementById('dropdownToggleContainer').classList.contains(`${category}`))
-        {
-          document.getElementById('dropdownIssuesOccurrences').innerHTML = updatedIssueOccurence;
-          const getInnerText = document.getElementById('dropdownIssuesOccurrences').innerText;
-          const reducedInnerText = getInnerText.substring(0, getInnerText.indexOf("/"))
-          document.getElementById('dropdownToggleCategoryInfo').innerText = `(${reducedInnerText.trim()})` 
+    
+      function resetIssueOccurence(category, filteredItems) {
+        for (let category in filteredItems) {
+          let updatedIssueOccurence = '';
+          if (category !== 'passed' && filteredItems[category].totalItems !== 0) {
+            updatedIssueOccurence = `${filteredItems[category].rules.length} issues / ${filteredItems[category].totalItems} occurrences`;
+          } else if (category !== 'passed' && filteredItems[category].totalItems === 0) {
+            updatedIssueOccurence = `0 issues`;
+          } else {
+            updatedIssueOccurence = `${filteredItems[category].totalItems} occurrences`;
+          }
+          if (category !== 'passed')
+            document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurence;
         }
       }
-    }
-  }
-
-  function OffCanvasSearchWarning() {
-    let expandedRuleSearchWarning = document.getElementById('expandedRuleSearchWarning');
-    // Check if the element exists and has child elements
-    if (expandedRuleSearchWarning && expandedRuleSearchWarning.hasChildNodes()) {
-      // Remove all child elements
-      while (expandedRuleSearchWarning.firstChild) {
-        expandedRuleSearchWarning.removeChild(expandedRuleSearchWarning.firstChild);
+    
+      function OffCanvasSearchWarning() {
+        let expandedRuleSearchWarning = document.getElementById('expandedRuleSearchWarning');
+        // Check if the element exists and has child elements
+        if (expandedRuleSearchWarning && expandedRuleSearchWarning.hasChildNodes()) {
+          // Remove all child elements
+          while (expandedRuleSearchWarning.firstChild) {
+            expandedRuleSearchWarning.removeChild(expandedRuleSearchWarning.firstChild);
+          }
+        }
+        if (searchInput) {
+          let warningDiv = document.createElement('div');
+          warningDiv.id = 'search warning';
+          warningDiv.className = 'alert alert-primary text-sm-center search-warning';
+          let warningStart = document.createTextNode(
+            'The list below has been filtered according to the search term "',
+          );
+          let textSearchInput = document.createElement('strong');
+          textSearchInput.textContent = searchInput.trim();
+          let inWord = document.createTextNode('" in ');
+          let filterCategory = document.createElement('strong');
+          filterCategory.textContent = document
+            .querySelector(`label[for="${currentlyClickedButton.id}"]`)
+            .textContent.trim();
+          let fullStop = document.createTextNode('.');
+          // Append the text nodes and elements to the span element
+          warningDiv.innerHTML = '';
+          warningDiv.appendChild(warningStart);
+          warningDiv.appendChild(textSearchInput);
+          warningDiv.appendChild(inWord);
+          warningDiv.appendChild(filterCategory);
+          warningDiv.appendChild(fullStop);
+          document.getElementById('expandedRuleSearchWarning').appendChild(warningDiv);
+        }
       }
-    }
-    if (searchInput) {
-      let warningDiv = document.createElement('div');
-      warningDiv.id = 'search warning';
-      warningDiv.className = 'alert alert-primary text-sm-center search-warning';
-      let warningStart = document.createTextNode(
-        'The list below has been filtered according to the search term "',
-      );
-      let textSearchInput = document.createElement('strong');
-      textSearchInput.textContent = searchInput.trim();
-      let inWord = document.createTextNode('" in ');
-      let filterCategory = document.createElement('strong');
-      filterCategory.textContent = document.querySelector(`label[for="${currentlyClickedButton.id}"]`).textContent.trim();
-      let fullStop = document.createTextNode(".");
-      // Append the text nodes and elements to the span element
-      warningDiv.innerHTML = '';
-      warningDiv.appendChild(warningStart);
-      warningDiv.appendChild(textSearchInput);
-      warningDiv.appendChild(inWord);
-      warningDiv.appendChild(filterCategory);
-      warningDiv.appendChild(fullStop);
-      document.getElementById('expandedRuleSearchWarning').appendChild(warningDiv);
-    }
-  }
-</script>
+    </script>
+    
 
     <script>
       function initTooltips() {
