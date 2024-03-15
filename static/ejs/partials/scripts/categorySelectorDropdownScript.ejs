@@ -185,15 +185,6 @@ accessibility %>
     lastTypedChar = typedChar;
   };
 
-  const announceOption = text => {
-    elements.announcement.textContent = text;
-    elements.announcement.setAttribute('aria-live', 'assertive');
-    setTimeout(() => {
-      elements.announcement.textContent = '';
-      elements.announcement.setAttribute('aria-live', 'off');
-    }, 1000);
-  };
-
   elements.button.addEventListener('keydown', handleKeyPress);
   document.addEventListener('click', handleDocumentInteraction);
   window.addEventListener('resize', updateDropdownPosition);
