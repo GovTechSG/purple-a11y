@@ -86,21 +86,19 @@ const moveFocusUp = () => {
 
 const focusCurrentOption = () => {
   const currentOption = elements.options[currentOptionIndex];
-  const optionLabel = currentOption.textContent;
+  // const optionLabel = currentOption.textContent;
 
-  currentOption.classList.add('current');
   currentOption.focus();
 
   currentOption.scrollIntoView({
     block: 'nearest',
   });
 
-  elements.options.forEach((option, index) => {
-    if (option !== currentOption) {
-      option.classList.remove('current');
-    }
-  });
-  announceOption(`You're currently focused on ${optionLabel}`);
+  // elements.options.forEach((option, index) => {
+  //   if (option !== currentOption) {
+  //     option.classList.remove('current');
+  //   }
+  // });
 };
 
 const selectCurrentOption = () => {
