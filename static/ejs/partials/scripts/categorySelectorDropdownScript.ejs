@@ -14,11 +14,6 @@ accessibility %>
   let lastTypedChar = '';
   let lastMatchingIndex = 0;
 
-  const updateDropdownPosition = () => {
-    const buttonHeight = elements.button.offsetHeight;
-    elements.dropdown.style.top = `calc(${buttonHeight}px)`;
-  };
-
   const toggleAllyDropdown = () => {
     elements.dropdown.classList.toggle('active');
     isDropdownOpen = !isDropdownOpen;
