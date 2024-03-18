@@ -531,8 +531,13 @@ export const generateArtifacts = async (
       ]
     }
 
-    process.send(JSON.stringify(scanDataMessage));
-    process.send(JSON.stringify(scanSummaryMessage));
+    try {
+      process.send(JSON.stringify(scanDataMessage));
+      process.send(JSON.stringify(scanSummaryMessage));
+      
+    } catch (error) {
+      console.log('Scan Summary: ',scanData);
+}
   }
 
   await writeResults(allIssues, storagePath);
