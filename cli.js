@@ -418,12 +418,14 @@ scanInit(options).then(async storagePath => {
         );
       }
 
-      if (process.env.PURPLE_A11Y_VERBOSE && process.env.REPORT_BREAKDOWN != '1') {
+      if (process.send && process.env.PURPLE_A11Y_VERBOSE && process.env.REPORT_BREAKDOWN != '1') {
         let zipFileNameMessage = {
           type: 'zipFileName',
           payload: `${constants.cliZipFileName}`
         }
+
         process.send(JSON.stringify(zipFileNameMessage));
+       
       }
       
 
