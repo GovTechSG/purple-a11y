@@ -536,7 +536,7 @@ export const generateArtifacts = async (
       process.send(JSON.stringify(scanSummaryMessage));
       
     } catch (error) {
-      console.log('Scan Data:',scanData);
+      console.log('Scan Summary: ',scanData);
 }
   }
 
