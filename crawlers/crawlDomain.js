@@ -80,7 +80,8 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
    * First time scan with original `url` containing credentials is strictly to authenticate for browser session
    * subsequent URLs are without credentials.
    */
-
+  
+  url = encodeURI(url);
   
   if (basicAuthRegex.test(url)) {
     isBasicAuth = true;
@@ -110,6 +111,7 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
           // playwright headless mode does not support navigation to pdf document
           req.skipNavigation = true;
         }
+        req.url = encodeURI(req.url)
         return req;
       },
     });
@@ -208,6 +210,7 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
             // playwright headless mode does not support navigation to pdf document
             req.skipNavigation = true;
           }
+          req.url = encodeURI(req.url)
           return req;
         },
       })

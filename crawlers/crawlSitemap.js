@@ -72,17 +72,19 @@ const crawlSitemap = async (
    * subsequent URLs are without credentials.
    * basicAuthPage is set to -1 for basic auth URL to ensure it is not counted towards maxRequestsPerCrawl
   */
- 
- if (basicAuthRegex.test(sitemapUrl)) {
-   isBasicAuth = true;
-   // request to basic auth URL to authenticate for browser session
-   finalLinks.push(new Request({ url: sitemapUrl, uniqueKey: `auth:${sitemapUrl}` }));
-   const finalUrl = `${sitemapUrl.split('://')[0]}://${sitemapUrl.split('@')[1]}`;
-   
-   // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
-   finalLinks.push(new Request({ url: finalUrl }));
-   basicAuthPage = -2;
-  } 
+
+  sitemapUrl = encodeURI(sitemapUrl)
+    
+  if (basicAuthRegex.test(sitemapUrl)) {
+    isBasicAuth = true;
+    // request to basic auth URL to authenticate for browser session
+    finalLinks.push(new Request({ url: sitemapUrl, uniqueKey: `auth:${sitemapUrl}` }));
+    const finalUrl = `${sitemapUrl.split('://')[0]}://${sitemapUrl.split('@')[1]}`;
+    
+    // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
+    finalLinks.push(new Request({ url: finalUrl }));
+    basicAuthPage = -2;
+    } 
   
   
   let pdfDownloads = [];
