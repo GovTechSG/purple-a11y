@@ -276,7 +276,7 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
       res.status = constants.urlCheckStatuses.success.code;
 
       let modifiedHTML = response.data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
-      const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?([^"]*)"/i.exec(
+      const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?(?:'([^']*)'|"([^"]*)")?/i.exec(
         modifiedHTML,
       );
       const hasMetaRefresh = metaRefreshMatch && metaRefreshMatch[1];
