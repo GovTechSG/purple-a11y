@@ -276,11 +276,9 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
       res.status = constants.urlCheckStatuses.success.code;
 
       let modifiedHTML = response.data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
-      // const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?(?:'([^']*)'|"([^"]*)")?/i.exec(
-      //   modifiedHTML,
-      // );
+
       const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?\s*url=(?:'([^']*)'|"([^"]*)"|([^>]*))"/i.exec(modifiedHTML);
-      //const hasMetaRefresh = metaRefreshMatch && metaRefreshMatch[1];
+
       const hasMetaRefresh = metaRefreshMatch && metaRefreshMatch.length > 1;
 
       if (redirectUrl != null && (hasMetaRefresh || !isNewCustomFlow)) {
@@ -290,7 +288,7 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
       }
 
       if (hasMetaRefresh) {
-        //const urlOrRelativePath = metaRefreshMatch[1];
+
         let urlOrRelativePath;
 
         for (let i = 1; i < metaRefreshMatch.length; i++) {
@@ -304,7 +302,6 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
           res.url = urlOrRelativePath.split('URL=').pop();
         } else {
           const pathname = res.url.substring(0, res.url.lastIndexOf('/'));
-          // res.url = urlOrRelativePath.replace('.', pathname);
           res.url = new URL(urlOrRelativePath, pathname).toString();
         }
       }
