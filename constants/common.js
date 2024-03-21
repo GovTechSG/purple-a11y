@@ -263,23 +263,23 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
   const res = {};
   await axios
     .get(url, {
-      headers: { 
+      headers: {
         ...extraHTTPHeaders,
         'User-Agent': devices['Desktop Chrome HiDPI'].userAgent,
         'Host': new URL(url).host
       },
       httpsAgent,
-      timeout: 2000,
+      timeout: 5000,
     })
     .then(async response => {
       const redirectUrl = response.request.res.responseUrl;
       res.status = constants.urlCheckStatuses.success.code;
 
       let modifiedHTML = response.data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
-      const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?(?:'([^']*)'|"([^"]*)")?/i.exec(
-        modifiedHTML,
-      );
-      const hasMetaRefresh = metaRefreshMatch && metaRefreshMatch[1];
+
+      const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?\s*url=(?:'([^']*)'|"([^"]*)"|([^>]*))"/i.exec(modifiedHTML);
+
+      const hasMetaRefresh = metaRefreshMatch && metaRefreshMatch.length > 1;
 
       if (redirectUrl != null && (hasMetaRefresh || !isNewCustomFlow)) {
         res.url = redirectUrl;
@@ -288,12 +288,21 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
       }
 
       if (hasMetaRefresh) {
-        const urlOrRelativePath = metaRefreshMatch[1];
+
+        let urlOrRelativePath;
+
+        for (let i = 1; i < metaRefreshMatch.length; i++) {
+          if (metaRefreshMatch[i] !== undefined && metaRefreshMatch[i] !== null) {
+            urlOrRelativePath = metaRefreshMatch[i];
+            break; // Stop the loop once the first non-null value is found
+          }
+        }
+
         if (urlOrRelativePath.includes('URL=')) {
           res.url = urlOrRelativePath.split('URL=').pop();
         } else {
           const pathname = res.url.substring(0, res.url.lastIndexOf('/'));
-          res.url = urlOrRelativePath.replace('.', pathname);
+          res.url = new URL(urlOrRelativePath, pathname).toString();
         }
       }
 
@@ -536,8 +545,8 @@ export const prepareData = async argv => {
   const domain = argv.isLocalSitemap ? 'custom' : new URL(argv.url).hostname;
   const sanitisedLabel = customFlowLabel ? `_${customFlowLabel.replaceAll(' ', '_')}` : '';
   let resultFilename;
-  const randomThreeDigitNumber =randomThreeDigitNumberString()
-  if (process.env.PURPLE_A11Y_VERBOSE){
+  const randomThreeDigitNumber = randomThreeDigitNumberString()
+  if (process.env.PURPLE_A11Y_VERBOSE) {
     resultFilename = `${date}_${time}${sanitisedLabel}_${domain}_${randomThreeDigitNumber}`;
   } else {
     resultFilename = `${date}_${time}${sanitisedLabel}_${domain}`;
@@ -545,7 +554,7 @@ export const prepareData = async argv => {
 
   if (followRobots) {
     constants.robotsTxtUrls = {};
-    await getUrlsFromRobotsTxt(url, browserToRun); 
+    await getUrlsFromRobotsTxt(url, browserToRun);
   }
 
   return {
@@ -575,47 +584,47 @@ export const prepareData = async argv => {
 };
 
 export const getUrlsFromRobotsTxt = async (url, browserToRun) => {
-  if (!constants.robotsTxtUrls) return; 
+  if (!constants.robotsTxtUrls) return;
 
   const domain = new URL(url).origin;
-  if (constants.robotsTxtUrls[domain]) return; 
+  if (constants.robotsTxtUrls[domain]) return;
   const robotsUrl = domain.concat('/robots.txt');
 
-  let robotsTxt; 
+  let robotsTxt;
   try {
     if (proxy) {
       robotsTxt = await getRobotsTxtViaPlaywright(robotsUrl, browserToRun);
     } else {
       robotsTxt = await getRobotsTxtViaAxios(robotsUrl);
     }
-  } catch(e) {
+  } catch (e) {
     silentLogger.info(e);
   }
 
   if (!robotsTxt) {
-    constants.robotsTxtUrls[domain] = {}; 
+    constants.robotsTxtUrls[domain] = {};
     return;
   }
-  
+
   console.log('Found robots.txt: ', robotsUrl);
-  
+
   const lines = robotsTxt.split(/\r?\n/);
   let shouldCapture = false;
-  let disallowedUrls = [], allowedUrls = []; 
+  let disallowedUrls = [], allowedUrls = [];
 
   const sanitisePattern = (pattern) => {
-    const directoryRegex = /^\/(?:[^?#/]+\/)*[^?#]*$/;  
-    const subdirWildcardRegex = /\/\*\//g;  
-    const filePathRegex =  /^\/(?:[^\/]+\/)*[^\/]+\.[a-zA-Z0-9]{1,6}$/
+    const directoryRegex = /^\/(?:[^?#/]+\/)*[^?#]*$/;
+    const subdirWildcardRegex = /\/\*\//g;
+    const filePathRegex = /^\/(?:[^\/]+\/)*[^\/]+\.[a-zA-Z0-9]{1,6}$/
 
     if (subdirWildcardRegex.test(pattern)) {
-      pattern = pattern.replace(subdirWildcardRegex, "/**/"); 
+      pattern = pattern.replace(subdirWildcardRegex, "/**/");
     }
     if (pattern.match(directoryRegex) && !pattern.match(filePathRegex)) {
       if (pattern.endsWith('*')) {
         pattern = pattern.concat('*');
       } else {
-        if (!pattern.endsWith('/')) pattern = pattern.concat('/'); 
+        if (!pattern.endsWith('/')) pattern = pattern.concat('/');
         pattern = pattern.concat('**');
       }
     }
@@ -629,25 +638,25 @@ export const getUrlsFromRobotsTxt = async (url, browserToRun) => {
     } else if (line.toLowerCase().startsWith('user-agent:') && shouldCapture) {
       break;
     } else if (shouldCapture && line.toLowerCase().startsWith('disallow:')) {
-      let disallowed = line.substring('disallow: '.length).trim(); 
+      let disallowed = line.substring('disallow: '.length).trim();
       if (disallowed) {
-        disallowed = sanitisePattern(disallowed); 
-        disallowedUrls.push(disallowed); 
+        disallowed = sanitisePattern(disallowed);
+        disallowedUrls.push(disallowed);
       }
     } else if (shouldCapture && line.toLowerCase().startsWith('allow:')) {
       let allowed = line.substring('allow: '.length).trim();
       if (allowed) {
-        allowed = sanitisePattern(allowed); 
+        allowed = sanitisePattern(allowed);
         allowedUrls.push(allowed);
       }
     }
   }
-  constants.robotsTxtUrls[domain] = { disallowedUrls, allowedUrls };  
+  constants.robotsTxtUrls[domain] = { disallowedUrls, allowedUrls };
 }
 
 const getRobotsTxtViaPlaywright = async (robotsUrl, browser) => {
   const browserContext = await constants.launcher.launchPersistentContext(
-    '', {...getPlaywrightLaunchOptions(browser)},
+    '', { ...getPlaywrightLaunchOptions(browser) },
   );
 
   const page = await browserContext.newPage();
@@ -669,25 +678,25 @@ const getRobotsTxtViaAxios = async (robotsUrl) => {
 }
 
 export const isDisallowedInRobotsTxt = (url) => {
-  if (!constants.robotsTxtUrls) return; 
+  if (!constants.robotsTxtUrls) return;
 
-  const domain = new URL(url).origin; 
+  const domain = new URL(url).origin;
   if (constants.robotsTxtUrls[domain]) {
-    const { disallowedUrls, allowedUrls } = constants.robotsTxtUrls[domain]; 
+    const { disallowedUrls, allowedUrls } = constants.robotsTxtUrls[domain];
 
     const isDisallowed = disallowedUrls.filter(disallowedUrl => {
-      const disallowed = minimatch(url, disallowedUrl); 
+      const disallowed = minimatch(url, disallowedUrl);
       return disallowed;
-    }).length > 0; 
+    }).length > 0;
 
-     const isAllowed = allowedUrls.filter(allowedUrl => {
-      const allowed = minimatch(url, allowedUrl); 
-      return allowed; 
-    }).length > 0; 
+    const isAllowed = allowedUrls.filter(allowedUrl => {
+      const allowed = minimatch(url, allowedUrl);
+      return allowed;
+    }).length > 0;
 
     return isDisallowed && !isAllowed;
   }
-  return false; 
+  return false;
 }
 
 export const getLinksFromSitemap = async (
@@ -705,7 +714,7 @@ export const getLinksFromSitemap = async (
 
   const addToUrlList = url => {
     if (!url) return;
-    if (isDisallowedInRobotsTxt(url)) return; 
+    if (isDisallowedInRobotsTxt(url)) return;
     const request = new Request({ url: encodeURI(url) });
     if (isUrlPdf(url)) {
       request.skipNavigation = true;
@@ -718,22 +727,22 @@ export const getLinksFromSitemap = async (
     const normalizedSitemapUrl = sitemapUrl.replace(/^(https?:\/\/)?(www\.)?/, '');
     const normalizedUserUrlInput = userUrlInput.replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/$/, ''); // Remove trailing slash also
 
-    if (normalizedSitemapUrl == normalizedUserUrlInput){
-        return 2;
-    }else if (normalizedSitemapUrl.startsWith(normalizedUserUrlInput)) {
-        return 1;
+    if (normalizedSitemapUrl == normalizedUserUrlInput) {
+      return 2;
+    } else if (normalizedSitemapUrl.startsWith(normalizedUserUrlInput)) {
+      return 1;
     } else {
-        return 0;
+      return 0;
     }
   }
-  const processXmlSitemap = async ($, sitemapType, linkSelector , dateSelector, sectionSelector) => {
+  const processXmlSitemap = async ($, sitemapType, linkSelector, dateSelector, sectionSelector) => {
     const urlList = [];
     // Iterate through each URL element in the sitemap, collect url and modified date
     $(sectionSelector).each((index, urlElement) => {
       let url;
       if (sitemapType === constants.xmlSitemapTypes.atom) {
         url = $(urlElement).find(linkSelector).prop('href')
-      } else { 
+      } else {
         url = $(urlElement).find(linkSelector).text();
       }
       let lastModified = $(urlElement).find(dateSelector).text();
@@ -741,7 +750,7 @@ export const getLinksFromSitemap = async (
 
       urlList.push({ url, lastModifiedDate });
     });
-    if(isIntelligent){
+    if (isIntelligent) {
       // Sort by closeness to userUrlInput in descending order
       urlList.sort((a, b) => {
         const closenessA = calculateCloseness(a.url);
@@ -749,21 +758,21 @@ export const getLinksFromSitemap = async (
         if (closenessA !== closenessB) {
           return closenessB - closenessA;
         }
-      
+
         // If closeness is the same, sort by last modified date in descending order
         const dateDifference = (b.lastModifiedDate || 0) - (a.lastModifiedDate || 0);
         return dateDifference !== 0 ? dateDifference : 0; // Maintain original order for equal dates
       });
     }
-    
+
     // Add the sorted URLs to the main URL list
     for (const { url } of urlList.slice(0, maxLinksCount)) {
       addToUrlList(url);
     }
-  
-    
+
+
   };
-  
+
   const processNonStandardSitemap = data => {
 
     const urlsFromData = crawlee.extractUrls({ string: data, urlRegExp: new RegExp("^(http|https):/{2}.+$", "gmi") }).slice(0, maxLinksCount);
@@ -783,7 +792,7 @@ export const getLinksFromSitemap = async (
 
 
     const getDataUsingPlaywright = async () => {
-     const browserContext = await constants.launcher.launchPersistentContext(
+      const browserContext = await constants.launcher.launchPersistentContext(
         finalUserDataDirectory,
         {
           ...getPlaywrightLaunchOptions(browser),
@@ -855,7 +864,7 @@ export const getLinksFromSitemap = async (
     const root = $(':root')[0];
 
     const { xmlns } = root.attribs;
-    
+
     const xmlFormatNamespace = '/schemas/sitemap';
     if (root.name === 'urlset' && xmlns.includes(xmlFormatNamespace)) {
       sitemapType = constants.xmlSitemapTypes.xml;
@@ -868,7 +877,7 @@ export const getLinksFromSitemap = async (
     } else {
       sitemapType = constants.xmlSitemapTypes.unknown;
     }
-    
+
 
 
     switch (sitemapType) {
@@ -901,13 +910,13 @@ export const getLinksFromSitemap = async (
 
     }
   };
-  
+
   try {
     await fetchUrls(sitemapUrl);
   } catch (e) {
     silentLogger.error(e)
   }
-  
+
 
   const requestList = Object.values(urls);
 
@@ -1304,7 +1313,7 @@ export const deleteClonedProfiles = browser => {
  * @returns null
  */
 export const deleteClonedChromeProfiles = () => {
-  if(process.env.PURPLE_A11Y_VERBOSE){
+  if (process.env.PURPLE_A11Y_VERBOSE) {
     return;
   }
   const baseDir = getDefaultChromeDataDir();
@@ -1343,7 +1352,7 @@ export const deleteClonedChromeProfiles = () => {
  * @returns null
  */
 export const deleteClonedEdgeProfiles = () => {
-  if (process.env.PURPLE_A11Y_VERBOSE){
+  if (process.env.PURPLE_A11Y_VERBOSE) {
     return;
   }
   const baseDir = getDefaultEdgeDataDir();
