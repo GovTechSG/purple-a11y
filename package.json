@@ -1,7 +1,7 @@
 {
   "name": "@govtechsg/purple-hats",
   "main": "npmIndex.js",
-  "version": "0.9.47",
+  "version": "0.9.48",
   "type": "module",
   "imports": {
     "#root/*.js": "./*.js"
@@ -11,7 +11,7 @@
     "axe-core": "^4.8.2",
     "axios": "^1.6.2",
     "cheerio": "^1.0.0-rc.12",
-    "crawlee": "^3.6.2",
+    "crawlee": "^3.8.1",
     "ejs": "^3.1.9",
     "fs-extra": "^11.2.0",
     "glob": "^10.3.10",
@@ -20,7 +20,7 @@
     "lodash": "^4.17.21",
     "minimatch": "^9.0.3",
     "pdfjs-dist": "github:veraPDF/pdfjs-dist#v2.14.305-taggedPdf-0.1.11",
-    "playwright": "1.40.0",
+    "playwright": "1.42.1",
     "prettier": "^3.1.0",
     "print-message": "^3.0.1",
     "safe-regex": "^2.1.1",
