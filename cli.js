@@ -364,6 +364,16 @@ const scanInit = async argvs => {
 
   const data = await prepareData(argvs);
 
+  if (process.env.RUNNING_FROM_PH_GUI){
+    let randomTokenMessage = {
+      type: 'randomToken',
+      payload: `${data.randomToken}`
+    }
+    if (process.send){
+    process.send(JSON.stringify(randomTokenMessage));
+  }
+  }
+
   setHeadlessMode(data.browser, data.isHeadless);
 
   const screenToScan = getScreenToScan(argvs.deviceChosen, argvs.customDevice, argvs.viewportWidth);

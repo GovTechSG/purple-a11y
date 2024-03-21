@@ -263,7 +263,7 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
         };
       }
 
-      if (category !== 'passed') {
+      if (category !== 'passed' && category!== 'needsReview') {
         conformance
           .filter(c => /wcag[0-9]{3,4}/.test(c))
           .forEach(c => allIssues.wcagViolations.add(c));
@@ -490,7 +490,6 @@ export const generateArtifacts = async (
       "endTime": formatDateTimeForMassScanner(scanDetails? getFormattedTime(scanDetails.endTime):getFormattedTime()),
       "pagesScanned": allIssues.pagesScanned.length,
       "wcagPassPercentage": allIssues.wcagPassPercentage,
-      "wcagViolations": allIssues.wcagViolations,
       "critical": axeImpactCount.critical,
       "serious": axeImpactCount.serious,
       "moderate": axeImpactCount.moderate,
@@ -531,13 +530,12 @@ export const generateArtifacts = async (
       ]
     }
 
-    try {
+    if (process.send){
       process.send(JSON.stringify(scanDataMessage));
       process.send(JSON.stringify(scanSummaryMessage));
-      
-    } catch (error) {
+    } else {
       console.log('Scan Summary: ',scanData);
-}
+    }
   }
 
   await writeResults(allIssues, storagePath);
