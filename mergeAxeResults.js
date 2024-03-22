@@ -438,10 +438,10 @@ export const generateArtifacts = async (
   printMessage([
     'Scan Summary',
     '',
-    `Must Fix: ${allIssues.items.mustFix.rules.length} issues / ${allIssues.items.mustFix.totalItems} occurrences`,
-    `Good to Fix: ${allIssues.items.goodToFix.rules.length} issues / ${allIssues.items.goodToFix.totalItems} occurrences`,
-    `Needs Review: ${allIssues.items.needsReview.rules.length} issues / ${allIssues.items.needsReview.totalItems} occurrences`,
-    `Passed: ${allIssues.items.passed.totalItems} occurrences`,
+    `Must Fix: ${allIssues.items.mustFix.rules.length} ${allIssues.items.mustFix.rules.length === 1 ? 'issue' : 'issues'} / ${allIssues.items.mustFix.totalItems} ${allIssues.items.mustFix.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
+    `Good to Fix: ${allIssues.items.goodToFix.rules.length} ${allIssues.items.goodToFix.rules.length === 1 ? 'issue' : 'issues'} / ${allIssues.items.goodToFix.totalItems} ${allIssues.items.goodToFix.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
+    `Needs Review: ${allIssues.items.needsReview.rules.length} ${allIssues.items.needsReview.rules.length === 1 ? 'issue' : 'issues'} / ${allIssues.items.needsReview.totalItems} ${allIssues.items.needsReview.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
+    `Passed: ${allIssues.items.passed.totalItems} ${allIssues.items.passed.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
   ]);
 
   // move screenshots folder to report folders
@@ -522,10 +522,10 @@ export const generateArtifacts = async (
     let scanSummaryMessage = {
       type: 'scanSummary',
       payload: [
-        `Must Fix: ${allIssues.items.mustFix.rules.length} issues / ${allIssues.items.mustFix.totalItems} occurrences`,
-        `Good to Fix: ${allIssues.items.goodToFix.rules.length} issues / ${allIssues.items.goodToFix.totalItems} occurrences`,
-        `Needs Review: ${allIssues.items.needsReview.rules.length} issues / ${allIssues.items.needsReview.totalItems} occurrences`,
-        `Passed: ${allIssues.items.passed.totalItems} occurrences`,
+        `Must Fix: ${allIssues.items.mustFix.rules.length} ${allIssues.items.mustFix.rules.length === 1 ? 'issue' : 'issues'} / ${allIssues.items.mustFix.totalItems} ${allIssues.items.mustFix.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
+        `Good to Fix: ${allIssues.items.goodToFix.rules.length} ${allIssues.items.goodToFix.rules.length === 1 ? 'issue' : 'issues'} / ${allIssues.items.goodToFix.totalItems} ${allIssues.items.goodToFix.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
+        `Needs Review: ${allIssues.items.needsReview.rules.length} ${allIssues.items.needsReview.rules.length === 1 ? 'issue' : 'issues'} / ${allIssues.items.needsReview.totalItems} ${allIssues.items.needsReview.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
+        `Passed: ${allIssues.items.passed.totalItems} ${allIssues.items.passed.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
         `Results directory: ${storagePath}`,
       ]
     }
