@@ -409,13 +409,13 @@ const scanInit = async argvs => {
 
 scanInit(options).then(async storagePath => {
   // Take option if set
-  if (typeof options.zip === 'string' && !options.zip.endsWith('.zip')) {
-    options.zip += '.zip';
-  }
-
-  if(typeof options.zip === 'string'){
+  if (typeof options.zip === 'string' {
     constants.cliZipFileName = options.zip;
-  } 
+    
+    if (!options.zip.endsWith('.zip')){
+    options.zip += '.zip';
+    }
+  }
 
   await fs
     .ensureDir(storagePath)
