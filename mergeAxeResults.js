@@ -263,9 +263,9 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
         };
       }
 
-      if (category !== 'passed' && category!== 'needsReview') {
+      if (!(category === 'passed' || category === 'needsReview')) {
         conformance
-          .filter(c => /wcag[0-9]{3,4}/.test(c))
+          .filter(c => /wcag[0-9]{3,4}/.test(c) || c === "best-practice")
           .forEach(c => allIssues.wcagViolations.add(c));
       }
 
