@@ -59,7 +59,7 @@ const combineRun = async (details, deviceToScan) => {
   }
 
   const scanDetails = {
-    startTime: new Date().getTime(),
+    startTime: new Date(),
     crawlType: type,
     requestUrl: finalUrl,
   };
@@ -144,7 +144,7 @@ const combineRun = async (details, deviceToScan) => {
       process.exit(1);
   }
 
-  scanDetails.endTime = new Date().getTime();
+  scanDetails.endTime = new Date();
   scanDetails.urlsCrawled = urlsCrawled;
   await createDetailsAndLogs(scanDetails, randomToken);
   if (scanDetails.urlsCrawled.scanned.length > 0) {

@@ -163,22 +163,23 @@ export const cleanUp = async pathToDelete => {
 //     hour12: true,
 //     hour: 'numeric',
 //     minute: '2-digit',
+//     timeZoneName: "shortOffset",
 //   });
 
 export const getWcagPassPercentage = (wcagViolations)=> {
   return parseFloat((Object.keys(constants.wcagLinks).length - wcagViolations.length) / Object.keys(constants.wcagLinks).length * 100).toFixed(2);
   }
 
-export const getFormattedTime = (timestamp) => {
-  if (timestamp) {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-GB', {
+export const getFormattedTime = (inputDate) => {
+  if (inputDate) {
+    return inputDate.toLocaleTimeString('en-GB', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour12: true,
       hour: 'numeric',
       minute: '2-digit',
+      timeZoneName: "shortOffset",
     });
   } else {
     return new Date().toLocaleTimeString('en-GB', {
@@ -188,6 +189,7 @@ export const getFormattedTime = (timestamp) => {
       hour12: true,
       hour: 'numeric',
       minute: '2-digit',
+      timeZoneName: "shortOffset",
     });
   }
 };

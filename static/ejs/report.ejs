@@ -52,7 +52,27 @@
           return tooltip;
         });
       }
-      document.addEventListener('DOMContentLoaded', initTooltips);
+
+      const initAboutStartTime = (() => {
+        const utcStartTimeString = document.getElementById('aboutStartTime').textContent;
+        const utcStartTimeDate = new Date(utcStartTimeString);
+        const viewerLocalStartTime = utcStartTimeDate.toLocaleTimeString('en-GB', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour12: true,
+          hour: 'numeric',
+          minute: '2-digit',
+          timeZoneName: "shortOffset",
+        });
+        document.getElementById('aboutStartTime').textContent = viewerLocalStartTime;
+      })
+
+      document.addEventListener('DOMContentLoaded', () => {
+        initTooltips();
+        initAboutStartTime();
+      });
+      
     </script>
     <!-- Checks if js runs -->
     <script>

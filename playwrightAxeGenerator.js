@@ -81,7 +81,7 @@ await cleanUp(${formatScriptStringVar(randomToken)});
 process.env.CRAWLEE_STORAGE_DIR = ${formatScriptStringVar(randomToken)};
 
 const scanDetails = {
-    startTime: new Date().getTime(),
+    startTime: new Date(),
     crawlType: 'Custom Flow',
     requestUrl: ${formatScriptStringVar(data.url)},
 };
@@ -422,7 +422,7 @@ const waitForCaptcha = async (page, captchaLocator) => {
         process.exit(1);
       }
         })().then(async (urlsCrawled) => {
-            scanDetails.endTime = new Date().getTime();
+            scanDetails.endTime = new Date();
             scanDetails.urlsCrawled = urlsCrawled;
             await createDetailsAndLogs(scanDetails, ${formatScriptStringVar(randomToken)});
             await createAndUpdateResultsFolders(${formatScriptStringVar(randomToken)});
