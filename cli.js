@@ -413,7 +413,7 @@ scanInit(options).then(async storagePath => {
     constants.cliZipFileName = options.zip;
     
     if (!options.zip.endsWith('.zip')){
-      options.zip += '.zip';
+      constants.cliZipFileName += '.zip';
     }
   }
 
