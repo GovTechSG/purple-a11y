@@ -16732,25 +16732,25 @@ const offCanvasComboboxElements = {
   options: document.querySelectorAll('[role="option"]'),
 };
 
-let isOffCanvasComboboxDropdownOpen = false;
+let isOffCanvasComboboxOpen = false;
 
 
-function toggleOffCanvasDropdown() {
+function toggleOffCanvasCombobox() {
   offCanvasComboboxElements.dropdown.classList.toggle('active');
-  isOffCanvasComboboxDropdownOpen = !isOffCanvasComboboxDropdownOpen;
-  offCanvasComboboxElements.button.setAttribute('aria-expanded', isOffCanvasComboboxDropdownOpen.toString());
+  isOffCanvasComboboxOpen = !isOffCanvasComboboxOpen;
+  offCanvasComboboxElements.button.setAttribute('aria-expanded', isOffCanvasComboboxOpen.toString());
 
-  if (isOffCanvasComboboxDropdownOpen) {
+  if (isOffCanvasComboboxOpen) {
     offCanvasComboboxElements.button.setAttribute('aria-activedescendant', 'expandedRuleIssueTypeListbox');
   }
 }
 
-const handleOffCanvasDropdownInteraction = event => {
+const handleOffCanvasComboboxInteraction = event => {
     const isClickInsideButton = offCanvasComboboxElements.button.contains(event.target);
     const isClickInsideDropdown = offCanvasComboboxElements.dropdown.contains(event.target);
 
-    if (isClickInsideButton || (!isClickInsideDropdown && isModalDropdownOpen)) {
-      toggleOffCanvasDropdown();
+    if (isClickInsideButton || (!isClickInsideDropdown && isOffCanvasComboboxOpen)) {
+      toggleOffCanvasCombobox();
     }
 
     const clickedOption = event.target.closest('[role="option"]');
@@ -16758,7 +16758,7 @@ const handleOffCanvasDropdownInteraction = event => {
       selectOptionByElement(clickedOption);
     }
   };
-  document.addEventListener('click', handleOffCanvasDropdownInteraction);
+  document.addEventListener('click', handleOffCanvasComboboxInteraction);
 </script>
 <!-- END Script expandedRuleDropdownCategorySelector -->
  
