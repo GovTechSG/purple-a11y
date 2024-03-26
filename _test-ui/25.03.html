@@ -16722,6 +16722,45 @@
   elements.wrapper.addEventListener('keydown', handleKeyPress);
   document.addEventListener('click', handleDocumentInteraction);
 </script>
+
+<!-- START Script expandedRuleDropdownCategorySelector -->
+<script>
+const offCanvasComboboxElements = {
+  button: document.getElementById('expandedRuleIssueTypeComboBox'),
+  wrapper: document.getElementById('expandedRuleIssueTypeComboBoxWrapper'),
+  dropdown: document.getElementById('expandedRuleIssueTypeListbox'),
+  options: document.querySelectorAll('[role="option"]'),
+};
+
+let isOffCanvasComboboxDropdownOpen = false;
+
+
+function toggleOffCanvasDropdown() {
+  offCanvasComboboxElements.dropdown.classList.toggle('active');
+  isOffCanvasComboboxDropdownOpen = !isOffCanvasComboboxDropdownOpen;
+  offCanvasComboboxElements.button.setAttribute('aria-expanded', isOffCanvasComboboxDropdownOpen.toString());
+
+  if (isOffCanvasComboboxDropdownOpen) {
+    offCanvasComboboxElements.button.setAttribute('aria-activedescendant', 'expandedRuleIssueTypeListbox');
+  }
+}
+
+const handleOffCanvasDropdownInteraction = event => {
+    const isClickInsideButton = offCanvasComboboxElements.button.contains(event.target);
+    const isClickInsideDropdown = offCanvasComboboxElements.dropdown.contains(event.target);
+
+    if (isClickInsideButton || (!isClickInsideDropdown && isModalDropdownOpen)) {
+      toggleOffCanvasDropdown();
+    }
+
+    const clickedOption = event.target.closest('[role="option"]');
+    if (clickedOption) {
+      selectOptionByElement(clickedOption);
+    }
+  };
+  document.addEventListener('click', handleOffCanvasDropdownInteraction);
+</script>
+<!-- END Script expandedRuleDropdownCategorySelector -->
  
 <script>
   window.addEventListener('DOMContentLoaded', () => {
