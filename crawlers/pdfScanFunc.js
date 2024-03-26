@@ -9,6 +9,7 @@ import os from 'os';
 import path from 'path';
 import { getPageFromContext } from '../screenshotFunc/pdfScreenshotFunc.js';
 import { ensureDirSync } from 'fs-extra';
+import { writeIntermediateUrlsCrawled } from '../utils.js';
 
 const require = createRequire(import.meta.url);
 
@@ -120,12 +121,14 @@ export const handlePdfDownload = (randomToken, pdfDownloads, request, sendReques
             urlScanned: request.url,
           });
           urlsCrawled.scanned.push({ url: trimmedUrl, pageTitle });
+          writeIntermediateUrlsCrawled(randomToken, "scanned", { url: trimmedUrl, pageTitle });
         } else {
           guiInfoLog(guiInfoStatusTypes.SKIPPED, {
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
           urlsCrawled.invalid.push(trimmedUrl);
+          writeIntermediateUrlsCrawled(randomToken, "invalid", trimmedUrl);
         }
         resolve();
       });

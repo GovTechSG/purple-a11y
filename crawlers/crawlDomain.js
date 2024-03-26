@@ -12,6 +12,7 @@ import constants, {
   basicAuthRegex,
   blackListedFileExtensions,
   guiInfoStatusTypes,
+  getIntermediateUrlsCrawledPath,
 } from '../constants/constants.js';
 import {
   getPlaywrightLaunchOptions,
@@ -20,9 +21,9 @@ import {
   isDisallowedInRobotsTxt,
   getUrlsFromRobotsTxt
 } from '../constants/common.js';
-import { areLinksEqual, isFollowStrategy } from '../utils.js';
+import { areLinksEqual, isFollowStrategy, writeIntermediateUrlsCrawled, mkdirIntermediateUrlsCrawled, readIntermediateUrlsCrawled } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
-import fs from 'fs';
+import fs from 'fs-extra';
 import { silentLogger, guiInfoLog } from '../logs.js';
 
 
@@ -49,13 +50,21 @@ const crawlDomain = async (
 let dataset;
 let urlsCrawled
 let requestQueue;
+const intermediateUrlsCrawledPath = getIntermediateUrlsCrawledPath(randomToken)
 
-if (fromCrawlIntelligentSitemap){
-  dataset=datasetFromIntelligent;
+if (fromCrawlIntelligentSitemap) {
+  dataset = datasetFromIntelligent;
   urlsCrawled = urlsCrawledFromIntelligent;
 } else {
   ({ dataset } = await createCrawleeSubFolders(randomToken));
-  urlsCrawled = { ...constants.urlsCrawledObj };
+
+  urlsCrawled = fs.existsSync(intermediateUrlsCrawledPath)
+    ? JSON.parse(await readIntermediateUrlsCrawled(randomToken))
+    : { ...constants.urlsCrawledObj };
+}
+
+if (process.env.PURPLE_A11Y_VERBOSE){
+  mkdirIntermediateUrlsCrawled(randomToken, urlsCrawled);
 }
 
 ({ requestQueue } = await createCrawleeSubFolders(randomToken));
@@ -277,6 +286,7 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
             urlScanned: request.url,
           });
           urlsCrawled.blacklisted.push(request.url);
+          writeIntermediateUrlsCrawled(randomToken, "blacklisted", request.url);
           return;
         }
         const { pdfFileName, trimmedUrl } = handlePdfDownload(
@@ -301,6 +311,7 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
           urlScanned: request.url,
         });
         urlsCrawled.blacklisted.push(request.url);
+        writeIntermediateUrlsCrawled(randomToken, "blacklisted", request.url);
         return;
       }
 
@@ -310,11 +321,13 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
           urlScanned: request.url,
         });
         urlsCrawled.blacklisted.push(request.url);
+        writeIntermediateUrlsCrawled(randomToken, "blacklisted", request.url);
         return;
       }
 
       if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
         urlsCrawled.userExcluded.push(request.url);
+        writeIntermediateUrlsCrawled(randomToken, "userExcluded", request.url);
         await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
         return;
       }
@@ -325,6 +338,7 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
           urlScanned: request.url,
         });
         urlsCrawled.forbidden.push({ url: request.url });
+        writeIntermediateUrlsCrawled(randomToken, "forbidden", { url: request.url });
         return;
       }
 
@@ -334,6 +348,7 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
           urlScanned: request.url,
         });
         urlsCrawled.invalid.push({ url: request.url });
+        writeIntermediateUrlsCrawled(randomToken, "invalid", { url: request.url });
         return;
       }
 
@@ -352,6 +367,10 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
                 fromUrl: request.url,
                 toUrl: request.loadedUrl, // i.e. actualUrl
               });
+              writeIntermediateUrlsCrawled(randomToken, "notScannedRedirects", {
+                fromUrl: request.url,
+                toUrl: request.loadedUrl, 
+              });
               return;
             }
 
@@ -366,6 +385,10 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
                 urlsCrawled.notScannedRedirects.push({
                   fromUrl: request.url,
                   toUrl: request.loadedUrl, // i.e. actualUrl
+                });
+                writeIntermediateUrlsCrawled(randomToken, "notScannedRedirects", {
+                  fromUrl: request.url,
+                  toUrl: request.loadedUrl, 
                 });
                 return;
               }
@@ -382,10 +405,19 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
                   pageTitle: results.pageTitle,
                   actualUrl: request.loadedUrl, // i.e. actualUrl
                 });
+                writeIntermediateUrlsCrawled(randomToken, "scanned", {
+                  url: request.url,
+                  pageTitle: results.pageTitle,
+                  actualUrl: request.loadedUrl,
+                });
 
                 urlsCrawled.scannedRedirects.push({
                   fromUrl: request.url,
                   toUrl: request.loadedUrl, // i.e. actualUrl
+                });
+                writeIntermediateUrlsCrawled(randomToken, "scannedRedirects", {
+                  fromUrl: request.url,
+                  toUrl: request.loadedUrl,
                 });
 
                 results.url = request.url;
@@ -401,6 +433,7 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
                   urlScanned: request.url,
                 });
                 urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
+                writeIntermediateUrlsCrawled(randomToken, "scanned", { url: request.url, pageTitle: results.pageTitle });
                 await dataset.pushData(results);
               }
             }
@@ -411,6 +444,7 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
               urlScanned: request.url,
             });
             urlsCrawled.blacklisted.push(request.url);
+            writeIntermediateUrlsCrawled(randomToken, "blacklisted", request.url);
           }
 
           if (followRobots) await getUrlsFromRobotsTxt(request.url, browser);
@@ -435,6 +469,7 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
             }
           })
           urlsCrawled.error.push({ url: request.url });
+          writeIntermediateUrlsCrawled(randomToken, "error", { url: request.url });
         }
       }
     },
@@ -444,6 +479,7 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
         urlScanned: request.url,
       });
       urlsCrawled.error.push({ url: request.url });
+      writeIntermediateUrlsCrawled(randomToken, "error", { url: request.url });
       crawlee.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
     },
     maxRequestsPerCrawl: Infinity,

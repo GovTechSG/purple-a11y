@@ -1,7 +1,7 @@
 import { execFileSync, execSync } from 'child_process';
 import path from 'path';
 import os from 'os';
-import { destinationPath, getIntermediateScreenshotsPath } from './constants/constants.js';
+import { destinationPath, getIntermediateScreenshotsPath, getIntermediateUrlsCrawledPath } from './constants/constants.js';
 import fs from 'fs-extra';
 import constants from './constants/constants.js';
 
@@ -293,3 +293,53 @@ export const isFollowStrategy = (link1, link2, rule) =>{
     return parsedLink1.hostname === parsedLink2.hostname;
   }
 }
+
+
+export const writeIntermediateUrlsCrawled = async (randomToken, key, item) => {
+  if (!process.env.PURPLE_A11Y_VERBOSE) {
+    return;
+  }
+  try {
+    const intermediateUrlsCrawledPath = getIntermediateUrlsCrawledPath(randomToken);
+    const filePath = `${intermediateUrlsCrawledPath}/${key}.json`;
+    const newItem = JSON.stringify(item) + '\n';
+
+    await fs.promises.appendFile(filePath, newItem);
+  } catch (error) {
+    console.error('Error in writeIntermediateUrlsCrawled:', error);
+  }
+};
+
+export const mkdirIntermediateUrlsCrawled = async (randomToken, urlsCrawled) => {
+  const folderPath = getIntermediateUrlsCrawledPath(randomToken);
+  await fs.ensureDir(folderPath);
+  for (const key of Object.keys(urlsCrawled)) {
+    const filePath = path.join(folderPath, `${key}.json`);
+    await fs.ensureFile(filePath);
+  }
+};
+
+export const readIntermediateUrlsCrawled = async randomToken => {
+  const urlsCrawled = {};
+  const folderPath = getIntermediateUrlsCrawledPath(randomToken);
+  const files = await fs.readdir(folderPath);
+
+  for (const file of files) {
+    const key = path.basename(file, '.json');
+    const filePath = path.join(folderPath, file);
+    const data = await fs.readFile(filePath, 'utf-8');
+
+    urlsCrawled[key] = data
+      .split('\n')
+      .filter(item => item.trim() !== '')
+      .map(item => {
+        try {
+          return JSON.parse(item);
+        } catch (error) {
+          return item;
+        }
+      });
+  }
+
+  return JSON.stringify(urlsCrawled, null, 2);
+};
