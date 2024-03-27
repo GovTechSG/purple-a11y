@@ -15482,7 +15482,7 @@
     <!-- search feat changes -->
     <div id="expandedRuleSearchWarning"></div>
     <div id="expandedRuleInfoText"></div>
-    <nav class="visually-hidden" id="expandedRuleCategorySelectors" aria-label="Occurrence category"></nav>
+    <!-- <nav id="expandedRuleCategorySelectors" aria-label="Occurrence category"></nav> -->
     
     <!-- START expandedRuleDropdownCategorySelector-->
     <div class="d-flex d-md-none">
@@ -17017,22 +17017,34 @@ const handleOffCanvasComboboxInteraction = event => {
     // START search feat changes
     Object.keys(filteredItems).forEach(category => {
       const ruleInCategory = filteredItems[category].rules.find(r => r.rule === selectedRule.rule);
-    // END search feat changes
+    // END search feat changes    
+    
       if (ruleInCategory !== undefined && category !== 'passed') {
         if (category !== 'passed') {
           availableFixCategories.push(category);
         }
-        const element = createElementFromString(`
-          <button aria-label="${getFormattedCategoryTitle(category)}, ${
-          ruleInCategory.totalItems
-        } occurrences" class="category-selector ${category}">
-            <span class="d-flex align-items-center category-name">${getFormattedCategoryTitle(
-              category,
-            )}</span>
-            <span class="category-information">${ruleInCategory.totalItems} occurrences</span>
-          </button>
-        `);
-        element.addEventListener('click', event => {
+
+        // Create combobox option category selector based on available fix categories
+        const ruleOffCanvasComboboxOption = createElementFromString(`
+        <li
+            tabindex="-1"
+            id="${category}DropdownSelector"
+            class="${category} category-selector d-flex flex-row align-items-center gap-2 position-relative"
+            role="option"
+            >
+            <span
+                id="${category}Title"
+                class="d-flex align-items-center category-name fw-bold d-inline mb-0"
+            >
+            ${getFormattedCategoryTitle(category)}
+            </span>
+            <span id="${category}ItemsInformation" class="category-information">
+
+              (${ruleInCategory.totalItems} Occurrences)
+                
+                </span>
+            </li>`);
+        ruleOffCanvasComboboxOption.addEventListener('click', event => {
           selectedCategorySelectorSwitcher(event.currentTarget);
           const ruleInfoText = document.getElementById('expandedRuleInfoText');
           if (category === 'mustFix' && availableFixCategories.includes('goodToFix')) {
@@ -17051,14 +17063,51 @@ const handleOffCanvasComboboxInteraction = event => {
 
           buildExpandedRuleCategoryContent(category, ruleInCategory);
         });
+
+        // Create button category selector based on available fix categories
+        // const element = createElementFromString(`
+        //   <button aria-label="${getFormattedCategoryTitle(category)}, ${
+        //   ruleInCategory.totalItems
+        // } occurrences" class="category-selector ${category}">
+        //     <span class="d-flex align-items-center category-name">${getFormattedCategoryTitle(
+        //       category,
+        //     )}</span>
+        //     <span class="category-information">${ruleInCategory.totalItems} occurrences</span>
+        //   </button>
+        // `);
+        // element.addEventListener('click', event => {
+        //   selectedCategorySelectorSwitcher(event.currentTarget);
+        //   const ruleInfoText = document.getElementById('expandedRuleInfoText');
+        //   if (category === 'mustFix' && availableFixCategories.includes('goodToFix')) {
+        //     ruleInfoText.innerHTML =
+        //       '<p class="mb-4">There are also occurrences of this issue that falls under "Good to Fix”.</p>';
+        //   } else if (category === 'goodToFix' && availableFixCategories.includes('mustFix')) {
+        //     ruleInfoText.innerHTML =
+        //       '<p class="mb-4">There are also occurrences of this issue that falls under "Must Fix”.</p>';
+        //   } else if (category === 'passed' && availableFixCategories.length > 0) {
+        //     ruleInfoText.innerHTML = `<p class="mb-4">There are also occurrences of this issue that falls under ${availableFixCategories
+        //       .map(c => `"${getFormattedCategoryTitle(c)}"`)
+        //       .join(' and ')}.</p>`;
+        //   } else {
+        //     ruleInfoText.innerHTML = '';
+        //   }
+
+        //   buildExpandedRuleCategoryContent(category, ruleInCategory);
+        // });
+
+        // if (category === selectedCategory) {
+        //   element.click();
+        // }
+        // categorySelectors.push(element);
         if (category === selectedCategory) {
-          element.click();
+          ruleOffCanvasComboboxOption.click();
         }
-        categorySelectors.push(element);
+        categorySelectors.push(ruleOffCanvasComboboxOption);
       }
     });
 
-    document.getElementById('expandedRuleCategorySelectors').replaceChildren(...categorySelectors);
+    document.getElementById('expandedRuleIssueTypeListbox').replaceChildren(...categorySelectors);
+    // document.getElementById('expandedRuleCategorySelectors').replaceChildren(...categorySelectors);
   }
 
   function buildExpandedRuleCategoryContent(category, ruleInCategory) {
