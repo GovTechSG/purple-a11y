@@ -15504,7 +15504,7 @@
             <strong id="expandedRuleDropdownToggleCategoryTitle" class="category-name d-flex align-items-center"
               >Category Title</strong
             >
-            <span id="expandedRuleDropdownToggleCategoryInfo">(# issues)</span>
+            <span id="expandedRuleDropdownToggleCategoryInfo">(# occurrences)</span>
           </span>
         </div>
 
@@ -16951,6 +16951,10 @@ const handleOffCanvasComboboxInteraction = event => {
         }
         curCategorySelector.classList.add('selected');
         selected = curCategorySelector;
+
+        // Updates expandedRuleDropdownToggleContainer to match selected category
+        document.getElementById('expandedRuleDropdownToggleCategoryTitle').innerText = curCategorySelector.children[0].innerText.replace(/\n/g, '')
+        document.getElementById('expandedRuleDropdownToggleCategoryInfo').innerText = curCategorySelector.children[1].innerText.replace(/\n/g, '')
       };
       return changeSelected;
     })();
@@ -16969,7 +16973,7 @@ const handleOffCanvasComboboxInteraction = event => {
         const ruleOffCanvasComboboxOption = createElementFromString(`
         <li
             tabindex="-1"
-            id="${category}DropdownSelector"
+            id="${category}ExpandedRuleDropdownSelector"
             class="${category} category-selector d-flex flex-row align-items-center gap-2 position-relative"
             role="option"
             >
