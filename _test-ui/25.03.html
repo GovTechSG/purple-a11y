@@ -16953,6 +16953,7 @@ const handleOffCanvasComboboxInteraction = event => {
         selected = curCategorySelector;
 
         // Updates expandedRuleDropdownToggleContainer to match selected category
+        document.getElementById('expandedRuleDropdownToggleContainer').classList.add(curCategorySelector.classList[0]);
         document.getElementById('expandedRuleDropdownToggleCategoryTitle').innerText = curCategorySelector.children[0].innerText.replace(/\n/g, '')
         document.getElementById('expandedRuleDropdownToggleCategoryInfo').innerText = curCategorySelector.children[1].innerText.replace(/\n/g, '')
       };
