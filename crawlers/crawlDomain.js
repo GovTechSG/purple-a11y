@@ -253,34 +253,49 @@ const crawlDomain = async (
       enqueueLinksByClickingElements,
     }) => {
 
-      const blacklistedPatterns = getBlackListedPatterns();
+      const actualUrl = request.loadedUrl || request.url;
+
 
       function isExcluded(url) {
         // Check if any pattern matches the URL.
-        return blacklistedPatterns.some(pattern => {
-          // If using simple substring matching:
-          return url.includes(pattern);
-        });
+        const blacklistedPatterns = getBlackListedPatterns();
+        try {
+          const parsedUrl = new URL(url);
+          return blacklistedPatterns.some(pattern =>
+            new RegExp(pattern).test(parsedUrl.hostname) || new RegExp(pattern).test(url)
+          );
+        } catch (error) {
+          console.error(`Error parsing URL: ${url}`, error);
+          return false;
+        }
       }
-
-      // loadedUrl is the URL after redirects
-      const actualUrl = request.loadedUrl || request.url;
 
       if (isExcluded(actualUrl)) {
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
           numScanned: urlsCrawled.scanned.length,
           urlScanned: actualUrl,
         });
-        urlsCrawled.excluded.push(actualUrl); 
-        return; 
+        return;
+      }
+
+      // Ensure page navigation completes to capture final URL in a redirect chain
+      await page.goto(request.url, { waitUntil: 'networkidle' });
+
+      let finalUrl = page.url(); // Initialize with the request URL
+
+      if (isExcluded(finalUrl)) {
+        console.log(`Excluded URL (final/redirect): ${finalUrl}`);
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: finalUrl,
+        });
+        return; // Skip processing this URL
       }
 
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
         crawler.autoscaledPool.abort();
         return;
       }
-
-
 
       // if URL has already been scanned
       if (urlsCrawled.scanned.some(item => item.url === request.url)) {
