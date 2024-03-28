@@ -1306,7 +1306,7 @@ export const deleteClonedProfiles = (browser,randomToken) => {
     deleteClonedChromeProfiles(randomToken);
   } else if (browser === constants.browserTypes.edge) {
     deleteClonedEdgeProfiles(randomToken);
-  } else if (defaultScanDetails.browser === 'chromium') {
+  } else if (browser === constants.browserTypes.chromium) {
     deleteClonedChromiumProfiles(randomToken);
   }
 };
