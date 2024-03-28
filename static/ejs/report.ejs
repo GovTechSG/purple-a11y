@@ -66,6 +66,7 @@
           timeZoneName: 'longGeneric',
         });
 
+        //adding a breakline between the time and timezone so it looks neater on report
         const lastTimeIndex = viewerLocalStartTime.lastIndexOf(':');
         const timePart = viewerLocalStartTime.slice(0, lastTimeIndex + 3);
         const timeZonePart = viewerLocalStartTime.slice(lastTimeIndex + 3);
