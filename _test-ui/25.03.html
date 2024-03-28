@@ -16813,6 +16813,7 @@
  
 <!-- START Script ruleOffCanvas -->
 <script>
+  let isListenerAttached = false;
   function generateWcagConformanceLinks(conformanceList) {
     const wcagConformanceUrls = {
       wcag111: 'https://www.w3.org/TR/WCAG21/#non-text-content',
@@ -17031,11 +17032,6 @@ const offCanvasComboboxElements = {
   options: document.getElementById('expandedRuleIssueTypeListbox').querySelectorAll('[role="option"]'),
 };
 
-// console.log(offCanvasComboboxElements.button)
-// console.log(offCanvasComboboxElements.wrapper)
-// console.log(offCanvasComboboxElements.dropdown)
-//  console.log(offCanvasComboboxElements.options)
-
 let isOffCanvasComboboxOpen = false;
 
 function toggleOffCanvasCombobox() {
@@ -17054,7 +17050,6 @@ const handleOffCanvasComboboxInteraction = event => {
 
     if (isClickInsideButton || (!isClickInsideDropdown && isOffCanvasComboboxOpen)) {
       toggleOffCanvasCombobox();
-      // console.log('handleOffCanvasComboboxInteraction')
     }
 
     const clickedOffCanvasComboboxElement = event.target.closest('[role="option"]');
@@ -17069,9 +17064,14 @@ const handleOffCanvasComboboxInteraction = event => {
     }
 
   };
+
+  if (!isListenerAttached) {
   document.addEventListener('click', handleOffCanvasComboboxInteraction);
-// END Script expandedRuleDropdownCategorySelector
+  isListenerAttached = true;
+  console.log('isListenerAttached:', isListenerAttached);
   }
+}
+// END Script expandedRuleDropdownCategorySelector
 
   function buildExpandedRuleCategoryContent(category, ruleInCategory) {
     const contentContainer = document.getElementById('expandedRuleCategoryContent');
@@ -17453,7 +17453,7 @@ const handleOffCanvasComboboxInteraction = event => {
   };
 </script>
 
-    
+
 <script>
     const lightbox = document.getElementsByClassName('screenshot-lightbox')[0];
     const lightboxHeader = document.getElementsByClassName('lightbox-header')[0];
