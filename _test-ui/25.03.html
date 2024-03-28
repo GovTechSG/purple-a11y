@@ -16481,7 +16481,7 @@
     button: document.getElementById('issueTypeComboBox'),
     wrapper: document.getElementById('issueTypeComboBoxWrapper'),
     dropdown: document.getElementById('issueTypeListbox'),
-    options: document.querySelectorAll('[role="option"]'),
+    options: document.getElementById('issueTypeListbox').querySelectorAll('[role="option"]'),
   };
 
   let isDropdownOpen = false;
@@ -16542,7 +16542,13 @@
       toggleAllyDropdown();
     }
 
-    const clickedOption = event.target.closest('[role="option"]');
+    const clickedElement = event.target.closest('[role="option"]');
+
+    let clickedOption = null;
+    if (clickedElement && elements.dropdown.contains(clickedElement)) {
+      clickedOption = clickedElement;
+    }
+    
     if (clickedOption) {
       selectOptionByElement(clickedOption);
     }
@@ -16670,7 +16676,7 @@ const offCanvasComboboxElements = {
   button: document.getElementById('expandedRuleIssueTypeComboBox'),
   wrapper: document.getElementById('expandedRuleIssueTypeComboBoxWrapper'),
   dropdown: document.getElementById('expandedRuleIssueTypeListbox'),
-  options: document.querySelectorAll('[role="option"]'),
+  options: document.getElementById('issueTypeListbox').querySelectorAll('[role="option"]'),
 };
 
 let isOffCanvasComboboxOpen = false;
