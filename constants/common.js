@@ -20,6 +20,7 @@ import printMessage from 'print-message';
 import constants, {
   getDefaultChromeDataDir,
   getDefaultEdgeDataDir,
+  getDefaultChromiumDataDir,
   proxy,
   formDataFields,
 } from './constants.js';
@@ -1231,7 +1232,7 @@ export const cloneChromeProfiles = randomToken => {
   }
 
   if (fs.existsSync(destDir)) {
-    deleteClonedChromeProfiles();
+    process.env.PURPLE_A11Y_VERBOSE ? deleteClonedChromeProfiles(randomToken) : deleteClonedChromeProfiles();
   }
 
   if (!fs.existsSync(destDir)) {
@@ -1276,7 +1277,7 @@ export const cloneEdgeProfiles = randomToken => {
   }
 
   if (fs.existsSync(destDir)) {
-    deleteClonedEdgeProfiles();
+    process.env.PURPLE_A11Y_VERBOSE ? deleteClonedEdgeProfiles(randomToken) : deleteClonedEdgeProfiles();
   }
 
   if (!fs.existsSync(destDir)) {
@@ -1300,11 +1301,13 @@ export const cloneEdgeProfiles = randomToken => {
   return null;
 };
 
-export const deleteClonedProfiles = browser => {
+export const deleteClonedProfiles = (browser,randomToken) => {
   if (browser === constants.browserTypes.chrome) {
-    deleteClonedChromeProfiles();
+    deleteClonedChromeProfiles(randomToken);
   } else if (browser === constants.browserTypes.edge) {
-    deleteClonedEdgeProfiles();
+    deleteClonedEdgeProfiles(randomToken);
+  } else if (browser === constants.browserTypes.chromium) {
+    deleteClonedChromiumProfiles(randomToken);
   }
 };
 
@@ -1312,22 +1315,24 @@ export const deleteClonedProfiles = browser => {
  * Deletes all the cloned Purple-A11y directories in the Chrome data directory
  * @returns null
  */
-export const deleteClonedChromeProfiles = () => {
-  if (process.env.PURPLE_A11Y_VERBOSE) {
-    return;
-  }
+export const deleteClonedChromeProfiles = (randomToken) => {
+  
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
     return;
   }
-
-  // Find all the Purple-A11y directories in the Chrome data directory
-  const destDir = globSync('**/Purple-A11y*', {
-    cwd: baseDir,
-    recursive: true,
-    absolute: true,
-  });
+  let destDir
+  if (randomToken) {
+    destDir = [`${baseDir}/purple-a11y-${randomToken}`];
+  } else {
+    // Find all the Purple-A11y directories in the Chrome data directory
+    destDir = globSync("**/Purple-A11y*", {
+      cwd: baseDir,
+      recursive: true,
+      absolute: true,
+    });
+  }
 
   if (destDir.length > 0) {
     destDir.forEach(dir => {
@@ -1335,8 +1340,7 @@ export const deleteClonedChromeProfiles = () => {
         try {
           fs.rmSync(dir, { recursive: true });
         } catch (err) {
-          silentLogger.warn(`Unable to delete ${dir} folder in the Chrome data directory. ${err}`);
-          console.warn(`Unable to delete ${dir} folder in the Chrome data directory. ${err}}`);
+          silentLogger.error(`CHROME Unable to delete ${dir} folder in the Chrome data directory. ${err}`);
         }
       }
     });
@@ -1351,7 +1355,7 @@ export const deleteClonedChromeProfiles = () => {
  * Deletes all the cloned Purple-A11y directories in the Edge data directory
  * @returns null
  */
-export const deleteClonedEdgeProfiles = () => {
+export const deleteClonedEdgeProfiles = (randomToken) => {
   if (process.env.PURPLE_A11Y_VERBOSE) {
     return;
   }
@@ -1361,13 +1365,17 @@ export const deleteClonedEdgeProfiles = () => {
     console.warn(`Unable to find Edge data directory in the system.`);
     return;
   }
-
-  // Find all the Purple-A11y directories in the Chrome data directory
-  const destDir = globSync('**/Purple-A11y*', {
-    cwd: baseDir,
-    recursive: true,
-    absolute: true,
-  });
+  let destDir
+  if (randomToken) {
+    destDir = [`${baseDir}/purple-a11y-${randomToken}`];
+  } else {
+    // Find all the Purple-A11y directories in the Chrome data directory
+    destDir = globSync("**/Purple-A11y*", {
+      cwd: baseDir,
+      recursive: true,
+      absolute: true,
+    });
+  }
 
   if (destDir.length > 0) {
     destDir.forEach(dir => {
@@ -1375,12 +1383,48 @@ export const deleteClonedEdgeProfiles = () => {
         try {
           fs.rmSync(dir, { recursive: true });
         } catch (err) {
-          silentLogger.warn(`Unable to delete ${dir} folder in the Chrome data directory. ${err}`);
-          console.warn(`Unable to delete ${dir} folder in the Chrome data directory. ${err}}`);
+          silentLogger.error(`EDGE Unable to delete ${dir} folder in the Chrome data directory. ${err}`);
         }
       }
     });
+    return;
   }
+};
+
+export const deleteClonedChromiumProfiles = (randomToken) => {
+  
+  const baseDir = getDefaultChromiumDataDir();
+
+  if (!baseDir) {
+    return;
+  }
+  let destDir
+  if (randomToken) {
+    destDir = [`${baseDir}/purple-a11y-${randomToken}`];
+  } else {
+    // Find all the Purple-A11y directories in the Chrome data directory
+    destDir = globSync("**/Purple-A11y*", {
+      cwd: baseDir,
+      recursive: true,
+      absolute: true,
+    });
+  }
+
+  if (destDir.length > 0) {
+    destDir.forEach(dir => {
+      if (fs.existsSync(dir)) {
+        try {
+          fs.rmSync(dir, { recursive: true });
+        } catch (err) {
+          silentLogger.error(`CHROME Unable to delete ${dir} folder in the Chrome data directory. ${err}`);
+        }
+      }
+    });
+    return;
+  }
+
+  silentLogger.warn('Unable to find Purple-A11y directory in the Chrome data directory.');
+  console.warn('Unable to find Purple-A11y directory in the Chrome data directory.');
 };
 
 export const getPlaywrightDeviceDetailsObject = (deviceChosen, customDevice, viewportWidth) => {
@@ -1447,9 +1491,9 @@ export const submitFormViaPlaywright = async (browserToRun, userDataDirectory, f
   } finally {
     await browserContext.close();
     if (proxy && browserToRun === constants.browserTypes.edge) {
-      deleteClonedEdgeProfiles();
+      !process.env.PURPLE_A11Y_VERBOSE ? deleteClonedEdgeProfiles() : undefined;
     } else if (proxy && browserToRun === constants.browserTypes.chrome) {
-      deleteClonedChromeProfiles();
+      !process.env.PURPLE_A11Y_VERBOSE ? deleteClonedChromeProfiles() : undefined;
     }
   }
 };
