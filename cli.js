@@ -365,7 +365,7 @@ const scanInit = async argvs => {
 
   const data = await prepareData(argvs);
 
-  if (process.env.RUNNING_FROM_PH_GUI){
+  if (process.env.RUNNING_FROM_PH_GUI || process.env.PURPLE_A11Y_VERBOSE){
     let randomTokenMessage = {
       type: 'randomToken',
       payload: `${data.randomToken}`
