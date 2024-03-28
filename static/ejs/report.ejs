@@ -53,7 +53,7 @@
         });
       }
 
-      const initAboutStartTime = (() => {
+      const initAboutStartTime = () => {
         const utcStartTimeString = document.getElementById('aboutStartTime').textContent;
         const utcStartTimeDate = new Date(utcStartTimeString);
         const viewerLocalStartTime = utcStartTimeDate.toLocaleTimeString('en-GB', {
@@ -63,16 +63,21 @@
           hour12: false,
           hour: 'numeric',
           minute: '2-digit',
-          timeZoneName: "shortOffset",
+          timeZoneName: 'longGeneric',
         });
-        document.getElementById('aboutStartTime').textContent = viewerLocalStartTime;
-      })
+
+        const lastTimeIndex = viewerLocalStartTime.lastIndexOf(':');
+        const timePart = viewerLocalStartTime.slice(0, lastTimeIndex + 3);
+        const timeZonePart = viewerLocalStartTime.slice(lastTimeIndex + 3);
+        const viewerLocalStartTimeFormatted = `${timePart}<br>${timeZonePart}`;
+
+        document.getElementById('aboutStartTime').innerHTML = viewerLocalStartTimeFormatted;
+      };
 
       document.addEventListener('DOMContentLoaded', () => {
         initTooltips();
         initAboutStartTime();
       });
-      
     </script>
     <!-- Checks if js runs -->
     <script>

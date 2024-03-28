@@ -1,10 +1,11 @@
 import {createCrawleeSubFolders,} from './commonCrawlerFunc.js';
-import constants, { guiInfoStatusTypes, sitemapPaths} from '../constants/constants.js';
+import constants, { guiInfoStatusTypes, sitemapPaths, getIntermediateUrlsCrawledPath} from '../constants/constants.js';
 import fs from 'fs';
 import {silentLogger, guiInfoLog } from '../logs.js';
 import crawlDomain from './crawlDomain.js'
 import crawlSitemap from './crawlSitemap.js'
 import {chromium} from 'playwright';
+import { readIntermediateUrlsCrawled } from '../utils.js';
 
 
   const crawlIntelligentSitemap = async (
@@ -29,8 +30,12 @@ import {chromium} from 'playwright';
     let sitemapExist =false;
     const fromCrawlIntelligentSitemap = true;
     let sitemapUrl;
+    const intermediateUrlsCrawledPath = getIntermediateUrlsCrawledPath(randomToken)
     
-    urlsCrawled = { ...constants.urlsCrawledObj };
+    urlsCrawled = fs.existsSync(intermediateUrlsCrawledPath)
+      ? JSON.parse(await readIntermediateUrlsCrawled(randomToken))
+      : { ...constants.urlsCrawledObj };
+
     ({ dataset } = await createCrawleeSubFolders(randomToken));
 
     if (!fs.existsSync(randomToken)) {

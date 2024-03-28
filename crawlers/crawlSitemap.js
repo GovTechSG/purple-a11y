@@ -8,16 +8,16 @@ import {
   isUrlPdf,
 } from './commonCrawlerFunc.js';
 
-import constants, { guiInfoStatusTypes, basicAuthRegex } from '../constants/constants.js';
+import constants, { guiInfoStatusTypes, basicAuthRegex, getIntermediateUrlsCrawledPath } from '../constants/constants.js';
 import {
   getLinksFromSitemap,
   getPlaywrightLaunchOptions,
   messageOptions,
   isSkippedUrl,
 } from '../constants/common.js';
-import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
+import { areLinksEqual, isWhitelistedContentType, writeIntermediateUrlsCrawled, mkdirIntermediateUrlsCrawled, readIntermediateUrlsCrawled } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
-import fs from 'fs';
+import fs from 'fs-extra';
 import { guiInfoLog } from '../logs.js';
 
 const crawlSitemap = async (
@@ -39,10 +39,11 @@ const crawlSitemap = async (
   urlsCrawledFromIntelligent = null, //optional
   
 ) => {
+
   let dataset;
   let urlsCrawled;
   let linksFromSitemap
-
+  const intermediateUrlsCrawledPath = getIntermediateUrlsCrawledPath(randomToken)
   
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth;
@@ -55,12 +56,19 @@ const crawlSitemap = async (
     urlsCrawled = urlsCrawledFromIntelligent;
     
   } else {
-    ({ dataset } = await createCrawleeSubFolders(randomToken));
-    urlsCrawled = { ...constants.urlsCrawledObj };
+    ({ dataset } = await createCrawleeSubFolders(randomToken)); 
+
+    urlsCrawled = fs.existsSync(intermediateUrlsCrawledPath)
+      ? JSON.parse(await readIntermediateUrlsCrawled(randomToken))
+      : { ...constants.urlsCrawledObj };
     
     if (!fs.existsSync(randomToken)) {
       fs.mkdirSync(randomToken);
     }
+  }
+
+  if (process.env.PURPLE_A11Y_VERBOSE){
+    mkdirIntermediateUrlsCrawled(randomToken, urlsCrawled);
   }
 
   linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory, userUrlInputFromIntelligent, fromCrawlIntelligentSitemap)
@@ -101,10 +109,45 @@ const crawlSitemap = async (
 
   finalLinks = [...finalLinks, ...linksFromSitemap];
 
-  const requestList = new crawlee.RequestList({
-    sources: finalLinks,
-  });
-  await requestList.initialize();
+  async function cacheRequestListState(requestList) {
+    try {
+      let filePath = `${randomToken}/${constants.requestListIntermediateFileName}`;
+      let currentRequestListState = requestList.getState();
+      await fs.writeFileSync(filePath, JSON.stringify(currentRequestListState, null, 2));
+    } catch (error) {
+      silentLogger.error(`Error writing request list state to ${filePath}:`, error);
+    }
+  }
+  
+  async function getCachedRequestListState(stateKey) {
+    return new Promise(resolve => {
+      let stateFilePath = `${stateKey}/${constants.requestListIntermediateFileName}`;
+      if (!fs.existsSync(stateFilePath)) {
+        resolve(null);
+      } else {
+        const data = fs.readFileSync(stateFilePath, 'utf8');
+        const parsedData = JSON.parse(data);
+        resolve(parsedData);
+      }
+    });
+  }
+
+  let requestList;
+
+  // Check if stored request list state exists (for retry mechanism in verbose mode)
+  const cachedRequestListState = await getCachedRequestListState(randomToken);
+  if (cachedRequestListState) {
+    requestList = await crawlee.RequestList.open(randomToken, finalLinks, {state: cachedRequestListState});
+  } else {
+    requestList = await crawlee.RequestList.open(randomToken, finalLinks);
+  }
+
+
+  //old method below
+  // const requestList = new crawlee.RequestList({
+  //   sources: finalLinks,
+  // });
+  // await requestList.initialize();
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
 
 
@@ -131,10 +174,16 @@ const crawlSitemap = async (
     requestList,
     preNavigationHooks: preNavigationHooks(extraHTTPHeaders),
     requestHandler: async ({ page, request, response, sendRequest }) => {
+      process.env.PURPLE_A11Y_VERBOSE ? cacheRequestListState(requestList) : undefined;
       const actualUrl = request.loadedUrl || request.url;
 
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
         crawler.autoscaledPool.abort();
+        return;
+      }
+
+      // if URL has already been scanned
+      if (urlsCrawled.scanned.some(item => item.url === request.url)){
         return;
       }
 
@@ -145,6 +194,7 @@ const crawlSitemap = async (
             urlScanned: request.url,
           });
           urlsCrawled.blacklisted.push(request.url);
+          writeIntermediateUrlsCrawled(randomToken, "blacklisted", request.url);
           return;
         }
         // pushes download promise into pdfDownloads
@@ -165,6 +215,7 @@ const crawlSitemap = async (
 
       if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
         urlsCrawled.userExcluded.push(request.url);
+        writeIntermediateUrlsCrawled(randomToken, "userExcluded", request.url);
         return;
       }
 
@@ -174,6 +225,7 @@ const crawlSitemap = async (
           urlScanned: request.url,
         });
         urlsCrawled.forbidden.push({ url: request.url });
+        writeIntermediateUrlsCrawled(randomToken, "forbidden", { url: request.url });
         return;
       }
 
@@ -183,6 +235,7 @@ const crawlSitemap = async (
           urlScanned: request.url,
         });
         urlsCrawled.invalid.push(request.url);
+        writeIntermediateUrlsCrawled(randomToken, "invalid", request.url);
         return;
       }
 
@@ -207,6 +260,10 @@ const crawlSitemap = async (
                 fromUrl: request.url,
                 toUrl: request.loadedUrl, // i.e. actualUrl
               });
+              writeIntermediateUrlsCrawled(randomToken, "notScannedRedirects", {
+                fromUrl: request.url,
+                toUrl: request.loadedUrl,
+              });
               return;
             }
   
@@ -215,16 +272,26 @@ const crawlSitemap = async (
               pageTitle: results.pageTitle,
               actualUrl: request.loadedUrl, // i.e. actualUrl
             });
+            writeIntermediateUrlsCrawled(randomToken, "scanned", {
+              url: request.url,
+              pageTitle: results.pageTitle,
+              actualUrl: request.loadedUrl, 
+            });
   
             urlsCrawled.scannedRedirects.push({
               fromUrl: request.url,
               toUrl: request.loadedUrl, // i.e. actualUrl
+            });
+            writeIntermediateUrlsCrawled(randomToken, "scannedRedirects", {
+              fromUrl: request.url,
+              toUrl: request.loadedUrl, 
             });
   
             results.url = request.url;
             results.actualUrl = request.loadedUrl;
           } else {
             urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
+            writeIntermediateUrlsCrawled(randomToken, "scanned", { url: request.url, pageTitle: results.pageTitle });
           }
           await dataset.pushData(results);
         } else {
@@ -249,6 +316,7 @@ const crawlSitemap = async (
         urlScanned: request.url,
       });
       urlsCrawled.error.push({ url: request.url });
+      writeIntermediateUrlsCrawled(randomToken, "error", { url: request.url });
       crawlee.log.error(`Failed Request - ${request.url}: ${request.errorMessages}`);
     },
     maxRequestsPerCrawl: Infinity,

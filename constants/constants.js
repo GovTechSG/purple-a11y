@@ -371,6 +371,7 @@ export default {
   urlCheckStatuses,
   launcher: chromium,
   pdfScanResultFileName: 'pdf-scan-results.json',
+  requestListIntermediateFileName : 'requestListState.json',
   forbiddenCharactersInDirPath,
   reserveFileNameKeywords,
   wcagLinks,

@@ -546,7 +546,10 @@ export const prepareData = async argv => {
   const sanitisedLabel = customFlowLabel ? `_${customFlowLabel.replaceAll(' ', '_')}` : '';
   let resultFilename;
   const randomThreeDigitNumber = randomThreeDigitNumberString()
-  if (process.env.PURPLE_A11Y_VERBOSE) {
+  if (process.env.VERBOSE_RANDOM_TOKEN){
+    resultFilename = process.env.VERBOSE_RANDOM_TOKEN;
+  }
+  else if (process.env.PURPLE_A11Y_VERBOSE) {
     resultFilename = `${date}_${time}${sanitisedLabel}_${domain}_${randomThreeDigitNumber}`;
   } else {
     resultFilename = `${date}_${time}${sanitisedLabel}_${domain}`;

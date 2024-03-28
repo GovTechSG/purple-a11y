@@ -395,7 +395,7 @@ export const generateArtifacts = async (
       htmlETL: purpleAiHtmlETL,
       rules: purpleAiRules,
     },
-    startTime: scanDetails.startTime? getFormattedTime(scanDetails.startTime) : getFormattedTime(),
+    startTime: scanDetails.startTime? scanDetails.startTime : new Date(),
     urlScanned,
     scanType,
     isCustomFlow,
@@ -487,7 +487,7 @@ export const generateArtifacts = async (
     let scanData = {
       "url": allIssues.urlScanned,
       "startTime": formatDateTimeForMassScanner(allIssues.startTime),
-      "endTime": formatDateTimeForMassScanner(scanDetails? getFormattedTime(scanDetails.endTime):getFormattedTime()),
+      "endTime": formatDateTimeForMassScanner(scanDetails? scanDetails.endTime: new Date()),
       "pagesScanned": allIssues.pagesScanned.length,
       "wcagPassPercentage": allIssues.wcagPassPercentage,
       "critical": axeImpactCount.critical,
