@@ -122,11 +122,11 @@ category summary is clicked %>
         const element = createElementFromString(`
           <button aria-label="${getFormattedCategoryTitle(category)}, ${
           ruleInCategory.totalItems
-        } occurrences" class="category-selector ${category}">
+        } ${ruleInCategory.totalItems === 1 ? 'occurrence' : 'occurrences'}" class="category-selector ${category}">
             <span class="d-flex align-items-center category-name">${getFormattedCategoryTitle(
               category,
             )}</span>
-            <span class="category-information">${ruleInCategory.totalItems} occurrences</span>
+            <span class="category-information">${ruleInCategory.totalItems} ${ruleInCategory.totalItems === 1 ? 'occurrence' : 'occurrences'}</span>
           </button>
         `);
         element.addEventListener('click', event => {
@@ -186,7 +186,7 @@ category summary is clicked %>
             <div class="accordion-item">
               <div class="accordion-header" id="${accordionId}-title">
                 <button
-                  aria-label="Page ${index + 1}: ${page.pageTitle}, ${page.items.length} occurrences" class="accordion-button collapsed"
+                  aria-label="Page ${index + 1}: ${page.pageTitle}, ${page.items.length} ${page.items.length === 1 ? 'occurrence' : 'occurrences'}" class="accordion-button collapsed"
                   type="button"
                   data-bs-toggle="collapse"
                   data-bs-target="#${accordionId}-content"

@@ -2,7 +2,7 @@
 <script>
   window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('mustFixSelector').click();
-    // document.getElementById('issueDescriptionsButton').click();
+    document.getElementById('issueDescriptionsButton').click();
     // document.getElementById('mustFixDropdownSelector').click();
   });
 
@@ -34,7 +34,7 @@
         handleSearch(category, searchVal, filteredItems);
       }
     } else {
-      resetIssueOccurrence(category, filteredItems);
+      resetIssueOccurrence(filteredItems);
     }
 
     const formatItemsCount = count => {

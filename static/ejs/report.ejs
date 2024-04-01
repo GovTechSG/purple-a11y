@@ -28,7 +28,9 @@
               ...items.passed
             },
           }
-        ) %>
+        ) %>;
+
+      const startTime = <%- JSON.stringify(startTime) %>
     </script>
   </head>
 
@@ -52,7 +54,37 @@
           return tooltip;
         });
       }
-      document.addEventListener('DOMContentLoaded', initTooltips);
+      
+      const initAboutStartTime = () => {
+          const formattedViewerLocalStartTime = formatAboutStartTime(startTime)
+          document.getElementById('aboutStartTime').innerHTML = formattedViewerLocalStartTime;
+        };
+
+        const formatAboutStartTime = (dateString) => {
+          const utcStartTimeDate = new Date(dateString)
+          const formattedStartTime = utcStartTimeDate.toLocaleTimeString('en-GB', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour12: false,
+            hour: 'numeric',
+            minute: '2-digit',
+            timeZoneName: 'longGeneric',
+          });
+
+          //adding a breakline between the time and timezone so it looks neater on report
+          const lastTimeIndex = formattedStartTime.lastIndexOf(':');
+          const timePart = formattedStartTime.slice(0, lastTimeIndex + 3);
+          const timeZonePart = formattedStartTime.slice(lastTimeIndex + 3);
+          const htmlFormattedStartTime = `${timePart}<br>${timeZonePart}`;
+
+          return htmlFormattedStartTime
+        };
+
+      document.addEventListener('DOMContentLoaded', () => {
+        initTooltips();
+        initAboutStartTime();
+      });
     </script>
     <!-- Checks if js runs -->
     <script>

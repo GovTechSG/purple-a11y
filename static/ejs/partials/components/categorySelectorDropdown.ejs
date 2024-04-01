@@ -45,11 +45,11 @@
         </span>
         <span id="<%= category %>ItemsInformation" class="category-information">
             <% if (category !== 'passed' && items[category].totalItems !== 0) { %> 
-              (<%= items[category].rules.length %> issues) 
+              (<%= items[category].rules.length %> <%= items[category].rules.length === 1 ? 'issue' : 'issues' %>) 
             <% } else if (category !== 'passed' && items[category].totalItems === 0) { %>
               (0 issues)
             <% } else { %>
-              (<%= items[category].totalItems %> occurrences)
+              (<%= items[category].totalItems %> <%= items[category].totalItems === 1 ? 'occurrence' : 'occurrences' %>)
             <% } %>
           </span>
         </li>
