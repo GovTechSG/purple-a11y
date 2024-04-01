@@ -104,6 +104,38 @@ export const getDefaultEdgeDataDir = () => {
   }
 };
 
+export const getDefaultChromiumDataDir = () => {
+  try {
+    let defaultChromiumDataDir = null;
+    if (process.env.IS_DOCKER) {
+      
+      defaultChromiumDataDir = '/app/chromium_support_folder';
+    } else if (os.platform() === 'win32') {
+      defaultChromiumDataDir = path.join(
+        os.homedir(),
+        'AppData',
+        'Local',
+        'Chromium',
+        'User Data',
+      );
+    } else if (os.platform() === 'darwin') {
+      defaultChromiumDataDir = path.join(
+        os.homedir(),
+        'Library',
+        'Application Support',
+        'Chromium',
+      );
+    }
+    if (defaultChromiumDataDir && fs.existsSync(defaultChromiumDataDir)) {
+      return defaultChromiumDataDir;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    silentLogger.error(`Error in getDefaultChromiumDataDir(): ${error}`);
+  }
+};
+
 export const removeQuarantineFlag = function (searchPath) {
   if (os.platform() === 'darwin') {
     let execPaths = globSync(searchPath, { absolute: true, recursive: true, nodir: true });
