@@ -18,7 +18,8 @@ import {
   isBlacklistedFileExtensions,
   isSkippedUrl,
   isDisallowedInRobotsTxt,
-  getUrlsFromRobotsTxt
+  getUrlsFromRobotsTxt,
+  getBlackListedPatterns,
 } from '../constants/common.js';
 import { areLinksEqual, isFollowStrategy } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
@@ -46,30 +47,30 @@ const crawlDomain = async (
   urlsCrawledFromIntelligent = null, //optional
 
 ) => {
-let dataset;
-let urlsCrawled
-let requestQueue;
+  let dataset;
+  let urlsCrawled
+  let requestQueue;
 
-if (fromCrawlIntelligentSitemap){
-  dataset=datasetFromIntelligent;
-  urlsCrawled = urlsCrawledFromIntelligent;
-} else {
-  ({ dataset } = await createCrawleeSubFolders(randomToken));
-  urlsCrawled = { ...constants.urlsCrawledObj };
-}
+  if (fromCrawlIntelligentSitemap) {
+    dataset = datasetFromIntelligent;
+    urlsCrawled = urlsCrawledFromIntelligent;
+  } else {
+    ({ dataset } = await createCrawleeSubFolders(randomToken));
+    urlsCrawled = { ...constants.urlsCrawledObj };
+  }
 
-({ requestQueue } = await createCrawleeSubFolders(randomToken));
+  ({ requestQueue } = await createCrawleeSubFolders(randomToken));
 
-if (!fs.existsSync(randomToken)) {
-  fs.mkdirSync(randomToken);
-}
+  if (!fs.existsSync(randomToken)) {
+    fs.mkdirSync(randomToken);
+  }
 
-let pdfDownloads = [];
-let uuidToPdfMapping = {};
-const isScanHtml = ['all', 'html-only'].includes(fileTypes);
-const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
-const { maxConcurrency } = constants;
-const { playwrightDeviceDetailsObject } = viewportSettings;
+  let pdfDownloads = [];
+  let uuidToPdfMapping = {};
+  const isScanHtml = ['all', 'html-only'].includes(fileTypes);
+  const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
+  const { maxConcurrency } = constants;
+  const { playwrightDeviceDetailsObject } = viewportSettings;
   let finalUrl;
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth = false;
@@ -80,9 +81,9 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
    * First time scan with original `url` containing credentials is strictly to authenticate for browser session
    * subsequent URLs are without credentials.
    */
-  
+
   url = encodeURI(url);
-  
+
   if (basicAuthRegex.test(url)) {
     isBasicAuth = true;
     // request to basic auth URL to authenticate for browser session
@@ -103,9 +104,9 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
       strategy,
       requestQueue,
       transformRequestFunction(req) {
-        if (urlsCrawled.scanned.some(item => item.url === req.url)){
+        if (urlsCrawled.scanned.some(item => item.url === req.url)) {
           req.skipNavigation = true;
-        } 
+        }
         if (isDisallowedInRobotsTxt(req.url)) return null;
         if (isUrlPdf(req.url)) {
           // playwright headless mode does not support navigation to pdf document
@@ -201,9 +202,9 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
         // handle onclick
         selector: ':not(a):is([role="link"], button[onclick])',
         transformRequestFunction(req) {
-          if (urlsCrawled.scanned.some(item => item.url === req.url)){
+          if (urlsCrawled.scanned.some(item => item.url === req.url)) {
             req.skipNavigation = true;
-          }  
+          }
           if (isDisallowedInRobotsTxt(req.url)) return null;
           req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
           if (isUrlPdf(req.url) || urlsCrawled.scanned.some(item => item.url === req.url)) {
@@ -251,15 +252,53 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
       enqueueLinks,
       enqueueLinksByClickingElements,
     }) => {
-      // loadedUrl is the URL after redirects
+
       const actualUrl = request.loadedUrl || request.url;
+
+
+      function isExcluded(url) {
+        // Check if any pattern matches the URL.
+        const blacklistedPatterns = getBlackListedPatterns();
+        try {
+          const parsedUrl = new URL(url);
+          return blacklistedPatterns.some(pattern =>
+            new RegExp(pattern).test(parsedUrl.hostname) || new RegExp(pattern).test(url)
+          );
+        } catch (error) {
+          console.error(`Error parsing URL: ${url}`, error);
+          return false;
+        }
+      }
+
+      if (isExcluded(actualUrl)) {
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: actualUrl,
+        });
+        return;
+      }
+
+      // Ensure page navigation completes to capture final URL in a redirect chain
+      await page.goto(request.url, { waitUntil: 'networkidle' });
+
+      let finalUrl = page.url(); // Initialize with the request URL
+
+      if (isExcluded(finalUrl)) {
+        console.log(`Excluded URL (final/redirect): ${finalUrl}`);
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: finalUrl,
+        });
+        return; // Skip processing this URL
+      }
+
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
         crawler.autoscaledPool.abort();
         return;
       }
 
       // if URL has already been scanned
-      if (urlsCrawled.scanned.some(item => item.url === request.url)){
+      if (urlsCrawled.scanned.some(item => item.url === request.url)) {
         await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
         return;
       }
@@ -344,7 +383,7 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
           if (isScanHtml) {
             // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
             const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
-            
+
             // check if redirected link is following strategy (same-domain/same-hostname)
             const isLoadedUrlFollowStrategy = isFollowStrategy(request.loadedUrl, url, strategy);
             if (isRedirected && !isLoadedUrlFollowStrategy) {
@@ -376,7 +415,7 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
                   numScanned: urlsCrawled.scanned.length,
                   urlScanned: request.url,
                 });
-                
+
                 urlsCrawled.scanned.push({
                   url: request.url,
                   pageTitle: results.pageTitle,
@@ -454,7 +493,7 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
 
 
 
- 
+
   if (pdfDownloads.length > 0) {
     // wait for pdf downloads to complete
     await Promise.all(pdfDownloads);
@@ -476,7 +515,7 @@ const { playwrightDeviceDetailsObject } = viewportSettings;
     await Promise.all(pdfResults.map(result => dataset.pushData(result)));
   }
 
-  if (!fromCrawlIntelligentSitemap){
+  if (!fromCrawlIntelligentSitemap) {
     guiInfoLog(guiInfoStatusTypes.COMPLETED);
   }
 
