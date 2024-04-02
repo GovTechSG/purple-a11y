@@ -54,13 +54,17 @@ Please refer to [Troubleshooting section](#troubleshooting) for more information
 
 Purple A11y can perform the following to scan the target URL.
 
+- To run Purple A11y in terminal, run `node index`. Questions will be prompted to assist you in providing the right inputs.
 - Results will be compiled in JSON format, followed by generating a HTML report.
-- To start using Purple A11y, run `node index`. Questions will be prompted to assist you in providing the right inputs.
 
 > NOTE: For your initial scan, there may be some loading time required before use. Purple-A11y will also ask for your name and email address and collect your app usage data to personalise your experience. Your information fully complies with [GovTech’s Privacy Policy](https://www.tech.gov.sg/privacy/).
-> You may delete your cached name and e-mail address by running the following command to delete `userData.txt`:
+
+> You may delete your cached name and e-mail address by going to the location to `$HOME/Library/Application Support/Purple A11y` to either DELETE or EDIT the `userData.txt`:
 > - Windows (PowerShell): `rm "$env:APPDATA\Purple A11y\userData.txt"`
 > - MacOS (Terminal): `rm "$HOME/Library/Application Support/Purple A11y/userData.txt"`
+
+If `userData.txt` does not exists just run `node index`.
+
 
 ### Scan Selection
 
@@ -95,7 +99,7 @@ Headless mode would allow you to run the scan in the background. If you would li
 │ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
 ? What would you like to scan? Sitemap
-? Do you want purple-a11y to run in the background? (Y/n) Y
+? Do you want purple-a11y to run in the background? (Y/n) No
 ```
 
 ### Sitemap Scan
@@ -110,7 +114,7 @@ Headless mode would allow you to run the scan in the background. If you would li
 │ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
 ? What would you like to scan? Sitemap
-? Do you want purple-a11y to run in the background? Yes
+? Do you want purple-a11y to run in the background? No
 ? Which screen size would you like to scan? (Use arrow keys) Desktop
 ? Please enter URL or file path to sitemap, or drag and drop a sitemap file here:  https://www.sitemaps.org/sitemap.xml
 
@@ -292,12 +296,12 @@ Options:
                                      ss to restricted resources.        [string]
 
 Examples:
-  To scan sitemap of website:', 'node cli.js -c [ 1 | sitemap ] -u <url_link>
-  [ -d <device> | -w <viewport_width> ]
-  To scan a website', 'node cli.js -c [ 2 | website ] -u <url_link> [ -d <devi
-  ce> | -w <viewport_width> ]
-  To start a custom flow scan', 'node cli.js -c [ 3 | custom ] -u <url_link> [
-   -d <device> | -w <viewport_width> ]
+  To scan sitemap of website:', 'node cli.js -c 1 | sitemap -u <url_link>
+  -d <device> | -w <viewport_width> 
+  To scan a website', 'node cli.js -c 2 | website -u <url_link> -d <devi
+  ce> | -w <viewport_width> 
+  To start a custom flow scan', 'node cli.js -c 3 | custom  -u <url_link>
+   -d <device> | -w <viewport_width> 
 ```
 
 ### Device Options
@@ -432,18 +436,29 @@ For example, to conduct a website scan to the URL `http://localhost:8000` and wr
 node cli.js -c 2 -o a11y-scan-results.zip -u http://localhost:8000 -d 'iPad (gen 7) landscape'
 ```
 
+If the site you want to scan has a query string wrap the link in single quotes when entered into the CLI.
+
 For example, to conduct a website scan to the URL `http://localhost:8000` and write to `a11y-scan-results.zip` with a custom screen width `360`, run
 
 ```shell
-node cli.js -c 2 -o a11y-scan-results.zip -u http://localhost:8000 -w 360
+node cli.js -c 2 -o a11y-scan-results.zip -u `http://localhost:8000` -w 360
 ```
+
+## Report
+Once a scan of the site is completed. 
+
+A report will be downloaded into the ../Documents folder.
+
+An Address link to report is provided. Click on the link to access the location of the report. 
+
+You can also click on the view report button to see the Accessibility Scan Results.
 
 ## Accessibility Scan Results
 For details on which accessibility scan results trigger "Must Fix" / "Good to Fix" findings, you may refer to [Scan Issue Details](https://github.com/GovTechSG/purple-a11y/blob/master/DETAILS.md).
 
 ## Troubleshooting
 
-Please refer to the information below to exist in debugging. Most errors below are due to the switching between Node.js versions.
+Please refer to the information below to assist in debugging. Most errors below are due to the switching between Node.js versions.
 
 ### Incompatible Node.js versions
 
@@ -499,7 +514,9 @@ zsh: abort      node index.js
 
 **Limitation**: Due to animations causing elements to shift out of the viewport after an Axe scan, there's a risk of element screenshots timing out within 5 seconds if the element is not found. This known issue is particularly prevalent in scenarios like carousels with interval-based transitions.
 
-## How do I limit number of pages scanned?
+## FAQ 
+
+### How do I limit number of pages scanned?
 
 If you find a scan takes too long to complete due to large website, or there are too many pages in a sitemap to scan, you may choose to limit number of pages scanned.
 
