@@ -17030,12 +17030,13 @@ const offCanvasComboboxElements = {
   button: document.getElementById('expandedRuleIssueTypeComboBox'),
   wrapper: document.getElementById('expandedRuleIssueTypeComboBoxWrapper'),
   dropdown: document.getElementById('expandedRuleIssueTypeListbox'),
-  options: document.getElementById('expandedRuleIssueTypeListbox').querySelectorAll('[role="option"]'),
 };
 
 let isOffCanvasComboboxOpen = false;
+let options;
 
 function toggleOffCanvasCombobox() {
+  options = document.getElementById('expandedRuleIssueTypeListbox').querySelectorAll('[role="option"]'),
   offCanvasComboboxElements.dropdown.classList.toggle('active');
   isOffCanvasComboboxOpen = !isOffCanvasComboboxOpen;
   offCanvasComboboxElements.button.setAttribute('aria-expanded', isOffCanvasComboboxOpen.toString());
