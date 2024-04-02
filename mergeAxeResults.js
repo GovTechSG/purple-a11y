@@ -389,8 +389,8 @@ export const generateArtifacts = async (
   const storagePath = getStoragePath(randomToken);
   const directory = `${storagePath}/${constants.allIssueFileName}`;
 
-  const formatAboutStartTime = (dateString) => {
-    const utcStartTimeDate = new Date(dateString)
+  const formatAboutStartTime = dateString => {
+    const utcStartTimeDate = new Date(dateString);
     const formattedStartTime = utcStartTimeDate.toLocaleTimeString('en-GB', {
       year: 'numeric',
       month: 'short',
@@ -398,16 +398,22 @@ export const generateArtifacts = async (
       hour12: false,
       hour: 'numeric',
       minute: '2-digit',
-      timeZoneName: 'longGeneric',
+      timeZoneName: 'shortGeneric',
     });
 
-    //adding a breakline between the time and timezone so it looks neater on report
-    const lastTimeIndex = formattedStartTime.lastIndexOf(':');
-    const timePart = formattedStartTime.slice(0, lastTimeIndex + 3);
-    const timeZonePart = formattedStartTime.slice(lastTimeIndex + 3);
-    const htmlFormattedStartTime = `${timePart} \n${timeZonePart}`;
+    const timezoneAbbreviation = new Intl.DateTimeFormat('en', {
+      timeZoneName: 'shortOffset',
+    })
+      .formatToParts(utcStartTimeDate)
+      .find(part => part.type === 'timeZoneName').value;
 
-    return htmlFormattedStartTime
+    //adding a breakline between the time and timezone so it looks neater on report
+    const timeColonIndex = formattedStartTime.lastIndexOf(':');
+    const timePart = formattedStartTime.slice(0, timeColonIndex + 3);
+    const timeZonePart = formattedStartTime.slice(timeColonIndex + 4);
+    const htmlFormattedStartTime = `${timePart}<br>${timeZonePart} ${timezoneAbbreviation}`;
+
+    return htmlFormattedStartTime;
   };
 
   const isCustomFlow = scanType === constants.scannerTypes.custom;
