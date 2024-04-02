@@ -16813,6 +16813,7 @@
  
 <!-- START Script ruleOffCanvas -->
 <script>
+  let currentComboboxOptionIndex = 0;
   let isListenerAttached = false;
   function generateWcagConformanceLinks(conformanceList) {
     const wcagConformanceUrls = {
@@ -17046,6 +17047,39 @@ function toggleOffCanvasCombobox() {
   }
 }
 
+const handleKeyPressInOffCanvas = event => {
+    const { key } = event;
+    const openKeys = ['ArrowDown', 'ArrowUp', 'Enter', ' '];
+    
+    if (!isOffCanvasComboboxOpen && openKeys.includes(key)) {
+    toggleOffCanvasCombobox();
+    focusCurrentOption();
+  } else if (isOffCanvasComboboxOpen) {
+    switch (key) {
+      case 'Escape':
+        event.preventDefault();
+        toggleOffCanvasCombobox();
+        break;
+        case 'ArrowDown':
+        moveFocusDown();
+        break;
+        case 'ArrowUp':
+        moveFocusUp();
+        break;
+        case 'Enter':
+        case ' ':
+        const selectedComboboxRule = focusCurrentOption();
+        document.getElementById(`${selectedComboboxRule}ExpandedRuleDropdownSelector`).click();
+        break;
+      case 'Tab':
+        toggleOffCanvasCombobox();
+        break;
+      default:
+        break;
+    }
+  }
+  };
+
 const handleOffCanvasComboboxInteraction = event => {
     const isClickInsideButton = offCanvasComboboxElements.button.contains(event.target);
     const isClickInsideDropdown = offCanvasComboboxElements.dropdown.contains(event.target);
@@ -17067,10 +17101,41 @@ const handleOffCanvasComboboxInteraction = event => {
 
   };
 
+  const moveFocusDown = () => {
+    if (currentComboboxOptionIndex < options.length - 1) {
+      currentComboboxOptionIndex++;
+    } else {
+      currentComboboxOptionIndex = 0;
+    }
+    focusCurrentOption();
+  };
+
+  const moveFocusUp = () => {
+    if (currentComboboxOptionIndex > 0) {
+      currentComboboxOptionIndex--;
+    } else {
+      currentComboboxOptionIndex = options.length - 1;
+    }
+    focusCurrentOption();
+  };
+
+  const focusCurrentOption = () => {
+    const currentComboboxOption = options[currentComboboxOptionIndex];
+
+    currentComboboxOption.focus();
+
+    currentComboboxOption.scrollIntoView({
+      block: 'nearest',
+    });
+    console.log(currentComboboxOption.classList[0])
+    return currentComboboxOption.classList[0];
+  };
+
   if (!isListenerAttached) {
-  document.addEventListener('click', handleOffCanvasComboboxInteraction);
-  isListenerAttached = true;
-  console.log('isListenerAttached:', isListenerAttached);
+    offCanvasComboboxElements.wrapper.addEventListener('keydown', handleKeyPressInOffCanvas);
+    document.addEventListener('click', handleOffCanvasComboboxInteraction);
+    isListenerAttached = true;
+    console.log('isListenerAttached:', isListenerAttached);
   }
 }
 // END Script expandedRuleDropdownCategorySelector
@@ -17733,6 +17798,8 @@ const handleOffCanvasComboboxInteraction = event => {
   }
 
   function OffCanvasSearchWarning() {
+    currentComboboxOptionIndex = 0;
+
     let expandedRuleSearchWarning = document.getElementById('expandedRuleSearchWarning');
     // Check if the element exists and has child elements
     if (expandedRuleSearchWarning && expandedRuleSearchWarning.hasChildNodes()) {
