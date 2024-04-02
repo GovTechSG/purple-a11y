@@ -388,6 +388,34 @@ export const generateArtifacts = async (
   const phAppVersion = getVersion();
   const storagePath = getStoragePath(randomToken);
   const directory = `${storagePath}/${constants.allIssueFileName}`;
+
+  const formatAboutStartTime = dateString => {
+    const utcStartTimeDate = new Date(dateString);
+    const formattedStartTime = utcStartTimeDate.toLocaleTimeString('en-GB', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour12: false,
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZoneName: 'shortGeneric',
+    });
+
+    const timezoneAbbreviation = new Intl.DateTimeFormat('en', {
+      timeZoneName: 'shortOffset',
+    })
+      .formatToParts(utcStartTimeDate)
+      .find(part => part.type === 'timeZoneName').value;
+
+    //adding a breakline between the time and timezone so it looks neater on report
+    const timeColonIndex = formattedStartTime.lastIndexOf(':');
+    const timePart = formattedStartTime.slice(0, timeColonIndex + 3);
+    const timeZonePart = formattedStartTime.slice(timeColonIndex + 4);
+    const htmlFormattedStartTime = `${timePart}<br>${timeZonePart} ${timezoneAbbreviation}`;
+
+    return htmlFormattedStartTime;
+  };
+
   const isCustomFlow = scanType === constants.scannerTypes.custom;
   const allIssues = {
     storagePath,
@@ -395,9 +423,10 @@ export const generateArtifacts = async (
       htmlETL: purpleAiHtmlETL,
       rules: purpleAiRules,
     },
-    startTime: scanDetails.startTime? getFormattedTime(scanDetails.startTime) : getFormattedTime(),
+    startTime: scanDetails.startTime? scanDetails.startTime : new Date(),
     urlScanned,
     scanType,
+    formatAboutStartTime,
     isCustomFlow,
     viewport,
     pagesScanned,
@@ -438,10 +467,10 @@ export const generateArtifacts = async (
   printMessage([
     'Scan Summary',
     '',
-    `Must Fix: ${allIssues.items.mustFix.rules.length} issues / ${allIssues.items.mustFix.totalItems} occurrences`,
-    `Good to Fix: ${allIssues.items.goodToFix.rules.length} issues / ${allIssues.items.goodToFix.totalItems} occurrences`,
-    `Needs Review: ${allIssues.items.needsReview.rules.length} issues / ${allIssues.items.needsReview.totalItems} occurrences`,
-    `Passed: ${allIssues.items.passed.totalItems} occurrences`,
+    `Must Fix: ${allIssues.items.mustFix.rules.length} ${allIssues.items.mustFix.rules.length === 1 ? 'issue' : 'issues'} / ${allIssues.items.mustFix.totalItems} ${allIssues.items.mustFix.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
+    `Good to Fix: ${allIssues.items.goodToFix.rules.length} ${allIssues.items.goodToFix.rules.length === 1 ? 'issue' : 'issues'} / ${allIssues.items.goodToFix.totalItems} ${allIssues.items.goodToFix.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
+    `Needs Review: ${allIssues.items.needsReview.rules.length} ${allIssues.items.needsReview.rules.length === 1 ? 'issue' : 'issues'} / ${allIssues.items.needsReview.totalItems} ${allIssues.items.needsReview.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
+    `Passed: ${allIssues.items.passed.totalItems} ${allIssues.items.passed.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
   ]);
 
   // move screenshots folder to report folders
@@ -487,7 +516,7 @@ export const generateArtifacts = async (
     let scanData = {
       "url": allIssues.urlScanned,
       "startTime": formatDateTimeForMassScanner(allIssues.startTime),
-      "endTime": formatDateTimeForMassScanner(scanDetails? getFormattedTime(scanDetails.endTime):getFormattedTime()),
+      "endTime": formatDateTimeForMassScanner(scanDetails? scanDetails.endTime: new Date()),
       "pagesScanned": allIssues.pagesScanned.length,
       "wcagPassPercentage": allIssues.wcagPassPercentage,
       "critical": axeImpactCount.critical,
@@ -522,10 +551,10 @@ export const generateArtifacts = async (
     let scanSummaryMessage = {
       type: 'scanSummary',
       payload: [
-        `Must Fix: ${allIssues.items.mustFix.rules.length} issues / ${allIssues.items.mustFix.totalItems} occurrences`,
-        `Good to Fix: ${allIssues.items.goodToFix.rules.length} issues / ${allIssues.items.goodToFix.totalItems} occurrences`,
-        `Needs Review: ${allIssues.items.needsReview.rules.length} issues / ${allIssues.items.needsReview.totalItems} occurrences`,
-        `Passed: ${allIssues.items.passed.totalItems} occurrences`,
+        `Must Fix: ${allIssues.items.mustFix.rules.length} ${allIssues.items.mustFix.rules.length === 1 ? 'issue' : 'issues'} / ${allIssues.items.mustFix.totalItems} ${allIssues.items.mustFix.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
+        `Good to Fix: ${allIssues.items.goodToFix.rules.length} ${allIssues.items.goodToFix.rules.length === 1 ? 'issue' : 'issues'} / ${allIssues.items.goodToFix.totalItems} ${allIssues.items.goodToFix.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
+        `Needs Review: ${allIssues.items.needsReview.rules.length} ${allIssues.items.needsReview.rules.length === 1 ? 'issue' : 'issues'} / ${allIssues.items.needsReview.totalItems} ${allIssues.items.needsReview.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
+        `Passed: ${allIssues.items.passed.totalItems} ${allIssues.items.passed.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
         `Results directory: ${storagePath}`,
       ]
     }

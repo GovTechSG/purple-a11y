@@ -179,25 +179,32 @@
     let totalItemsSum = rules.reduce((sum, rule) => sum + rule.totalItems, 0);
     filteredItems[category].totalItems = totalItemsSum;
     let updatedIssueOccurrence = '';
+
+    // Determine the correct singular/plural form for 'issue' and 'occurrence'
+    const issueLabel = filteredItems[category].rules.length === 1 ? 'issue' : 'issues';
+    const occurrenceLabel = filteredItems[category].totalItems === 1 ? 'occurrence' : 'occurrences';
+
     if (category !== 'passed' && filteredItems[category].totalItems !== 0) {
-      updatedIssueOccurrence = `<strong style="color: #0047FA;">${filteredItems[category].rules.length}</strong> issues / <strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong> occurrences`;
+      updatedIssueOccurrence = `<strong style="color: #0047FA;">${filteredItems[category].rules.length}</strong> ${issueLabel} / <strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong> ${occurrenceLabel}`;
     } else if (category !== 'passed' && filteredItems[category].totalItems === 0) {
       updatedIssueOccurrence = `<strong style="color: #0047FA;">0</strong> issues`;
     } else {
-      updatedIssueOccurrence = `<strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong> occurrences`;
+      updatedIssueOccurrence = `<strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong> ${occurrenceLabel}`;
     }
     if (category !== 'passed') document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurrence;
   }
 
-  function resetIssueOccurrence(category, filteredItems) {
+  function resetIssueOccurrence(filteredItems) {
     for (let category in filteredItems) {
+      const issueLabel = filteredItems[category].rules.length === 1 ? 'issue' : 'issues';
+      const occurrenceLabel = filteredItems[category].totalItems === 1 ? 'occurrence' : 'occurrences';
       let updatedIssueOccurrence = '';
       if (category !== 'passed' && filteredItems[category].totalItems !== 0) {
-        updatedIssueOccurrence = `${filteredItems[category].rules.length} issues / ${filteredItems[category].totalItems} occurrences`;
+        updatedIssueOccurrence = `${filteredItems[category].rules.length} ${issueLabel} / ${filteredItems[category].totalItems} ${occurrenceLabel}`;
       } else if (category !== 'passed' && filteredItems[category].totalItems === 0) {
         updatedIssueOccurrence = `0 issues`;
       } else {
-        updatedIssueOccurrence = `${filteredItems[category].totalItems} occurrences`;
+        updatedIssueOccurrence = `${filteredItems[category].totalItems} ${occurrenceLabel}`;
       }
       if (category !== 'passed') document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurrence;
     }

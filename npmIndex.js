@@ -49,7 +49,7 @@ export const init = async (
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
   const scanDetails = {
-    startTime: new Date().getTime(),
+    startTime: new Date(),
     crawlType: 'Custom',
     requestUrl: entryUrl,
     urlsCrawled: { ...constants.urlsCrawledObj },
@@ -167,7 +167,7 @@ export const init = async (
     throwErrorIfTerminated();
     console.log('Stopping Purple A11y');
     isInstanceTerminated = true;
-    scanDetails.endTime = new Date().getTime();
+    scanDetails.endTime = new Date();
     scanDetails.urlsCrawled = urlsCrawled;
 
     if (urlsCrawled.scanned.length === 0) {
