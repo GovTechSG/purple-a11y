@@ -15314,7 +15314,7 @@
 
 
 
-        <!-- Dropdown Category Selector -->
+        <!-- START Component Dropdown Category Selector -->
         
 
 <div class="d-flex m-3 d-md-none">
@@ -16910,6 +16910,7 @@
 
     const availableFixCategories = [];
     const categorySelectors = [];
+    const comboboxCategorySelectors = [];
 
     const selectedCategorySelectorSwitcher = (function() {
       let selected;
@@ -17017,11 +17018,11 @@
         if (category === selectedCategory) {
           ruleOffCanvasComboboxOption.click();
         }
-        categorySelectors.push(ruleOffCanvasComboboxOption);
+        comboboxCategorySelectors.push(ruleOffCanvasComboboxOption);
       }
     });
 
-    document.getElementById('expandedRuleIssueTypeListbox').replaceChildren(...categorySelectors);
+    document.getElementById('expandedRuleIssueTypeListbox').replaceChildren(...comboboxCategorySelectors);
     // document.getElementById('expandedRuleCategorySelectors').replaceChildren(...categorySelectors);
 
 //  START Script expandedRuleDropdownCategorySelector 
