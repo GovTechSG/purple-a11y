@@ -571,7 +571,7 @@ export const generateArtifacts = async (
   await writeCsv(allIssues, storagePath);
   await writeHTML(allIssues, storagePath);
   await writeSummaryHTML(allIssues, storagePath);
-  retryFunction(writeSummaryPdf(storagePath), 1);
+  retryFunction(() => writeSummaryPdf(storagePath), 1);
   return createRuleIdJson(allIssues);
 };
 
