@@ -356,7 +356,8 @@ const scanInit = async argvs => {
 
   // File clean up after url check
   // files will clone a second time below if url check passes
-  
+  process.env.PURPLE_A11Y_VERBOSE ? deleteClonedProfiles(data.browser,data.randomToken): deleteClonedProfiles(data.browser) //first deletion
+
   if (argvs.exportDirectory) {
     constants.exportDirectory = argvs.exportDirectory;
   }
@@ -398,7 +399,7 @@ const scanInit = async argvs => {
   }
 
   // Delete cloned directory
-  process.env.PURPLE_A11Y_VERBOSE ? deleteClonedProfiles(data.browser,data.randomToken): deleteClonedProfiles(data.browser)
+  process.env.PURPLE_A11Y_VERBOSE ? deleteClonedProfiles(data.browser,data.randomToken): deleteClonedProfiles(data.browser) //second deletion
 
   // Delete dataset and request queues
   await cleanUp(data.randomToken);
