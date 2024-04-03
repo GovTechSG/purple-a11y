@@ -99,18 +99,6 @@ category summary is clicked %>
     const availableFixCategories = [];
     const categorySelectors = [];
 
-    const selectedCategorySelectorSwitcher = (function() {
-      let selected;
-      const changeSelected = curCategorySelector => {
-        if (selected) {
-          selected.classList.remove('selected');
-        }
-        curCategorySelector.classList.add('selected');
-        selected = curCategorySelector;
-      };
-      return changeSelected;
-    })();
-
     // START search feat changes
     Object.keys(filteredItems).forEach(category => {
       const ruleInCategory = filteredItems[category].rules.find(r => r.rule === selectedRule.rule);
@@ -119,18 +107,19 @@ category summary is clicked %>
         if (category !== 'passed') {
           availableFixCategories.push(category);
         }
+
         const element = createElementFromString(`
-          <button aria-label="${getFormattedCategoryTitle(category)}, ${
+          <button id="${category}OffCanvasButtonSelector" aria-label="${getFormattedCategoryTitle(category)}, ${
           ruleInCategory.totalItems
-        } ${ruleInCategory.totalItems === 1 ? 'occurrence' : 'occurrences'}" class="category-selector ${category}">
+        } ${ruleInCategory.totalItems === 1 ? 'occurrence' : 'occurrences'}" class="${category} category-selector">
             <span class="d-flex align-items-center category-name">${getFormattedCategoryTitle(
               category,
             )}</span>
             <span class="category-information">${ruleInCategory.totalItems} ${ruleInCategory.totalItems === 1 ? 'occurrence' : 'occurrences'}</span>
           </button>
         `);
+
         element.addEventListener('click', event => {
-          selectedCategorySelectorSwitcher(event.currentTarget);
           const ruleInfoText = document.getElementById('expandedRuleInfoText');
           if (category === 'mustFix' && availableFixCategories.includes('goodToFix')) {
             ruleInfoText.innerHTML =
@@ -148,9 +137,11 @@ category summary is clicked %>
 
           buildExpandedRuleCategoryContent(category, ruleInCategory);
         });
+
         if (category === selectedCategory) {
           element.click();
         }
+
         categorySelectors.push(element);
       }
     });
