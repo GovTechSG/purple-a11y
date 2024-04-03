@@ -1026,7 +1026,7 @@ export const getClonedProfilesWithRandomToken = (browser, randomToken) => {
   } else if (browser === constants.browserTypes.edge) {
     clonedDataDir = cloneEdgeProfiles(randomToken);
   } else {
-    clonedDataDir = '';
+    clonedDataDir = cloneChromiumProfiles(randomToken);
   }
   return clonedDataDir;
 };
@@ -1253,6 +1253,35 @@ export const cloneChromeProfiles = randomToken => {
   return null;
 };
 
+export const cloneChromiumProfiles = randomToken => {
+  const baseDir = getDefaultChromiumDataDir();
+
+  if (!baseDir) {
+    return;
+  }
+
+  let destDir;
+
+  if (randomToken) {
+    destDir = path.join(baseDir, `Purple-A11y-${randomToken}`);
+  } else {
+    destDir = path.join(baseDir, 'Purple-A11y');
+  }
+
+  if (!fs.existsSync(destDir)) {
+    fs.mkdirSync(destDir);
+  }
+
+  const baseOptions = {
+    cwd: baseDir,
+    recursive: true,
+    absolute: true,
+    nodir: true,
+  };
+
+  return destDir;
+};
+
 /**
  * Checks if the Edge data directory exists and creates a clone
  * of all profile within the Purple-A11y directory located in the
@@ -1392,13 +1421,12 @@ export const deleteClonedEdgeProfiles = (randomToken) => {
 };
 
 export const deleteClonedChromiumProfiles = (randomToken) => {
-  
   const baseDir = getDefaultChromiumDataDir();
 
   if (!baseDir) {
     return;
   }
-  let destDir
+  let destDir;
   if (randomToken) {
     destDir = [`${baseDir}/purple-a11y-${randomToken}`];
   } else {
@@ -1416,15 +1444,15 @@ export const deleteClonedChromiumProfiles = (randomToken) => {
         try {
           fs.rmSync(dir, { recursive: true });
         } catch (err) {
-          silentLogger.error(`CHROME Unable to delete ${dir} folder in the Chrome data directory. ${err}`);
+          silentLogger.error(`CHROMIUM Unable to delete ${dir} folder in the Chromium data directory. ${err}`);
         }
       }
     });
     return;
   }
 
-  silentLogger.warn('Unable to find Purple-A11y directory in the Chrome data directory.');
-  console.warn('Unable to find Purple-A11y directory in the Chrome data directory.');
+  silentLogger.warn('Unable to find Purple-A11y directory in Chromium support directory');
+  console.warn('Unable to find Purple-A11y directory in Chromium support directory');
 };
 
 export const getPlaywrightDeviceDetailsObject = (deviceChosen, customDevice, viewportWidth) => {
