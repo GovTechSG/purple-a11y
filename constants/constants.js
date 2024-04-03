@@ -59,6 +59,7 @@ export const getDefaultChromeDataDir = () => {
         'Chrome',
       );
     }
+    
     if (defaultChromeDataDir && fs.existsSync(defaultChromeDataDir)) {
       return defaultChromeDataDir;
     } else {
@@ -107,9 +108,21 @@ export const getDefaultEdgeDataDir = () => {
 export const getDefaultChromiumDataDir = () => {
   try {
     let defaultChromiumDataDir = null;
+    
     if (process.env.IS_DOCKER) {
-      
-      defaultChromiumDataDir = '/app/chromium_support_folder';
+      defaultChromiumDataDir = path.join(
+        process.cwd(),
+        'Chromium Support',
+      );
+    
+      try {
+        fs.mkdirSync(defaultChromiumDataDir, { recursive: true }); // Use { recursive: true } to create parent directories if they don't exist
+      } catch (error) {
+        defaultChromiumDataDir = '/tmp';
+      }
+
+      silentLogger.warn('Using Chromium support directory at', defaultChromiumDataDir);
+    
     } else if (os.platform() === 'win32') {
       defaultChromiumDataDir = path.join(
         os.homedir(),
@@ -126,6 +139,7 @@ export const getDefaultChromiumDataDir = () => {
         'Chromium',
       );
     }
+
     if (defaultChromiumDataDir && fs.existsSync(defaultChromiumDataDir)) {
       return defaultChromiumDataDir;
     } else {

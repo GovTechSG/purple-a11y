@@ -357,8 +357,6 @@ const scanInit = async argvs => {
   // File clean up after url check
   // files will clone a second time below if url check passes
   
-  !process.env.PURPLE_A11Y_VERBOSE ? deleteClonedProfiles(argvs.browserToRun) : undefined;
-
   if (argvs.exportDirectory) {
     constants.exportDirectory = argvs.exportDirectory;
   }
