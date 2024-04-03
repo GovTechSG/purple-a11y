@@ -354,6 +354,8 @@ const scanInit = async argvs => {
     argvs.strategy = 'same-domain';
   }
 
+  const data = await prepareData(argvs);
+
   // File clean up after url check
   // files will clone a second time below if url check passes
   process.env.PURPLE_A11Y_VERBOSE ? deleteClonedProfiles(data.browser,data.randomToken): deleteClonedProfiles(data.browser) //first deletion
@@ -361,8 +363,6 @@ const scanInit = async argvs => {
   if (argvs.exportDirectory) {
     constants.exportDirectory = argvs.exportDirectory;
   }
-
-  const data = await prepareData(argvs);
 
   if (process.env.RUNNING_FROM_PH_GUI || process.env.PURPLE_A11Y_VERBOSE){
     let randomTokenMessage = {
