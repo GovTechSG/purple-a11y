@@ -98,6 +98,7 @@ category summary is clicked %>
 
     const availableFixCategories = [];
     const categorySelectors = [];
+    const comboboxCategorySelectors = [];
 
     Object.keys(filteredItems).forEach(category => {
       const ruleInCategory = filteredItems[category].rules.find(r => r.rule === selectedRule.rule);
@@ -107,11 +108,11 @@ category summary is clicked %>
           availableFixCategories.push(category);
         }
 
-        // Create buttons for each category based on availableCategories
+        // Create button / combobox option for each category based on availableCategories
         const element = createElementFromString(`
           <button id="${category}OffCanvasButtonSelector" aria-label="${getFormattedCategoryTitle(category)}, ${
-          ruleInCategory.totalItems
-        } ${ruleInCategory.totalItems === 1 ? 'occurrence' : 'occurrences'}" class="${category} category-selector">
+            ruleInCategory.totalItems
+            } ${ruleInCategory.totalItems === 1 ? 'occurrence' : 'occurrences'}" class="${category} category-selector">
             <span class="d-flex align-items-center category-name">${getFormattedCategoryTitle(
               category,
             )}</span>
@@ -119,13 +120,36 @@ category summary is clicked %>
           </button>
         `);
 
-        // Populate the array of buttons
+        const ruleOffCanvasComboboxOption = createElementFromString(`
+          <li
+            tabindex="-1"
+            id="${category}ExpandedRuleDropdownSelector"
+            class="${category} category-selector d-flex flex-row align-items-center gap-2 position-relative"
+            role="option"
+            >
+            <span
+                id="${category}Title"
+                class="d-flex align-items-center category-name fw-bold d-inline mb-0"
+            >
+            ${getFormattedCategoryTitle(category)}
+            </span>
+            <span id="${category}ItemsInformation" class="category-information">
+
+              (${ruleInCategory.totalItems} Occurrences)
+
+                </span>
+          </li>`
+        );
+
+        // Populate the array of button / combobox option
         categorySelectors.push(element);
+        comboboxCategorySelectors.push(ruleOffCanvasComboboxOption);
 
-        // Dynamically update the buttons for categorySelectors
+        // Dynamically update the button / combobox option for categorySelectors
         document.getElementById('expandedRuleCategorySelectors').replaceChildren(...categorySelectors);
+        document.getElementById('expandedRuleIssueTypeListbox').replaceChildren(...comboboxCategorySelectors);
 
-        // Iterate through each button and add event listeners
+        // Iterate through each button / combobox option and add event listeners
         document.getElementById('expandedRuleCategorySelectors').querySelectorAll("button").forEach(button => {
           button.addEventListener('click', event => {
 
@@ -150,11 +174,37 @@ category summary is clicked %>
           })
         })
 
-        // Automatically click corresponding button category in ruleOffCanvas
+        document.getElementById('expandedRuleIssueTypeListbox').querySelectorAll("li").forEach(list => {
+          list.addEventListener('click', event => {
+
+            // Stops event listener from being added multiple times
+            event.stopImmediatePropagation()
+
+            const ruleInfoText = document.getElementById('expandedRuleInfoText');
+            if (category === 'mustFix' && availableFixCategories.includes('goodToFix')) {
+              ruleInfoText.innerHTML =
+                '<p class="mb-4">There are also occurrences of this issue that falls under "Good to Fix”.</p>';
+            } else if (category === 'goodToFix' && availableFixCategories.includes('mustFix')) {
+              ruleInfoText.innerHTML =
+                '<p class="mb-4">There are also occurrences of this issue that falls under "Must Fix”.</p>';
+            } else if (category === 'passed' && availableFixCategories.length > 0) {
+              ruleInfoText.innerHTML = `<p class="mb-4">There are also occurrences of this issue that falls under ${availableFixCategories
+                .map(c => `"${getFormattedCategoryTitle(c)}"`)
+                .join(' and ')}.</p>`;
+            } else {
+              ruleInfoText.innerHTML = '';
+            }
+            buildExpandedRuleCategoryContent(category, ruleInCategory);
+          });
+        });
+
+        // Automatically click corresponding button / combobox option category in ruleOffCanvas
         if (category === selectedCategory) {
           element.click();
         }
-
+        if (category === selectedCategory) {
+          ruleOffCanvasComboboxOption.click();
+        }
       }
     });
   }
