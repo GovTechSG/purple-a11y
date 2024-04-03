@@ -156,6 +156,14 @@ category summary is clicked %>
             // Stops event listener from being added multiple times
             event.stopImmediatePropagation()
 
+            removeSelectedClass()
+
+            event.currentTarget.classList.add('selected')
+
+            document.getElementById(`${event.currentTarget.classList[0]}ExpandedRuleDropdownSelector`).classList.add('selected')
+
+            updateExpandedRuleDropdownToggleContainer()
+
             ruleInfoText()
 
             buildExpandedRuleCategoryContent(category, ruleInCategory);
@@ -168,6 +176,14 @@ category summary is clicked %>
             // Stops event listener from being added multiple times
             event.stopImmediatePropagation()
 
+            removeSelectedClass()
+
+            event.currentTarget.classList.add('selected')
+
+            document.getElementById(`${event.currentTarget.classList[0]}OffCanvasButtonSelector`).classList.add('selected')
+
+            updateExpandedRuleDropdownToggleContainer()
+
             ruleInfoText()
 
             buildExpandedRuleCategoryContent(category, ruleInCategory);
@@ -177,11 +193,20 @@ category summary is clicked %>
         // Automatically click corresponding button / combobox option category in ruleOffCanvas
         if (category === selectedCategory) {
           element.click();
+
+          document.getElementById('expandedRuleDropdownToggleContainer').classList.replace(expandedRuleDropdownToggleContainer.classList[0], category);
+          document.getElementById('expandedRuleDropdownToggleCategoryTitle').innerText = getFormattedCategoryTitle(category)
+          document.getElementById('expandedRuleDropdownToggleCategoryInfo').innerText = `(${ruleInCategory.totalItems} Occurrences)`
         }
         if (category === selectedCategory) {
           ruleOffCanvasComboboxOption.click();
+
+          document.getElementById('expandedRuleDropdownToggleContainer').classList.replace(expandedRuleDropdownToggleContainer.classList[0], category);
+          document.getElementById('expandedRuleDropdownToggleCategoryTitle').innerText = getFormattedCategoryTitle(category)
+          document.getElementById('expandedRuleDropdownToggleCategoryInfo').innerText = `(${ruleInCategory.totalItems} Occurrences)`
         }
       }
+
       function ruleInfoText() {
         document.getElementById('expandedRuleInfoText');
         if (category === 'mustFix' && availableFixCategories.includes('goodToFix')) {
@@ -198,6 +223,21 @@ category summary is clicked %>
           ruleInfoText.innerHTML = '';
         }
       }
+
+      function updateExpandedRuleDropdownToggleContainer(){
+        document.getElementById('expandedRuleDropdownToggleContainer').classList.replace(expandedRuleDropdownToggleContainer.classList[0], event.currentTarget.classList[0]);
+        document.getElementById('expandedRuleDropdownToggleCategoryTitle').innerText = event.currentTarget.children[0].innerText.replace(/\n/g, '')
+        document.getElementById('expandedRuleDropdownToggleCategoryInfo').innerText = event.currentTarget.children[1].innerText.replace(/\n/g, '')
+      }
+    });
+  }
+
+  function removeSelectedClass() {
+    document.getElementById('expandedRuleCategorySelectors').querySelectorAll("button").forEach(button => {
+      button.classList.remove('selected');
+    });
+    document.getElementById('expandedRuleIssueTypeListbox').querySelectorAll("li").forEach(list => {
+      list.classList.remove('selected');
     });
   }
 
