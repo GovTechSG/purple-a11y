@@ -16913,24 +16913,6 @@
     const categorySelectors = [];
     const comboboxCategorySelectors = [];
 
-    const selectedCategorySelectorSwitcher = (function() {
-      let selected;
-      const changeSelected = curCategorySelector => {
-        if (selected) {
-          selected.classList.remove('selected');
-        }
-        curCategorySelector.classList.add('selected');
-        selected = curCategorySelector;
-
-        // Updates expandedRuleDropdownToggleContainer to match selected category
-        const expandedRuleDropdownToggleContainer = document.getElementById('expandedRuleDropdownToggleContainer');
-        expandedRuleDropdownToggleContainer.classList.replace(expandedRuleDropdownToggleContainer.classList[0], curCategorySelector.classList[0]);  
-        document.getElementById('expandedRuleDropdownToggleCategoryTitle').innerText = curCategorySelector.children[0].innerText.replace(/\n/g, '')
-        document.getElementById('expandedRuleDropdownToggleCategoryInfo').innerText = curCategorySelector.children[1].innerText.replace(/\n/g, '')
-      };
-      return changeSelected;
-    })();
-
     // START search feat changes
     Object.keys(filteredItems).forEach(category => {
       const ruleInCategory = filteredItems[category].rules.find(r => r.rule === selectedRule.rule);
@@ -16962,7 +16944,7 @@
                 </span>
             </li>`);
         ruleOffCanvasComboboxOption.addEventListener('click', event => {
-          selectedCategorySelectorSwitcher(event.currentTarget);
+
           const ruleInfoText = document.getElementById('expandedRuleInfoText');
           if (category === 'mustFix' && availableFixCategories.includes('goodToFix')) {
             ruleInfoText.innerHTML =
