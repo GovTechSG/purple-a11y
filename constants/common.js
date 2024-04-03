@@ -1226,9 +1226,9 @@ export const cloneChromeProfiles = randomToken => {
   let destDir;
 
   if (randomToken) {
-    destDir = path.join(baseDir, `Purple-A11y-${randomToken}`);
+    destDir = path.join(baseDir, `purple-a11y-${randomToken}`);
   } else {
-    destDir = path.join(baseDir, 'Purple-A11y');
+    destDir = path.join(baseDir, 'purple-a11y');
   }
 
   if (fs.existsSync(destDir)) {
@@ -1263,21 +1263,14 @@ export const cloneChromiumProfiles = randomToken => {
   let destDir;
 
   if (randomToken) {
-    destDir = path.join(baseDir, `Purple-A11y-${randomToken}`);
+    destDir = path.join(baseDir, `purple-a11y-${randomToken}`);
   } else {
-    destDir = path.join(baseDir, 'Purple-A11y');
+    destDir = path.join(baseDir, 'purple-a11y');
   }
 
   if (!fs.existsSync(destDir)) {
     fs.mkdirSync(destDir);
   }
-
-  const baseOptions = {
-    cwd: baseDir,
-    recursive: true,
-    absolute: true,
-    nodir: true,
-  };
 
   return destDir;
 };
@@ -1300,9 +1293,9 @@ export const cloneEdgeProfiles = randomToken => {
   let destDir;
 
   if (randomToken) {
-    destDir = path.join(baseDir, `Purple-A11y-${randomToken}`);
+    destDir = path.join(baseDir, `purple-a11y-${randomToken}`);
   } else {
-    destDir = path.join(baseDir, 'Purple-A11y');
+    destDir = path.join(baseDir, 'purple-a11y');
   }
 
   if (fs.existsSync(destDir)) {
@@ -1356,7 +1349,7 @@ export const deleteClonedChromeProfiles = (randomToken) => {
     destDir = [`${baseDir}/purple-a11y-${randomToken}`];
   } else {
     // Find all the Purple-A11y directories in the Chrome data directory
-    destDir = globSync("**/Purple-A11y*", {
+    destDir = globSync("**/purple-a11y*", {
       cwd: baseDir,
       recursive: true,
       absolute: true,
@@ -1399,7 +1392,7 @@ export const deleteClonedEdgeProfiles = (randomToken) => {
     destDir = [`${baseDir}/purple-a11y-${randomToken}`];
   } else {
     // Find all the Purple-A11y directories in the Chrome data directory
-    destDir = globSync("**/Purple-A11y*", {
+    destDir = globSync("**/purple-a11y*", {
       cwd: baseDir,
       recursive: true,
       absolute: true,
@@ -1431,7 +1424,7 @@ export const deleteClonedChromiumProfiles = (randomToken) => {
     destDir = [`${baseDir}/purple-a11y-${randomToken}`];
   } else {
     // Find all the Purple-A11y directories in the Chrome data directory
-    destDir = globSync("**/Purple-A11y*", {
+    destDir = globSync("**/purple-a11y*", {
       cwd: baseDir,
       recursive: true,
       absolute: true,
