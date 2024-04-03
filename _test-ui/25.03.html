@@ -16943,70 +16943,112 @@
                 
                 </span>
             </li>`);
-        ruleOffCanvasComboboxOption.addEventListener('click', event => {
 
-          const ruleInfoText = document.getElementById('expandedRuleInfoText');
-          if (category === 'mustFix' && availableFixCategories.includes('goodToFix')) {
-            ruleInfoText.innerHTML =
-              '<p class="mb-4">There are also occurrences of this issue that falls under "Good to Fix”.</p>';
-          } else if (category === 'goodToFix' && availableFixCategories.includes('mustFix')) {
-            ruleInfoText.innerHTML =
-              '<p class="mb-4">There are also occurrences of this issue that falls under "Must Fix”.</p>';
-          } else if (category === 'passed' && availableFixCategories.length > 0) {
-            ruleInfoText.innerHTML = `<p class="mb-4">There are also occurrences of this issue that falls under ${availableFixCategories
-              .map(c => `"${getFormattedCategoryTitle(c)}"`)
-              .join(' and ')}.</p>`;
-          } else {
-            ruleInfoText.innerHTML = '';
-          }
-
-          buildExpandedRuleCategoryContent(category, ruleInCategory);
-        });
-
-        // Create button category selector based on available fix categories
-        // const element = createElementFromString(`
-        //   <button aria-label="${getFormattedCategoryTitle(category)}, ${
-        //   ruleInCategory.totalItems
-        // } occurrences" class="category-selector ${category}">
-        //     <span class="d-flex align-items-center category-name">${getFormattedCategoryTitle(
-        //       category,
-        //     )}</span>
-        //     <span class="category-information">${ruleInCategory.totalItems} occurrences</span>
-        //   </button>
-        // `);
-        // element.addEventListener('click', event => {
-        //   selectedCategorySelectorSwitcher(event.currentTarget);
-        //   const ruleInfoText = document.getElementById('expandedRuleInfoText');
-        //   if (category === 'mustFix' && availableFixCategories.includes('goodToFix')) {
-        //     ruleInfoText.innerHTML =
-        //       '<p class="mb-4">There are also occurrences of this issue that falls under "Good to Fix”.</p>';
-        //   } else if (category === 'goodToFix' && availableFixCategories.includes('mustFix')) {
-        //     ruleInfoText.innerHTML =
-        //       '<p class="mb-4">There are also occurrences of this issue that falls under "Must Fix”.</p>';
-        //   } else if (category === 'passed' && availableFixCategories.length > 0) {
-        //     ruleInfoText.innerHTML = `<p class="mb-4">There are also occurrences of this issue that falls under ${availableFixCategories
-        //       .map(c => `"${getFormattedCategoryTitle(c)}"`)
-        //       .join(' and ')}.</p>`;
-        //   } else {
-        //     ruleInfoText.innerHTML = '';
-        //   }
-
-        //   buildExpandedRuleCategoryContent(category, ruleInCategory);
-        // });
-
-        // if (category === selectedCategory) {
-        //   element.click();
-        // }
-        // categorySelectors.push(element);
-        if (category === selectedCategory) {
-          ruleOffCanvasComboboxOption.click();
-        }
         comboboxCategorySelectors.push(ruleOffCanvasComboboxOption);
-      }
+
+        document.getElementById('expandedRuleIssueTypeListbox').replaceChildren(...comboboxCategorySelectors);
+
+        const element = createElementFromString(`
+          <button id="${category}OffCanvasButtonSelector" aria-label="${getFormattedCategoryTitle(category)}, ${
+          ruleInCategory.totalItems
+        } occurrences" class="${category} category-selector ">
+            <span class="d-flex align-items-center category-name">${getFormattedCategoryTitle(
+              category,
+            )}</span>
+            <span class="category-information">${ruleInCategory.totalItems} occurrences</span>
+          </button>
+        `);
+
+        categorySelectors.push(element);
+
+        document.getElementById('expandedRuleCategorySelectors').replaceChildren(...categorySelectors);
+
+        document.getElementById('expandedRuleIssueTypeListbox').querySelectorAll("li").forEach(list => {
+        list.addEventListener('click', event => {
+            event.stopImmediatePropagation()
+
+
+            removeSelectedClass()
+            event.currentTarget.classList.add('selected')
+
+
+          document.getElementById(`${event.currentTarget.classList[0]}OffCanvasButtonSelector`).classList.add('selected')
+
+        document.getElementById('expandedRuleDropdownToggleContainer').classList.replace(expandedRuleDropdownToggleContainer.classList[0], event.currentTarget.classList[0]);  
+
+        document.getElementById('expandedRuleDropdownToggleCategoryTitle').innerText = event.currentTarget.children[0].innerText.replace(/\n/g, '')
+        document.getElementById('expandedRuleDropdownToggleCategoryInfo').innerText = event.currentTarget.children[1].innerText.replace(/\n/g, '')
+
+          ruleInfoText()
+
+            buildExpandedRuleCategoryContent(category, ruleInCategory);
+            console.log("list category is," + category)
+
+            toggleOffCanvasCombobox();
+
+        });
     });
 
-    document.getElementById('expandedRuleIssueTypeListbox').replaceChildren(...comboboxCategorySelectors);
-    // document.getElementById('expandedRuleCategorySelectors').replaceChildren(...categorySelectors);
+
+        document.getElementById('expandedRuleCategorySelectors').querySelectorAll("button").forEach(button => {
+        button.addEventListener('click', event => {
+            event.stopImmediatePropagation()
+          
+            removeSelectedClass()
+            
+            event.currentTarget.classList.add('selected')
+
+          document.getElementById(`${event.currentTarget.classList[0]}ExpandedRuleDropdownSelector`).classList.add('selected')
+
+          document.getElementById('expandedRuleDropdownToggleContainer').classList.replace(expandedRuleDropdownToggleContainer.classList[0], event.currentTarget.classList[0]);  
+
+        document.getElementById('expandedRuleDropdownToggleCategoryTitle').innerText = event.currentTarget.children[0].innerText.replace(/\n/g, '')
+        document.getElementById('expandedRuleDropdownToggleCategoryInfo').innerText = event.currentTarget.children[1].innerText.replace(/\n/g, '')
+
+          ruleInfoText()
+
+          buildExpandedRuleCategoryContent(category, ruleInCategory);
+          console.log("button category is," + category)
+
+        });
+    });
+
+        if (category === selectedCategory) {
+            element.click();
+            document.getElementById('expandedRuleDropdownToggleContainer').classList.replace(expandedRuleDropdownToggleContainer.classList[0], category);  
+            
+            document.getElementById('expandedRuleDropdownToggleCategoryTitle').innerText = getFormattedCategoryTitle(category)
+            document.getElementById('expandedRuleDropdownToggleCategoryInfo').innerText = `(${ruleInCategory.totalItems} Occurrences)`
+
+
+        }
+        if (category === selectedCategory) {
+            
+          ruleOffCanvasComboboxOption.click();
+
+          document.getElementById('expandedRuleDropdownToggleContainer').classList.replace(expandedRuleDropdownToggleContainer.classList[0], category);  
+
+          document.getElementById('expandedRuleDropdownToggleCategoryTitle').innerText = getFormattedCategoryTitle(category)
+          document.getElementById('expandedRuleDropdownToggleCategoryInfo').innerText = `(${ruleInCategory.totalItems} Occurrences)`
+        }
+      }
+      function ruleInfoText() {
+        document.getElementById('expandedRuleInfoText');
+        if (category === 'mustFix' && availableFixCategories.includes('goodToFix')) {
+          ruleInfoText.innerHTML =
+            '<p class="mb-4">There are also occurrences of this issue that falls under "Good to Fix”.</p>';
+        } else if (category === 'goodToFix' && availableFixCategories.includes('mustFix')) {
+          ruleInfoText.innerHTML =
+            '<p class="mb-4">There are also occurrences of this issue that falls under "Must Fix”.</p>';
+        } else if (category === 'passed' && availableFixCategories.length > 0) {
+          ruleInfoText.innerHTML = `<p class="mb-4">There are also occurrences of this issue that falls under ${availableFixCategories
+            .map(c => `"${getFormattedCategoryTitle(c)}"`)
+            .join(' and ')}.</p>`;
+        } else {
+          ruleInfoText.innerHTML = '';
+        }
+      }
+    });
 
 //  START Script expandedRuleDropdownCategorySelector 
 const offCanvasComboboxElements = {
@@ -17119,8 +17161,17 @@ const handleOffCanvasComboboxInteraction = event => {
     isListenerAttached = true;
     console.log('isListenerAttached:', isListenerAttached);
   }
+  // END Script expandedRuleDropdownCategorySelector
 }
-// END Script expandedRuleDropdownCategorySelector
+
+function removeSelectedClass() {
+    document.getElementById('expandedRuleCategorySelectors').querySelectorAll("button").forEach(button => {
+      button.classList.remove('selected');
+    });
+    document.getElementById('expandedRuleIssueTypeListbox').querySelectorAll("li").forEach(list => {
+      list.classList.remove('selected');
+    });
+  }
 
   function buildExpandedRuleCategoryContent(category, ruleInCategory) {
     const contentContainer = document.getElementById('expandedRuleCategoryContent');
