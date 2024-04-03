@@ -1586,7 +1586,8 @@
     }
   }
 
-  ul#issueTypeListbox {
+  ul#issueTypeListbox,
+  ul#expandedRuleIssueTypeListbox {
     position: absolute;
     padding: 0;
     opacity: 0;
@@ -1643,15 +1644,19 @@
   }
 
   /* Special CSS to overwrite for mobile dropdown as we are reusing the same class. */
+  .expanded-rule-issue-type-combobox-button > .category-selector,
   .ally-toggle-button-2 > .category-selector {
     padding: 8px 16px;
   }
 
+  .expanded-rule-issue-type-combobox-button > .category-selector:not(.selected):hover,
+  .expanded-rule-issue-type-combobox-button > .category-selector:not(.selected):focus,
   .ally-toggle-button-2 > .category-selector:not(.selected):hover,
   .ally-toggle-button-2 > .category-selector:not(.selected):focus {
     background-color: #fff;
   }
 
+  .expanded-rule-issue-type-combobox-button::after,
   .ally-toggle-button-2::after {
     border-bottom: 1px solid #333;
     border-right: 1px solid #333;
