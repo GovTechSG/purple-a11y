@@ -4,6 +4,7 @@ import os from 'os';
 import { destinationPath, getIntermediateScreenshotsPath } from './constants/constants.js';
 import fs from 'fs-extra';
 import constants from './constants/constants.js';
+import { silentLogger } from './logs.js';
 
 export const getVersion = () => {
   const loadJSON = path => JSON.parse(fs.readFileSync(new URL(path, import.meta.url)));
@@ -288,5 +289,18 @@ export const isFollowStrategy = (link1, link2, rule) =>{
     return link1Domain === link2Domain;
   } else {
     return parsedLink1.hostname === parsedLink2.hostname;
+  }
+}
+
+export const retryFunction = async (func, maxAttempt) => {
+  let attemptCount = 0;
+  while (attemptCount < maxAttempt) {
+    attemptCount++
+    try {
+      const result = await func();
+      return result;
+    } catch (error) {
+      silentLogger.error(`(Attempt count: ${attemptCount} of ${maxAttempt}) ${error}`);
+    }
   }
 }
