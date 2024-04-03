@@ -206,7 +206,7 @@ const writeSummaryPdf = async (storagePath, filename = 'summary') => {
   const data = fs.readFileSync(htmlFilePath, { encoding: 'utf-8' });
   await page.setContent(data);
 
-  await page.waitForLoadState('networkidle', { timeout: 300000 });
+  await page.waitForLoadState('networkidle', { timeout: 30000 });
 
   await page.emulateMedia({ media: 'print' });
 
