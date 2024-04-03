@@ -270,7 +270,7 @@ const crawlDomain = async (
         }
       }
 
-      if (isExcluded(actualUrl)) {
+      if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
           numScanned: urlsCrawled.scanned.length,
           urlScanned: actualUrl,
