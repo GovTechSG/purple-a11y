@@ -16815,6 +16815,9 @@
 <script>
   let currentComboboxOptionIndex = 0;
   let isListenerAttached = false;
+  let options;
+  let isOffCanvasComboboxOpen = false;
+
   function generateWcagConformanceLinks(conformanceList) {
     const wcagConformanceUrls = {
       wcag111: 'https://www.w3.org/TR/WCAG21/#non-text-content',
@@ -17057,17 +17060,13 @@ const offCanvasComboboxElements = {
   dropdown: document.getElementById('expandedRuleIssueTypeListbox'),
 };
 
-let isOffCanvasComboboxOpen = false;
-let options;
-
 function toggleOffCanvasCombobox() {
-  options = document.getElementById('expandedRuleIssueTypeListbox').querySelectorAll('[role="option"]'),
-  offCanvasComboboxElements.dropdown.classList.toggle('active');
+document.getElementById('expandedRuleIssueTypeListbox').classList.toggle('active');
   isOffCanvasComboboxOpen = !isOffCanvasComboboxOpen;
-  offCanvasComboboxElements.button.setAttribute('aria-expanded', isOffCanvasComboboxOpen.toString());
+  document.getElementById('expandedRuleIssueTypeComboBox').setAttribute('aria-expanded', isOffCanvasComboboxOpen.toString());
 
   if (isOffCanvasComboboxOpen) {
-    offCanvasComboboxElements.button.setAttribute('aria-activedescendant', 'expandedRuleIssueTypeListbox');
+    document.getElementById('expandedRuleIssueTypeComboBox').setAttribute('aria-activedescendant', 'expandedRuleIssueTypeListbox');
   }
 }
 
@@ -17126,7 +17125,7 @@ const handleOffCanvasComboboxInteraction = event => {
   };
 
   const moveFocusDown = () => {
-    if (currentComboboxOptionIndex < options.length - 1) {
+    if (currentComboboxOptionIndex < document.getElementById('expandedRuleIssueTypeListbox').querySelectorAll('[role="option"]').length - 1) {
       currentComboboxOptionIndex++;
     } else {
       currentComboboxOptionIndex = 0;
@@ -17138,20 +17137,19 @@ const handleOffCanvasComboboxInteraction = event => {
     if (currentComboboxOptionIndex > 0) {
       currentComboboxOptionIndex--;
     } else {
-      currentComboboxOptionIndex = options.length - 1;
+      currentComboboxOptionIndex = document.getElementById('expandedRuleIssueTypeListbox').querySelectorAll('[role="option"]').length - 1;
     }
     focusCurrentOption();
   };
 
   const focusCurrentOption = () => {
-    const currentComboboxOption = options[currentComboboxOptionIndex];
+    const currentComboboxOption = document.getElementById('expandedRuleIssueTypeListbox').querySelectorAll('[role="option"]')[currentComboboxOptionIndex];
 
     currentComboboxOption.focus();
 
     currentComboboxOption.scrollIntoView({
       block: 'nearest',
     });
-    console.log(currentComboboxOption.classList[0])
     return currentComboboxOption.classList[0];
   };
 
@@ -17159,7 +17157,6 @@ const handleOffCanvasComboboxInteraction = event => {
     offCanvasComboboxElements.wrapper.addEventListener('keydown', handleKeyPressInOffCanvas);
     document.addEventListener('click', handleOffCanvasComboboxInteraction);
     isListenerAttached = true;
-    console.log('isListenerAttached:', isListenerAttached);
   }
   // END Script expandedRuleDropdownCategorySelector
 }
