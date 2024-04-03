@@ -109,21 +109,7 @@ export const getDefaultChromiumDataDir = () => {
   try {
     let defaultChromiumDataDir = null;
     
-    if (process.env.IS_DOCKER) {
-      defaultChromiumDataDir = path.join(
-        process.cwd(),
-        'Chromium Support',
-      );
-    
-      try {
-        fs.mkdirSync(defaultChromiumDataDir, { recursive: true }); // Use { recursive: true } to create parent directories if they don't exist
-      } catch (error) {
-        defaultChromiumDataDir = '/tmp';
-      }
-
-      silentLogger.warn('Using Chromium support directory at', defaultChromiumDataDir);
-    
-    } else if (os.platform() === 'win32') {
+    if (os.platform() === 'win32') {
       defaultChromiumDataDir = path.join(
         os.homedir(),
         'AppData',
@@ -138,6 +124,20 @@ export const getDefaultChromiumDataDir = () => {
         'Application Support',
         'Chromium',
       );
+    } else {
+      defaultChromiumDataDir = path.join(
+        process.cwd(),
+        'Chromium Support',
+      );
+    
+      try {
+        fs.mkdirSync(defaultChromiumDataDir, { recursive: true }); // Use { recursive: true } to create parent directories if they don't exist
+      } catch (error) {
+        defaultChromiumDataDir = '/tmp';
+      }
+
+      silentLogger.warn(`Using Chromium support directory at ${defaultChromiumDataDir}`);
+    
     }
 
     if (defaultChromiumDataDir && fs.existsSync(defaultChromiumDataDir)) {
