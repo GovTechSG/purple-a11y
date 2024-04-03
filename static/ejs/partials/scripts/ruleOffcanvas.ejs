@@ -156,20 +156,8 @@ category summary is clicked %>
             // Stops event listener from being added multiple times
             event.stopImmediatePropagation()
 
-            const ruleInfoText = document.getElementById('expandedRuleInfoText');
-            if (category === 'mustFix' && availableFixCategories.includes('goodToFix')) {
-              ruleInfoText.innerHTML =
-                '<p class="mb-4">There are also occurrences of this issue that falls under "Good to Fix”.</p>';
-            } else if (category === 'goodToFix' && availableFixCategories.includes('mustFix')) {
-              ruleInfoText.innerHTML =
-                '<p class="mb-4">There are also occurrences of this issue that falls under "Must Fix”.</p>';
-            } else if (category === 'passed' && availableFixCategories.length > 0) {
-              ruleInfoText.innerHTML = `<p class="mb-4">There are also occurrences of this issue that falls under ${availableFixCategories
-                .map(c => `"${getFormattedCategoryTitle(c)}"`)
-                .join(' and ')}.</p>`;
-            } else {
-              ruleInfoText.innerHTML = '';
-            }
+            ruleInfoText()
+
             buildExpandedRuleCategoryContent(category, ruleInCategory);
           })
         })
@@ -180,20 +168,8 @@ category summary is clicked %>
             // Stops event listener from being added multiple times
             event.stopImmediatePropagation()
 
-            const ruleInfoText = document.getElementById('expandedRuleInfoText');
-            if (category === 'mustFix' && availableFixCategories.includes('goodToFix')) {
-              ruleInfoText.innerHTML =
-                '<p class="mb-4">There are also occurrences of this issue that falls under "Good to Fix”.</p>';
-            } else if (category === 'goodToFix' && availableFixCategories.includes('mustFix')) {
-              ruleInfoText.innerHTML =
-                '<p class="mb-4">There are also occurrences of this issue that falls under "Must Fix”.</p>';
-            } else if (category === 'passed' && availableFixCategories.length > 0) {
-              ruleInfoText.innerHTML = `<p class="mb-4">There are also occurrences of this issue that falls under ${availableFixCategories
-                .map(c => `"${getFormattedCategoryTitle(c)}"`)
-                .join(' and ')}.</p>`;
-            } else {
-              ruleInfoText.innerHTML = '';
-            }
+            ruleInfoText()
+
             buildExpandedRuleCategoryContent(category, ruleInCategory);
           });
         });
@@ -204,6 +180,22 @@ category summary is clicked %>
         }
         if (category === selectedCategory) {
           ruleOffCanvasComboboxOption.click();
+        }
+      }
+      function ruleInfoText() {
+        document.getElementById('expandedRuleInfoText');
+        if (category === 'mustFix' && availableFixCategories.includes('goodToFix')) {
+          ruleInfoText.innerHTML =
+            '<p class="mb-4">There are also occurrences of this issue that falls under "Good to Fix”.</p>';
+        } else if (category === 'goodToFix' && availableFixCategories.includes('mustFix')) {
+          ruleInfoText.innerHTML =
+            '<p class="mb-4">There are also occurrences of this issue that falls under "Must Fix”.</p>';
+        } else if (category === 'passed' && availableFixCategories.length > 0) {
+          ruleInfoText.innerHTML = `<p class="mb-4">There are also occurrences of this issue that falls under ${availableFixCategories
+            .map(c => `"${getFormattedCategoryTitle(c)}"`)
+            .join(' and ')}.</p>`;
+        } else {
+          ruleInfoText.innerHTML = '';
         }
       }
     });
