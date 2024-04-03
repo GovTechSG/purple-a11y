@@ -1010,7 +1010,7 @@ export const getBrowserToRun = (preferredBrowser, isCli) => {
     }
   } else {
     // defaults to chromium
-    return { browserToRun: constants.browserTypes.chromium, clonedBrowserDataDir: getDefaultChromiumDataDir() };
+    return { browserToRun: constants.browserTypes.chromium, clonedBrowserDataDir: cloneChromiumProfiles() };
   }
 };
 /**
