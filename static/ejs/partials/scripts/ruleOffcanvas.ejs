@@ -99,15 +99,15 @@ category summary is clicked %>
     const availableFixCategories = [];
     const categorySelectors = [];
 
-    // START search feat changes
     Object.keys(filteredItems).forEach(category => {
       const ruleInCategory = filteredItems[category].rules.find(r => r.rule === selectedRule.rule);
-    // END search feat changes
+
       if (ruleInCategory !== undefined && category !== 'passed') {
         if (category !== 'passed') {
           availableFixCategories.push(category);
         }
 
+        // Create buttons for each category based on availableCategories
         const element = createElementFromString(`
           <button id="${category}OffCanvasButtonSelector" aria-label="${getFormattedCategoryTitle(category)}, ${
           ruleInCategory.totalItems
@@ -119,34 +119,44 @@ category summary is clicked %>
           </button>
         `);
 
-        element.addEventListener('click', event => {
-          const ruleInfoText = document.getElementById('expandedRuleInfoText');
-          if (category === 'mustFix' && availableFixCategories.includes('goodToFix')) {
-            ruleInfoText.innerHTML =
-              '<p class="mb-4">There are also occurrences of this issue that falls under "Good to Fix”.</p>';
-          } else if (category === 'goodToFix' && availableFixCategories.includes('mustFix')) {
-            ruleInfoText.innerHTML =
-              '<p class="mb-4">There are also occurrences of this issue that falls under "Must Fix”.</p>';
-          } else if (category === 'passed' && availableFixCategories.length > 0) {
-            ruleInfoText.innerHTML = `<p class="mb-4">There are also occurrences of this issue that falls under ${availableFixCategories
-              .map(c => `"${getFormattedCategoryTitle(c)}"`)
-              .join(' and ')}.</p>`;
-          } else {
-            ruleInfoText.innerHTML = '';
-          }
+        // Populate the array of buttons
+        categorySelectors.push(element);
 
-          buildExpandedRuleCategoryContent(category, ruleInCategory);
-        });
+        // Dynamically update the buttons for categorySelectors
+        document.getElementById('expandedRuleCategorySelectors').replaceChildren(...categorySelectors);
 
+        // Iterate through each button and add event listeners
+        document.getElementById('expandedRuleCategorySelectors').querySelectorAll("button").forEach(button => {
+          button.addEventListener('click', event => {
+
+            // Stops event listener from being added multiple times
+            event.stopImmediatePropagation()
+
+            const ruleInfoText = document.getElementById('expandedRuleInfoText');
+            if (category === 'mustFix' && availableFixCategories.includes('goodToFix')) {
+              ruleInfoText.innerHTML =
+                '<p class="mb-4">There are also occurrences of this issue that falls under "Good to Fix”.</p>';
+            } else if (category === 'goodToFix' && availableFixCategories.includes('mustFix')) {
+              ruleInfoText.innerHTML =
+                '<p class="mb-4">There are also occurrences of this issue that falls under "Must Fix”.</p>';
+            } else if (category === 'passed' && availableFixCategories.length > 0) {
+              ruleInfoText.innerHTML = `<p class="mb-4">There are also occurrences of this issue that falls under ${availableFixCategories
+                .map(c => `"${getFormattedCategoryTitle(c)}"`)
+                .join(' and ')}.</p>`;
+            } else {
+              ruleInfoText.innerHTML = '';
+            }
+            buildExpandedRuleCategoryContent(category, ruleInCategory);
+          })
+        })
+
+        // Automatically click corresponding button category in ruleOffCanvas
         if (category === selectedCategory) {
           element.click();
         }
 
-        categorySelectors.push(element);
       }
     });
-
-    document.getElementById('expandedRuleCategorySelectors').replaceChildren(...categorySelectors);
   }
 
   function buildExpandedRuleCategoryContent(category, ruleInCategory) {
