@@ -167,7 +167,7 @@ category summary is clicked %>
 
               document.getElementById(`${event.currentTarget.classList[0]}ExpandedRuleDropdownSelector`).classList.add('selected')
 
-              updateExpandedRuleDropdownToggleContainer()
+              updateExpandedRuleDropdownToggleContainer(`(${event.currentTarget.children[1].innerText})`)
 
               ruleInfoText()
 
@@ -187,7 +187,7 @@ category summary is clicked %>
 
               document.getElementById(`${event.currentTarget.classList[0]}OffCanvasButtonSelector`).classList.add('selected')
 
-              updateExpandedRuleDropdownToggleContainer()
+              updateExpandedRuleDropdownToggleContainer(event.currentTarget.children[1].innerText)
 
               ruleInfoText()
 
@@ -231,10 +231,10 @@ category summary is clicked %>
           }
         }
 
-        function updateExpandedRuleDropdownToggleContainer(){
+        function updateExpandedRuleDropdownToggleContainer(dropdownOccurrencesString){
           document.getElementById('expandedRuleDropdownToggleContainer').classList.replace(expandedRuleDropdownToggleContainer.classList[0], event.currentTarget.classList[0]);
           document.getElementById('expandedRuleDropdownToggleCategoryTitle').innerText = event.currentTarget.children[0].innerText.replace(/\n/g, '')
-          document.getElementById('expandedRuleDropdownToggleCategoryInfo').innerText = event.currentTarget.children[1].innerText.replace(/\n/g, '')
+          document.getElementById('expandedRuleDropdownToggleCategoryInfo').innerText = dropdownOccurrencesString
         }
       });
       //  START Script expandedRuleDropdownCategorySelector
