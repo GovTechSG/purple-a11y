@@ -30,6 +30,10 @@ Portable Purple A11y is the recommended way to run Purple A11y as it reduces the
 Please ensure the following requirements are met:
 
 - **Node.js version to be version 15.10.0 and above.**
+- To check your version of Node go into terminal and paste the command bellow
+```shell
+node -v
+```
 - If you do not have node, or if there is a need to manage your node versions, you can consider using [Node Version Manager (NVM)](https://github.com/nvm-sh/nvm).
 - Make sure NVM is pointing to a node version >= 15.10.0. Please refer to [Usage of Node Version Manager (NVM)](<#usage-of-node-version-manager-(NVM)>)
 - Install the required NPM packages with `npm install`.
@@ -54,11 +58,12 @@ Please refer to [Troubleshooting section](#troubleshooting) for more information
 
 Purple A11y can perform the following to scan the target URL.
 
-- To run Purple A11y in terminal, run `node index`. Questions will be prompted to assist you in providing the right inputs.
+- To **run** Purple A11y in **terminal**, run `node index`. Questions will be prompted to assist you in providing the right inputs.
 - Results will be compiled in JSON format, followed by generating a HTML report.
 
 > NOTE: For your initial scan, there may be some loading time required before use. Purple-A11y will also ask for your name and email address and collect your app usage data to personalise your experience. Your information fully complies with [GovTech’s Privacy Policy](https://www.tech.gov.sg/privacy/).
 
+#### Delete/Edit Details
 > You may delete your cached name and e-mail address by going to the location to `$HOME/Library/Application Support/Purple A11y` to either DELETE or EDIT the `userData.txt`:
 > - Windows (PowerShell): `rm "$env:APPDATA\Purple A11y\userData.txt"`
 > - MacOS (Terminal): `rm "$HOME/Library/Application Support/Purple A11y/userData.txt"`
@@ -234,7 +239,9 @@ npx playwright@1.27.1 install
 
 ### CLI Mode
 
-CLI mode is designed to be run in continuous integration (CI) environment. Run `node cli.js` for a set of command-line parameters available. Please note CLI mode is only supported on Mac/Linux at this moment.
+CLI mode is designed to be run in continuous integration (CI) environment. 
+ Run `node cli.js` for a set of command-line parameters available. 
+ **Please note CLI mode is only supported on Mac/Linux at this moment.**
 
 ```shell
 Usage: node cli.js -c <crawler> -d <device> -w <viewp
@@ -454,7 +461,10 @@ An Address link to report is provided. Click on the link to access the location 
 You can also click on the view report button to see the Accessibility Scan Results.
 
 ## Accessibility Scan Results
-For details on which accessibility scan results trigger "Must Fix" / "Good to Fix" findings, you may refer to [Scan Issue Details](https://github.com/GovTechSG/purple-a11y/blob/master/DETAILS.md).
+
+Each Issue has its own severity "Must Fix" / "Good to Fix" based on the [WCAG Conformance](https://www.w3.org/TR/WCAG21/). 
+
+For details on which accessibility scan results triggers a  "Must Fix" / "Good to Fix" findings, you may refer to [Scan Issue Details](https://github.com/GovTechSG/purple-a11y/blob/master/DETAILS.md).
 
 ## Troubleshooting
 
@@ -463,13 +473,14 @@ Please refer to the information below to assist in debugging. Most errors below 
 ### Incompatible Node.js versions
 
 **Issue**: When your Node.js version is incompatible, you may face the following syntax error.
-**Solution**: Install Node.js versions > v15.10.0, i.e. Node.js v16 and above.
+
 
 ```shell
 const URL_NO_COMMAS_REGEX = RegExp('https?://(www\\.)?[\\p{L}0-9][-\\p{L}0-9@:%._\\+~#=]{0,254}[\\p{L}0-9]\\.[a-z]{2,63}(:\\d{1,5})?(/[-\\p{L}0-9@:%_\\+.~#?&//=\\(\\)]*)?', 'giu'); // eslint-disable-line
                             ^
 SyntaxError: Invalid regular expression: /https?://(www\.)?[\p{L}0-9][-\p{L}0-9@:%\._\+~#=]{0,254}[\p{L}0-9]\.[a-z]{2,63}(:\d{1,5})?(/[-\p{L}0-9@:%_\+.~#?&//=\(\)]*)?/: Invalid escape
 ```
+**Solution**: Install Node.js versions > v15.10.0, i.e. Node.js v16 and above.
 
 ### Compiled against a different Node.js version
 
@@ -521,6 +532,11 @@ zsh: abort      node index.js
 If you find a scan takes too long to complete due to large website, or there are too many pages in a sitemap to scan, you may choose to limit number of pages scanned.
 
 To do this, run CLI mode `node cli.js` with the needed settings and specify `-p 10` where `10` is the number of pages you wish to scan.
+
+### I am a new developer and I have some knowledge gap.
+
+We recommend looking at our **Technology Stack** to understand the usage of each component. Take your time to understand.
+
 
 ## Additional Information on Data
 
