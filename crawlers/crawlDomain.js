@@ -270,7 +270,7 @@ const crawlDomain = async (
         }
       }
 
-      if (isExcluded(actualUrl)) {
+      if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
           numScanned: urlsCrawled.scanned.length,
           urlScanned: actualUrl,
@@ -283,7 +283,7 @@ const crawlDomain = async (
 
       let finalUrl = page.url(); // Initialize with the request URL
 
-      if (isExcluded(finalUrl)) {
+      if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
         console.log(`Excluded URL (final/redirect): ${finalUrl}`);
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
           numScanned: urlsCrawled.scanned.length,
