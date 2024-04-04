@@ -269,7 +269,7 @@ const crawlDomain = async (
           return false;
         }
       }
-
+      if(!isScanPdfs){
       if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
           numScanned: urlsCrawled.scanned.length,
@@ -283,6 +283,7 @@ const crawlDomain = async (
 
       let finalUrl = page.url(); // Initialize with the request URL
 
+
       if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
         console.log(`Excluded URL (final/redirect): ${finalUrl}`);
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
@@ -291,6 +292,7 @@ const crawlDomain = async (
         });
         return; // Skip processing this URL
       }
+    }
 
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
         crawler.autoscaledPool.abort();

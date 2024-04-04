@@ -183,6 +183,5 @@ export const failedRequestHandler = async ({ request }) => {
 
 export const isUrlPdf = url => {
   const parsedUrl = new URL(url);
-  
   return /\.pdf($|\?|#)/i.test(parsedUrl.pathname);
 };
