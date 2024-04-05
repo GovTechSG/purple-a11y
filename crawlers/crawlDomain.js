@@ -269,8 +269,8 @@ const crawlDomain = async (
           return false;
         }
       }
-
-      if (isExcluded(actualUrl)) {
+      if(!isScanPdfs){
+      if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
           numScanned: urlsCrawled.scanned.length,
           urlScanned: actualUrl,
@@ -283,7 +283,8 @@ const crawlDomain = async (
 
       let finalUrl = page.url(); // Initialize with the request URL
 
-      if (isExcluded(finalUrl)) {
+
+      if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
         console.log(`Excluded URL (final/redirect): ${finalUrl}`);
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
           numScanned: urlsCrawled.scanned.length,
@@ -291,6 +292,7 @@ const crawlDomain = async (
         });
         return; // Skip processing this URL
       }
+    }
 
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
         crawler.autoscaledPool.abort();
@@ -330,8 +332,9 @@ const crawlDomain = async (
         return;
       }
 
-      const resHeaders = response.headers();
-      const contentType = resHeaders['content-type'];
+      const resHeaders = response ? response.headers() : {}; // Safely access response headers
+      const contentType = resHeaders['content-type'] || ''; // Ensure contentType is defined
+
 
       // whitelist html and pdf document types
       if (!contentType.includes('text/html') && !contentType.includes('application/pdf')) {
