@@ -332,8 +332,9 @@ const crawlDomain = async (
         return;
       }
 
-      const resHeaders = response.headers();
-      const contentType = resHeaders['content-type'];
+      const resHeaders = response ? response.headers() : {}; // Safely access response headers
+      const contentType = resHeaders['content-type'] || ''; // Ensure contentType is defined
+
 
       // whitelist html and pdf document types
       if (!contentType.includes('text/html') && !contentType.includes('application/pdf')) {
