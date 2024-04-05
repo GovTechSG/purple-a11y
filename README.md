@@ -457,10 +457,6 @@ Once a scan of the site is completed.
 
 A report will be downloaded into the current working directory.
 
-An Address link to report is provided. Click on the link to access the location of the report. 
-
-You can also click on the view report button to see the Accessibility Scan Results.
-
 ## Accessibility Scan Results
 
 Each Issue has its own severity "Must Fix" / "Good to Fix" based on the [WCAG Conformance](https://www.w3.org/TR/WCAG21/). 
