@@ -1,5 +1,5 @@
 # Use Node LTS alpine distribution
-FROM node:lts-alpine3.18
+FROM node:lts
 
 # Installation of packages for purple-a11y and chromium
 RUN apk add build-base gcompat g++ make python3 zip bash git chromium openjdk11-jre
