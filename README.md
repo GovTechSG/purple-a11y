@@ -64,7 +64,8 @@ Purple A11y can perform the following to scan the target URL.
 > NOTE: For your initial scan, there may be some loading time required before use. Purple-A11y will also ask for your name and email address and collect your app usage data to personalise your experience. Your information fully complies with [GovTech’s Privacy Policy](https://www.tech.gov.sg/privacy/).
 
 #### Delete/Edit Details
-> You may delete your cached name and e-mail address by going to the location to `$HOME/Library/Application Support/Purple A11y` to either DELETE or EDIT the `userData.txt`:
+> You may delete and edit your cached name and e-mail address by running the following command to delete `userData.txt`:
+
 > - Windows (PowerShell): `rm "$env:APPDATA\Purple A11y\userData.txt"`
 > - MacOS (Terminal): `rm "$HOME/Library/Application Support/Purple A11y/userData.txt"`
 
@@ -437,7 +438,7 @@ Examples:
 If the device name contains ```(``` and ```)```, wrap the device name in single quotes when entered into the CLI.
 Please note that ```-d``` and ```-w``` are mutually exclusive. If none are specified, the default device used for the CLI scan is Desktop.
 
-For example, to conduct a website scan to the URL `http://localhost:8000` and write to `a11y-scan-results.zip` with an `iPad (gen 7) landscape` screen, run
+For example, to conduct a website scan to the URL "http://localhost:8000" and write to "a11y-scan-results.zip" with an 'iPad (gen 7) landscape' screen, run
 
 ```shell
 node cli.js -c 2 -o a11y-scan-results.zip -u http://localhost:8000 -d 'iPad (gen 7) landscape'
@@ -445,16 +446,16 @@ node cli.js -c 2 -o a11y-scan-results.zip -u http://localhost:8000 -d 'iPad (gen
 
 If the site you want to scan has a query string wrap the link in single quotes when entered into the CLI.
 
-For example, to conduct a website scan to the URL `http://localhost:8000` and write to `a11y-scan-results.zip` with a custom screen width `360`, run
+For example, to conduct a website scan to the URL "http://localhost:8000" and write to "a11y-scan-results.zip" with a custom screen width '360', run
 
 ```shell
-node cli.js -c 2 -o a11y-scan-results.zip -u `http://localhost:8000` -w 360
+node cli.js -c 2 -o a11y-scan-results.zip -u "http://localhost:8000" -w 360
 ```
 
 ## Report
 Once a scan of the site is completed. 
 
-A report will be downloaded into the ../Documents folder.
+A report will be downloaded into the current working directory.
 
 An Address link to report is provided. Click on the link to access the location of the report. 
 
