@@ -186,11 +186,5 @@ export const isUrlPdf = url => {
   return /\.pdf($|\?|#)/i.test(parsedUrl.pathname) || /\.pdf($|\?|#)/i.test(parsedUrl.href);
 };
 
-export const isUrlZip = (url) => {
-  // Parsing the full URL
-  const parsedUrl = new URL(url);
-  
-  // Checking the whole URL for the .zip pattern, not just the pathname
-  return /\.zip($|\?|#)/i.test(parsedUrl.pathname) || /\.zip($|\?|#)/i.test(parsedUrl.href);
-};
+
 

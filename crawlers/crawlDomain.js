@@ -273,16 +273,8 @@ const crawlDomain = async (
         }
       }
 
-      if (isUrlZip(actualUrl)) {
-        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-          numScanned: urlsCrawled.scanned.length,
-          urlScanned: actualUrl,
-        });
-        return;
-      }
-
       if (!isScanPdfs) {
-        if (isExcluded(actualUrl) || isUrlPdf(actualUrl) || isUrlZip(actualUrl)) {
+        if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
           guiInfoLog(guiInfoStatusTypes.SKIPPED, {
             numScanned: urlsCrawled.scanned.length,
             urlScanned: actualUrl,
