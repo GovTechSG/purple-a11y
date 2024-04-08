@@ -104,6 +104,7 @@ const crawlDomain = async (
       strategy,
       requestQueue,
       transformRequestFunction(req) {
+        req.url = encodeURI(req.url)
         if (urlsCrawled.scanned.some(item => item.url === req.url)) {
           req.skipNavigation = true;
         }
@@ -112,7 +113,7 @@ const crawlDomain = async (
           // playwright headless mode does not support navigation to pdf document
           req.skipNavigation = true;
         }
-        req.url = encodeURI(req.url)
+       
         return req;
       },
     });
@@ -202,6 +203,7 @@ const crawlDomain = async (
         // handle onclick
         selector: ':not(a):is([role="link"], button[onclick])',
         transformRequestFunction(req) {
+          req.url = encodeURI(req.url)
           if (urlsCrawled.scanned.some(item => item.url === req.url)) {
             req.skipNavigation = true;
           }
@@ -211,7 +213,7 @@ const crawlDomain = async (
             // playwright headless mode does not support navigation to pdf document
             req.skipNavigation = true;
           }
-          req.url = encodeURI(req.url)
+          
           return req;
         },
       })
@@ -269,30 +271,31 @@ const crawlDomain = async (
           return false;
         }
       }
-      if(!isScanPdfs){
-      if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
-        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-          numScanned: urlsCrawled.scanned.length,
-          urlScanned: actualUrl,
-        });
-        return;
-      }
 
-      // Ensure page navigation completes to capture final URL in a redirect chain
-      await page.goto(request.url, { waitUntil: 'networkidle' });
+      if (!isScanPdfs) {
+        if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
+          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: actualUrl,
+          });
+          return;
+        }
 
-      let finalUrl = page.url(); // Initialize with the request URL
+        // Ensure page navigation completes to capture final URL in a redirect chain
+        await page.goto(request.url, { waitUntil: 'networkidle' });
+
+        let finalUrl = page.url(); // Initialize with the request URL
 
 
-      if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
-        console.log(`Excluded URL (final/redirect): ${finalUrl}`);
-        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-          numScanned: urlsCrawled.scanned.length,
-          urlScanned: finalUrl,
-        });
-        return; // Skip processing this URL
-      }
-    }
+        if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
+          console.log(`Excluded URL (final/redirect): ${finalUrl}`);
+          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: finalUrl,
+          });
+          return; // Skip processing this URL
+        }
+      } 
 
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
         crawler.autoscaledPool.abort();
