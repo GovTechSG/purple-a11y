@@ -30,6 +30,10 @@ Portable Purple A11y is the recommended way to run Purple A11y as it reduces the
 Please ensure the following requirements are met:
 
 - **Node.js version to be version 15.10.0 and above.**
+- To check your version of Node go into terminal and paste the command bellow
+```shell
+node -v
+```
 - If you do not have node, or if there is a need to manage your node versions, you can consider using [Node Version Manager (NVM)](https://github.com/nvm-sh/nvm).
 - Make sure NVM is pointing to a node version >= 15.10.0. Please refer to [Usage of Node Version Manager (NVM)](<#usage-of-node-version-manager-(NVM)>)
 - Install the required NPM packages with `npm install`.
@@ -54,13 +58,19 @@ Please refer to [Troubleshooting section](#troubleshooting) for more information
 
 Purple A11y can perform the following to scan the target URL.
 
+- To **run** Purple A11y in **terminal**, run `node index`. Questions will be prompted to assist you in providing the right inputs.
 - Results will be compiled in JSON format, followed by generating a HTML report.
-- To start using Purple A11y, run `node index`. Questions will be prompted to assist you in providing the right inputs.
 
 > NOTE: For your initial scan, there may be some loading time required before use. Purple-A11y will also ask for your name and email address and collect your app usage data to personalise your experience. Your information fully complies with [GovTech’s Privacy Policy](https://www.tech.gov.sg/privacy/).
-> You may delete your cached name and e-mail address by running the following command to delete `userData.txt`:
+
+#### Delete/Edit Details
+> You may delete and edit your cached name and e-mail address by running the following command to delete `userData.txt`:
+
 > - Windows (PowerShell): `rm "$env:APPDATA\Purple A11y\userData.txt"`
 > - MacOS (Terminal): `rm "$HOME/Library/Application Support/Purple A11y/userData.txt"`
+
+If `userData.txt` does not exists just run `node index`.
+
 
 ### Scan Selection
 
@@ -95,7 +105,7 @@ Headless mode would allow you to run the scan in the background. If you would li
 │ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
 ? What would you like to scan? Sitemap
-? Do you want purple-a11y to run in the background? (Y/n) Y
+? Do you want purple-a11y to run in the background? (Y/n) No
 ```
 
 ### Sitemap Scan
@@ -110,7 +120,7 @@ Headless mode would allow you to run the scan in the background. If you would li
 │ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
 ? What would you like to scan? Sitemap
-? Do you want purple-a11y to run in the background? Yes
+? Do you want purple-a11y to run in the background? No
 ? Which screen size would you like to scan? (Use arrow keys) Desktop
 ? Please enter URL or file path to sitemap, or drag and drop a sitemap file here:  https://www.sitemaps.org/sitemap.xml
 
@@ -230,7 +240,9 @@ npx playwright@1.27.1 install
 
 ### CLI Mode
 
-CLI mode is designed to be run in continuous integration (CI) environment. Run `node cli.js` for a set of command-line parameters available. Please note CLI mode is only supported on Mac/Linux at this moment.
+CLI mode is designed to be run in continuous integration (CI) environment. 
+ Run `node cli.js` for a set of command-line parameters available. 
+ **Please note CLI mode is only supported on Mac/Linux at this moment.**
 
 ```shell
 Usage: node cli.js -c <crawler> -d <device> -w <viewp
@@ -292,12 +304,12 @@ Options:
                                      ss to restricted resources.        [string]
 
 Examples:
-  To scan sitemap of website:', 'node cli.js -c [ 1 | sitemap ] -u <url_link>
-  [ -d <device> | -w <viewport_width> ]
-  To scan a website', 'node cli.js -c [ 2 | website ] -u <url_link> [ -d <devi
-  ce> | -w <viewport_width> ]
-  To start a custom flow scan', 'node cli.js -c [ 3 | custom ] -u <url_link> [
-   -d <device> | -w <viewport_width> ]
+  To scan sitemap of website:', 'node cli.js -c 1 | sitemap -u <url_link>
+  -d <device> | -w <viewport_width> 
+  To scan a website', 'node cli.js -c 2 | website -u <url_link> -d <devi
+  ce> | -w <viewport_width> 
+  To start a custom flow scan', 'node cli.js -c 3 | custom  -u <url_link>
+   -d <device> | -w <viewport_width> 
 ```
 
 ### Device Options
@@ -426,35 +438,46 @@ Examples:
 If the device name contains ```(``` and ```)```, wrap the device name in single quotes when entered into the CLI.
 Please note that ```-d``` and ```-w``` are mutually exclusive. If none are specified, the default device used for the CLI scan is Desktop.
 
-For example, to conduct a website scan to the URL `http://localhost:8000` and write to `a11y-scan-results.zip` with an `iPad (gen 7) landscape` screen, run
+For example, to conduct a website scan to the URL "http://localhost:8000" and write to "a11y-scan-results.zip" with an 'iPad (gen 7) landscape' screen, run
 
 ```shell
 node cli.js -c 2 -o a11y-scan-results.zip -u http://localhost:8000 -d 'iPad (gen 7) landscape'
 ```
 
-For example, to conduct a website scan to the URL `http://localhost:8000` and write to `a11y-scan-results.zip` with a custom screen width `360`, run
+If the site you want to scan has a query string wrap the link in single quotes when entered into the CLI.
+
+For example, to conduct a website scan to the URL "http://localhost:8000" and write to "a11y-scan-results.zip" with a custom screen width '360', run
 
 ```shell
-node cli.js -c 2 -o a11y-scan-results.zip -u http://localhost:8000 -w 360
+node cli.js -c 2 -o a11y-scan-results.zip -u "http://localhost:8000" -w 360
 ```
 
+## Report
+Once a scan of the site is completed. 
+
+A report will be downloaded into the current working directory.
+
 ## Accessibility Scan Results
-For details on which accessibility scan results trigger "Must Fix" / "Good to Fix" findings, you may refer to [Scan Issue Details](https://github.com/GovTechSG/purple-a11y/blob/master/DETAILS.md).
+
+Each Issue has its own severity "Must Fix" / "Good to Fix" based on the [WCAG Conformance](https://www.w3.org/TR/WCAG21/). 
+
+For details on which accessibility scan results triggers a  "Must Fix" / "Good to Fix" findings, you may refer to [Scan Issue Details](https://github.com/GovTechSG/purple-a11y/blob/master/DETAILS.md).
 
 ## Troubleshooting
 
-Please refer to the information below to exist in debugging. Most errors below are due to the switching between Node.js versions.
+Please refer to the information below to assist in debugging. Most errors below are due to the switching between Node.js versions.
 
 ### Incompatible Node.js versions
 
 **Issue**: When your Node.js version is incompatible, you may face the following syntax error.
-**Solution**: Install Node.js versions > v15.10.0, i.e. Node.js v16 and above.
+
 
 ```shell
 const URL_NO_COMMAS_REGEX = RegExp('https?://(www\\.)?[\\p{L}0-9][-\\p{L}0-9@:%._\\+~#=]{0,254}[\\p{L}0-9]\\.[a-z]{2,63}(:\\d{1,5})?(/[-\\p{L}0-9@:%_\\+.~#?&//=\\(\\)]*)?', 'giu'); // eslint-disable-line
                             ^
 SyntaxError: Invalid regular expression: /https?://(www\.)?[\p{L}0-9][-\p{L}0-9@:%\._\+~#=]{0,254}[\p{L}0-9]\.[a-z]{2,63}(:\d{1,5})?(/[-\p{L}0-9@:%_\+.~#?&//=\(\)]*)?/: Invalid escape
 ```
+**Solution**: Install Node.js versions > v15.10.0, i.e. Node.js v16 and above.
 
 ### Compiled against a different Node.js version
 
@@ -499,11 +522,18 @@ zsh: abort      node index.js
 
 **Limitation**: Due to animations causing elements to shift out of the viewport after an Axe scan, there's a risk of element screenshots timing out within 5 seconds if the element is not found. This known issue is particularly prevalent in scenarios like carousels with interval-based transitions.
 
-## How do I limit number of pages scanned?
+## FAQ 
+
+### How do I limit number of pages scanned?
 
 If you find a scan takes too long to complete due to large website, or there are too many pages in a sitemap to scan, you may choose to limit number of pages scanned.
 
 To do this, run CLI mode `node cli.js` with the needed settings and specify `-p 10` where `10` is the number of pages you wish to scan.
+
+### I am a new developer and I have some knowledge gap.
+
+We recommend looking at our **Technology Stack** to understand the usage of each component. Take your time to understand.
+
 
 ## Additional Information on Data
 
