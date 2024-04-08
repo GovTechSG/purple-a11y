@@ -47,7 +47,7 @@ export const guiInfoLog = (status, data) => {
       case guiInfoStatusTypes.SKIPPED:
       case guiInfoStatusTypes.ERROR:
         console.log(
-          `Electron crawling::${data.numScanned || 0}::${status}::${
+          `crawling::${data.numScanned || 0}::${status}::${
             data.urlScanned || 'no url provided'
           }`,
         );
