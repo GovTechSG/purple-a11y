@@ -7,6 +7,7 @@ import {
   preNavigationHooks,
   runAxeScript,
   isUrlPdf,
+  isUrlZip,
 } from './commonCrawlerFunc.js';
 import constants, {
   basicAuthRegex,
@@ -270,7 +271,7 @@ const crawlDomain = async (
         }
       }
       if(!isScanPdfs){
-      if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
+      if (isExcluded(actualUrl) || isUrlPdf(actualUrl) || isUrlZip(actualUrl)) {
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
           numScanned: urlsCrawled.scanned.length,
           urlScanned: actualUrl,
@@ -284,7 +285,7 @@ const crawlDomain = async (
       let finalUrl = page.url(); // Initialize with the request URL
 
 
-      if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
+      if (isExcluded(actualUrl) || isUrlPdf(actualUrl) || isUrlZip(actualUrl)) {
         console.log(`Excluded URL (final/redirect): ${finalUrl}`);
         guiInfoLog(guiInfoStatusTypes.SKIPPED, {
           numScanned: urlsCrawled.scanned.length,
