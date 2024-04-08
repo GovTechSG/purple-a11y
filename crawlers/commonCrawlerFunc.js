@@ -191,6 +191,6 @@ export const isUrlZip = (url) => {
   const parsedUrl = new URL(url);
   
   // Checking the whole URL for the .zip pattern, not just the pathname
-  return /\.zip($|\?|#)/i.test(parsedUrl.href);
+  return /\.zip($|\?|#)/i.test(parsedUrl.pathname) || /\.zip($|\?|#)/i.test(parsedUrl.href);
 };
 
