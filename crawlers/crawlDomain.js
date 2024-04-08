@@ -7,7 +7,6 @@ import {
   preNavigationHooks,
   runAxeScript,
   isUrlPdf,
-  isUrlZip,
 } from './commonCrawlerFunc.js';
 import constants, {
   basicAuthRegex,
