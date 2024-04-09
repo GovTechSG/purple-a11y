@@ -41,7 +41,7 @@ export const guiInfoLog = (status, data) => {
   if (process.env.RUNNING_FROM_PH_GUI || process.env.PURPLE_A11Y_VERBOSE) {
     switch (status) {
       case guiInfoStatusTypes.COMPLETED:
-        console.log('Electron scan completed');
+        console.log('Scan completed');
         break;
       case guiInfoStatusTypes.SCANNED:
       case guiInfoStatusTypes.SKIPPED:
