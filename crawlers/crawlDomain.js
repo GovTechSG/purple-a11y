@@ -51,7 +51,9 @@ const crawlDomain = async (
   let urlsCrawled
   let requestQueue;
 
-  let counter = 1; // Define the counter and initialize it to 1 if it hasn't been previously defined
+  let counter = 1; // Initialize counter
+  let processedUrls = []; // Avoid checking duplicates
+
   
   if (fromCrawlIntelligentSitemap) {
     dataset = datasetFromIntelligent;
@@ -259,19 +261,31 @@ const crawlDomain = async (
 
       const actualUrl = request.loadedUrl || request.url;
 
-
       function isExcluded(url) {
+
+        if (processedUrls.includes(url)) {
+          process.stdout.write(`Duplicate: ${url}\r`);
+          return false;
+        } else {
+          processedUrls.push(url);
+        }
+
         // Print out the count and current error message
         process.stdout.write(`URL ${counter}: ${url}\r`);
         counter++; 
-        
-        // Check if any pattern matches the URL.
+
         const blacklistedPatterns = getBlackListedPatterns();
+        if (!blacklistedPatterns) {
+          return;
+        }
+
         try {
           const parsedUrl = new URL(url);
           return blacklistedPatterns.some(pattern =>
             new RegExp(pattern).test(parsedUrl.hostname) || new RegExp(pattern).test(url)
           );
+
+          return isBlacklisted;
         } catch (error) {
           console.error(`Error parsing URL: ${url}`, error);
           return false;
