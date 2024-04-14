@@ -51,6 +51,8 @@ const crawlDomain = async (
   let urlsCrawled
   let requestQueue;
 
+  let counter = 1; // Define the counter and initialize it to 1 if it hasn't been previously defined
+  
   if (fromCrawlIntelligentSitemap) {
     dataset = datasetFromIntelligent;
     urlsCrawled = urlsCrawledFromIntelligent;
@@ -259,6 +261,10 @@ const crawlDomain = async (
 
 
       function isExcluded(url) {
+        // Print out the count and current error message
+        process.stdout.write(`URL ${counter}: ${url}\r`);
+        counter++; 
+        
         // Check if any pattern matches the URL.
         const blacklistedPatterns = getBlackListedPatterns();
         try {
