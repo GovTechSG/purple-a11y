@@ -96,36 +96,86 @@ const crawlDomain = async (
     await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
   }
 
-  const customEnqueueLinksByClickingElements = async (page, requestQueue) => {
-    page.on('framenavigated', async (frame) => {
-      const newUrl = frame.url();
-      const currentUrl = page.url();
-  
-      if (newUrl !== currentUrl) {
-        console.log("Navigation detected to: " + newUrl);
-        await requestQueue.addRequest({ url: newUrl, skipNavigation: isUrlPdf(newUrl) });
-        
-      }
-    });
-  
-    const buttons = await page.$$('button');
-    for (const button of buttons) {
-      try {
-        if (await button.isVisible()) {
-          console.log('Clicking visible button');
-          await button.click();
-          await page.waitForTimeout(1000); // Wait for 1 second
-          await page.waitForLoadState('networkidle'); // Wait for network idle
-        }
-      } catch (error) {
-        console.log(`Error occurred while clicking button: ${error}`);
-      }
-    }
-    
-  };
-  
+  // const customEnqueueLinksByClickingElements = async (page, requestQueue) => {
+  //   page.on('framenavigated', async (frame) => {
+  //     const newUrl = frame.url();
+  //     const currentUrl = page.url();
+
+  //     if (newUrl !== currentUrl) {
+  //       console.log("Navigation detected to: " + newUrl);
+  //       await requestQueue.addRequest({ url: newUrl, skipNavigation: isUrlPdf(newUrl) });
+
+  //     }
+  //   });
+
+  //   const buttons = await page.$$('button');
+  //   for (const button of buttons) {
+  //     try {
+  //       if (await button.isVisible()) {
+  //         console.log('Clicking visible button');
+  //         await button.click();
+  //         await page.waitForTimeout(5000); // Wait for 1 second
+  //         await page.waitForLoadState('networkidle'); // Wait for network idle
+  //       }
+  //     } catch (error) {
+  //       console.log(`Error occurred while clicking button: ${error}`);
+  //     }
+  //   }
+
+  // };
+
 
   const enqueueProcess = async (page, enqueueLinks, customEnqueueLinksByClickingElements) => {
+    try {
+
+      const customEnqueueLinksByClickingElements = async (page) => {
+
+        page.on('framenavigated', async (frame) => {
+          const newUrl = frame.url();
+          const currentUrl = page.url();
+
+          if (newUrl !== currentUrl) {
+            console.log("Navigation detected to: " + newUrl);
+            if (!page.isClosed()) {
+              await requestQueue.addRequest({ url: newUrl, skipNavigation: isUrlPdf(newUrl) });
+            }
+          }
+        });
+
+        if (urlsCrawled.scanned.length >= maxRequestsPerCrawl - 1) {
+          return;
+        }
+
+        const buttons = await page.$$('button');
+
+        for (const button of buttons) {
+          try {
+            if (await button.isVisible() && await button.isEnabled() && !page.isClosed()) {
+              try {
+                console.log('clicking button');
+                await button.click({});
+              }
+              catch (e) {
+                console.log(e);
+              }
+              await page.waitForTimeout(1000); // Add a delay of 0.5 second between each button click
+              await page.waitForLoadState(); // Wait for the page to finish loading
+              await page.waitForTimeout(500); // Add a delay of 0.5 second after the page has finished loading
+            }
+          } catch (error) {
+            console.log(`Error occurred while clicking button: ${error}`);
+          }
+        }
+
+        return;
+
+      };
+
+      await customEnqueueLinksByClickingElements(page);
+
+    } catch (e) {
+      console.log(e);
+    }
     await enqueueLinks({
       // set selector matches anchor elements with href but not contains # or starting with mailto:
       selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
@@ -141,7 +191,7 @@ const crawlDomain = async (
           // playwright headless mode does not support navigation to pdf document
           req.skipNavigation = true;
         }
-       
+
         return req;
       },
     });
@@ -241,7 +291,7 @@ const crawlDomain = async (
             // playwright headless mode does not support navigation to pdf document
             req.skipNavigation = true;
           }
-          
+
           return req;
         },
       })
@@ -323,7 +373,7 @@ const crawlDomain = async (
           });
           return; // Skip processing this URL
         }
-      } 
+      }
 
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
         crawler.autoscaledPool.abort();
