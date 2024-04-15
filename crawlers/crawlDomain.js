@@ -96,8 +96,36 @@ const crawlDomain = async (
     await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
   }
 
+  const customEnqueueLinksByClickingElements = async (page, requestQueue) => {
+    page.on('framenavigated', async (frame) => {
+      const newUrl = frame.url();
+      const currentUrl = page.url();
+  
+      if (newUrl !== currentUrl) {
+        console.log("Navigation detected to: " + newUrl);
+        await requestQueue.addRequest({ url: newUrl, skipNavigation: isUrlPdf(newUrl) });
+        
+      }
+    });
+  
+    const buttons = await page.$$('button');
+    for (const button of buttons) {
+      try {
+        if (await button.isVisible()) {
+          console.log('Clicking visible button');
+          await button.click();
+          await page.waitForTimeout(1000); // Wait for 1 second
+          await page.waitForLoadState('networkidle'); // Wait for network idle
+        }
+      } catch (error) {
+        console.log(`Error occurred while clicking button: ${error}`);
+      }
+    }
+    
+  };
+  
 
-  const enqueueProcess = async (page, enqueueLinks, enqueueLinksByClickingElements) => {
+  const enqueueProcess = async (page, enqueueLinks, customEnqueueLinksByClickingElements) => {
     await enqueueLinks({
       // set selector matches anchor elements with href but not contains # or starting with mailto:
       selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
@@ -195,7 +223,7 @@ const crawlDomain = async (
 
     // Try catch is necessary as clicking links is best effort, it may result in new pages that cause browser load or navigation errors that PlaywrightCrawler does not handle
     try {
-      await enqueueLinksByClickingElements({
+      await customEnqueueLinksByClickingElements({
         // set selector matches
         // NOT <a>
         // IS role='link' or button onclick
@@ -252,7 +280,7 @@ const crawlDomain = async (
       crawler,
       sendRequest,
       enqueueLinks,
-      enqueueLinksByClickingElements,
+      customEnqueueLinksByClickingElements,
     }) => {
 
       const actualUrl = request.loadedUrl || request.url;
@@ -304,12 +332,12 @@ const crawlDomain = async (
 
       // if URL has already been scanned
       if (urlsCrawled.scanned.some(item => item.url === request.url)) {
-        await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
+        await enqueueProcess(page, enqueueLinks, customEnqueueLinksByClickingElements);
         return;
       }
 
       if (isDisallowedInRobotsTxt(request.url)) {
-        await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
+        await enqueueProcess(page, enqueueLinks, customEnqueueLinksByClickingElements);
         return;
       }
 
@@ -360,7 +388,7 @@ const crawlDomain = async (
 
       if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
         urlsCrawled.userExcluded.push(request.url);
-        await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
+        await enqueueProcess(page, enqueueLinks, customEnqueueLinksByClickingElements);
         return;
       }
 
@@ -459,7 +487,7 @@ const crawlDomain = async (
           }
 
           if (followRobots) await getUrlsFromRobotsTxt(request.url, browser);
-          await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
+          await enqueueProcess(page, enqueueLinks, customEnqueueLinksByClickingElements);
         }
       } catch (e) {
         if (!e.message.includes("page.evaluate")) {
