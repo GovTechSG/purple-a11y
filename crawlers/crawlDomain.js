@@ -131,6 +131,7 @@ const crawlDomain = async (
       const customEnqueueLinksByClickingElements = async (page) => {
 
         page.on('framenavigated', async (frame) => {
+          console.log("Detected new URL");
           const newUrl = frame.url();
           const currentUrl = page.url();
 
@@ -142,28 +143,22 @@ const crawlDomain = async (
           }
         });
 
-        if (urlsCrawled.scanned.length >= maxRequestsPerCrawl - 1) {
-          return;
-        }
+        const buttons = await page.$$eval('button', buttons => buttons);
 
-        const buttons = await page.$$('button');
+        console.log("Found buttons", buttons.length);
 
         for (const button of buttons) {
           try {
+            console.log("Clicking button");
+            console.log(button); // Print the parent of the button
+
             if (await button.isVisible() && await button.isEnabled() && !page.isClosed()) {
-              try {
-                console.log('clicking button');
-                await button.click({});
-              }
-              catch (e) {
-                console.log(e);
-              }
-              await page.waitForTimeout(1000); // Add a delay of 0.5 second between each button click
+              await button.click({});
+              await page.waitForTimeout(500); // Add a delay of 0.5 second between each button click
               await page.waitForLoadState(); // Wait for the page to finish loading
-              await page.waitForTimeout(500); // Add a delay of 0.5 second after the page has finished loading
             }
           } catch (error) {
-            console.log(`Error occurred while clicking button: ${error}`);
+            silentLogger.info(`Error occurred while executing button clicks: ${error}`);
           }
         }
 
@@ -176,6 +171,8 @@ const crawlDomain = async (
     } catch (e) {
       console.log(e);
     }
+    
+    /*
     await enqueueLinks({
       // set selector matches anchor elements with href but not contains # or starting with mailto:
       selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
@@ -195,6 +192,7 @@ const crawlDomain = async (
         return req;
       },
     });
+    */
 
     const handleOnWindowOpen = async url => {
       if (!isDisallowedInRobotsTxt(url)) {
@@ -271,33 +269,6 @@ const crawlDomain = async (
       }
     })
 
-    // Try catch is necessary as clicking links is best effort, it may result in new pages that cause browser load or navigation errors that PlaywrightCrawler does not handle
-    try {
-      await customEnqueueLinksByClickingElements({
-        // set selector matches
-        // NOT <a>
-        // IS role='link' or button onclick
-        // enqueue new page URL
-        // handle onclick
-        selector: ':not(a):is([role="link"], button[onclick])',
-        transformRequestFunction(req) {
-          req.url = encodeURI(req.url)
-          if (urlsCrawled.scanned.some(item => item.url === req.url)) {
-            req.skipNavigation = true;
-          }
-          if (isDisallowedInRobotsTxt(req.url)) return null;
-          req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-          if (isUrlPdf(req.url) || urlsCrawled.scanned.some(item => item.url === req.url)) {
-            // playwright headless mode does not support navigation to pdf document
-            req.skipNavigation = true;
-          }
-
-          return req;
-        },
-      })
-    } catch (e) {
-      silentLogger.info(e);
-    }
   };
 
   const crawler = new crawlee.PlaywrightCrawler({
