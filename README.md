@@ -242,7 +242,7 @@ npx playwright@1.27.1 install
 
 CLI mode is designed to be run in continuous integration (CI) environment. 
  Run `node cli.js` for a set of command-line parameters available. 
- **Please note CLI mode is only supported on Mac/Linux at this moment.**
+
 
 ```shell
 Usage: node cli.js -c <crawler> -d <device> -w <view
