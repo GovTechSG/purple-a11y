@@ -84,6 +84,14 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     }
     return option;
   })
+  .coerce('f', option => {
+    if (option === "true"){
+      return true;
+    }
+    else{
+      return false;
+    }
+  })
   .coerce('w', option => {
     if (!option || Number.isNaN(option)) {
       printMessage([`Invalid viewport width. Please provide a number. `], messageOptions);
@@ -453,3 +461,5 @@ scanInit(options).then(async storagePath => {
       printMessage([`Error in zipping results: ${error}`]);
     });
 });
+
+export { options };

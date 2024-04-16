@@ -49,6 +49,12 @@ export const cliOptions = {
     type: 'number',
     demandOption: false,
   },
+  f: {
+    alias: 'safeMode',
+    describe: 'Disables dynamically clicking of page elements to find links, which resolve issues on some websites. Defaults to false.',
+    type: 'string',
+    demandOption: false,
+  },
   h: {
     alias: 'headless',
     describe: 'Whether to run the scan in headless mode. Defaults to yes.',

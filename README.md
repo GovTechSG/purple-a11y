@@ -245,57 +245,69 @@ CLI mode is designed to be run in continuous integration (CI) environment.
  **Please note CLI mode is only supported on Mac/Linux at this moment.**
 
 ```shell
-Usage: node cli.js -c <crawler> -d <device> -w <viewp
-ort> -u <url> OPTIONS
+Usage: node cli.js -c <crawler> -d <device> -w <view
+port> -u <url> OPTIONS
 
 Options:
-      --help             Show help                                     [boolean]
-  -c, --scanner          Type of scan, 1) sitemap, 2) website crawl, 3) custom f
-                         low, 4) custom flow 2.0, 5) intelligent
-                                                                      [required] 
-                             [choices: "sitemap", "website", "custom", "custom2", "intelligent"]
-  -u, --url              Website URL you want to scan        [string] [required]
-  -d, --customDevice     Device you want to scan   [string] [default: "Desktop"]
-  -w, --viewportWidth    Viewport width (in pixels) you want to scan    [number]
-  -o, --zip              Zip filename to save results                   [string]
-  -p, --maxpages         Maximum number of pages to scan (default: 100). Only av
-                         ailable in website and sitemap scans           [number]
-  -h, --headless         Whether to run the scan in headless mode. Defaults to y
-                         es.    [string] [choices: "yes", "no"] [default: "yes"]
-  -b, --browserToRun   Browser to run the scan on: 1) Chromium, 2) Chrome, 3) Ed
-                       ge. Defaults to Chromium.
-                   [choices: "chrome", "edge", "chromium"] [default: "chromium"]
-  -s, --strategy       Strategy to choose which links to crawl in a website scan
-                       . Defaults to "same-domain".
-                                       [choices: "same-domain", "same-hostname"]
-  -k, --nameEmail      To personalise your experience, we will be
-                       collecting your name, email address and usage data. 
-                       Your information fully complies with GovTech’s Privacy Policy. 
-                       Please provide your name and email address 
-                       in this format "John Doe:john@domain.com".                   
-                                        [string] [required]
-  -j, --customFlowLabel  Give Custom Flow Scan a label for easier reference in t
-                         he report                                      [string]
-  -t, --specifiedMaxConcurrency  Maximum number of pages to scan concurrently.
-                                 Use for sites with throttling. Defaults to 25.
+      --help                         Show help                         [boolean]
+  -c, --scanner                      Type of scan, 1) sitemap, 2) website crawl,
+                                      3) custom flow, 4) custom flow 2.0, 5) int
+                                     elligent
+  [required] [choices: "sitemap", "website", "custom", "custom2", "intelligent"]
+  -u, --url                          Website URL you want to scan
+                                                             [string] [required]
+  -d, --customDevice                 Device you want to scan            [string]
+  -w, --viewportWidth                Viewport width (in pixels) you want to scan
                                                                         [number]
+  -o, --zip                          Zip filename to save results       [string]
+  -p, --maxpages                     Maximum number of pages to scan (default: 1
+                                     00). Only available in website and sitemap
+                                     scans                              [number]
+  -f, --safeMode                     Disables dynamically clicking of page eleme
+                                     nts to find links, which resolve issues on
+                                     some websites. Defaults to false.  [string]
+  -h, --headless                     Whether to run the scan in headless mode. D
+                                     efaults to yes.
+                                [string] [choices: "yes", "no"] [default: "yes"]
+  -b, --browserToRun                 Browser to run the scan on: 1) Chromium, 2)
+                                      Chrome, 3) Edge. Defaults to Chromium.
+                     [choices: "chromium", "chrome", "edge"] [default: "chrome"]
+  -s, --strategy                     Strategy to choose which links to crawl in
+                                     a website scan. Defaults to "same-domain".
+                                       [choices: "same-domain", "same-hostname"]
+  -e, --exportDirectory              Preferred directory to store scan results.
+                                     Path is relative to your home directory.
+                                                                        [string]
+  -j, --customFlowLabel              Give Custom Flow Scan a label for easier re
+                                     ference in the report              [string]
+  -k, --nameEmail                    To personalise your experience, we will be
+                                     collecting your name, email address and app
+                                      usage data. Your information fully complie
+                                     s with GovTech’s Privacy Policy. Please pro
+                                     vide your name and email address in this fo
+                                     rmat "John Doe:john@domain.com".
+                                                             [string] [required]
+  -t, --specifiedMaxConcurrency      Maximum number of pages to scan concurrentl
+                                     y. Use for sites with throttling. Defaults
+                                     to 25.                             [number]
   -i, --fileTypes                    File types to include in the scan. Defaults
                                       to html-only.
        [string] [choices: "all", "pdf-only", "html-only"] [default: "html-only"]
-  -x, --blacklistedPatternsFilename  Txt file that has a list of pattern of 
-                                     domains to exclude from accessibility scan 
-                                     separated by new line
+  -x, --blacklistedPatternsFilename  Txt file that has a list of pattern of doma
+                                     ins to exclude from accessibility scan sepa
+                                     rated by new line
                                             [string] [default: "exclusions.txt"]
-  -a, --additional  Additional features to include in the report:
-                    screenshots - Include element screenshots in the generated 
-                    report
-                    none - Exclude all additional features in the generated re
-                    port
+  -a, --additional                   Additional features to include in the repor
+                                     t:
+                                     screenshots - Include element screensho
+                                     ts in the generated report
+                                     none - Exclude
+                                     all additional features in the generated re
+                                     port
               [string] [choices: "screenshots", "none"] [default: "screenshots"]
-  -q, --metadata  Json string that contains additional scan metadata for
-                  telemetry purposes.
-                  Defaults to "{}"
-                                                        [string] [default: "{}"]
+  -q, --metadata                     Json string that contains additional scan m
+                                     etadata for telemetry purposes. Defaults to
+                                      "{}"              [string] [default: "{}"]
   -r, --followRobots                 Option for crawler to adhere to robots.txt
                                      rules if it exists
                                  [string] [choices: "yes", "no"] [default: "no"]
@@ -304,12 +316,13 @@ Options:
                                      ss to restricted resources.        [string]
 
 Examples:
-  To scan sitemap of website:', 'node cli.js -c 1 | sitemap -u <url_link>
-  -d <device> | -w <viewport_width> 
-  To scan a website', 'node cli.js -c 2 | website -u <url_link> -d <devi
-  ce> | -w <viewport_width> 
-  To start a custom flow scan', 'node cli.js -c 3 | custom  -u <url_link>
-   -d <device> | -w <viewport_width> 
+  To scan sitemap of website:', 'node cli.js -c [ 1 | sitemap ] -u <url_link>
+  [ -d <device> | -w <viewport_width> ]
+  To scan a website', 'node cli.js -c [ 2 | website ] -u <url_link> [ -d <devi
+  ce> | -w <viewport_width> ]
+  To start a custom flow scan', 'node cli.js -c [ 3 | custom ] -u <url_link> [
+   -d <device> | -w <viewport_width> ]
+
 ```
 
 ### Device Options

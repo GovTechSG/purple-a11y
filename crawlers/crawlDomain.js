@@ -25,6 +25,8 @@ import { areLinksEqual, isFollowStrategy } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
 import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
+import { cli } from 'winston/lib/winston/config/index.js';
+import { options } from '../cli.js'; 
 
 
 const crawlDomain = async (
@@ -113,7 +115,7 @@ const crawlDomain = async (
           // playwright headless mode does not support navigation to pdf document
           req.skipNavigation = true;
         }
-       
+
         return req;
       },
     });
@@ -193,32 +195,35 @@ const crawlDomain = async (
       }
     })
 
-    // Try catch is necessary as clicking links is best effort, it may result in new pages that cause browser load or navigation errors that PlaywrightCrawler does not handle
-    try {
-      await enqueueLinksByClickingElements({
-        // set selector matches
-        // NOT <a>
-        // IS role='link' or button onclick
-        // enqueue new page URL
-        // handle onclick
-        selector: ':not(a):is([role="link"], button[onclick])',
-        transformRequestFunction(req) {
-          req.url = encodeURI(req.url)
-          if (urlsCrawled.scanned.some(item => item.url === req.url)) {
-            req.skipNavigation = true;
-          }
-          if (isDisallowedInRobotsTxt(req.url)) return null;
-          req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-          if (isUrlPdf(req.url) || urlsCrawled.scanned.some(item => item.url === req.url)) {
-            // playwright headless mode does not support navigation to pdf document
-            req.skipNavigation = true;
-          }
-          
-          return req;
-        },
-      })
-    } catch (e) {
-      silentLogger.info(e);
+    // If safemMode flag is enabled, skip enqueueLinksByClickingElements
+    if (!options.f) {
+      // Try catch is necessary as clicking links is best effort, it may result in new pages that cause browser load or navigation errors that PlaywrightCrawler does not handle
+      try {
+        await enqueueLinksByClickingElements({
+          // set selector matches
+          // NOT <a>
+          // IS role='link' or button onclick
+          // enqueue new page URL
+          // handle onclick
+          selector: ':not(a):is([role="link"], button[onclick])',
+          transformRequestFunction(req) {
+            req.url = encodeURI(req.url)
+            if (urlsCrawled.scanned.some(item => item.url === req.url)) {
+              req.skipNavigation = true;
+            }
+            if (isDisallowedInRobotsTxt(req.url)) return null;
+            req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+            if (isUrlPdf(req.url) || urlsCrawled.scanned.some(item => item.url === req.url)) {
+              // playwright headless mode does not support navigation to pdf document
+              req.skipNavigation = true;
+            }
+
+            return req;
+          },
+        })
+      } catch (e) {
+        silentLogger.info(e);
+      }
     }
   };
 
@@ -295,7 +300,7 @@ const crawlDomain = async (
           });
           return; // Skip processing this URL
         }
-      } 
+      }
 
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
         crawler.autoscaledPool.abort();
