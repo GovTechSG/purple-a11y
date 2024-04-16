@@ -263,9 +263,11 @@ Options:
   -p, --maxpages                     Maximum number of pages to scan (default: 1
                                      00). Only available in website and sitemap
                                      scans                              [number]
-  -f, --safeMode                     Disables dynamically clicking of page eleme
-                                     nts to find links, which resolve issues on
-                                     some websites. Defaults to false.  [string]
+  -f, --safeMode                     Option to disable dynamically clicking of p
+                                     age buttons and links to find links, which
+                                     resolve issues on some websites. Defaults t
+                                     o no.
+                                 [string] [choices: "yes", "no"] [default: "no"]
   -h, --headless                     Whether to run the scan in headless mode. D
                                      efaults to yes.
                                 [string] [choices: "yes", "no"] [default: "yes"]

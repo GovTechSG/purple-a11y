@@ -538,7 +538,8 @@ export const prepareData = async argv => {
     additional,
     metadata,
     followRobots,
-    header
+    header,
+    safeMode
   } = argv;
 
   // construct filename for scan results
@@ -580,7 +581,8 @@ export const prepareData = async argv => {
     includeScreenshots: !(additional === 'none'),
     metadata,
     followRobots,
-    extraHTTPHeaders: header
+    extraHTTPHeaders: header,
+    safeMode
   };
 };
 
