@@ -84,6 +84,16 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     }
     return option;
   })
+  .coerce('f', option => {
+    if (typeof option !== 'boolean') {
+      printMessage(
+        [`Invalid Input. Please provide a boolean value. (yes | no)`],
+        messageOptions,
+      );
+      process.exit(1);
+    }
+    return option;
+  })
   .coerce('w', option => {
     if (!option || Number.isNaN(option)) {
       printMessage([`Invalid viewport width. Please provide a number. `], messageOptions);

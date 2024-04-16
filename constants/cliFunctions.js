@@ -49,6 +49,13 @@ export const cliOptions = {
     type: 'number',
     demandOption: false,
   },
+  f: {
+    alias: 'enqueueLinkByClickingElement',
+    describe: 'Whether to run the scan that allows EnqueueLinkByClickingElement. Defaults to no.',
+    type: 'boolean',
+    default: false,
+    demandOption: false,
+  },
   h: {
     alias: 'headless',
     describe: 'Whether to run the scan in headless mode. Defaults to yes.',
