@@ -194,7 +194,8 @@ const crawlDomain = async (
         silentLogger.info(e);
       }
     })
-    console.log(options.f);
+
+    // If safemMode flag is enabled, skip enqueueLinksByClickingElements
     if (!options.f) {
       // Try catch is necessary as clicking links is best effort, it may result in new pages that cause browser load or navigation errors that PlaywrightCrawler does not handle
       try {

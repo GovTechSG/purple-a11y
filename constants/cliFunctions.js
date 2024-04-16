@@ -50,8 +50,8 @@ export const cliOptions = {
     demandOption: false,
   },
   f: {
-    alias: 'safemode',
-    describe: 'Determines whether to disable EnqueueLinkByClickingElement. Defaults to false.',
+    alias: 'safeMode',
+    describe: 'Disables dynamically clicking of page elements to find links, which resolve issues on some websites. Defaults to false.',
     type: 'string',
     demandOption: false,
   },
