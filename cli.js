@@ -84,14 +84,6 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     }
     return option;
   })
-  .coerce('f', option => {
-    if (option === "true"){
-      return true;
-    }
-    else{
-      return false;
-    }
-  })
   .coerce('w', option => {
     if (!option || Number.isNaN(option)) {
       printMessage([`Invalid viewport width. Please provide a number. `], messageOptions);
@@ -276,6 +268,7 @@ const scanInit = async argvs => {
   }
   argvs.headless = argvs.headless === 'yes';
   argvs.followRobots = argvs.followRobots === 'yes';
+  argvs.safeMode = argvs.safeMode === 'yes';
   argvs.browserToRun = constants.browserTypes[argvs.browserToRun];
 
   // let chromeDataDir = null;

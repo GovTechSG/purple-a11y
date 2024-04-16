@@ -44,11 +44,13 @@ const crawlDomain = async (
   includeScreenshots,
   followRobots,
   extraHTTPHeaders,
+  safeMode,
   fromCrawlIntelligentSitemap = false, //optional
   datasetFromIntelligent = null, //optional
   urlsCrawledFromIntelligent = null, //optional
 
 ) => {
+
   let dataset;
   let urlsCrawled
   let requestQueue;
@@ -195,8 +197,8 @@ const crawlDomain = async (
       }
     })
 
-    // If safemMode flag is enabled, skip enqueueLinksByClickingElements
-    if (!options.f) {
+    // If safeMode flag is enabled, skip enqueueLinksByClickingElements
+    if (!safeMode) {
       // Try catch is necessary as clicking links is best effort, it may result in new pages that cause browser load or navigation errors that PlaywrightCrawler does not handle
       try {
         await enqueueLinksByClickingElements({

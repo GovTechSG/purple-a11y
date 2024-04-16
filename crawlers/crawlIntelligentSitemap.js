@@ -22,6 +22,7 @@ import {chromium} from 'playwright';
     includeScreenshots,
     followRobots,
     extraHTTPHeaders,
+    safeMode
   ) => {
     let urlsCrawledFinal;
     let urlsCrawled;
@@ -145,6 +146,7 @@ import {chromium} from 'playwright';
         fromCrawlIntelligentSitemap,
         dataset, //for crawlDomain to add on to
         urlsCrawled, //urls for crawlDomain to exclude
+        safeMode
       )
     }
 

@@ -35,7 +35,8 @@ const combineRun = async (details, deviceToScan) => {
     followRobots,
     metadata,
     customFlowLabel = 'Custom Flow',
-    extraHTTPHeaders
+    extraHTTPHeaders,
+    safeMode
   } = envDetails;
 
   process.env.CRAWLEE_LOG_LEVEL = 'ERROR';
@@ -115,27 +116,29 @@ const combineRun = async (details, deviceToScan) => {
         blacklistedPatterns,
         includeScreenshots,
         followRobots,
-        extraHTTPHeaders
+        extraHTTPHeaders,
+        safeMode
       );
       break;
 
     case constants.scannerTypes.website:
       urlsCrawled = await crawlDomain(
-      url,
-      randomToken,
-      host,
-      viewportSettings,
-      maxRequestsPerCrawl,
-      browser,
-      userDataDirectory,
-      strategy,
-      specifiedMaxConcurrency,
-      fileTypes,
-      blacklistedPatterns,
-      includeScreenshots,
-      followRobots,
-      extraHTTPHeaders
-    );
+        url,
+        randomToken,
+        host,
+        viewportSettings,
+        maxRequestsPerCrawl,
+        browser,
+        userDataDirectory,
+        strategy,
+        specifiedMaxConcurrency,
+        fileTypes,
+        blacklistedPatterns,
+        includeScreenshots,
+        followRobots,
+        extraHTTPHeaders,
+        safeMode
+      );
     break;
 
     default:

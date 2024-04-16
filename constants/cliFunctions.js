@@ -51,8 +51,11 @@ export const cliOptions = {
   },
   f: {
     alias: 'safeMode',
-    describe: 'Disables dynamically clicking of page elements to find links, which resolve issues on some websites. Defaults to false.',
+    describe: 'Option to disable dynamically clicking of page buttons and links to find links, which resolve issues on some websites. Defaults to no.',
     type: 'string',
+    choices: ['yes', 'no'],
+    requiresArg: true,
+    default: 'no',
     demandOption: false,
   },
   h: {
