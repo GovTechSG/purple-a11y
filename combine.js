@@ -39,7 +39,6 @@ const combineRun = async (details, deviceToScan) => {
     safeMode
   } = envDetails;
 
-  console.log("combine ", safeMode);
   process.env.CRAWLEE_LOG_LEVEL = 'ERROR';
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
