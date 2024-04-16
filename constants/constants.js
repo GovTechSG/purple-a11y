@@ -219,6 +219,7 @@ export const guiInfoStatusTypes = {
   SKIPPED: 'skipped',
   COMPLETED: 'completed',
   ERROR: 'error',
+  DUPLICATE: 'duplicate',
 };
 
 let launchOptionsArgs = [];
