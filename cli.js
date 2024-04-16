@@ -85,14 +85,12 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return option;
   })
   .coerce('f', option => {
-    if (typeof option !== 'boolean') {
-      printMessage(
-        [`Invalid Input. Please provide a boolean value. (yes | no)`],
-        messageOptions,
-      );
-      process.exit(1);
+    if (option === "true"){
+      return true;
     }
-    return option;
+    else{
+      return false;
+    }
   })
   .coerce('w', option => {
     if (!option || Number.isNaN(option)) {
@@ -463,3 +461,5 @@ scanInit(options).then(async storagePath => {
       printMessage([`Error in zipping results: ${error}`]);
     });
 });
+
+export { options };

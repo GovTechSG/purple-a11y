@@ -26,7 +26,7 @@ import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.
 import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
 import { cli } from 'winston/lib/winston/config/index.js';
-import { cliOptions } from '../constants/cliFunctions.js';
+import { options } from '../cli.js'; 
 
 
 const crawlDomain = async (
@@ -194,7 +194,8 @@ const crawlDomain = async (
         silentLogger.info(e);
       }
     })
-    if (!cliOptions.f) {
+    console.log(options.f);
+    if (!options.f) {
       // Try catch is necessary as clicking links is best effort, it may result in new pages that cause browser load or navigation errors that PlaywrightCrawler does not handle
       try {
         await enqueueLinksByClickingElements({

@@ -52,8 +52,7 @@ export const cliOptions = {
   f: {
     alias: 'enqueueLinkByClickingElement',
     describe: 'Whether to run the scan that allows EnqueueLinkByClickingElement. Defaults to no.',
-    type: 'boolean',
-    default: false,
+    type: 'string',
     demandOption: false,
   },
   h: {
