@@ -275,8 +275,8 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
     .then(async response => {
       const redirectUrl = response.request.res.responseUrl;
       res.status = constants.urlCheckStatuses.success.code;
-
-      let modifiedHTML = response.data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
+      let data = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+      let modifiedHTML = data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
 
       const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?\s*url=(?:'([^']*)'|"([^"]*)"|([^>]*))"/i.exec(modifiedHTML);
 
