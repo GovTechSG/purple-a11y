@@ -274,8 +274,9 @@ Options:
   -b, --browserToRun                 Browser to run the scan on: 1) Chromium, 2)
                                       Chrome, 3) Edge. Defaults to Chromium.
                      [choices: "chromium", "chrome", "edge"] [default: "chrome"]
-  -s, --strategy                     Strategy to choose which links to crawl in
-                                     a website scan. Defaults to "same-domain".
+  -s, --strategy                     Crawls up to general (same parent) domains,
+                                      or only specific hostname. Defaults to "sa
+                                     me-domain".
                                        [choices: "same-domain", "same-hostname"]
   -e, --exportDirectory              Preferred directory to store scan results.
                                      Path is relative to your home directory.
