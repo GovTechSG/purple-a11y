@@ -25,9 +25,6 @@ import { areLinksEqual, isFollowStrategy } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
 import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
-import { cli } from 'winston/lib/winston/config/index.js';
-import { options } from '../cli.js'; 
-
 
 const crawlDomain = async (
   url,
