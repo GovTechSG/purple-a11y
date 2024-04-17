@@ -275,8 +275,19 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
     .then(async response => {
       const redirectUrl = response.request.res.responseUrl;
       res.status = constants.urlCheckStatuses.success.code;
-
-      let modifiedHTML = response.data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
+      let data;
+      if (typeof response.data === 'string' || response.data instanceof String) {
+          data = response.data;
+      } else if (typeof response.data === 'object' && response.data !== null) {
+          try {
+              data = JSON.stringify(response.data);
+          } catch (error) {
+              console.log("Error converting object to JSON:", error);
+          }
+      } else {
+          console.log("Unsupported data type:", typeof response.data);
+      }
+      let modifiedHTML = data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
 
       const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?\s*url=(?:'([^']*)'|"([^"]*)"|([^>]*))"/i.exec(modifiedHTML);
 
