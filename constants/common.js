@@ -288,7 +288,7 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
           console.log("Unsupported data type:", typeof response.data);
       }
       let modifiedHTML = data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
-      
+
       const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?\s*url=(?:'([^']*)'|"([^"]*)"|([^>]*))"/i.exec(modifiedHTML);
 
       const hasMetaRefresh = metaRefreshMatch && metaRefreshMatch.length > 1;
@@ -1114,6 +1114,12 @@ const cloneChromeProfileCookieFiles = (options, destDir) => {
             fs.copyFileSync(dir, path.join(destProfileDir, 'Cookies'));
           } catch (err) {
             silentLogger.error(err);
+            if (err.code === 'EBUSY') {
+              console.log(`Unable to copy the file from ${intermPath} to ${storagePath}/${resultFile} because it is currently in use.`);
+              console.log('Please close any applications that might be using this file and try again.');
+            } else {
+              console.log(`An unexpected error occurred while copying the file from ${intermPath} to ${storagePath}/${resultFile}: ${err.message}`);
+            }
             printMessage([err], messageOptions);
             success = false;
           }
@@ -1178,6 +1184,12 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
             fs.copyFileSync(dir, path.join(destProfileDir, 'Cookies'));
           } catch (err) {
             silentLogger.error(err);
+            if (err.code === 'EBUSY') {
+              console.log(`Unable to copy the file from ${intermPath} to ${storagePath}/${resultFile} because it is currently in use.`);
+              console.log('Please close any applications that might be using this file and try again.');
+            } else {
+              console.log(`An unexpected error occurred while copying the file from ${intermPath} to ${storagePath}/${resultFile}: ${err.message}`);
+            }
             printMessage([err], messageOptions);
             success = false;
           }
@@ -1210,6 +1222,12 @@ const cloneLocalStateFile = (options, destDir) => {
         fs.copyFileSync(dir, path.join(destDir, 'Local State'));
       } catch (err) {
         silentLogger.error(err);
+        if (err.code === 'EBUSY') {
+          console.log(`Unable to copy the file from ${intermPath} to ${storagePath}/${resultFile} because it is currently in use.`);
+          console.log('Please close any applications that might be using this file and try again.');
+        } else {
+          console.log(`An unexpected error occurred while copying the file from ${intermPath} to ${storagePath}/${resultFile}: ${err.message}`);
+        }
         printMessage([err], messageOptions);
         success = false;
       }

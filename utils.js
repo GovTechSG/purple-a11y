@@ -26,7 +26,7 @@ export const isWhitelistedContentType = contentType => {
 };
 
 export const getStoragePath = randomToken => {
-  if (process.env.PURPLE_A11Y_VERBOSE_STORAGE_PATH){
+  if (process.env.PURPLE_A11Y_VERBOSE_STORAGE_PATH) {
     return `${process.env.PURPLE_A11Y_VERBOSE_STORAGE_PATH}/${randomToken}`
   }
   if (constants.exportDirectory === process.cwd()) {
@@ -42,16 +42,29 @@ export const getStoragePath = randomToken => {
 export const createDetailsAndLogs = async (scanDetails, randomToken) => {
   const storagePath = getStoragePath(randomToken);
   const logPath = `logs/${randomToken}`;
-  await fs.ensureDir(storagePath);
-  await fs.writeFile(`${storagePath}/details.json`, JSON.stringify(scanDetails, 0, 2));
+  try {
+    await fs.ensureDir(storagePath);
+    await fs.writeFile(`${storagePath}/details.json`, JSON.stringify(scanDetails, 0, 2));
 
-  // update logs
-  await fs.ensureDir(logPath);
-  await fs.pathExists('errors.txt').then(async exists => {
-    if (exists) {
-      await fs.copy('errors.txt', `${logPath}/${randomToken}.txt`);
-    }
-  });
+    // update logs
+    await fs.ensureDir(logPath);
+    await fs.pathExists('errors.txt').then(async exists => {
+      if (exists) {
+        try {
+          await fs.copy('errors.txt', `${logPath}/${randomToken}.txt`);
+        } catch (error) {
+          if (error.code === 'EBUSY') {
+            console.log(`Unable to copy the file from 'errors.txt' to '${logPath}/${randomToken}.txt' because it is currently in use.`);
+            console.log('Please close any applications that might be using this file and try again.');
+          } else {
+            console.log(`An unexpected error occurred while copying the file: ${error.message}`);
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.log(`An error occurred while setting up storage or log directories: ${error.message}`);
+  }
 };
 
 export const getUserDataTxt = () => {
@@ -59,12 +72,12 @@ export const getUserDataTxt = () => {
     os.platform() === 'win32'
       ? path.join(process.env.APPDATA, 'Purple A11y', 'userData.txt')
       : path.join(
-          process.env.HOME,
-          'Library',
-          'Application Support',
-          'Purple A11y',
-          'userData.txt',
-        );
+        process.env.HOME,
+        'Library',
+        'Application Support',
+        'Purple A11y',
+        'userData.txt',
+      );
   // check if textFilePath exists
   if (fs.existsSync(textFilePath)) {
     const userData = JSON.parse(fs.readFileSync(textFilePath, 'utf8'));
@@ -78,12 +91,12 @@ export const writeToUserDataTxt = async (key, value) => {
     os.platform() === 'win32'
       ? path.join(process.env.APPDATA, 'Purple A11y', 'userData.txt')
       : path.join(
-          process.env.HOME,
-          'Library',
-          'Application Support',
-          'Purple A11y',
-          'userData.txt',
-        );
+        process.env.HOME,
+        'Library',
+        'Application Support',
+        'Purple A11y',
+        'userData.txt',
+      );
 
   // Create file if it doesn't exist
   if (fs.existsSync(textFilePath)) {
@@ -107,9 +120,18 @@ export const createAndUpdateResultsFolders = async randomToken => {
   const intermediatePdfResultsPath = `${randomToken}/${constants.pdfScanResultFileName}`;
 
   const transferResults = async (intermPath, resultFile) => {
+    try {
     if (fs.existsSync(intermPath)) {
       await fs.copy(intermPath, `${storagePath}/${resultFile}`);
     }
+  } catch (error) {
+    if (error.code === 'EBUSY') {
+      console.log(`Unable to copy the file from ${intermPath} to ${storagePath}/${resultFile} because it is currently in use.`);
+      console.log('Please close any applications that might be using this file and try again.');
+    } else {
+      console.log(`An unexpected error occurred while copying the file from ${intermPath} to ${storagePath}/${resultFile}: ${error.message}`);
+    }
+  }
   };
 
   await Promise.all([
@@ -167,13 +189,13 @@ export const cleanUp = async pathToDelete => {
 //     timeZoneName: "longGeneric",
 //   });
 
-export const getWcagPassPercentage = (wcagViolations)=> {
+export const getWcagPassPercentage = (wcagViolations) => {
   return parseFloat((Object.keys(constants.wcagLinks).length - wcagViolations.length) / Object.keys(constants.wcagLinks).length * 100).toFixed(2);
-  }
+}
 
-  export const getFormattedTime = (inputDate) => {
-    if (inputDate) {
-      return inputDate.toLocaleTimeString('en-GB', {
+export const getFormattedTime = (inputDate) => {
+  if (inputDate) {
+    return inputDate.toLocaleTimeString('en-GB', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -280,12 +302,12 @@ export const randomThreeDigitNumberString = () => {
   return String(threeDigitNumber);
 }
 
-export const isFollowStrategy = (link1, link2, rule) =>{
+export const isFollowStrategy = (link1, link2, rule) => {
   const parsedLink1 = new URL(link1);
   const parsedLink2 = new URL(link2);
-  if (rule === "same-domain"){
+  if (rule === "same-domain") {
     const link1Domain = parsedLink1.hostname.split('.').slice(-2).join('.');
-    const link2Domain = parsedLink2.hostname.split('.').slice(-2).join('.'); 
+    const link2Domain = parsedLink2.hostname.split('.').slice(-2).join('.');
     return link1Domain === link2Domain;
   } else {
     return parsedLink1.hostname === parsedLink2.hostname;
