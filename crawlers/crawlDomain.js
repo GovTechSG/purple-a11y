@@ -25,9 +25,6 @@ import { areLinksEqual, isFollowStrategy } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
 import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
-import { cli } from 'winston/lib/winston/config/index.js';
-import { options } from '../cli.js'; 
-
 
 const crawlDomain = async (
   url,
@@ -85,9 +82,13 @@ const crawlDomain = async (
    * First time scan with original `url` containing credentials is strictly to authenticate for browser session
    * subsequent URLs are without credentials.
    */
-
+  try{
   url = encodeURI(url);
-
+  }
+  catch(e){
+    console.log(e);
+    silentLogger.info(e);
+  }
   if (basicAuthRegex.test(url)) {
     isBasicAuth = true;
     // request to basic auth URL to authenticate for browser session
@@ -108,7 +109,13 @@ const crawlDomain = async (
       strategy,
       requestQueue,
       transformRequestFunction(req) {
+        try{
         req.url = encodeURI(req.url)
+        }
+        catch(e){
+          console.log(e);
+          silentLogger.info(e);
+        }
         if (urlsCrawled.scanned.some(item => item.url === req.url)) {
           req.skipNavigation = true;
         }
@@ -209,7 +216,13 @@ const crawlDomain = async (
           // handle onclick
           selector: ':not(a):is([role="link"], button[onclick])',
           transformRequestFunction(req) {
+            try{
             req.url = encodeURI(req.url)
+            }
+            catch(e){
+              console.log(e);
+              silentLogger.info(e);
+            }
             if (urlsCrawled.scanned.some(item => item.url === req.url)) {
               req.skipNavigation = true;
             }
