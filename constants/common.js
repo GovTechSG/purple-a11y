@@ -1115,10 +1115,10 @@ const cloneChromeProfileCookieFiles = (options, destDir) => {
           } catch (err) {
             silentLogger.error(err);
             if (err.code === 'EBUSY') {
-              console.log(`Unable to copy the file from ${intermPath} to ${storagePath}/${resultFile} because it is currently in use.`);
+              console.log(`Unable to copy the file because it is currently in use.`);
               console.log('Please close any applications that might be using this file and try again.');
             } else {
-              console.log(`An unexpected error occurred while copying the file from ${intermPath} to ${storagePath}/${resultFile}: ${err.message}`);
+              console.log(`An unexpected error occurred while copying the file: ${err.message}`);
             }
             printMessage([err], messageOptions);
             success = false;
@@ -1185,10 +1185,10 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
           } catch (err) {
             silentLogger.error(err);
             if (err.code === 'EBUSY') {
-              console.log(`Unable to copy the file from ${intermPath} to ${storagePath}/${resultFile} because it is currently in use.`);
+              console.log(`Unable to copy the file because it is currently in use.`);
               console.log('Please close any applications that might be using this file and try again.');
             } else {
-              console.log(`An unexpected error occurred while copying the file from ${intermPath} to ${storagePath}/${resultFile}: ${err.message}`);
+              console.log(`An unexpected error occurred while copying the file: ${err.message}`);
             }
             printMessage([err], messageOptions);
             success = false;
@@ -1223,10 +1223,10 @@ const cloneLocalStateFile = (options, destDir) => {
       } catch (err) {
         silentLogger.error(err);
         if (err.code === 'EBUSY') {
-          console.log(`Unable to copy the file from ${intermPath} to ${storagePath}/${resultFile} because it is currently in use.`);
+          console.log(`Unable to copy the file because it is currently in use.`);
           console.log('Please close any applications that might be using this file and try again.');
         } else {
-          console.log(`An unexpected error occurred while copying the file from ${intermPath} to ${storagePath}/${resultFile}: ${err.message}`);
+          console.log(`An unexpected error occurred while copying the file: ${err.message}`);
         }
         printMessage([err], messageOptions);
         success = false;
