@@ -50,16 +50,7 @@ export const createDetailsAndLogs = async (scanDetails, randomToken) => {
     await fs.ensureDir(logPath);
     await fs.pathExists('errors.txt').then(async exists => {
       if (exists) {
-        try {
           await fs.copy('errors.txt', `${logPath}/${randomToken}.txt`);
-        } catch (error) {
-          if (error.code === 'EBUSY') {
-            console.log(`Unable to copy the file because it is currently in use.`);
-            console.log('Please close any applications that might be using this file and try again.');
-          } else {
-            console.log(`An unexpected error occurred while copying the file: ${error.message}`);
-          }
-        }
       }
     });
   } catch (error) {
@@ -120,18 +111,9 @@ export const createAndUpdateResultsFolders = async randomToken => {
   const intermediatePdfResultsPath = `${randomToken}/${constants.pdfScanResultFileName}`;
 
   const transferResults = async (intermPath, resultFile) => {
-    try {
     if (fs.existsSync(intermPath)) {
       await fs.copy(intermPath, `${storagePath}/${resultFile}`);
     }
-  } catch (error) {
-    if (error.code === 'EBUSY') {
-      console.log(`Unable to copy the file because it is currently in use.`);
-      console.log('Please close any applications that might be using this file and try again.');
-    } else {
-      console.log(`An unexpected error occurred while copying the file: ${error.message}`);
-    }
-  }
   };
 
   await Promise.all([
