@@ -33,60 +33,66 @@ const crawlSitemap = async (
   blacklistedPatterns,
   includeScreenshots,
   extraHTTPHeaders,
-  fromCrawlIntelligentSitemap = false, //optional
-  userUrlInputFromIntelligent = null, //optional
-  datasetFromIntelligent = null, //optional
-  urlsCrawledFromIntelligent = null, //optional
-  
+  isLocalFile=true, // Add this parameter
+  fromCrawlIntelligentSitemap = false,
+  userUrlInputFromIntelligent = null,
+  datasetFromIntelligent = null,
+  urlsCrawledFromIntelligent = null,
 ) => {
   let dataset;
   let urlsCrawled;
-  let linksFromSitemap
+  let finalLinks = [];
 
-  
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth;
   let basicAuthPage = 0;
-  let finalLinks = []; 
-  
-  
-  if (fromCrawlIntelligentSitemap){
-    dataset=datasetFromIntelligent;
+
+  if (fromCrawlIntelligentSitemap) {
+    dataset = datasetFromIntelligent;
     urlsCrawled = urlsCrawledFromIntelligent;
-    
   } else {
     ({ dataset } = await createCrawleeSubFolders(randomToken));
     urlsCrawled = { ...constants.urlsCrawledObj };
-    
+
     if (!fs.existsSync(randomToken)) {
       fs.mkdirSync(randomToken);
     }
   }
 
-  linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory, userUrlInputFromIntelligent, fromCrawlIntelligentSitemap)
-  
-  /**
-   * Regex to match http://username:password@hostname.com
-   * utilised in scan strategy to ensure subsequent URLs within the same domain are scanned.
-   * First time scan with original `url` containing credentials is strictly to authenticate for browser session
-   * subsequent URLs are without credentials.
-   * basicAuthPage is set to -1 for basic auth URL to ensure it is not counted towards maxRequestsPerCrawl
-  */
+  if (isLocalFile) {
+    // Handle the local file case
+    const filePath = sitemapUrl;
+    const fileUrl = `file://${filePath}`;
 
-  sitemapUrl = encodeURI(sitemapUrl)
-    
-  if (basicAuthRegex.test(sitemapUrl)) {
-    isBasicAuth = true;
-    // request to basic auth URL to authenticate for browser session
-    finalLinks.push(new Request({ url: sitemapUrl, uniqueKey: `auth:${sitemapUrl}` }));
-    const finalUrl = `${sitemapUrl.split('://')[0]}://${sitemapUrl.split('@')[1]}`;
-    
-    // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
-    finalLinks.push(new Request({ url: finalUrl }));
-    basicAuthPage = -2;
-    } 
-  
-  
+    // Create a single request for the local file
+    finalLinks = [new Request({ url: fileUrl })];
+  } else {
+    // Handle the sitemap case
+    sitemapUrl = encodeURI(sitemapUrl);
+
+    if (basicAuthRegex.test(sitemapUrl)) {
+      isBasicAuth = true;
+      // request to basic auth URL to authenticate for browser session
+      finalLinks.push(new Request({ url: sitemapUrl, uniqueKey: `auth:${sitemapUrl}` }));
+      const finalUrl = `${sitemapUrl.split('://')[0]}://${sitemapUrl.split('@')[1]}`;
+
+      // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
+      finalLinks.push(new Request({ url: finalUrl }));
+      basicAuthPage = -2;
+    }
+
+    const linksFromSitemap = await getLinksFromSitemap(
+      sitemapUrl,
+      maxRequestsPerCrawl,
+      browser,
+      userDataDirectory,
+      userUrlInputFromIntelligent,
+      fromCrawlIntelligentSitemap
+    );
+
+    finalLinks = [...finalLinks, ...linksFromSitemap];
+  }
+
   let pdfDownloads = [];
   let uuidToPdfMapping = {};
   const isScanHtml = ['all', 'html-only'].includes(fileTypes);
@@ -94,20 +100,14 @@ const crawlSitemap = async (
   const { playwrightDeviceDetailsObject } = viewportSettings;
   const { maxConcurrency } = constants;
 
-
-
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
-
-
-  finalLinks = [...finalLinks, ...linksFromSitemap];
 
   const requestList = new crawlee.RequestList({
     sources: finalLinks,
   });
   await requestList.initialize();
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
-
-
+  
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
       launcher: constants.launcher,
@@ -132,6 +132,24 @@ const crawlSitemap = async (
     preNavigationHooks: preNavigationHooks(extraHTTPHeaders),
     requestHandler: async ({ page, request, response, sendRequest }) => {
       const actualUrl = request.loadedUrl || request.url;
+      
+      if (isLocalFile) {
+        
+        // Handle the local file case
+        const filePath = actualUrl.replace('file://', '');
+        let fileContent;
+        try {
+            fileContent = fs.readFileSync(filePath, 'utf-8');
+            console.log('File content read successfully'); // Debug log
+        } catch (error) {
+            console.error('Error reading file:', error);
+            return;
+        }
+        const results = await runAxeScript(includeScreenshots, page, randomToken, {}, [], fileContent);
+        await dataset.pushData(results);
+        urlsCrawled.scanned.push({ url: filePath, pageTitle: results.pageTitle });
+        return;
+      }
 
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
         crawler.autoscaledPool.abort();
@@ -144,6 +162,7 @@ const crawlSitemap = async (
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
+          
           urlsCrawled.blacklisted.push(request.url);
           return;
         }
@@ -195,13 +214,13 @@ const crawlSitemap = async (
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
-  
+
           const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
           if (isRedirected) {
             const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
               item => (item.actualUrl || item.url) === request.loadedUrl,
             );
-  
+
             if (isLoadedUrlInCrawledUrls) {
               urlsCrawled.notScannedRedirects.push({
                 fromUrl: request.url,
@@ -209,18 +228,18 @@ const crawlSitemap = async (
               });
               return;
             }
-  
+
             urlsCrawled.scanned.push({
               url: request.url,
               pageTitle: results.pageTitle,
               actualUrl: request.loadedUrl, // i.e. actualUrl
             });
-  
+
             urlsCrawled.scannedRedirects.push({
               fromUrl: request.url,
               toUrl: request.loadedUrl, // i.e. actualUrl
             });
-  
+
             results.url = request.url;
             results.actualUrl = request.loadedUrl;
           } else {
@@ -232,18 +251,17 @@ const crawlSitemap = async (
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
-  
+
           isScanHtml && urlsCrawled.invalid.push(actualUrl);
         }
       }
     },
     failedRequestHandler: async ({ request }) => {
-
       // check if scanned pages have reached limit due to multi-instances of handler running
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
         return;
       }
-      
+
       guiInfoLog(guiInfoStatusTypes.ERROR, {
         numScanned: urlsCrawled.scanned.length,
         urlScanned: request.url,
@@ -254,42 +272,30 @@ const crawlSitemap = async (
     maxRequestsPerCrawl: Infinity,
     maxConcurrency: specifiedMaxConcurrency || maxConcurrency,
   });
-
-  await crawler.run();
-
-  await requestList.isFinished();
-
-
   
-
+  await crawler.run();
+  
+  await requestList.isFinished();
+  
   if (pdfDownloads.length > 0) {
     // wait for pdf downloads to complete
     await Promise.all(pdfDownloads);
 
     // scan and process pdf documents
     await runPdfScan(randomToken);
-
+    
     // transform result format
     const pdfResults = await mapPdfScanResults(randomToken, uuidToPdfMapping);
-
-    // get screenshots from pdf docs
-    // if (includeScreenshots) {
-    //   await Promise.all(pdfResults.map(
-    //     async result => await doPdfScreenshots(randomToken, result)
-    //   ));
-    // }
 
     // push results for each pdf document to key value store
     await Promise.all(pdfResults.map(result => dataset.pushData(result)));
   }
 
-  
-  if (!fromCrawlIntelligentSitemap){
+  if (!fromCrawlIntelligentSitemap) {
     guiInfoLog(guiInfoStatusTypes.COMPLETED);
   }
-
-  return urlsCrawled;
   
+  return urlsCrawled;
 };
 
 export default crawlSitemap;

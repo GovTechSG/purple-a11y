@@ -120,8 +120,14 @@ export const runAxeScript = async (
   randomToken,
   customFlowDetails,
   selectors = [],
+  fileContent = null, 
 ) => {
   await crawlee.playwrightUtils.injectFile(page, axeScript);
+
+  if (fileContent) {
+    // Set the file content directly instead of navigating to a URL
+    await page.setContent(fileContent);
+  }
 
   const results = await page.evaluate(
     async ({ selectors, saflyIconSelector}) => {
