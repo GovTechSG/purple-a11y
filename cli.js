@@ -263,6 +263,8 @@ const scanInit = async argvs => {
   if (constants.scannerTypes[argvs.scanner] === constants.scannerTypes.custom2) {
     argvs.scanner = constants.scannerTypes.custom;
     isNewCustomFlow = true;
+   } else if (constants.scannerTypes[argvs.scanner] === constants.scannerTypes.page) {
+    argvs.scanner = constants.scannerTypes.page; // Add this block
   } else {
     argvs.scanner = constants.scannerTypes[argvs.scanner];
   }

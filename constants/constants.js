@@ -211,7 +211,8 @@ const scannerTypes = {
   website: 'Website',
   custom: 'Custom',
   custom2: 'Custom2',
-  intelligent: 'Intelligent'
+  intelligent: 'Intelligent',
+  page: 'Page',
 };
 
 export const guiInfoStatusTypes = {
@@ -357,6 +358,7 @@ const urlCheckStatuses = {
       'No browser available to run scans. Please ensure you have Chrome or Edge (for Windows only) installed.',
   },
   axiosTimeout: { code: 18, message: 'Axios timeout exceeded. Falling back on browser checks.' },
+  invalidFilePath: { code: 20, message: 'Invalid file path or file is not an HTML file.' }, 
 };
 
 const browserTypes = {
