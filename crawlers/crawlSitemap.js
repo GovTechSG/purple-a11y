@@ -116,7 +116,6 @@ const crawlSitemap = async (
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
 
   finalLinks = [...finalLinks, ...linksFromSitemap];
-  console.log(finalLinks)
   const requestList = new crawlee.RequestList({
     sources: finalLinks,
   });
