@@ -292,18 +292,8 @@ function getBaseName(filePath) {
     const request = linksFromSitemap[0];
     const pdfFileName = getBaseName(request.url);
     const trimmedUrl = request.url;
-    //console.log("hi", pdfFileName)
-    // const { pdfFileName, trimmedUrl } = handlePdfDownload(
-    //   randomToken,
-    //   pdfDownloads,
-    //   request,
-    //   null,
-    //   urlsCrawled,
-    // );
-
     const destinationPath = `${randomToken}/${pdfFileName}`;
-    console.log(destinationPath);
-    
+
     const data = fs.readFileSync(trimmedUrl);
     fs.writeFileSync(destinationPath, data);
   
