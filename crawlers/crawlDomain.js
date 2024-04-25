@@ -279,6 +279,14 @@ const crawlDomain = async (
 
 
       function isExcluded(url) {
+        if (urlsCrawled.scanned.some(item => item.url === url)) {
+          guiInfoLog(guiInfoStatusTypes.DUPLICATE, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: url,
+          });
+
+          return false;
+        } 
         // Check if any pattern matches the URL.
         const blacklistedPatterns = getBlackListedPatterns();
         try {

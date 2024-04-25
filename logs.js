@@ -46,6 +46,7 @@ export const guiInfoLog = (status, data) => {
       case guiInfoStatusTypes.SCANNED:
       case guiInfoStatusTypes.SKIPPED:
       case guiInfoStatusTypes.ERROR:
+      case guiInfoStatusTypes.DUPLICATE:
         console.log(
           `crawling::${data.numScanned || 0}::${status}::${
             data.urlScanned || 'no url provided'
