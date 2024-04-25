@@ -81,12 +81,7 @@ export const getUserDataTxt = () => {
         'Purple A11y',
         'userData.txt',
       );
-        process.env.HOME,
-        'Library',
-        'Application Support',
-        'Purple A11y',
-        'userData.txt',
-      );
+        
   // check if textFilePath exists
   if (fs.existsSync(textFilePath)) {
     const userData = JSON.parse(fs.readFileSync(textFilePath, 'utf8'));
