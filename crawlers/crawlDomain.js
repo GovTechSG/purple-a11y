@@ -291,6 +291,9 @@ const crawlDomain = async (
 
         // Check if any pattern matches the URL.
         const blacklistedPatterns = getBlackListedPatterns();
+        if (!blacklistedPatterns) { // Check if there are blacklistedPatterns.
+          return false;
+        }
         try {
           const parsedUrl = new URL(url);
           return blacklistedPatterns.some(pattern =>
