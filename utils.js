@@ -27,7 +27,6 @@ export const isWhitelistedContentType = contentType => {
 
 export const getStoragePath = randomToken => {
   if (process.env.PURPLE_A11Y_VERBOSE_STORAGE_PATH) {
-  if (process.env.PURPLE_A11Y_VERBOSE_STORAGE_PATH) {
     return `${process.env.PURPLE_A11Y_VERBOSE_STORAGE_PATH}/${randomToken}`
   }
   if (constants.exportDirectory === process.cwd()) {
@@ -200,7 +199,6 @@ export const cleanUp = async pathToDelete => {
 //   });
 
 export const getWcagPassPercentage = (wcagViolations) => {
-export const getWcagPassPercentage = (wcagViolations) => {
   return parseFloat((Object.keys(constants.wcagLinks).length - wcagViolations.length) / Object.keys(constants.wcagLinks).length * 100).toFixed(2);
 }
 
@@ -313,7 +311,6 @@ export const randomThreeDigitNumberString = () => {
   return String(threeDigitNumber);
 }
 
-export const isFollowStrategy = (link1, link2, rule) => {
 export const isFollowStrategy = (link1, link2, rule) => {
   const parsedLink1 = new URL(link1);
   const parsedLink2 = new URL(link2);
