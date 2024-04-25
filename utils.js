@@ -207,9 +207,6 @@ export const getWcagPassPercentage = (wcagViolations) => {
 export const getFormattedTime = (inputDate) => {
   if (inputDate) {
     return inputDate.toLocaleTimeString('en-GB', {
-export const getFormattedTime = (inputDate) => {
-  if (inputDate) {
-    return inputDate.toLocaleTimeString('en-GB', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
