@@ -45,10 +45,7 @@ export const createDetailsAndLogs = async (scanDetails, randomToken) => {
   try {
     await fs.ensureDir(storagePath);
     await fs.writeFile(`${storagePath}/details.json`, JSON.stringify(scanDetails, 0, 2));
-  try {
-    await fs.ensureDir(storagePath);
-    await fs.writeFile(`${storagePath}/details.json`, JSON.stringify(scanDetails, 0, 2));
-
+    
     // update logs
     await fs.ensureDir(logPath);
     await fs.pathExists('errors.txt').then(async exists => {
@@ -309,7 +306,6 @@ export const randomThreeDigitNumberString = () => {
 export const isFollowStrategy = (link1, link2, rule) => {
   const parsedLink1 = new URL(link1);
   const parsedLink2 = new URL(link2);
-  if (rule === "same-domain") {
   if (rule === "same-domain") {
     const link1Domain = parsedLink1.hostname.split('.').slice(-2).join('.');
     const link2Domain = parsedLink2.hostname.split('.').slice(-2).join('.');
