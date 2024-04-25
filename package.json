@@ -51,10 +51,10 @@
   "description": "Purple A11y is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/GovTechSG/purple-hats-dev.git"
+    "url": "git+https://github.com/GovTechSG/purple-a11y.git"
   },
   "bugs": {
-    "url": "https://github.com/GovTechSG/purple-hats-dev/issues"
+    "url": "https://github.com/GovTechSG/purple-a11y/issues"
   },
-  "homepage": "https://github.com/GovTechSG/purple-hats-dev#readme"
+  "homepage": "https://github.com/GovTechSG/purple-a11y#readme"
 }
