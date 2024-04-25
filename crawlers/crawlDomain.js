@@ -83,7 +83,13 @@ const crawlDomain = async (
    * subsequent URLs are without credentials.
    */
 
-  url = encodeURI(url);
+  try {
+    url = encodeURI(url);
+  }
+  catch (e) {
+    console.log(e);
+    silentLogger.info(e);
+  }
 
   if (basicAuthRegex.test(url)) {
     isBasicAuth = true;
@@ -105,7 +111,13 @@ const crawlDomain = async (
       strategy,
       requestQueue,
       transformRequestFunction(req) {
-        req.url = encodeURI(req.url)
+        try {
+          req.url = encodeURI(req.url)
+        }
+        catch (e) {
+          console.log(e);
+          silentLogger.info(e);
+        }
         if (urlsCrawled.scanned.some(item => item.url === req.url)) {
           req.skipNavigation = true;
         }
@@ -206,7 +218,13 @@ const crawlDomain = async (
           // handle onclick
           selector: ':not(a):is([role="link"], button[onclick])',
           transformRequestFunction(req) {
-            req.url = encodeURI(req.url)
+            try {
+              req.url = encodeURI(req.url)
+            }
+            catch (e) {
+              console.log(e);
+              silentLogger.info(e);
+            }
             if (urlsCrawled.scanned.some(item => item.url === req.url)) {
               req.skipNavigation = true;
             }
