@@ -263,6 +263,16 @@ const crawlDomain = async (
 
 
       function isExcluded(url) {
+        // Check if duplicate scan URL
+        if (urlsCrawled.scanned.some(item => item.url === url)) {
+          guiInfoLog(guiInfoStatusTypes.DUPLICATE, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: url,
+          });
+          
+          return false;
+        } 
+
         // Check if any pattern matches the URL.
         const blacklistedPatterns = getBlackListedPatterns();
         try {
