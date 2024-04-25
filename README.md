@@ -242,7 +242,7 @@ npx playwright@1.27.1 install
 
 CLI mode is designed to be run in continuous integration (CI) environment. 
  Run `node cli.js` for a set of command-line parameters available. 
- **Please note CLI mode is only supported on Mac/Linux at this moment.**
+
 
 ```shell
 Usage: node cli.js -c <crawler> -d <device> -w <view
@@ -274,8 +274,9 @@ Options:
   -b, --browserToRun                 Browser to run the scan on: 1) Chromium, 2)
                                       Chrome, 3) Edge. Defaults to Chromium.
                      [choices: "chromium", "chrome", "edge"] [default: "chrome"]
-  -s, --strategy                     Strategy to choose which links to crawl in
-                                     a website scan. Defaults to "same-domain".
+  -s, --strategy                     Crawls up to general (same parent) domains,
+                                      or only specific hostname. Defaults to "sa
+                                     me-domain".
                                        [choices: "same-domain", "same-hostname"]
   -e, --exportDirectory              Preferred directory to store scan results.
                                      Path is relative to your home directory.

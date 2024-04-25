@@ -77,8 +77,7 @@ export const cliOptions = {
   },
   s: {
     alias: 'strategy',
-    describe:
-      'Strategy to choose which links to crawl in a website scan. Defaults to "same-domain".',
+    describe: 'Crawls up to general (same parent) domains, or only specific hostname. Defaults to "same-domain".',
     choices: ['same-domain', 'same-hostname'],
     requiresArg: true,
     demandOption: false,
