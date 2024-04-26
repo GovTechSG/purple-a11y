@@ -28,6 +28,7 @@ import { silentLogger } from '../logs.js';
 import { isUrlPdf } from '../crawlers/commonCrawlerFunc.js';
 import { randomThreeDigitNumberString } from '../utils.js';
 
+
 // validateDirPath validates a provided directory path
 // returns null if no error
 export const validateDirPath = dirPath => {
@@ -216,7 +217,9 @@ export const isFileSitemap = async filePath => {
 
   const file = fs.readFileSync(filePath, 'utf8');
   const isLocalSitemap = await isSitemapContent(file);
-  return isLocalSitemap ? filePath : null;
+  let isLocalFileOrSitemap = isLocalSitemap ? filePath : null;
+  let isLocalFileOption = filePath.endsWith('.pdf') ? filePath : null;
+  return (isLocalFileOption || isLocalFileOrSitemap) ? filePath : null;
 };
 
 export const getUrlMessage = scanner => {
@@ -509,9 +512,12 @@ export const checkUrl = async (
     }
   }
 
+  const isLocalFile = !validator.isURL(url);
+
   if (
     res.status === constants.urlCheckStatuses.success.code &&
-    scanner === constants.scannerTypes.sitemap
+    scanner === constants.scannerTypes.sitemap &&
+    !isLocalFile
   ) {
     const isSitemap = await isSitemapContent(res.content);
 

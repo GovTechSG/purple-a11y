@@ -1,4 +1,5 @@
 import crawlee, { Request } from 'crawlee';
+import validator from 'validator';
 import printMessage from 'print-message';
 import {
   createCrawleeSubFolders,
@@ -8,7 +9,7 @@ import {
   isUrlPdf,
 } from './commonCrawlerFunc.js';
 
-import constants, { guiInfoStatusTypes, basicAuthRegex } from '../constants/constants.js';
+import constants, { guiInfoStatusTypes, basicAuthRegex, destinationPath } from '../constants/constants.js';
 import {
   getLinksFromSitemap,
   getPlaywrightLaunchOptions,
@@ -62,9 +63,27 @@ const crawlSitemap = async (
       fs.mkdirSync(randomToken);
     }
   }
-
-  linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory, userUrlInputFromIntelligent, fromCrawlIntelligentSitemap)
   
+  if (sitemapUrl.startsWith('http') || sitemapUrl.startsWith('https')) {
+    
+    // Sitemap URL
+    linksFromSitemap = await getLinksFromSitemap(
+      sitemapUrl,
+      maxRequestsPerCrawl,
+      browser,
+      userDataDirectory,
+      userUrlInputFromIntelligent,
+      fromCrawlIntelligentSitemap
+    );
+  } else {
+    // Local file path
+    if (fs.existsSync(sitemapUrl)) {
+      linksFromSitemap = [new Request({ url: sitemapUrl })];
+    } else {
+      // File not found
+      throw new Error(`File not found: ${sitemapUrl}`);
+    }
+  }
   /**
    * Regex to match http://username:password@hostname.com
    * utilised in scan strategy to ensure subsequent URLs within the same domain are scanned.
@@ -74,13 +93,11 @@ const crawlSitemap = async (
   */
 
   sitemapUrl = encodeURI(sitemapUrl)
-    
   if (basicAuthRegex.test(sitemapUrl)) {
     isBasicAuth = true;
     // request to basic auth URL to authenticate for browser session
     finalLinks.push(new Request({ url: sitemapUrl, uniqueKey: `auth:${sitemapUrl}` }));
     const finalUrl = `${sitemapUrl.split('://')[0]}://${sitemapUrl.split('@')[1]}`;
-    
     // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
     finalLinks.push(new Request({ url: finalUrl }));
     basicAuthPage = -2;
@@ -98,16 +115,14 @@ const crawlSitemap = async (
 
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
 
-
   finalLinks = [...finalLinks, ...linksFromSitemap];
-
   const requestList = new crawlee.RequestList({
     sources: finalLinks,
   });
   await requestList.initialize();
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
 
-
+  if (sitemapUrl.startsWith('http') || sitemapUrl.startsWith('https')) {
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
       launcher: constants.launcher,
@@ -254,12 +269,50 @@ const crawlSitemap = async (
     maxRequestsPerCrawl: Infinity,
     maxConcurrency: specifiedMaxConcurrency || maxConcurrency,
   });
+}
+function getBaseName(filePath) {
+  // Remove any query parameters or anchors that might be present in a URL
+  filePath = filePath.split('?')[0].split('#')[0];
 
-  await crawler.run();
+  // Find the last '/' in the path which separates the file name from the rest of the path
+  const lastSlashIndex = filePath.lastIndexOf('/');
+
+  // Extract the substring from the last '/' to the end to get the basename
+  const basename = lastSlashIndex !== -1 ? filePath.substring(lastSlashIndex + 1) : filePath;
+
+  return basename;
+}
+
+  if (sitemapUrl.startsWith('http') || sitemapUrl.startsWith('https')) {
+    // Run crawler only for sitemap URLs
+    await crawler.run();
+  } else {
+    // Process local file path without running the crawler
+    const request = linksFromSitemap[0];
+    const pdfFileName = getBaseName(request.url);
+    const trimmedUrl = request.url;
+    const destinationPath = `${randomToken}/${pdfFileName}`;
+
+    const data = fs.readFileSync(trimmedUrl);
+    fs.writeFileSync(destinationPath, data);
+  
+    uuidToPdfMapping[pdfFileName] = trimmedUrl;
+    
+    urlsCrawled.scanned.push({ url: trimmedUrl, pageTitle: pdfFileName });
+
+  }
 
   await requestList.isFinished();
+  
+  if (!(sitemapUrl.startsWith('http') || sitemapUrl.startsWith('https'))) {
+    await runPdfScan(randomToken);
 
+    // transform result format
+    const pdfResults = await mapPdfScanResults(randomToken, uuidToPdfMapping);
 
+    // push results for each pdf document to key value store
+    await Promise.all(pdfResults.map(result => dataset.pushData(result)));
+  }
   
 
   if (pdfDownloads.length > 0) {
