@@ -194,6 +194,10 @@ export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
         rules: {},
         totalItems: 0,
       },
+      needsReview: {
+        rules: {},
+        totalItems: 0,
+      },
     };
 
     const { itemDetails, validationResult } = jobs[jobIdx];
