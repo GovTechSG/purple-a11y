@@ -1,4 +1,6 @@
 variables:
+  # DOCKER_IMAGE: <GitLab URL>/<username>/<project name>:latest
+  DOCKER_IMAGE: <GitLab URL>/<username>/<project name>:latest
   # A11Y_SCAN_URL: https://www.example.com
   A11Y_SCAN_URL: "https://example.com"
   # A11Y_SCAN_TYPE: [choices: "sitemap", "website"]
@@ -18,7 +20,7 @@ a11y-scan:
   tags:
     # - some tag
   image:
-    name: <some registry>/purple-a11y:latest
+    name: $DOCKER_IMAGE
     entrypoint: [ "/bin/bash", "-lc" ] 
   script:
     - cd /app
