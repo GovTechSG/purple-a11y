@@ -10,6 +10,9 @@ variables:
   A11Y_SCAN_DEVICE: "Desktop"
   # A11Y_SCAN_MAX_NUM_PAGES: 100
   A11Y_SCAN_MAX_NUM_PAGES: 100
+  # A11Y_MAX_CONCURRENT_PAGES: 25
+  # If scan encounters blocked pages / error 403, reduce to 1
+  A11Y_MAX_CONCURRENT_PAGES: 25
   # A11Y_SCAN_ARTIFACT_NAME: "a11y-scan-results.zip"
   A11Y_SCAN_ARTIFACT_NAME: "a11y-scan-results.zip"
   # A11Y_SCAN_NAME_EMAIL: "John Doe:john@domain.com"
@@ -26,7 +29,7 @@ a11y-scan:
     # Start in the app dir
     - cd /app
     # Run accessibility scan
-    - node cli.js -b chromium -c "$A11Y_SCAN_TYPE" -d "$A11Y_SCAN_DEVICE" -o "$CI_PROJECT_DIR/$A11Y_SCAN_ARTIFACT_NAME" -u "$A11Y_SCAN_URL" -p "$A11Y_SCAN_MAX_NUM_PAGES" -k "$A11Y_SCAN_NAME_EMAIL" || true
+    - node cli.js -b chromium -c "$A11Y_SCAN_TYPE" -d "$A11Y_SCAN_DEVICE" -o "$CI_PROJECT_DIR/$A11Y_SCAN_ARTIFACT_NAME" -u "$A11Y_SCAN_URL" -p "$A11Y_SCAN_MAX_NUM_PAGES" -t "$A11Y_MAX_CONCURRENT_PAGES" -k "$A11Y_SCAN_NAME_EMAIL" || true
     # Move the results directory to artifacts
     - results_directory=$(find results -mindepth 1 -maxdepth 1 -type d -print -quit)  # Get the first directory within ./results
     - if [ -n "$results_directory" ]; then mv "$results_directory" "$CI_PROJECT_DIR/artifacts"; fi # Move the directory to ./artifacts
