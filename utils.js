@@ -1,4 +1,4 @@
-import { execFileSync, execSync } from 'child_process';
+import { execSync, spawnSync } from 'child_process';
 import path from 'path';
 import os from 'os';
 import { destinationPath, getIntermediateScreenshotsPath } from './constants/constants.js';
