@@ -262,12 +262,22 @@ export const zipResults = (zipName, resultsPath) => {
       throw err;
     }
   } else {
-    // To zip up files recursively )-r) in the results folder path
-    // Will only zip up the content of the results folder path with (-j) i.e. junk the path
+    // Get zip command in Mac and Linux
     const command = '/usr/bin/zip';
-    const args = ['-r', '-j', zipName, resultsPath];
+    // Check if user specified absolute or relative path
+    const zipFilePath = path.isAbsolute(zipName) ? zipName : path.join(process.cwd(), zipName);
+    
+    // To zip up files recursively (-r) in the results folder path and write it to user's specified path
+    const args = ['-r', zipFilePath, '.'];
+    
+    // Change working directory only for the zip command
+    const options = {
+      cwd: resultsPath
+    };
+
     try {
-      execFileSync(command, args);
+      // Zip results
+      spawnSync(command, args, options);
     } catch (err) {
       throw err;
     }
