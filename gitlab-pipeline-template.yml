@@ -43,6 +43,8 @@ a11y-scan:
       - artifacts/reports/report.csv
       - artifacts/reports/report.html
       - artifacts/reports/summary.pdf
+      # Include screenhots folder
+      # - artifacts/reports/elemScreenshots/
       # Stores the reports folder so it can be accessed through Browse
       # - artifacts/reports
       # Uploads the results as zipped file
