@@ -32,7 +32,7 @@ a11y-scan:
     # Start in the app dir
     - cd /app
     # Run accessibility scan
-    - node cli.js -b chromium -c "$A11Y_SCAN_TYPE" -d "$A11Y_SCAN_DEVICE" -o "$CI_PROJECT_DIR/$A11Y_SCAN_ARTIFACT_NAME" -u "$A11Y_SCAN_URL" -p "$A11Y_SCAN_MAX_NUM_PAGES" -a "$A11Y_INCLUDE_SCREENSHOTS" -k "$A11Y_SCAN_NAME_EMAIL" || true
+    - PURPLE_A11Y_VERBOSE=true node cli.js -b chromium -c "$A11Y_SCAN_TYPE" -d "$A11Y_SCAN_DEVICE" -o "$CI_PROJECT_DIR/$A11Y_SCAN_ARTIFACT_NAME" -u "$A11Y_SCAN_URL" -p "$A11Y_SCAN_MAX_NUM_PAGES" -a "$A11Y_INCLUDE_SCREENSHOTS" -k "$A11Y_SCAN_NAME_EMAIL" || true
     # Move the results directory to artifacts
     - results_directory=$(find results -mindepth 1 -maxdepth 1 -type d -print -quit)  # Get the first directory within ./results
     - if [ -n "$results_directory" ]; then mv "$results_directory" "$CI_PROJECT_DIR/artifacts"; fi # Move the directory to ./artifacts
