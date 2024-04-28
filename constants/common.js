@@ -1062,7 +1062,6 @@ export const getChromeData = () => {
 export const getEdgeData = () => {
   const browserDataDir = getDefaultEdgeDataDir();
   const clonedBrowserDataDir = cloneEdgeProfiles();
-  console.log(browserDataDir, clonedBrowserDataDir, 'getEdgeData');
   if (browserDataDir && clonedBrowserDataDir) {
     const browserToRun = constants.browserTypes.edge;
     return { browserToRun, clonedBrowserDataDir };
@@ -1124,7 +1123,7 @@ const cloneChromeProfileCookieFiles = (options, destDir) => {
             } else {
               console.log(`An unexpected error occurred for ${profileName} while copying the file: ${err.message}`);
             }
-            printMessage([err], messageOptions);
+            // printMessage([err], messageOptions);
             success = false;
           }
         }
@@ -1348,9 +1347,7 @@ export const cloneEdgeProfiles = randomToken => {
     nodir: true,
   };
 
-  console.log(destDir, 'destDir');
   const cloneLocalStateFileSuccess = cloneLocalStateFile(baseOptions, destDir);
-  console.log(cloneLocalStateFileSuccess, 'cloneLocalStateFileSuccess');
   if (cloneEdgeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSuccess) {
     return destDir;
   }
