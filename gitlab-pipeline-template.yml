@@ -3,7 +3,7 @@ variables:
   DOCKER_IMAGE: <GitLab URL>/<username>/<project name>:latest
   # A11Y_SCAN_URL: https://www.example.com
   A11Y_SCAN_URL: "https://example.com"
-  # A11Y_SCAN_TYPE: [choices: "sitemap", "website"]
+  # A11Y_SCAN_TYPE: [choices: "sitemap", "website", "intelligent"]
   A11Y_SCAN_TYPE: "website"
   # A11Y_SCAN_DEVICE: "Desktop"
   # A full list of devices is available at https://github.com/GovTechSG/purple-a11y#mobile-device-options
@@ -12,10 +12,10 @@ variables:
   A11Y_SCAN_MAX_NUM_PAGES: 100
   # A11Y_MAX_CONCURRENT_PAGES: 25
   # If scan encounters blocked pages / error 403, reduce to 1
-  A11Y_MAX_CONCURRENT_PAGES: 25
+  A11Y_MAX_CONCURRENT_PAGES: 1
   # Speed up tests by excluding screenshots
-  # A11Y_INCLUDE_SCREENSHOTS: screenshots
-  A11Y_INCLUDE_SCREENSHOTS: none
+  # A11Y_INCLUDE_SCREENSHOTS: [choices: "screenshots", "none"]
+  A11Y_INCLUDE_SCREENSHOTS: screenshots
   # A11Y_SCAN_ARTIFACT_NAME: "a11y-scan-results.zip"
   A11Y_SCAN_ARTIFACT_NAME: "a11y-scan-results.zip"
   # A11Y_SCAN_NAME_EMAIL: "John Doe:john@domain.com"
