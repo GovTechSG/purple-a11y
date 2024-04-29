@@ -287,25 +287,21 @@ function getBaseName(filePath) {
   if (sitemapUrl.startsWith('http') || sitemapUrl.startsWith('https')) {
     // Run crawler only for sitemap URLs
     await crawler.run();
+
+    await requestList.isFinished();
   } else {
     // Process local file path without running the crawler
     const request = linksFromSitemap[0];
     const pdfFileName = getBaseName(request.url);
     const trimmedUrl = request.url;
-    const destinationPath = `${randomToken}/${pdfFileName}`;
+    const destinationFilePath = `${randomToken}/${pdfFileName}`;
 
     const data = fs.readFileSync(trimmedUrl);
-    fs.writeFileSync(destinationPath, data);
-  
+    fs.writeFileSync(destinationFilePath, data);
     uuidToPdfMapping[pdfFileName] = trimmedUrl;
 
     urlsCrawled.scanned.push({ url: trimmedUrl, pageTitle: pdfFileName });
 
-  }
-
-  await requestList.isFinished();
-  
-  if (!(sitemapUrl.startsWith('http') || sitemapUrl.startsWith('https'))) {
     await runPdfScan(randomToken);
     // transform result format
     const pdfResults = await mapPdfScanResults(randomToken, uuidToPdfMapping);
@@ -314,7 +310,6 @@ function getBaseName(filePath) {
     await Promise.all(pdfResults.map(result => dataset.pushData(result)));
   }
   
-
   if (pdfDownloads.length > 0) {
     // wait for pdf downloads to complete
     await Promise.all(pdfDownloads);
