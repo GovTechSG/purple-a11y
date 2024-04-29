@@ -561,7 +561,7 @@ export const prepareData = async argv => {
 
   // construct filename for scan results
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
-  const domain = argv.isLocalSitemap ? 'custom' : new URL(argv.url).hostname;
+  const domain = argv.isLocalSitemap ? path.basename(argv.url) : new URL(argv.url).hostname;
   const sanitisedLabel = customFlowLabel ? `_${customFlowLabel.replaceAll(' ', '_')}` : '';
   let resultFilename;
   const randomThreeDigitNumber = randomThreeDigitNumberString()
@@ -570,12 +570,12 @@ export const prepareData = async argv => {
   } else {
     resultFilename = `${date}_${time}${sanitisedLabel}_${domain}`;
   }
+  
 
   if (followRobots) {
     constants.robotsTxtUrls = {};
     await getUrlsFromRobotsTxt(url, browserToRun);
   }
-
   return {
     type: scanner,
     url: finalUrl,
