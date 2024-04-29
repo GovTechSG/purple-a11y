@@ -735,11 +735,9 @@ export const getLinksFromSitemap = async (
   const addToUrlList = url => {
     if (!url) return;
     if (isDisallowedInRobotsTxt(url)) return;
-    try{
+
     const request = new Request({ url: encodeURI(url) });
-    } catch(e){
-      console.log(e);
-    }
+
     if (isUrlPdf(url)) {
       request.skipNavigation = true;
     }

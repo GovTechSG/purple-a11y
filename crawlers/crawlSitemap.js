@@ -122,7 +122,6 @@ const crawlSitemap = async (
   await requestList.initialize();
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
 
-  if (sitemapUrl.startsWith('http') || sitemapUrl.startsWith('https')) {
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
       launcher: constants.launcher,
@@ -147,7 +146,6 @@ const crawlSitemap = async (
     preNavigationHooks: preNavigationHooks(extraHTTPHeaders),
     requestHandler: async ({ page, request, response, sendRequest }) => {
       const actualUrl = request.loadedUrl || request.url;
-
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
         crawler.autoscaledPool.abort();
         return;
@@ -200,7 +198,6 @@ const crawlSitemap = async (
         urlsCrawled.invalid.push(request.url);
         return;
       }
-
       if (basicAuthPage < 0) {
         basicAuthPage++;
       } else {
@@ -269,7 +266,7 @@ const crawlSitemap = async (
     maxRequestsPerCrawl: Infinity,
     maxConcurrency: specifiedMaxConcurrency || maxConcurrency,
   });
-}
+
 function getBaseName(filePath) {
   // Remove any query parameters or anchors that might be present in a URL
   filePath = filePath.split('?')[0].split('#')[0];
@@ -305,10 +302,8 @@ function getBaseName(filePath) {
   await requestList.isFinished();
   
   if (!(sitemapUrl.startsWith('http') || sitemapUrl.startsWith('https'))) {
-    console.log(randomToken)
     await runPdfScan(randomToken);
     // transform result format
-    console.log("hi",uuidToPdfMapping)
     const pdfResults = await mapPdfScanResults(randomToken, uuidToPdfMapping);
 
     // push results for each pdf document to key value store
