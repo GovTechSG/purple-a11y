@@ -297,7 +297,7 @@ function getBaseName(filePath) {
     fs.writeFileSync(destinationPath, data);
   
     uuidToPdfMapping[pdfFileName] = trimmedUrl;
-    
+
     urlsCrawled.scanned.push({ url: trimmedUrl, pageTitle: pdfFileName });
 
   }
@@ -305,9 +305,10 @@ function getBaseName(filePath) {
   await requestList.isFinished();
   
   if (!(sitemapUrl.startsWith('http') || sitemapUrl.startsWith('https'))) {
+    console.log(randomToken)
     await runPdfScan(randomToken);
-
     // transform result format
+    console.log("hi",uuidToPdfMapping)
     const pdfResults = await mapPdfScanResults(randomToken, uuidToPdfMapping);
 
     // push results for each pdf document to key value store

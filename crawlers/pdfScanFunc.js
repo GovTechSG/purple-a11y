@@ -210,13 +210,19 @@ export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
       .slice(0, -1)
       .join('.');
       // .split('.')[0];
+      console.log(uuid)
     const url = uuidToUrlMapping[uuid];
+    //const url = uuidToUrlMapping[uuid];
+    console.log("url",url)
     const pageTitle = decodeURI(url).split('/').pop();
+    console.log("pg",pageTitle)
     const filePath = `${randomToken}/${uuid}.pdf`;
+    console.log("fp",filePath)
 
     translated.url = url;
     translated.pageTitle = pageTitle;
     translated.filePath = filePath;
+    console.log("tfp",filePath)
 
     if (!validationResult) {
       // check for error in scan
