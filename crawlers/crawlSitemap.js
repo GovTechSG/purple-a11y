@@ -92,7 +92,11 @@ const crawlSitemap = async (
    * basicAuthPage is set to -1 for basic auth URL to ensure it is not counted towards maxRequestsPerCrawl
   */
 
+  try{
   sitemapUrl = encodeURI(sitemapUrl)
+  } catch (e) {
+    console.log(e)
+  }
   if (basicAuthRegex.test(sitemapUrl)) {
     isBasicAuth = true;
     // request to basic auth URL to authenticate for browser session
