@@ -206,7 +206,10 @@ export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
     const uuid = fileName
       .split(os.platform() === 'win32' ? '\\' : '/')
       .pop()
-      .split('.')[0];
+      .split('.')
+      .slice(0, -1)
+      .join('.');
+      // .split('.')[0];
     const url = uuidToUrlMapping[uuid];
     const pageTitle = decodeURI(url).split('/').pop();
     const filePath = `${randomToken}/${uuid}.pdf`;
