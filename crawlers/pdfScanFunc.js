@@ -171,8 +171,12 @@ export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
   const intermediateResultPath = `${intermediateFolder}/${constants.pdfScanResultFileName}`;
 
   const rawdata = fs.readFileSync(intermediateResultPath);
-  const output = JSON.parse(rawdata);
-
+  let output;
+  try {
+    output = JSON.parse(rawdata);
+  } catch (e) {
+    console.log(e);
+  }
   const errorMeta = require('../constants/errorMeta.json');
 
   const resultsList = [];
@@ -209,7 +213,7 @@ export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
       .split('.')
       .slice(0, -1)
       .join('.');
-      // .split('.')[0];
+    // .split('.')[0];
 
     const url = uuidToUrlMapping[uuid];
     const pageTitle = decodeURI(url).split('/').pop();
