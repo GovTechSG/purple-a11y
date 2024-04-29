@@ -736,7 +736,14 @@ export const getLinksFromSitemap = async (
     if (!url) return;
     if (isDisallowedInRobotsTxt(url)) return;
 
-    const request = new Request({ url: encodeURI(url) });
+    let request;
+    try{
+      request = new Request({ url: encodeURI(url) });
+
+    } catch (e) {
+      console.log('Error creating request:', e);
+
+    }
 
     if (isUrlPdf(url)) {
       request.skipNavigation = true;
