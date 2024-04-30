@@ -1193,7 +1193,7 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
             } else {
               console.log(`An unexpected error occurred while copying the file: ${err.message}`);
             }
-            printMessage([err], messageOptions);
+            //printMessage([err], messageOptions);
             success = false;
           }
         }
