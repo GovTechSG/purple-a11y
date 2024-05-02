@@ -877,11 +877,11 @@ export const getLinksFromSitemap = async (
     } else {
       data = fs.readFileSync(url, 'utf8');
     }
-
+    let $;
     if (typeof data === 'string') {
-      cheerio.load(data, { xml: true });
+      $ = cheerio.load(data, { xml: true });
     } else {
-      cheerio.load(data.toString(), { xml: true });
+      $ = cheerio.load(data.toString(), { xml: true });
     }
     // This case is when the document is not an XML format document
     if ($(':root').length === 0) {
