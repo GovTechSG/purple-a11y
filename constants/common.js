@@ -218,7 +218,8 @@ export const isFileSitemap = async filePath => {
   const file = fs.readFileSync(filePath, 'utf8');
   const isLocalSitemap = await isSitemapContent(file);
   let isLocalFileOrSitemap = isLocalSitemap ? filePath : null;
-  return (isLocalFileOrSitemap) ? filePath : null;
+  let isLocalFileOption = filePath.endsWith('.pdf') ? filePath : null;
+  return (isLocalFileOption || isLocalFileOrSitemap) ? filePath : null;
 };
 
 export const getUrlMessage = scanner => {
