@@ -295,12 +295,14 @@ function getBaseName(filePath) {
     const pdfFileName = getBaseName(request.url);
     const trimmedUrl = request.url;
     const destinationFilePath = `${randomToken}/${pdfFileName}`;
-
     const data = fs.readFileSync(trimmedUrl);
     fs.writeFileSync(destinationFilePath, data);
     uuidToPdfMapping[pdfFileName] = trimmedUrl;
 
     urlsCrawled.scanned.push({ url: trimmedUrl, pageTitle: pdfFileName });
+    if (!trimmedUrl.endsWith('.pdf')) {
+      return;
+    }
 
     await runPdfScan(randomToken);
     // transform result format

@@ -180,12 +180,12 @@ export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
   const errorMeta = require('../constants/errorMeta.json');
 
   const resultsList = [];
-
+  if (output){
   // jobs: files that are scanned
   const {
     report: { jobs },
   } = output;
-
+  
   // loop through all jobs
   for (let jobIdx = 0; jobIdx < jobs.length; jobIdx++) {
     const translated = {
@@ -253,6 +253,7 @@ export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
 
     resultsList.push(translated);
   }
+}
   return resultsList;
 };
 

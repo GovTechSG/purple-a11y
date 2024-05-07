@@ -150,7 +150,8 @@ const combineRun = async (details, deviceToScan) => {
   scanDetails.endTime = new Date();
   scanDetails.urlsCrawled = urlsCrawled;
   await createDetailsAndLogs(scanDetails, randomToken);
-  if (scanDetails.urlsCrawled.scanned.length > 0) {
+  if (scanDetails.urlsCrawled){
+    if(scanDetails.urlsCrawled.scanned.length > 0) {
     await createAndUpdateResultsFolders(randomToken);
     const pagesNotScanned = [
       ...urlsCrawled.error, 
@@ -184,7 +185,7 @@ const combineRun = async (details, deviceToScan) => {
       pagesNotScanned.length,
       metadata,
     );
-  } else {
+  } }else {
     printMessage([`No pages were scanned.`], constants.alertMessageOptions);
   }
 };

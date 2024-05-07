@@ -218,8 +218,9 @@ export const isFileSitemap = async filePath => {
   const file = fs.readFileSync(filePath, 'utf8');
   const isLocalSitemap = await isSitemapContent(file);
   let isLocalFileOrSitemap = isLocalSitemap ? filePath : null;
-  let isLocalFileOption = filePath.endsWith('.pdf') ? filePath : null;
-  return (isLocalFileOption || isLocalFileOrSitemap) ? filePath : null;
+  let isLocalFiles= file ? filePath : null;
+  
+  return (isLocalFileOrSitemap || isLocalFiles) ? filePath : null;
 };
 
 export const getUrlMessage = scanner => {
@@ -513,7 +514,6 @@ export const checkUrl = async (
   }
 
   const isLocalFile = !validator.isURL(url);
-
   if (
     res.status === constants.urlCheckStatuses.success.code &&
     scanner === constants.scannerTypes.sitemap &&
