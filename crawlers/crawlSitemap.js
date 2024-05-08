@@ -20,13 +20,14 @@ import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
 import fs from 'fs';
 import { guiInfoLog } from '../logs.js';
+import puppeteer from 'puppeteer';
 
 const crawlSitemap = async (
   sitemapUrl,
   randomToken,
   host,
   viewportSettings,
-  maxRequestsPerCrawl, 
+  maxRequestsPerCrawl,
   browser,
   userDataDirectory,
   specifiedMaxConcurrency,
@@ -38,34 +39,34 @@ const crawlSitemap = async (
   userUrlInputFromIntelligent = null, //optional
   datasetFromIntelligent = null, //optional
   urlsCrawledFromIntelligent = null, //optional
-  
+
 ) => {
   let dataset;
   let urlsCrawled;
   let linksFromSitemap
 
-  
+
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth;
   let basicAuthPage = 0;
-  let finalLinks = []; 
-  
-  
-  if (fromCrawlIntelligentSitemap){
-    dataset=datasetFromIntelligent;
+  let finalLinks = [];
+
+
+  if (fromCrawlIntelligentSitemap) {
+    dataset = datasetFromIntelligent;
     urlsCrawled = urlsCrawledFromIntelligent;
-    
+
   } else {
     ({ dataset } = await createCrawleeSubFolders(randomToken));
     urlsCrawled = { ...constants.urlsCrawledObj };
-    
+
     if (!fs.existsSync(randomToken)) {
       fs.mkdirSync(randomToken);
     }
   }
-  
+
   if (sitemapUrl.startsWith('http') || sitemapUrl.startsWith('https')) {
-    
+
     // Sitemap URL
     linksFromSitemap = await getLinksFromSitemap(
       sitemapUrl,
@@ -92,8 +93,8 @@ const crawlSitemap = async (
    * basicAuthPage is set to -1 for basic auth URL to ensure it is not counted towards maxRequestsPerCrawl
   */
 
-  try{
-  sitemapUrl = encodeURI(sitemapUrl)
+  try {
+    sitemapUrl = encodeURI(sitemapUrl)
   } catch (e) {
     console.log(e)
   }
@@ -105,9 +106,9 @@ const crawlSitemap = async (
     // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
     finalLinks.push(new Request({ url: finalUrl }));
     basicAuthPage = -2;
-    } 
-  
-  
+  }
+
+
   let pdfDownloads = [];
   let uuidToPdfMapping = {};
   const isScanHtml = ['all', 'html-only'].includes(fileTypes);
@@ -211,13 +212,13 @@ const crawlSitemap = async (
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
-  
+
           const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
           if (isRedirected) {
             const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
               item => (item.actualUrl || item.url) === request.loadedUrl,
             );
-  
+
             if (isLoadedUrlInCrawledUrls) {
               urlsCrawled.notScannedRedirects.push({
                 fromUrl: request.url,
@@ -225,18 +226,18 @@ const crawlSitemap = async (
               });
               return;
             }
-  
+
             urlsCrawled.scanned.push({
               url: request.url,
               pageTitle: results.pageTitle,
               actualUrl: request.loadedUrl, // i.e. actualUrl
             });
-  
+
             urlsCrawled.scannedRedirects.push({
               fromUrl: request.url,
               toUrl: request.loadedUrl, // i.e. actualUrl
             });
-  
+
             results.url = request.url;
             results.actualUrl = request.loadedUrl;
           } else {
@@ -248,7 +249,7 @@ const crawlSitemap = async (
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
-  
+
           isScanHtml && urlsCrawled.invalid.push(actualUrl);
         }
       }
@@ -259,7 +260,7 @@ const crawlSitemap = async (
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
         return;
       }
-      
+
       guiInfoLog(guiInfoStatusTypes.ERROR, {
         numScanned: urlsCrawled.scanned.length,
         urlScanned: request.url,
@@ -271,18 +272,18 @@ const crawlSitemap = async (
     maxConcurrency: specifiedMaxConcurrency || maxConcurrency,
   });
 
-function getBaseName(filePath) {
-  // Remove any query parameters or anchors that might be present in a URL
-  filePath = filePath.split('?')[0].split('#')[0];
+  function getBaseName(filePath) {
+    // Remove any query parameters or anchors that might be present in a URL
+    filePath = filePath.split('?')[0].split('#')[0];
 
-  // Find the last '/' in the path which separates the file name from the rest of the path
-  const lastSlashIndex = filePath.lastIndexOf('/');
+    // Find the last '/' in the path which separates the file name from the rest of the path
+    const lastSlashIndex = filePath.lastIndexOf('/');
 
-  // Extract the substring from the last '/' to the end to get the basename
-  const basename = lastSlashIndex !== -1 ? filePath.substring(lastSlashIndex + 1) : filePath;
+    // Extract the substring from the last '/' to the end to get the basename
+    const basename = lastSlashIndex !== -1 ? filePath.substring(lastSlashIndex + 1) : filePath;
 
-  return basename;
-}
+    return basename;
+  }
 
   if (sitemapUrl.startsWith('http') || sitemapUrl.startsWith('https')) {
     // Run crawler only for sitemap URLs
@@ -299,19 +300,47 @@ function getBaseName(filePath) {
     fs.writeFileSync(destinationFilePath, data);
     uuidToPdfMapping[pdfFileName] = trimmedUrl;
 
-    urlsCrawled.scanned.push({ url: trimmedUrl, pageTitle: pdfFileName });
-    if (!trimmedUrl.endsWith('.pdf')) {
-      return;
+    if (!request.url.endsWith(".pdf")) {
+      const browser = await puppeteer.launch();
+      const page = await browser.newPage();
+      request.url = "file://" + request.url
+      console.log(request.url)
+      await page.goto(request.url);
+      const results = await runAxeScript(includeScreenshots, page, randomToken);
+      console.log(results)
+      guiInfoLog(guiInfoStatusTypes.SCANNED, {
+        numScanned: urlsCrawled.scanned.length,
+        urlScanned: request.url,
+      });
+
+      urlsCrawled.scanned.push({
+        url: request.url,
+        pageTitle: results.pageTitle,
+        actualUrl: request.loadedUrl, // i.e. actualUrl
+      });
+
+      urlsCrawled.scannedRedirects.push({
+        fromUrl: request.url,
+        toUrl: request.loadedUrl, // i.e. actualUrl
+      });
+
+      results.url = request.url;
+      results.actualUrl = request.loadedUrl;
+
+      await dataset.pushData(results);
     }
+    else {
+      urlsCrawled.scanned.push({ url: trimmedUrl, pageTitle: pdfFileName });
 
-    await runPdfScan(randomToken);
-    // transform result format
-    const pdfResults = await mapPdfScanResults(randomToken, uuidToPdfMapping);
+      await runPdfScan(randomToken);
+      // transform result format
+      const pdfResults = await mapPdfScanResults(randomToken, uuidToPdfMapping);
 
-    // push results for each pdf document to key value store
-    await Promise.all(pdfResults.map(result => dataset.pushData(result)));
+      // push results for each pdf document to key value store
+      await Promise.all(pdfResults.map(result => dataset.pushData(result)));
+    }
   }
-  
+
   if (pdfDownloads.length > 0) {
     // wait for pdf downloads to complete
     await Promise.all(pdfDownloads);
@@ -333,13 +362,13 @@ function getBaseName(filePath) {
     await Promise.all(pdfResults.map(result => dataset.pushData(result)));
   }
 
-  
-  if (!fromCrawlIntelligentSitemap){
+
+  if (!fromCrawlIntelligentSitemap) {
     guiInfoLog(guiInfoStatusTypes.COMPLETED);
   }
 
   return urlsCrawled;
-  
+
 };
 
 export default crawlSitemap;
