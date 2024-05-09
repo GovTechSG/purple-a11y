@@ -1,7 +1,7 @@
 {
   "name": "@govtechsg/purple-hats",
   "main": "npmIndex.js",
-  "version": "0.9.50",
+  "version": "0.9.51",
   "type": "module",
   "imports": {
     "#root/*.js": "./*.js"
@@ -23,7 +23,6 @@
     "playwright": "1.42.1",
     "prettier": "^3.1.0",
     "print-message": "^3.0.1",
-    "puppeteer": "^22.8.0",
     "safe-regex": "^2.1.1",
     "validator": "^13.11.0",
     "which": "^4.0.0",

@@ -20,7 +20,8 @@ import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
 import fs from 'fs';
 import { guiInfoLog } from '../logs.js';
-import puppeteer from 'puppeteer';
+import playwright from 'playwright';
+
 
 const crawlSitemap = async (
   sitemapUrl,
@@ -301,13 +302,13 @@ const crawlSitemap = async (
     uuidToPdfMapping[pdfFileName] = trimmedUrl;
 
     if (!request.url.endsWith(".pdf")) {
-      const browser = await puppeteer.launch();
-      const page = await browser.newPage();
+      // Playwright only supports chromium,firefox and webkit thus hardcoded to chromium
+      const browserUsed = await playwright.chromium.launch();
+      const context = await browserUsed.newContext();
+      const page = await context.newPage();
       request.url = "file://" + request.url
-      console.log(request.url)
       await page.goto(request.url);
       const results = await runAxeScript(includeScreenshots, page, randomToken);
-      console.log(results)
       guiInfoLog(guiInfoStatusTypes.SCANNED, {
         numScanned: urlsCrawled.scanned.length,
         urlScanned: request.url,
