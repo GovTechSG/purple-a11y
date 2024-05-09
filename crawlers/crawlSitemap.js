@@ -302,8 +302,22 @@ const crawlSitemap = async (
     uuidToPdfMapping[pdfFileName] = trimmedUrl;
 
     if (!request.url.endsWith(".pdf")) {
+      let browserUsed;
       // Playwright only supports chromium,firefox and webkit thus hardcoded to chromium
-      const browserUsed = await playwright.chromium.launch();
+      if (browser === "chromium") {
+        browserUsed = await playwright.chromium.launch();
+      }
+      else if(browser === "firefox"){
+        browserUsed = await playwright.firefox.launch();
+      }
+      else if(browser === "webkit"){
+        browserUsed = await playwright.webkit.launch();
+      }
+      else{
+        console.log("Browser not supported, please use chromium, firefox, webkit")
+        console.log(" ")
+        return;
+      }
       const context = await browserUsed.newContext();
       const page = await context.newPage();
       request.url = "file://" + request.url
