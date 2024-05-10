@@ -102,7 +102,7 @@ const combineRun = async (details, deviceToScan) => {
       break;
 
     case constants.scannerTypes.intelligent:
-        urlsCrawled = await crawlIntelligentSitemap(
+      urlsCrawled = await crawlIntelligentSitemap(
         url,
         randomToken,
         host,
@@ -139,7 +139,7 @@ const combineRun = async (details, deviceToScan) => {
         extraHTTPHeaders,
         safeMode
       );
-    break;
+      break;
 
     default:
       consoleLogger.error(`type: ${type} not defined`);
@@ -150,40 +150,42 @@ const combineRun = async (details, deviceToScan) => {
   scanDetails.endTime = new Date();
   scanDetails.urlsCrawled = urlsCrawled;
   await createDetailsAndLogs(scanDetails, randomToken);
-  if (scanDetails.urlsCrawled.scanned.length > 0) {
-    await createAndUpdateResultsFolders(randomToken);
-    const pagesNotScanned = [
-      ...urlsCrawled.error, 
-      ...urlsCrawled.invalid, 
-      ...urlsCrawled.forbidden
-    ];
-    const basicFormHTMLSnippet = await generateArtifacts(
-      randomToken,
-      url,
-      type,
-      deviceToScan,
-      urlsCrawled.scanned,
-      pagesNotScanned,
-      customFlowLabel,
-      undefined,
-      scanDetails
-    );
-    const [name, email] = nameEmail.split(':');
-    
-    await submitForm(
-      browser,
-      userDataDirectory,
-      url,
-      entryUrl,
-      type,
-      email,
-      name,
-      JSON.stringify(basicFormHTMLSnippet),
-      urlsCrawled.scanned.length,
-      urlsCrawled.scannedRedirects.length, 
-      pagesNotScanned.length,
-      metadata,
-    );
+  if (scanDetails.urlsCrawled) {
+    if (scanDetails.urlsCrawled.scanned.length > 0) {
+      await createAndUpdateResultsFolders(randomToken);
+      const pagesNotScanned = [
+        ...urlsCrawled.error,
+        ...urlsCrawled.invalid,
+        ...urlsCrawled.forbidden
+      ];
+      const basicFormHTMLSnippet = await generateArtifacts(
+        randomToken,
+        url,
+        type,
+        deviceToScan,
+        urlsCrawled.scanned,
+        pagesNotScanned,
+        customFlowLabel,
+        undefined,
+        scanDetails
+      );
+      const [name, email] = nameEmail.split(':');
+
+      await submitForm(
+        browser,
+        userDataDirectory,
+        url,
+        entryUrl,
+        type,
+        email,
+        name,
+        JSON.stringify(basicFormHTMLSnippet),
+        urlsCrawled.scanned.length,
+        urlsCrawled.scannedRedirects.length,
+        pagesNotScanned.length,
+        metadata,
+      );
+    }
   } else {
     printMessage([`No pages were scanned.`], constants.alertMessageOptions);
   }
