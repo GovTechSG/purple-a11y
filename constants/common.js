@@ -229,6 +229,8 @@ export const getUrlMessage = scanner => {
       return 'Please enter URL of website: ';
     case constants.scannerTypes.sitemap:
       return 'Please enter URL or file path to sitemap, or drag and drop a sitemap file here: ';
+    case constants.scannerTypes.localFile:
+      return 'Please enter file path: ';
 
     default:
       return 'Invalid option';
@@ -512,8 +514,10 @@ export const checkUrl = async (
   }
 
   if (
-    res.status === constants.urlCheckStatuses.success.code &&
-    scanner === constants.scannerTypes.sitemap
+    (res.status === constants.urlCheckStatuses.success.code &&
+    scanner === constants.scannerTypes.sitemap) ||
+    (res.status === constants.urlCheckStatuses.success.code &&
+      scanner === constants.scannerTypes.localFile)
   ) {
     const isSitemap = await isSitemapContent(res.content);
 

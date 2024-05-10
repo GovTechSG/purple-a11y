@@ -22,7 +22,7 @@ import { guiInfoLog } from '../logs.js';
 import playwright from 'playwright';
 import path from 'path';
 
-const crawlSitemap = async (
+const crawlLocalFile = async (
     sitemapUrl,
     randomToken,
     host,

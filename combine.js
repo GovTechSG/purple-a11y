@@ -1,6 +1,7 @@
 import printMessage from 'print-message';
 import crawlSitemap from './crawlers/crawlSitemap.js';
 import crawlDomain from './crawlers/crawlDomain.js';
+import crawlLocalFile from './crawlers/crawlLocalFile.js';
 import crawlIntelligentSitemap from './crawlers/crawlIntelligentSitemap.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
@@ -42,7 +43,7 @@ const combineRun = async (details, deviceToScan) => {
   process.env.CRAWLEE_LOG_LEVEL = 'ERROR';
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
-  const host = type === constants.scannerTypes.sitemap && isLocalSitemap ? '' : getHost(url);
+  const host = (type === constants.scannerTypes.sitemap && isLocalSitemap || type === constants.scannerTypes.localFile && isLocalSitemap) ? '' : getHost(url);
 
   let blacklistedPatterns = null;
   try {
@@ -86,6 +87,23 @@ const combineRun = async (details, deviceToScan) => {
 
     case constants.scannerTypes.sitemap:
       urlsCrawled = await crawlSitemap(
+        url,
+        randomToken,
+        host,
+        viewportSettings,
+        maxRequestsPerCrawl,
+        browser,
+        userDataDirectory,
+        specifiedMaxConcurrency,
+        fileTypes,
+        blacklistedPatterns,
+        includeScreenshots,
+        extraHTTPHeaders
+      );
+      break;
+
+    case constants.scannerTypes.localFile:
+      urlsCrawled = await crawlLocalFile(
         url,
         randomToken,
         host,
