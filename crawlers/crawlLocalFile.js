@@ -20,6 +20,7 @@ import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.
 import fs from 'fs';
 import { guiInfoLog } from '../logs.js';
 import playwright from 'playwright';
+import path from 'path';
 
 const crawlSitemap = async (
     sitemapUrl,
@@ -98,7 +99,7 @@ const crawlSitemap = async (
     printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
 
     const request = linksFromSitemap[0];
-    const pdfFileName = getBaseName(request.url);
+    const pdfFileName = path.basename(request.url);
     const trimmedUrl = request.url;
     const destinationFilePath = `${randomToken}/${pdfFileName}`;
     const data = fs.readFileSync(trimmedUrl);
