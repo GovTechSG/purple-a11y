@@ -10,7 +10,7 @@
     "extends": [
         "airbnb-base",
         "eslint:recommended",
-        "prettier"
+        "plugin:prettier/recommended"
     ],
     "globals": {
         "Atomics": "readonly",
@@ -26,7 +26,6 @@
             {
                 "properties": "always"
             }
-        ],
-        "prettier/prettier": "error"
+        ]
     }
 }
