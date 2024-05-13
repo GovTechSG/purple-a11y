@@ -25,6 +25,7 @@ import { areLinksEqual, isFollowStrategy } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
 import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
+import puppeteer from 'puppeteer'
 
 const crawlDomain = async (
   url,
@@ -98,7 +99,25 @@ const crawlDomain = async (
     finalUrl = `${url.split('://')[0]}://${url.split('@')[1]}`;
     await requestQueue.addRequest({ url: finalUrl, skipNavigation: isUrlPdf(finalUrl) });
   } else {
-    await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    console.log(url)
+
+    page.on('response', response => {
+        console.log('Response URL:', response.url());  // Logs out each URL that loads
+    });
+
+    // Navigate to the URL
+    await page.goto(url, { waitUntil: 'networkidle0' });
+
+    const redirectUrl = page.url()
+    console.log('Final URL:', typeof(page.url()), page.url(),'hi');
+    if (typeof page.url() !== 'string' || page.url().trim() === '') {
+      console.error('Invalid URL:', url);
+  } else {
+    console.log("help")
+    await requestQueue.addRequest({url:redirectUrl, skipNavigation: isUrlPdf(redirectUrl) });
+  }
   }
 
 
@@ -315,8 +334,9 @@ const crawlDomain = async (
         }
 
         // Ensure page navigation completes to capture final URL in a redirect chain
-        await page.goto(request.url, { waitUntil: 'networkidle' });
-
+        if(urlsCrawled.scanned.length < maxRequestsPerCrawl){
+          await page.goto(request.url, { waitUntil: 'networkidle' });
+        }
         let finalUrl = page.url(); // Initialize with the request URL
 
 
