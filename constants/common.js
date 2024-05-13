@@ -4,7 +4,6 @@
 /* eslint-disable no-use-before-define */
 import validator from 'validator';
 import axios from 'axios';
-import { JSDOM } from 'jsdom';
 import * as cheerio from 'cheerio';
 import crawlee, { Request } from 'crawlee';
 import { parseString } from 'xml2js';
@@ -27,6 +26,7 @@ import constants, {
 import { silentLogger } from '../logs.js';
 import { isUrlPdf } from '../crawlers/commonCrawlerFunc.js';
 import { randomThreeDigitNumberString } from '../utils.js';
+import {parseHTML} from 'linkedom';
 
 // validateDirPath validates a provided directory path
 // returns null if no error
@@ -136,7 +136,7 @@ export const isBlacklistedFileExtensions = (url, blacklistedFileExtensions) => {
   return blacklistedFileExtensions.includes(urlExtension);
 };
 
-const document = new JSDOM('').window;
+const document = parseHTML('').window
 
 const httpsAgent = new https.Agent({
   // Run in environments with custom certificates
