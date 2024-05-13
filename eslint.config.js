@@ -10,7 +10,7 @@ export default [
   js.configs.recommended,
   ...compat.extends('airbnb-base', 'plugin:prettier/recommended'),
   {
-    languageOptions: { globals: globals.node },
+    languageOptions: { globals: globals.node, ecmaVersion: 'latest', sourceType: 'module' },
     plugins: {
       pluginImport,
       pluginPrettier,
