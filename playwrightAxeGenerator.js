@@ -443,7 +443,9 @@ const waitForCaptcha = async (page, captchaLocator) => {
               )}, 
               urlsCrawled.scanned, 
               pagesNotScanned,
-              ${formatScriptStringVar(customFlowLabel || 'Custom Flow')}
+              ${formatScriptStringVar(customFlowLabel || 'Custom Flow')},
+              undefined,
+              scanDetails
             );
 
   await submitForm(
