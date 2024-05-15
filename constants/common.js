@@ -267,7 +267,7 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
       headers: {
         ...extraHTTPHeaders,
         'User-Agent': devices['Desktop Chrome HiDPI'].userAgent,
-        'Host': new URL(url).host
+        Host: new URL(url).host,
       },
       httpsAgent,
       timeout: 5000,
@@ -277,19 +277,22 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
       res.status = constants.urlCheckStatuses.success.code;
       let data;
       if (typeof response.data === 'string' || response.data instanceof String) {
-          data = response.data;
+        data = response.data;
       } else if (typeof response.data === 'object' && response.data !== null) {
-          try {
-              data = JSON.stringify(response.data);
-          } catch (error) {
-              console.log("Error converting object to JSON:", error);
-          }
+        try {
+          data = JSON.stringify(response.data);
+        } catch (error) {
+          console.log('Error converting object to JSON:', error);
+        }
       } else {
-          console.log("Unsupported data type:", typeof response.data);
+        console.log('Unsupported data type:', typeof response.data);
       }
       let modifiedHTML = data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
 
-      const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?\s*url=(?:'([^']*)'|"([^"]*)"|([^>]*))"/i.exec(modifiedHTML);
+      const metaRefreshMatch =
+        /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?\s*url=(?:'([^']*)'|"([^"]*)"|([^>]*))"/i.exec(
+          modifiedHTML,
+        );
 
       const hasMetaRefresh = metaRefreshMatch && metaRefreshMatch.length > 1;
 
@@ -300,7 +303,6 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
       }
 
       if (hasMetaRefresh) {
-
         let urlOrRelativePath;
 
         for (let i = 1; i < metaRefreshMatch.length; i++) {
@@ -365,7 +367,7 @@ const checkUrlConnectivityWithBrowser = async (
   clonedDataDir,
   playwrightDeviceDetailsObject,
   isNewCustomFlow,
-  extraHTTPHeaders
+  extraHTTPHeaders,
 ) => {
   const res = {};
 
@@ -393,7 +395,7 @@ const checkUrlConnectivityWithBrowser = async (
         ...getPlaywrightLaunchOptions(browserToRun),
         ...(viewport && { viewport }),
         ...(userAgent && { userAgent }),
-        ...(extraHTTPHeaders && { extraHTTPHeaders })
+        ...(extraHTTPHeaders && { extraHTTPHeaders }),
       });
     } catch (err) {
       printMessage([`Unable to launch browser\n${err}`], messageOptions);
@@ -481,7 +483,7 @@ export const checkUrl = async (
   clonedDataDir,
   playwrightDeviceDetailsObject,
   isNewCustomFlow,
-  extraHTTPHeaders
+  extraHTTPHeaders,
 ) => {
   let res;
   if (proxy) {
@@ -491,7 +493,7 @@ export const checkUrl = async (
       clonedDataDir,
       playwrightDeviceDetailsObject,
       isNewCustomFlow,
-      extraHTTPHeaders
+      extraHTTPHeaders,
     );
   } else {
     res = await checkUrlConnectivity(url, isNewCustomFlow, extraHTTPHeaders);
@@ -503,7 +505,7 @@ export const checkUrl = async (
           clonedDataDir,
           playwrightDeviceDetailsObject,
           isNewCustomFlow,
-          extraHTTPHeaders
+          extraHTTPHeaders,
         );
       }
     }
@@ -550,7 +552,7 @@ export const prepareData = async argv => {
     metadata,
     followRobots,
     header,
-    safeMode
+    safeMode,
   } = argv;
 
   // construct filename for scan results
@@ -558,7 +560,7 @@ export const prepareData = async argv => {
   const domain = argv.isLocalSitemap ? 'custom' : new URL(argv.url).hostname;
   const sanitisedLabel = customFlowLabel ? `_${customFlowLabel.replaceAll(' ', '_')}` : '';
   let resultFilename;
-  const randomThreeDigitNumber = randomThreeDigitNumberString()
+  const randomThreeDigitNumber = randomThreeDigitNumberString();
   if (process.env.PURPLE_A11Y_VERBOSE) {
     resultFilename = `${date}_${time}${sanitisedLabel}_${domain}_${randomThreeDigitNumber}`;
   } else {
@@ -593,7 +595,7 @@ export const prepareData = async argv => {
     metadata,
     followRobots,
     extraHTTPHeaders: header,
-    safeMode
+    safeMode,
   };
 };
 
@@ -624,15 +626,16 @@ export const getUrlsFromRobotsTxt = async (url, browserToRun) => {
 
   const lines = robotsTxt.split(/\r?\n/);
   let shouldCapture = false;
-  let disallowedUrls = [], allowedUrls = [];
+  let disallowedUrls = [],
+    allowedUrls = [];
 
-  const sanitisePattern = (pattern) => {
+  const sanitisePattern = pattern => {
     const directoryRegex = /^\/(?:[^?#/]+\/)*[^?#]*$/;
     const subdirWildcardRegex = /\/\*\//g;
-    const filePathRegex = /^\/(?:[^\/]+\/)*[^\/]+\.[a-zA-Z0-9]{1,6}$/
+    const filePathRegex = /^\/(?:[^\/]+\/)*[^\/]+\.[a-zA-Z0-9]{1,6}$/;
 
     if (subdirWildcardRegex.test(pattern)) {
-      pattern = pattern.replace(subdirWildcardRegex, "/**/");
+      pattern = pattern.replace(subdirWildcardRegex, '/**/');
     }
     if (pattern.match(directoryRegex) && !pattern.match(filePathRegex)) {
       if (pattern.endsWith('*')) {
@@ -644,7 +647,7 @@ export const getUrlsFromRobotsTxt = async (url, browserToRun) => {
     }
     const final = domain.concat(pattern);
     return final;
-  }
+  };
 
   for (const line of lines) {
     if (line.toLowerCase().startsWith('user-agent: *')) {
@@ -666,21 +669,21 @@ export const getUrlsFromRobotsTxt = async (url, browserToRun) => {
     }
   }
   constants.robotsTxtUrls[domain] = { disallowedUrls, allowedUrls };
-}
+};
 
 const getRobotsTxtViaPlaywright = async (robotsUrl, browser) => {
-  const browserContext = await constants.launcher.launchPersistentContext(
-    '', { ...getPlaywrightLaunchOptions(browser) },
-  );
+  const browserContext = await constants.launcher.launchPersistentContext('', {
+    ...getPlaywrightLaunchOptions(browser),
+  });
 
   const page = await browserContext.newPage();
   await page.goto(robotsUrl, { waitUntil: 'networkidle', timeout: 30000 });
 
   const robotsTxt = await page.evaluate(() => document.body.textContent);
   return robotsTxt;
-}
+};
 
-const getRobotsTxtViaAxios = async (robotsUrl) => {
+const getRobotsTxtViaAxios = async robotsUrl => {
   const instance = axios.create({
     httpsAgent: new https.Agent({
       rejectUnauthorized: false,
@@ -689,29 +692,31 @@ const getRobotsTxtViaAxios = async (robotsUrl) => {
 
   const robotsTxt = await (await instance.get(robotsUrl, { timeout: 2000 })).data;
   return robotsTxt;
-}
+};
 
-export const isDisallowedInRobotsTxt = (url) => {
+export const isDisallowedInRobotsTxt = url => {
   if (!constants.robotsTxtUrls) return;
 
   const domain = new URL(url).origin;
   if (constants.robotsTxtUrls[domain]) {
     const { disallowedUrls, allowedUrls } = constants.robotsTxtUrls[domain];
 
-    const isDisallowed = disallowedUrls.filter(disallowedUrl => {
-      const disallowed = minimatch(url, disallowedUrl);
-      return disallowed;
-    }).length > 0;
+    const isDisallowed =
+      disallowedUrls.filter(disallowedUrl => {
+        const disallowed = minimatch(url, disallowedUrl);
+        return disallowed;
+      }).length > 0;
 
-    const isAllowed = allowedUrls.filter(allowedUrl => {
-      const allowed = minimatch(url, allowedUrl);
-      return allowed;
-    }).length > 0;
+    const isAllowed =
+      allowedUrls.filter(allowedUrl => {
+        const allowed = minimatch(url, allowedUrl);
+        return allowed;
+      }).length > 0;
 
     return isDisallowed && !isAllowed;
   }
   return false;
-}
+};
 
 export const getLinksFromSitemap = async (
   sitemapUrl,
@@ -719,9 +724,8 @@ export const getLinksFromSitemap = async (
   browser,
   userDataDirectory,
   userUrlInput,
-  isIntelligent
+  isIntelligent,
 ) => {
-
   const urls = {}; // dictionary of requests to urls to be scanned
 
   const isLimitReached = () => urls.size >= maxLinksCount;
@@ -729,9 +733,9 @@ export const getLinksFromSitemap = async (
   const addToUrlList = url => {
     if (!url) return;
     if (isDisallowedInRobotsTxt(url)) return;
-    try{
-    const request = new Request({ url: encodeURI(url) });
-    } catch(e){
+    try {
+      const request = new Request({ url: encodeURI(url) });
+    } catch (e) {
       console.log(e);
     }
     if (isUrlPdf(url)) {
@@ -740,10 +744,12 @@ export const getLinksFromSitemap = async (
     urls[url] = request;
   };
 
-  const calculateCloseness = (sitemapUrl) => {
+  const calculateCloseness = sitemapUrl => {
     // Remove 'http://', 'https://', and 'www.' prefixes from the URLs
     const normalizedSitemapUrl = sitemapUrl.replace(/^(https?:\/\/)?(www\.)?/, '');
-    const normalizedUserUrlInput = userUrlInput.replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/$/, ''); // Remove trailing slash also
+    const normalizedUserUrlInput = userUrlInput
+      .replace(/^(https?:\/\/)?(www\.)?/, '')
+      .replace(/\/$/, ''); // Remove trailing slash also
 
     if (normalizedSitemapUrl == normalizedUserUrlInput) {
       return 2;
@@ -752,14 +758,14 @@ export const getLinksFromSitemap = async (
     } else {
       return 0;
     }
-  }
+  };
   const processXmlSitemap = async ($, sitemapType, linkSelector, dateSelector, sectionSelector) => {
     const urlList = [];
     // Iterate through each URL element in the sitemap, collect url and modified date
     $(sectionSelector).each((index, urlElement) => {
       let url;
       if (sitemapType === constants.xmlSitemapTypes.atom) {
-        url = $(urlElement).find(linkSelector).prop('href')
+        url = $(urlElement).find(linkSelector).prop('href');
       } else {
         url = $(urlElement).find(linkSelector).text();
       }
@@ -787,13 +793,12 @@ export const getLinksFromSitemap = async (
     for (const { url } of urlList.slice(0, maxLinksCount)) {
       addToUrlList(url);
     }
-
-
   };
 
   const processNonStandardSitemap = data => {
-
-    const urlsFromData = crawlee.extractUrls({ string: data, urlRegExp: new RegExp("^(http|https):/{2}.+$", "gmi") }).slice(0, maxLinksCount);
+    const urlsFromData = crawlee
+      .extractUrls({ string: data, urlRegExp: new RegExp('^(http|https):/{2}.+$', 'gmi') })
+      .slice(0, maxLinksCount);
     urlsFromData.forEach(url => {
       addToUrlList(url);
     });
@@ -807,7 +812,6 @@ export const getLinksFromSitemap = async (
   const fetchUrls = async url => {
     let data;
     let sitemapType;
-
 
     const getDataUsingPlaywright = async () => {
       const browserContext = await constants.launcher.launchPersistentContext(
@@ -871,12 +875,9 @@ export const getLinksFromSitemap = async (
 
     // This case is when the document is not an XML format document
     if ($(':root').length === 0) {
-
       processNonStandardSitemap(data);
       return;
     }
-
-
 
     // Root element
     const root = $(':root')[0];
@@ -896,14 +897,11 @@ export const getLinksFromSitemap = async (
       sitemapType = constants.xmlSitemapTypes.unknown;
     }
 
-
-
     switch (sitemapType) {
       case constants.xmlSitemapTypes.xmlIndex:
         silentLogger.info(`This is a XML format sitemap index.`);
         for (const childSitemapUrl of $('loc')) {
           if (isLimitReached()) {
-
             break;
           }
 
@@ -925,24 +923,19 @@ export const getLinksFromSitemap = async (
       default:
         silentLogger.info(`This is an unrecognised XML sitemap format.`);
         processNonStandardSitemap(data);
-
     }
   };
 
   try {
     await fetchUrls(sitemapUrl);
   } catch (e) {
-    silentLogger.error(e)
+    silentLogger.error(e);
   }
-
 
   const requestList = Object.values(urls);
 
   return requestList;
 };
-
-
-
 
 export const validEmail = email => {
   const emailRegex = /^.+@.+\..+$/u;
@@ -951,7 +944,7 @@ export const validEmail = email => {
 };
 
 // For new user flow.
-export const validName = (name) => {
+export const validName = name => {
   // Allow only printable characters from any language
   const regex = /^[\p{L}\p{N}\s'".,()\[\]{}!?:؛،؟…]+$/u;
 
@@ -993,6 +986,17 @@ export const getBrowserToRun = (preferredBrowser, isCli) => {
 
       constants.launcher = webkit;
       return { browserToRun: null, clonedBrowserDataDir: '' };
+    }
+    if (os.platform() === 'linux') {
+      // linux user who specified -b chrome but does not have chrome
+      if (isCli)
+        printMessage(['Unable to use Chrome, falling back to chromium...'], messageOptions);
+
+      constants.launcher = chromium;
+      return {
+        browserToRun: constants.browserTypes.chromium,
+        clonedBrowserDataDir: cloneChromiumProfiles(),
+      };
     } else {
       if (isCli)
         printMessage(['Unable to use Chrome, falling back to Edge browser...'], messageOptions);
@@ -1027,7 +1031,10 @@ export const getBrowserToRun = (preferredBrowser, isCli) => {
     }
   } else {
     // defaults to chromium
-    return { browserToRun: constants.browserTypes.chromium, clonedBrowserDataDir: cloneChromiumProfiles() };
+    return {
+      browserToRun: constants.browserTypes.chromium,
+      clonedBrowserDataDir: cloneChromiumProfiles(),
+    };
   }
 };
 /**
@@ -1118,10 +1125,16 @@ const cloneChromeProfileCookieFiles = (options, destDir) => {
           } catch (err) {
             silentLogger.error(err);
             if (err.code === 'EBUSY') {
-              console.log(`Unable to copy the file for ${profileName} because it is currently in use.`);
-              console.log('Please close any applications that might be using this file and try again.');
+              console.log(
+                `Unable to copy the file for ${profileName} because it is currently in use.`,
+              );
+              console.log(
+                'Please close any applications that might be using this file and try again.',
+              );
             } else {
-              console.log(`An unexpected error occurred for ${profileName} while copying the file: ${err.message}`);
+              console.log(
+                `An unexpected error occurred for ${profileName} while copying the file: ${err.message}`,
+              );
             }
             // printMessage([err], messageOptions);
             success = false;
@@ -1188,8 +1201,12 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
           } catch (err) {
             silentLogger.error(err);
             if (err.code === 'EBUSY') {
-              console.log(`Unable to copy the file for ${profileName} because it is currently in use.`);
-              console.log('Please close any applications that might be using this file and try again.');
+              console.log(
+                `Unable to copy the file for ${profileName} because it is currently in use.`,
+              );
+              console.log(
+                'Please close any applications that might be using this file and try again.',
+              );
             } else {
               console.log(`An unexpected error occurred while copying the file: ${err.message}`);
             }
@@ -1229,7 +1246,9 @@ const cloneLocalStateFile = (options, destDir) => {
           console.log(`Unable to copy the file because it is currently in use.`);
           console.log('Please close any applications that might be using this file and try again.');
         } else {
-          console.log(`An unexpected error occurred for ${profileName} while copying the file: ${err.message}`);
+          console.log(
+            `An unexpected error occurred for ${profileName} while copying the file: ${err.message}`,
+          );
         }
         printMessage([err], messageOptions);
         success = false;
@@ -1266,7 +1285,9 @@ export const cloneChromeProfiles = randomToken => {
   }
 
   if (fs.existsSync(destDir)) {
-    process.env.PURPLE_A11Y_VERBOSE ? deleteClonedChromeProfiles(randomToken) : deleteClonedChromeProfiles();
+    process.env.PURPLE_A11Y_VERBOSE
+      ? deleteClonedChromeProfiles(randomToken)
+      : deleteClonedChromeProfiles();
   }
 
   if (!fs.existsSync(destDir)) {
@@ -1333,7 +1354,9 @@ export const cloneEdgeProfiles = randomToken => {
   }
 
   if (fs.existsSync(destDir)) {
-    process.env.PURPLE_A11Y_VERBOSE ? deleteClonedEdgeProfiles(randomToken) : deleteClonedEdgeProfiles();
+    process.env.PURPLE_A11Y_VERBOSE
+      ? deleteClonedEdgeProfiles(randomToken)
+      : deleteClonedEdgeProfiles();
   }
 
   if (!fs.existsSync(destDir)) {
@@ -1355,7 +1378,7 @@ export const cloneEdgeProfiles = randomToken => {
   return null;
 };
 
-export const deleteClonedProfiles = (browser,randomToken) => {
+export const deleteClonedProfiles = (browser, randomToken) => {
   if (browser === constants.browserTypes.chrome) {
     deleteClonedChromeProfiles(randomToken);
   } else if (browser === constants.browserTypes.edge) {
@@ -1369,19 +1392,18 @@ export const deleteClonedProfiles = (browser,randomToken) => {
  * Deletes all the cloned Purple-A11y directories in the Chrome data directory
  * @returns null
  */
-export const deleteClonedChromeProfiles = (randomToken) => {
-  
+export const deleteClonedChromeProfiles = randomToken => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
     return;
   }
-  let destDir
+  let destDir;
   if (randomToken) {
     destDir = [`${baseDir}/purple-a11y-${randomToken}`];
   } else {
     // Find all the Purple-A11y directories in the Chrome data directory
-    destDir = globSync("**/purple-a11y*", {
+    destDir = globSync('**/purple-a11y*', {
       cwd: baseDir,
       recursive: true,
       absolute: true,
@@ -1394,7 +1416,9 @@ export const deleteClonedChromeProfiles = (randomToken) => {
         try {
           fs.rmSync(dir, { recursive: true });
         } catch (err) {
-          silentLogger.error(`CHROME Unable to delete ${dir} folder in the Chrome data directory. ${err}`);
+          silentLogger.error(
+            `CHROME Unable to delete ${dir} folder in the Chrome data directory. ${err}`,
+          );
         }
       }
     });
@@ -1409,7 +1433,7 @@ export const deleteClonedChromeProfiles = (randomToken) => {
  * Deletes all the cloned Purple-A11y directories in the Edge data directory
  * @returns null
  */
-export const deleteClonedEdgeProfiles = (randomToken) => {
+export const deleteClonedEdgeProfiles = randomToken => {
   if (process.env.PURPLE_A11Y_VERBOSE) {
     return;
   }
@@ -1419,12 +1443,12 @@ export const deleteClonedEdgeProfiles = (randomToken) => {
     console.warn(`Unable to find Edge data directory in the system.`);
     return;
   }
-  let destDir
+  let destDir;
   if (randomToken) {
     destDir = [`${baseDir}/purple-a11y-${randomToken}`];
   } else {
     // Find all the Purple-A11y directories in the Chrome data directory
-    destDir = globSync("**/purple-a11y*", {
+    destDir = globSync('**/purple-a11y*', {
       cwd: baseDir,
       recursive: true,
       absolute: true,
@@ -1437,7 +1461,9 @@ export const deleteClonedEdgeProfiles = (randomToken) => {
         try {
           fs.rmSync(dir, { recursive: true });
         } catch (err) {
-          silentLogger.error(`EDGE Unable to delete ${dir} folder in the Chrome data directory. ${err}`);
+          silentLogger.error(
+            `EDGE Unable to delete ${dir} folder in the Chrome data directory. ${err}`,
+          );
         }
       }
     });
@@ -1445,7 +1471,7 @@ export const deleteClonedEdgeProfiles = (randomToken) => {
   }
 };
 
-export const deleteClonedChromiumProfiles = (randomToken) => {
+export const deleteClonedChromiumProfiles = randomToken => {
   const baseDir = getDefaultChromiumDataDir();
 
   if (!baseDir) {
@@ -1456,7 +1482,7 @@ export const deleteClonedChromiumProfiles = (randomToken) => {
     destDir = [`${baseDir}/purple-a11y-${randomToken}`];
   } else {
     // Find all the Purple-A11y directories in the Chrome data directory
-    destDir = globSync("**/purple-a11y*", {
+    destDir = globSync('**/purple-a11y*', {
       cwd: baseDir,
       recursive: true,
       absolute: true,
@@ -1469,7 +1495,9 @@ export const deleteClonedChromiumProfiles = (randomToken) => {
         try {
           fs.rmSync(dir, { recursive: true });
         } catch (err) {
-          silentLogger.error(`CHROMIUM Unable to delete ${dir} folder in the Chromium data directory. ${err}`);
+          silentLogger.error(
+            `CHROMIUM Unable to delete ${dir} folder in the Chromium data directory. ${err}`,
+          );
         }
       }
     });
@@ -1565,11 +1593,10 @@ export const submitForm = async (
   numberOfPagesNotScanned,
   metadata,
 ) => {
-
   const additionalPageDataJson = JSON.stringify({
     redirectsScanned: numberOfRedirectsScanned,
-    pagesNotScanned: numberOfPagesNotScanned
-  })
+    pagesNotScanned: numberOfPagesNotScanned,
+  });
 
   let finalUrl =
     `${formDataFields.formUrl}?` +
