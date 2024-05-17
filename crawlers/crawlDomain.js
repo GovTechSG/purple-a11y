@@ -315,7 +315,7 @@ const crawlDomain = async (
         }
 
         // Ensure page navigation completes to capture final URL in a redirect chain
-        await page.goto(request.url, { waitUntil: 'networkidle' });
+        await page.goto(request.url, { waitUntil: 'load' });
 
         let finalUrl = page.url(); // Initialize with the request URL
 

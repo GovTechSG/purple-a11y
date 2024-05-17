@@ -141,6 +141,7 @@ const document = new JSDOM('').window;
 const httpsAgent = new https.Agent({
   // Run in environments with custom certificates
   rejectUnauthorized: false,
+  keepAlive: true,
 });
 
 export const messageOptions = {
@@ -684,6 +685,7 @@ const getRobotsTxtViaAxios = async (robotsUrl) => {
   const instance = axios.create({
     httpsAgent: new https.Agent({
       rejectUnauthorized: false,
+      keepAlive: true,
     }),
   });
 
@@ -855,6 +857,7 @@ export const getLinksFromSitemap = async (
           const instance = axios.create({
             httpsAgent: new https.Agent({
               rejectUnauthorized: false,
+              keepAlive: true,
             }),
           });
           data = await (await instance.get(url, { timeout: 80000 })).data;
@@ -1531,7 +1534,7 @@ export const submitFormViaPlaywright = async (browserToRun, userDataDirectory, f
   try {
     const response = await page.goto(finalUrl, {
       timeout: 30000,
-      ...(proxy && { waitUntil: 'commit' }),
+      ...(proxy && { waitUntil: 'load' }),
     });
 
     try {
