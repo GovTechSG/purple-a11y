@@ -41,7 +41,8 @@
   "overrides": {
     "node-fetch": "^2.3.0",
     "json5": "^2.2.3",
-    "ansi-regex": "^5.0.1"
+    "ansi-regex": "^5.0.1",
+    "tough-cookie": "^5.0.0-rc.2"
   },
   "scripts": {
     "test": "node --experimental-vm-modules ./node_modules/.bin/jest"
