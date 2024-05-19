@@ -27,7 +27,7 @@ export const isWhitelistedContentType = contentType => {
 
 export const getStoragePath = randomToken => {
   if (process.env.PURPLE_A11Y_VERBOSE_STORAGE_PATH) {
-    return `${process.env.PURPLE_A11Y_VERBOSE_STORAGE_PATH}/${randomToken}`
+    return `${process.env.PURPLE_A11Y_VERBOSE_STORAGE_PATH}/${randomToken}`;
   }
   if (constants.exportDirectory === process.cwd()) {
     return `results/${randomToken}`;
@@ -45,7 +45,7 @@ export const createDetailsAndLogs = async (scanDetails, randomToken) => {
   try {
     await fs.ensureDir(storagePath);
     await fs.writeFile(`${storagePath}/details.json`, JSON.stringify(scanDetails, 0, 2));
-    
+
     // update logs
     await fs.ensureDir(logPath);
     await fs.pathExists('errors.txt').then(async exists => {
@@ -54,8 +54,12 @@ export const createDetailsAndLogs = async (scanDetails, randomToken) => {
           await fs.copy('errors.txt', `${logPath}/${randomToken}.txt`);
         } catch (error) {
           if (error.code === 'EBUSY') {
-            console.log(`Unable to copy the file from 'errors.txt' to '${logPath}/${randomToken}.txt' because it is currently in use.`);
-            console.log('Please close any applications that might be using this file and try again.');
+            console.log(
+              `Unable to copy the file from 'errors.txt' to '${logPath}/${randomToken}.txt' because it is currently in use.`,
+            );
+            console.log(
+              'Please close any applications that might be using this file and try again.',
+            );
           } else {
             console.log(`An unexpected error occurred while copying the file: ${error.message}`);
           }
@@ -122,17 +126,21 @@ export const createAndUpdateResultsFolders = async randomToken => {
 
   const transferResults = async (intermPath, resultFile) => {
     try {
-    if (fs.existsSync(intermPath)) {
-      await fs.copy(intermPath, `${storagePath}/${resultFile}`);
+      if (fs.existsSync(intermPath)) {
+        await fs.copy(intermPath, `${storagePath}/${resultFile}`);
+      }
+    } catch (error) {
+      if (error.code === 'EBUSY') {
+        console.log(
+          `Unable to copy the file from ${intermPath} to ${storagePath}/${resultFile} because it is currently in use.`,
+        );
+        console.log('Please close any applications that might be using this file and try again.');
+      } else {
+        console.log(
+          `An unexpected error occurred while copying the file from ${intermPath} to ${storagePath}/${resultFile}: ${error.message}`,
+        );
+      }
     }
-  } catch (error) {
-    if (error.code === 'EBUSY') {
-      console.log(`Unable to copy the file from ${intermPath} to ${storagePath}/${resultFile} because it is currently in use.`);
-      console.log('Please close any applications that might be using this file and try again.');
-    } else {
-      console.log(`An unexpected error occurred while copying the file from ${intermPath} to ${storagePath}/${resultFile}: ${error.message}`);
-    }
-  }
   };
 
   await Promise.all([
@@ -190,11 +198,15 @@ export const cleanUp = async pathToDelete => {
 //     timeZoneName: "longGeneric",
 //   });
 
-export const getWcagPassPercentage = (wcagViolations) => {
-  return parseFloat((Object.keys(constants.wcagLinks).length - wcagViolations.length) / Object.keys(constants.wcagLinks).length * 100).toFixed(2);
-}
+export const getWcagPassPercentage = wcagViolations => {
+  return parseFloat(
+    ((Object.keys(constants.wcagLinks).length - wcagViolations.length) /
+      Object.keys(constants.wcagLinks).length) *
+      100,
+  ).toFixed(2);
+};
 
-export const getFormattedTime = (inputDate) => {
+export const getFormattedTime = inputDate => {
   if (inputDate) {
     return inputDate.toLocaleTimeString('en-GB', {
       year: 'numeric',
@@ -212,13 +224,12 @@ export const getFormattedTime = (inputDate) => {
       hour12: false,
       hour: 'numeric',
       minute: '2-digit',
-      timeZoneName: "longGeneric",
+      timeZoneName: 'longGeneric',
     });
   }
 };
 
-export const formatDateTimeForMassScanner = (date) => {
-
+export const formatDateTimeForMassScanner = date => {
   // Format date and time parts separately
   const year = date.getFullYear().toString().slice(-2); // Get the last two digits of the year
   const month = ('0' + (date.getMonth() + 1)).slice(-2); // Month is zero-indexed
@@ -266,13 +277,13 @@ export const zipResults = (zipName, resultsPath) => {
     const command = '/usr/bin/zip';
     // Check if user specified absolute or relative path
     const zipFilePath = path.isAbsolute(zipName) ? zipName : path.join(process.cwd(), zipName);
-    
+
     // To zip up files recursively (-r) in the results folder path and write it to user's specified path
     const args = ['-r', zipFilePath, '.'];
-    
+
     // Change working directory only for the zip command
     const options = {
-      cwd: resultsPath
+      cwd: resultsPath,
     };
 
     try {
@@ -311,24 +322,24 @@ export const randomThreeDigitNumberString = () => {
   // Add 100 to ensure the result is between 100 (inclusive) and 1000 (exclusive)
   const threeDigitNumber = Math.floor(scaledDecimal) + 100;
   return String(threeDigitNumber);
-}
+};
 
 export const isFollowStrategy = (link1, link2, rule) => {
   const parsedLink1 = new URL(link1);
   const parsedLink2 = new URL(link2);
-  if (rule === "same-domain") {
+  if (rule === 'same-domain') {
     const link1Domain = parsedLink1.hostname.split('.').slice(-2).join('.');
     const link2Domain = parsedLink2.hostname.split('.').slice(-2).join('.');
     return link1Domain === link2Domain;
   } else {
     return parsedLink1.hostname === parsedLink2.hostname;
   }
-}
+};
 
 export const retryFunction = async (func, maxAttempt) => {
   let attemptCount = 0;
   while (attemptCount < maxAttempt) {
-    attemptCount++
+    attemptCount++;
     try {
       const result = await func();
       return result;
@@ -336,4 +347,4 @@ export const retryFunction = async (func, maxAttempt) => {
       silentLogger.error(`(Attempt count: ${attemptCount} of ${maxAttempt}) ${error}`);
     }
   }
-}
+};
