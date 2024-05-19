@@ -67,18 +67,27 @@ export const createDetailsAndLogs = async (scanDetails, randomToken) => {
   }
 };
 
+export const getUserDataFilePath = () => {
+  const platform = os.platform();
+  if (platform === 'win32') {
+    return path.join(process.env.APPDATA, 'Purple A11y', 'userData.txt');
+  } else if (platform === 'darwin') {
+    return path.join(
+      process.env.HOME,
+      'Library',
+      'Application Support',
+      'Purple A11y',
+      'userData.txt',
+    );
+  } else {
+    // linux and other OS
+    return path.join(process.env.HOME, '.config', 'purple-a11y', 'userData.txt');
+  }
+};
+
 export const getUserDataTxt = () => {
-  const textFilePath =
-    os.platform() === 'win32'
-      ? path.join(process.env.APPDATA, 'Purple A11y', 'userData.txt')
-      : path.join(
-        process.env.HOME,
-        'Library',
-        'Application Support',
-        'Purple A11y',
-        'userData.txt',
-      );
-        
+  const textFilePath = getUserDataFilePath();
+
   // check if textFilePath exists
   if (fs.existsSync(textFilePath)) {
     const userData = JSON.parse(fs.readFileSync(textFilePath, 'utf8'));
@@ -88,16 +97,7 @@ export const getUserDataTxt = () => {
 };
 
 export const writeToUserDataTxt = async (key, value) => {
-  const textFilePath =
-    os.platform() === 'win32'
-      ? path.join(process.env.APPDATA, 'Purple A11y', 'userData.txt')
-      : path.join(
-        process.env.HOME,
-        'Library',
-        'Application Support',
-        'Purple A11y',
-        'userData.txt',
-      );
+  const textFilePath = getUserDataFilePath();
 
   // Create file if it doesn't exist
   if (fs.existsSync(textFilePath)) {
