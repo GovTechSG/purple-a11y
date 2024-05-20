@@ -1534,7 +1534,7 @@ export const submitFormViaPlaywright = async (browserToRun, userDataDirectory, f
   try {
     const response = await page.goto(finalUrl, {
       timeout: 30000,
-      ...(proxy && { waitUntil: 'load' }),
+      ...(proxy && { waitUntil: 'commit' }),
     });
 
     try {
