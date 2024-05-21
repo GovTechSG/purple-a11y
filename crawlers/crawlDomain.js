@@ -82,6 +82,10 @@ const crawlDomain = async (
    * First time scan with original `url` containing credentials is strictly to authenticate for browser session
    * subsequent URLs are without credentials.
    */
+  const username = basicAuthRegex.test(url)? url.split('://')[1].split(':')[0] : null;
+  const password = basicAuthRegex.test(url) ? url.split(':')[2].split('@')[0] : null;
+  const authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
+  
   try{
   url = encodeURI(url);
   }
@@ -92,13 +96,20 @@ const crawlDomain = async (
   if (basicAuthRegex.test(url)) {
     isBasicAuth = true;
     // request to basic auth URL to authenticate for browser session
-    await requestQueue.addRequest({ url, uniqueKey: `auth:${url}` });
-
+    await requestQueue.addRequest({ url, uniqueKey: `auth:${url}`, headers: {
+      'Authorization': authHeader
+    } });
+    console.log(authHeader);
     // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
     finalUrl = `${url.split('://')[0]}://${url.split('@')[1]}`;
-    await requestQueue.addRequest({ url: finalUrl, skipNavigation: isUrlPdf(finalUrl) });
+    console.log(finalUrl);
+    await requestQueue.addRequest({ url: finalUrl, skipNavigation: isUrlPdf(finalUrl), headers: {
+      'Authorization': authHeader
+    } });
   } else {
-    await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+    
+    await requestQueue.addRequest({url, skipNavigation: isUrlPdf(url) });
+  
   }
 
 
@@ -263,7 +274,16 @@ const crawlDomain = async (
       ],
     },
     requestQueue,
-    preNavigationHooks: preNavigationHooks(extraHTTPHeaders),
+    preNavigationHooks: basicAuthRegex.test(url)
+    ? [
+        async ({ page, request }) => {
+          await page.setExtraHTTPHeaders({
+            Authorization: authHeader,
+            ...extraHTTPHeaders,
+          });
+        },
+      ]
+    : preNavigationHooks(extraHTTPHeaders),
     requestHandler: async ({
       browserController,
       page,
@@ -314,8 +334,11 @@ const crawlDomain = async (
           return;
         }
 
+        await page.setExtraHTTPHeaders({
+          'Authorization': authHeader
+        });
         // Ensure page navigation completes to capture final URL in a redirect chain
-        await page.goto(request.url, { waitUntil: 'networkidle' });
+        await page.goto(request.url, { waitUntil: 'load' });
 
         let finalUrl = page.url(); // Initialize with the request URL
 
