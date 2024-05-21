@@ -983,17 +983,18 @@ export const validName = (name) => {
  * @returns object consisting of browser to run and cloned data directory
  */
 export const getBrowserToRun = (preferredBrowser, isCli) => {
+  const platform = os.platform();
   if (preferredBrowser === constants.browserTypes.chrome) {
     const chromeData = getChromeData();
     if (chromeData) return chromeData;
 
-    if (os.platform() === 'darwin') {
+    if (platform === 'darwin') {
       // mac user who specified -b chrome but does not have chrome
       if (isCli) printMessage(['Unable to use Chrome, falling back to webkit...'], messageOptions);
 
       constants.launcher = webkit;
       return { browserToRun: null, clonedBrowserDataDir: '' };
-    } else {
+    } else if (platform === 'win32') {
       if (isCli)
         printMessage(['Unable to use Chrome, falling back to Edge browser...'], messageOptions);
 
@@ -1003,6 +1004,10 @@ export const getBrowserToRun = (preferredBrowser, isCli) => {
       if (isCli)
         printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
       process.exit(constants.urlCheckStatuses.browserError.code);
+    } else {
+      // linux and other OS
+      if (isCli)
+        printMessage(['Unable to use Chrome, falling back to Chromium browser...'], messageOptions);
     }
   } else if (preferredBrowser === constants.browserTypes.edge) {
     const edgeData = getEdgeData();
@@ -1013,23 +1018,37 @@ export const getBrowserToRun = (preferredBrowser, isCli) => {
     const chromeData = getChromeData();
     if (chromeData) return chromeData;
 
-    if (os.platform() === 'darwin') {
+    if (platform === 'darwin') {
       //  mac user who specified -b edge but does not have edge or chrome
       if (isCli)
-        printMessage(['Unable to use Chrome and Edge, falling back to webkit...'], messageOptions);
+        printMessage(
+          ['Unable to use both Edge and Chrome, falling back to webkit...'],
+          messageOptions,
+        );
 
       constants.launcher = webkit;
       return { browserToRun: null, clonedBrowserDataDir: '' };
-    } else {
+    } else if (platform === 'win32') {
       if (isCli)
-        printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
+        printMessage(['Unable to use both Edge and Chrome. Please try again.'], messageOptions);
       process.exit(constants.urlCheckStatuses.browserError.code);
+    } else {
+      // linux and other OS
+      if (isCli)
+        printMessage(
+          ['Unable to use both Edge and Chrome, falling back to Chromium browser...'],
+          messageOptions,
+        );
     }
-  } else {
-    // defaults to chromium
-    return { browserToRun: constants.browserTypes.chromium, clonedBrowserDataDir: cloneChromiumProfiles() };
   }
+
+  // defaults to chromium
+  return {
+    browserToRun: constants.browserTypes.chromium,
+    clonedBrowserDataDir: cloneChromiumProfiles(),
+  };
 };
+
 /**
  * Cloning a second time with random token for parallel browser sessions
  * Also to mitigate against known bug where cookies are
