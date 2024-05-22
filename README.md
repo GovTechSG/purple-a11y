@@ -48,6 +48,23 @@ nvm install <nodejs_version_greater_than_15>
 nvm use <nodejs_version_greater_than_15>
 ```
 
+#### Environment variables (Optional)
+| Variable Name | Description | Default |
+| ------------- | ----------- | ------- |
+| PURPLE_A11Y_VERBOSE_STORAGE_PATH | Location for storing generated reports | Current working directory |
+| PURPLE_A11Y_VERBOSE | When set to `true`, log output goes to console | `false` |
+| RUNNING_FROM_PH_GUI |  | `false` |
+| REPORT_BREAKDOWN | Further breakdown reports according to their respective impact level | `false` |
+| WARN_LEVEL | seems to be used as a global  variable. Only used in tests. |  |
+
+#### Environment variables used internally (DO NOT SET)
+| Variable Name | Description |
+| ------------- | ----------- |
+| CRAWLEE_LOG_LEVEL | https://crawlee.dev/docs/guides/configuration#crawlee_log_level |
+| CRAWLEE_STORAGE_DIR | https://crawlee.dev/docs/guides/configuration#crawlee_storage_dir |
+| CRAWLEE_HEADLESS | https://crawlee.dev/docs/guides/configuration#crawlee_headless |
+
+
 #### Facing issues?
 
 Please refer to [Troubleshooting section](#troubleshooting) for more information.
@@ -68,6 +85,7 @@ Purple A11y can perform the following to scan the target URL.
 
 > - Windows (PowerShell): `rm "$env:APPDATA\Purple A11y\userData.txt"`
 > - MacOS (Terminal): `rm "$HOME/Library/Application Support/Purple A11y/userData.txt"`
+> - Linux (Terminal): `rm ~/.config/purple-ally/userData.txt`
 
 If `userData.txt` does not exists just run `node index`.
 
@@ -208,7 +226,7 @@ Custom flow allows you to record a series of actions in the browser and re-play 
   Sitemap
   Website
 ❯ Custom
-  ```
+```
 
 1. Specify the URL of the starting page you wish to scan
 2. A Chrome and Playwright Inspector window will appear.  Navigate through the pages you would like to conduct an accessibility scan.
