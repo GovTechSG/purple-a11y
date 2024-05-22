@@ -40,7 +40,7 @@ if (-Not (Test-Path jre\bin\java.exe)) {
 # Install VeraPDF
 if (-Not (Test-Path verapdf\verapdf.bat)) {
     Write-Output "INFO: Downloading VeraPDF"
-    Invoke-WebRequest -o .\verapdf-installer.zip "http://downloads.verapdf.org/rel/verapdf-installer.zip"
+    Invoke-WebRequest -o .\verapdf-installer.zip "https://github.com/GovTechSG/purple-a11y/releases/download/cache/verapdf-installer.zip"
     Expand-Archive .\verapdf-installer.zip -DestinationPath .
     Get-ChildItem ./verapdf-greenfield-* -Directory | Rename-Item -NewName verapdf-installer
 
