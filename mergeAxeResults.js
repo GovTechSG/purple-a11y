@@ -4,9 +4,9 @@ import os from 'os';
 import fs from 'fs-extra';
 import printMessage from 'print-message';
 import path from 'path';
-import { fileURLToPath, URL } from 'url';
+import { fileURLToPath} from 'url';
+import constants, { basicAuthRegex } from './constants/constants.js';
 import ejs from 'ejs';
-import constants from './constants/constants.js';
 import { createScreenshotsFolder, getFormattedTime, getStoragePath, getVersion, getWcagPassPercentage, formatDateTimeForMassScanner, retryFunction } from './utils.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import itemTypeDescription from './constants/itemTypeDescription.js';
@@ -388,15 +388,10 @@ export const generateArtifacts = async (
   const phAppVersion = getVersion();
   const storagePath = getStoragePath(randomToken);
   const directory = `${storagePath}/${constants.allIssueFileName}`;
-  
-  function removeBasicAuth(urlString) {
-    const parsedUrl = new URL(urlString);
-    parsedUrl.username = '';
-    parsedUrl.password = '';
-    return parsedUrl.toString();
+
+  if (basicAuthRegex.test(urlScanned)) {
+    urlScanned = `${urlScanned.split('://')[0]}://${urlScanned.split('@')[1]}`;
   }
-  
-  urlScanned = removeBasicAuth(urlScanned);
 
   const formatAboutStartTime = dateString => {
     const utcStartTimeDate = new Date(dateString);

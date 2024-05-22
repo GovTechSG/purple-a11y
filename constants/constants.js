@@ -281,7 +281,6 @@ export const impactOrder = {
 
 export const formDataFields = {
   formUrl: `https://docs.google.com/forms/d/e/1FAIpQLSem5C8fyNs5TiU5Vv2Y63-SH7CHN86f-LEPxeN_1u_ldUbgUA/formResponse`, // prod
-  // formUrl: `https://docs.google.com/forms/d/e/1FAIpQLSf69h2C7pv8k4fl3x2isbA9UnUaXWBsgZyRILuq2UNrIMYTqA/formResponse`, // dev
   entryUrlField: 'entry.1562345227',
   redirectUrlField: 'entry.473072563', 
   scanTypeField: 'entry.1148680657',
