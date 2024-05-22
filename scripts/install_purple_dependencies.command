@@ -60,7 +60,7 @@ if ! [ -f verapdf/verapdf ]; then
   echo "Downloading VeraPDF"
   if [ -d "./verapdf" ]; then rm -Rf ./verapdf; fi
   if [ -d "./verapdf-installer" ]; then rm -Rf ./verapdf-installer; fi
-  curl -L -o ./verapdf-installer.zip http://downloads.verapdf.org/rel/verapdf-installer.zip
+  curl -L -o ./verapdf-installer.zip https://github.com/GovTechSG/purple-a11y/releases/download/cache/verapdf-installer.zip
   unzip -j ./verapdf-installer.zip -d ./verapdf-installer
   ./verapdf-installer/verapdf-install "${__dir}/verapdf-auto-install-macos.xml"
   cp -r /tmp/verapdf .
