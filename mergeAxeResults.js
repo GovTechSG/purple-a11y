@@ -4,7 +4,7 @@ import os from 'os';
 import fs from 'fs-extra';
 import printMessage from 'print-message';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, URL } from 'url';
 import ejs from 'ejs';
 import constants from './constants/constants.js';
 import { createScreenshotsFolder, getFormattedTime, getStoragePath, getVersion, getWcagPassPercentage, formatDateTimeForMassScanner, retryFunction } from './utils.js';
@@ -388,6 +388,15 @@ export const generateArtifacts = async (
   const phAppVersion = getVersion();
   const storagePath = getStoragePath(randomToken);
   const directory = `${storagePath}/${constants.allIssueFileName}`;
+  
+  function removeBasicAuth(urlString) {
+    const parsedUrl = new URL(urlString);
+    parsedUrl.username = '';
+    parsedUrl.password = '';
+    return parsedUrl.toString();
+  }
+  
+  urlScanned = removeBasicAuth(urlScanned);
 
   const formatAboutStartTime = dateString => {
     const utcStartTimeDate = new Date(dateString);
