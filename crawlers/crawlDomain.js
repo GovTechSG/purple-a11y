@@ -72,7 +72,7 @@ const crawlDomain = async (
   const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
   const { maxConcurrency } = constants;
   const { playwrightDeviceDetailsObject } = viewportSettings;
-  let finalUrl;
+  let actualUrl;
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth = false;
 
@@ -82,34 +82,30 @@ const crawlDomain = async (
    * First time scan with original `url` containing credentials is strictly to authenticate for browser session
    * subsequent URLs are without credentials.
    */
-  const username = basicAuthRegex.test(url)? url.split('://')[1].split(':')[0] : null;
+  const username = basicAuthRegex.test(url) ? url.split('://')[1].split(':')[0] : null;
   const password = basicAuthRegex.test(url) ? url.split(':')[2].split('@')[0] : null;
   const authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
-  
-  try{
-  url = encodeURI(url);
+
+  try {
+    url = encodeURI(url);
   }
-  catch(e){
+  catch (e) {
     console.log(e);
     silentLogger.info(e);
   }
+
   if (basicAuthRegex.test(url)) {
     isBasicAuth = true;
-    // request to basic auth URL to authenticate for browser session
-    await requestQueue.addRequest({ url, uniqueKey: `auth:${url}`, headers: {
-      'Authorization': authHeader
-    } });
-    console.log(authHeader);
-    // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
-    finalUrl = `${url.split('://')[0]}://${url.split('@')[1]}`;
-    console.log(finalUrl);
-    await requestQueue.addRequest({ url: finalUrl, skipNavigation: isUrlPdf(finalUrl), headers: {
-      'Authorization': authHeader
-    } });
+    actualUrl = `${url.split('://')[0]}://${url.split('@')[1]}`;
+    await requestQueue.addRequest({
+      url: actualUrl, skipNavigation: isUrlPdf(actualUrl), headers: {
+        'Authorization': authHeader
+      }
+    });
   } else {
-    
-    await requestQueue.addRequest({url, skipNavigation: isUrlPdf(url) });
-  
+
+    await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+
   }
 
 
@@ -120,10 +116,10 @@ const crawlDomain = async (
       strategy,
       requestQueue,
       transformRequestFunction(req) {
-        try{
-        req.url = encodeURI(req.url)
+        try {
+          req.url = encodeURI(req.url)
         }
-        catch(e){
+        catch (e) {
           console.log(e);
           silentLogger.info(e);
         }
@@ -227,10 +223,10 @@ const crawlDomain = async (
           // handle onclick
           selector: ':not(a):is([role="link"], button[onclick])',
           transformRequestFunction(req) {
-            try{
-            req.url = encodeURI(req.url)
+            try {
+              req.url = encodeURI(req.url)
             }
-            catch(e){
+            catch (e) {
               console.log(e);
               silentLogger.info(e);
             }
@@ -275,7 +271,7 @@ const crawlDomain = async (
     },
     requestQueue,
     preNavigationHooks: basicAuthRegex.test(url)
-    ? [
+      ? [
         async ({ page, request }) => {
           await page.setExtraHTTPHeaders({
             Authorization: authHeader,
@@ -283,7 +279,7 @@ const crawlDomain = async (
           });
         },
       ]
-    : preNavigationHooks(extraHTTPHeaders),
+      : preNavigationHooks(extraHTTPHeaders),
     requestHandler: async ({
       browserController,
       page,
@@ -295,9 +291,6 @@ const crawlDomain = async (
       enqueueLinksByClickingElements,
     }) => {
 
-      const actualUrl = request.loadedUrl || request.url;
-
-
       function isExcluded(url) {
         // Check if duplicate scan URL
         if (urlsCrawled.scanned.some(item => item.url === url)) {
@@ -307,7 +300,7 @@ const crawlDomain = async (
           });
 
           return false;
-        } 
+        }
 
         // Check if any pattern matches the URL.
         const blacklistedPatterns = getBlackListedPatterns();
@@ -325,53 +318,80 @@ const crawlDomain = async (
         }
       }
 
-      if (!isScanPdfs) {
-        if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
-          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-            numScanned: urlsCrawled.scanned.length,
-            urlScanned: actualUrl,
-          });
-          return;
-        }
+      try {
 
+        // Set basic auth header
         await page.setExtraHTTPHeaders({
           'Authorization': authHeader
         });
+
         // Ensure page navigation completes to capture final URL in a redirect chain
-        await page.goto(request.url, { waitUntil: 'load' });
+        await page.goto(request.url, { waitUntil: 'networkidle' });
 
-        let finalUrl = page.url(); // Initialize with the request URL
+        const actualUrl = page.url(); // Initialize with the actual URL
 
-
-        if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
-          console.log(`Excluded URL (final/redirect): ${finalUrl}`);
-          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-            numScanned: urlsCrawled.scanned.length,
-            urlScanned: finalUrl,
-          });
-          return; // Skip processing this URL
-        }
-      }
-
-      if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
-        crawler.autoscaledPool.abort();
-        return;
-      }
-
-      // if URL has already been scanned
-      if (urlsCrawled.scanned.some(item => item.url === request.url)) {
-        await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
-        return;
-      }
-
-      if (isDisallowedInRobotsTxt(request.url)) {
-        await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
-        return;
-      }
-
-      // handle pdfs
-      if (request.skipNavigation && isUrlPdf(actualUrl)) {
         if (!isScanPdfs) {
+          if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
+            guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+              numScanned: urlsCrawled.scanned.length,
+              urlScanned: actualUrl,
+            });
+            return;
+          }
+
+          if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
+            guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+              numScanned: urlsCrawled.scanned.length,
+              urlScanned: actualUrl,
+            });
+            return; // Skip processing this URL
+          }
+        }
+
+        if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
+          crawler.autoscaledPool.abort();
+          return;
+        }
+
+        // if URL has already been scanned
+        if (urlsCrawled.scanned.some(item => item.url === request.url)) {
+          await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
+          return;
+        }
+
+        if (isDisallowedInRobotsTxt(request.url)) {
+          await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
+          return;
+        }
+
+        // handle pdfs
+        if (request.skipNavigation && isUrlPdf(actualUrl)) {
+          if (!isScanPdfs) {
+            guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+              numScanned: urlsCrawled.scanned.length,
+              urlScanned: request.url,
+            });
+            urlsCrawled.blacklisted.push(request.url);
+            return;
+          }
+          const { pdfFileName, trimmedUrl } = handlePdfDownload(
+            randomToken,
+            pdfDownloads,
+            request,
+            sendRequest,
+            urlsCrawled,
+          );
+
+          uuidToPdfMapping[pdfFileName] = trimmedUrl;
+          return;
+        }
+
+        const resHeaders = response ? response.headers() : {}; // Safely access response headers
+        const contentType = resHeaders['content-type'] || ''; // Ensure contentType is defined
+
+
+        // whitelist html and pdf document types
+        if (!contentType.includes('text/html') && !contentType.includes('application/pdf')) {
           guiInfoLog(guiInfoStatusTypes.SKIPPED, {
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
@@ -379,76 +399,62 @@ const crawlDomain = async (
           urlsCrawled.blacklisted.push(request.url);
           return;
         }
-        const { pdfFileName, trimmedUrl } = handlePdfDownload(
-          randomToken,
-          pdfDownloads,
-          request,
-          sendRequest,
-          urlsCrawled,
-        );
 
-        uuidToPdfMapping[pdfFileName] = trimmedUrl;
-        return;
-      }
+        if (isBlacklistedFileExtensions(actualUrl, blackListedFileExtensions)) {
+          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: request.url,
+          });
+          urlsCrawled.blacklisted.push(request.url);
+          return;
+        }
 
-      const resHeaders = response ? response.headers() : {}; // Safely access response headers
-      const contentType = resHeaders['content-type'] || ''; // Ensure contentType is defined
+        if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
+          urlsCrawled.userExcluded.push(request.url);
+          await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
+          return;
+        }
 
+        if (response.status() === 403) {
+          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: request.url,
+          });
+          urlsCrawled.forbidden.push({ url: request.url });
+          return;
+        }
 
-      // whitelist html and pdf document types
-      if (!contentType.includes('text/html') && !contentType.includes('application/pdf')) {
-        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-          numScanned: urlsCrawled.scanned.length,
-          urlScanned: request.url,
-        });
-        urlsCrawled.blacklisted.push(request.url);
-        return;
-      }
+        if (response.status() !== 200) {
+          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: request.url,
+          });
+          urlsCrawled.invalid.push({ url: request.url });
+          return;
+        }
 
-      if (isBlacklistedFileExtensions(actualUrl, blackListedFileExtensions)) {
-        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-          numScanned: urlsCrawled.scanned.length,
-          urlScanned: request.url,
-        });
-        urlsCrawled.blacklisted.push(request.url);
-        return;
-      }
+        if (isScanHtml) {
+          // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
+          const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
 
-      if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
-        urlsCrawled.userExcluded.push(request.url);
-        await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
-        return;
-      }
+          // check if redirected link is following strategy (same-domain/same-hostname)
+          const isLoadedUrlFollowStrategy = isFollowStrategy(request.loadedUrl, url, strategy);
+          if (isRedirected && !isLoadedUrlFollowStrategy) {
+            urlsCrawled.notScannedRedirects.push({
+              fromUrl: request.url,
+              toUrl: request.loadedUrl, // i.e. actualUrl
+            });
+            return;
+          }
 
-      if (response.status() === 403) {
-        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-          numScanned: urlsCrawled.scanned.length,
-          urlScanned: request.url,
-        });
-        urlsCrawled.forbidden.push({ url: request.url });
-        return;
-      }
+          const results = await runAxeScript(includeScreenshots, page, randomToken);
 
-      if (response.status() !== 200) {
-        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-          numScanned: urlsCrawled.scanned.length,
-          urlScanned: request.url,
-        });
-        urlsCrawled.invalid.push({ url: request.url });
-        return;
-      }
+          if (isRedirected) {
+            const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
+              item => (item.actualUrl || item.url) === request.loadedUrl,
+            );
 
-      try {
-        if (isBasicAuth) {
-          isBasicAuth = false;
-        } else {
-          if (isScanHtml) {
-            // For deduplication, if the URL is redirected, we want to store the original URL and the redirected URL (actualUrl)
-            const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
-
-            // check if redirected link is following strategy (same-domain/same-hostname)
-            const isLoadedUrlFollowStrategy = isFollowStrategy(request.loadedUrl, url, strategy);
-            if (isRedirected && !isLoadedUrlFollowStrategy) {
+            if (isLoadedUrlInCrawledUrls) {
               urlsCrawled.notScannedRedirects.push({
                 fromUrl: request.url,
                 toUrl: request.loadedUrl, // i.e. actualUrl
@@ -456,67 +462,51 @@ const crawlDomain = async (
               return;
             }
 
-            const results = await runAxeScript(includeScreenshots, page, randomToken);
+            // One more check if scanned pages have reached limit due to multi-instances of handler running
+            if (urlsCrawled.scanned.length < maxRequestsPerCrawl) {
+              guiInfoLog(guiInfoStatusTypes.SCANNED, {
+                numScanned: urlsCrawled.scanned.length,
+                urlScanned: request.url,
+              });
 
-            if (isRedirected) {
-              const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
-                item => (item.actualUrl || item.url) === request.loadedUrl,
-              );
+              urlsCrawled.scanned.push({
+                url: request.url,
+                pageTitle: results.pageTitle,
+                actualUrl: request.loadedUrl, // i.e. actualUrl
+              });
 
-              if (isLoadedUrlInCrawledUrls) {
-                urlsCrawled.notScannedRedirects.push({
-                  fromUrl: request.url,
-                  toUrl: request.loadedUrl, // i.e. actualUrl
-                });
-                return;
-              }
+              urlsCrawled.scannedRedirects.push({
+                fromUrl: request.url,
+                toUrl: request.loadedUrl, // i.e. actualUrl
+              });
 
-              // One more check if scanned pages have reached limit due to multi-instances of handler running
-              if (urlsCrawled.scanned.length < maxRequestsPerCrawl) {
-                guiInfoLog(guiInfoStatusTypes.SCANNED, {
-                  numScanned: urlsCrawled.scanned.length,
-                  urlScanned: request.url,
-                });
-
-                urlsCrawled.scanned.push({
-                  url: request.url,
-                  pageTitle: results.pageTitle,
-                  actualUrl: request.loadedUrl, // i.e. actualUrl
-                });
-
-                urlsCrawled.scannedRedirects.push({
-                  fromUrl: request.url,
-                  toUrl: request.loadedUrl, // i.e. actualUrl
-                });
-
-                results.url = request.url;
-                results.actualUrl = request.loadedUrl;
-                await dataset.pushData(results);
-              }
-            } else {
-
-              // One more check if scanned pages have reached limit due to multi-instances of handler running
-              if (urlsCrawled.scanned.length < maxRequestsPerCrawl) {
-                guiInfoLog(guiInfoStatusTypes.SCANNED, {
-                  numScanned: urlsCrawled.scanned.length,
-                  urlScanned: request.url,
-                });
-                urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
-                await dataset.pushData(results);
-              }
+              results.url = request.url;
+              results.actualUrl = request.loadedUrl;
+              await dataset.pushData(results);
             }
-
           } else {
-            guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-              numScanned: urlsCrawled.scanned.length,
-              urlScanned: request.url,
-            });
-            urlsCrawled.blacklisted.push(request.url);
+
+            // One more check if scanned pages have reached limit due to multi-instances of handler running
+            if (urlsCrawled.scanned.length < maxRequestsPerCrawl) {
+              guiInfoLog(guiInfoStatusTypes.SCANNED, {
+                numScanned: urlsCrawled.scanned.length,
+                urlScanned: request.url,
+              });
+              urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
+              await dataset.pushData(results);
+            }
           }
 
-          if (followRobots) await getUrlsFromRobotsTxt(request.url, browser);
-          await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
+        } else {
+          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: request.url,
+          });
+          urlsCrawled.blacklisted.push(request.url);
         }
+
+        if (followRobots) await getUrlsFromRobotsTxt(request.url, browser);
+        await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
       } catch (e) {
         if (!e.message.includes("page.evaluate")) {
           silentLogger.info(e);
@@ -552,9 +542,6 @@ const crawlDomain = async (
   });
 
   await crawler.run();
-
-
-
 
   if (pdfDownloads.length > 0) {
     // wait for pdf downloads to complete
