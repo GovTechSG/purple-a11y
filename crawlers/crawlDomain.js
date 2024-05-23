@@ -90,7 +90,6 @@ const crawlDomain = async (
     url = encodeURI(url);
   }
   catch (e) {
-    console.log(e);
     silentLogger.info(e);
   }
 
@@ -110,40 +109,41 @@ const crawlDomain = async (
 
 
   const enqueueProcess = async (page, enqueueLinks, enqueueLinksByClickingElements) => {
-    await enqueueLinks({
-      // set selector matches anchor elements with href but not contains # or starting with mailto:
-      selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
-      strategy,
-      requestQueue,
-      transformRequestFunction(req) {
-        try {
-          req.url = encodeURI(req.url)
-        }
-        catch (e) {
-          console.log(e);
-          silentLogger.info(e);
-        }
-        if (urlsCrawled.scanned.some(item => item.url === req.url)) {
-          req.skipNavigation = true;
-        }
-        if (isDisallowedInRobotsTxt(req.url)) return null;
-        if (isUrlPdf(req.url)) {
-          // playwright headless mode does not support navigation to pdf document
-          req.skipNavigation = true;
-        }
-
-        return req;
-      },
-    });
-
-    const handleOnWindowOpen = async url => {
-      if (!isDisallowedInRobotsTxt(url)) {
-        await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
-      }
-    };
-    await page.exposeFunction('handleOnWindowOpen', handleOnWindowOpen);
-
     try {
+
+      await enqueueLinks({
+        // set selector matches anchor elements with href but not contains # or starting with mailto:
+        selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
+        strategy,
+        requestQueue,
+        transformRequestFunction(req) {
+          try {
+            req.url = encodeURI(req.url)
+          }
+          catch (e) {
+            silentLogger.info(e);
+          }
+          if (urlsCrawled.scanned.some(item => item.url === req.url)) {
+            req.skipNavigation = true;
+          }
+          if (isDisallowedInRobotsTxt(req.url)) return null;
+          if (isUrlPdf(req.url)) {
+            // playwright headless mode does not support navigation to pdf document
+            req.skipNavigation = true;
+          }
+
+          return req;
+        },
+      });
+
+      const handleOnWindowOpen = async url => {
+        if (!isDisallowedInRobotsTxt(url)) {
+          await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+        }
+      };
+      await page.exposeFunction('handleOnWindowOpen', handleOnWindowOpen);
+
+
       await page.evaluate(() => {
         // Override window.open
         window.open = url => {
@@ -183,69 +183,69 @@ const crawlDomain = async (
       await page.evaluate(() => {
         document.addEventListener('click', (event) => handleOnClickEvent(event));
       })
+
+      
+      page.on('request', async request => {
+        try {
+          // Intercepting requests to handle cases where request was issued before the frame is created
+          await page.context().route(request.url(), async route => {
+            const isTopFrameNavigationRequest = () => {
+              return route.request().isNavigationRequest()
+                && route.request().frame() === page.mainFrame();
+            }
+
+            if (route.request().resourceType() === 'document') {
+              if (isTopFrameNavigationRequest()) {
+                const url = route.request().url();
+                if (!isDisallowedInRobotsTxt(url)) {
+                  await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+                }
+              }
+            }
+          })
+        } catch (e) {
+          silentLogger.info(e);
+        }
+      })
+    
+      // If safeMode flag is enabled, skip enqueueLinksByClickingElements
+      if (!safeMode) {
+        // Try catch is necessary as clicking links is best effort, it may result in new pages that cause browser load or navigation errors that PlaywrightCrawler does not handle
+        try {
+          await enqueueLinksByClickingElements({
+            // set selector matches
+            // NOT <a>
+            // IS role='link' or button onclick
+            // enqueue new page URL
+            // handle onclick
+            selector: ':not(a):is([role="link"], button[onclick])',
+            transformRequestFunction(req) {
+              try {
+                req.url = encodeURI(req.url)
+              }
+              catch (e) {
+                silentLogger.info(e);
+              }
+              if (urlsCrawled.scanned.some(item => item.url === req.url)) {
+                req.skipNavigation = true;
+              }
+              if (isDisallowedInRobotsTxt(req.url)) return null;
+              req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+              if (isUrlPdf(req.url) || urlsCrawled.scanned.some(item => item.url === req.url)) {
+                // playwright headless mode does not support navigation to pdf document
+                req.skipNavigation = true;
+              }
+
+              return req;
+            },
+          })
+        } catch (e) {
+          silentLogger.info(e);
+        }
+      }
     } catch (e) {
       // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
       // Handles browser page object been closed.
-    }
-
-    page.on('request', async request => {
-      try {
-        // Intercepting requests to handle cases where request was issued before the frame is created
-        await page.context().route(request.url(), async route => {
-          const isTopFrameNavigationRequest = () => {
-            return route.request().isNavigationRequest()
-              && route.request().frame() === page.mainFrame();
-          }
-
-          if (route.request().resourceType() === 'document') {
-            if (isTopFrameNavigationRequest()) {
-              const url = route.request().url();
-              if (!isDisallowedInRobotsTxt(url)) {
-                await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
-              }
-            }
-          }
-        })
-      } catch (e) {
-        silentLogger.info(e);
-      }
-    })
-
-    // If safeMode flag is enabled, skip enqueueLinksByClickingElements
-    if (!safeMode) {
-      // Try catch is necessary as clicking links is best effort, it may result in new pages that cause browser load or navigation errors that PlaywrightCrawler does not handle
-      try {
-        await enqueueLinksByClickingElements({
-          // set selector matches
-          // NOT <a>
-          // IS role='link' or button onclick
-          // enqueue new page URL
-          // handle onclick
-          selector: ':not(a):is([role="link"], button[onclick])',
-          transformRequestFunction(req) {
-            try {
-              req.url = encodeURI(req.url)
-            }
-            catch (e) {
-              console.log(e);
-              silentLogger.info(e);
-            }
-            if (urlsCrawled.scanned.some(item => item.url === req.url)) {
-              req.skipNavigation = true;
-            }
-            if (isDisallowedInRobotsTxt(req.url)) return null;
-            req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-            if (isUrlPdf(req.url) || urlsCrawled.scanned.some(item => item.url === req.url)) {
-              // playwright headless mode does not support navigation to pdf document
-              req.skipNavigation = true;
-            }
-
-            return req;
-          },
-        })
-      } catch (e) {
-        silentLogger.info(e);
-      }
     }
   };
 
@@ -328,22 +328,21 @@ const crawlDomain = async (
       }
 
       try {
-        // Set basic auth header
-        if (isBasicAuth) await page.setExtraHTTPHeaders({
-          'Authorization': authHeader
-        });
-        
-        // Best effort to check if page has loaded
-        // TODO: Possibility of using both networkidle and load to check page load state
-        // await page.goto(request.url, { waitUntil: 'networkidle', timeout: 5000 });
-        await page.goto(request.url, { waitUntil: 'load' });
 
-      } catch (e) {
-        silentLogger.info("Error resolving page as loaded " , page.url);
-        silentLogger.info(e);
-      }
+        // Attempt to launch page and wait for it to either load or networkidle
+        try {
+          // Set basic auth header if needed
+          if (isBasicAuth) await page.setExtraHTTPHeaders({
+            'Authorization': authHeader
+          });
+          
+          await page.goto(request.url, { waitUntil: 'load'});
 
-      try {
+        } catch (e) {
+          // Fallback to just assuming page has loaded
+          silentLogger.info(`Unable to determine if page has fully loaded for ${request.url}`);
+        }
+
         const actualUrl = page.url(); // Initialize with the actual URL
 
         if (!isScanPdfs) {
@@ -404,7 +403,6 @@ const crawlDomain = async (
 
         const resHeaders = response ? response.headers() : {}; // Safely access response headers
         const contentType = resHeaders['content-type'] || ''; // Ensure contentType is defined
-
 
         // whitelist html and pdf document types
         if (!contentType.includes('text/html') && !contentType.includes('application/pdf')) {
@@ -524,25 +522,32 @@ const crawlDomain = async (
         if (followRobots) await getUrlsFromRobotsTxt(request.url, browser);
         await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
       } catch (e) {
-        if (!e.message.includes("page.evaluate")) {
-          silentLogger.info(e);
-          guiInfoLog(guiInfoStatusTypes.ERROR, {
-            numScanned: urlsCrawled.scanned.length,
-            urlScanned: request.url,
-          });
-          const browser = browserController.browser;
-          page = await browser.newPage();
-          await page.goto(request.url);
+        try {
+          
+          if (!e.message.includes("page.evaluate")) {
+            silentLogger.info(e);
+            guiInfoLog(guiInfoStatusTypes.ERROR, {
+              numScanned: urlsCrawled.scanned.length,
+              urlScanned: request.url,
+            });
+            
+            const browser = browserController.browser;
+            page = await browser.newPage();
+            await page.goto(request.url);
+  
+            await page.route('**/*', async route => {
+              const interceptedRequest = route.request();
+              if (interceptedRequest.resourceType() === 'document') {
+                await requestQueue.addRequest({ url: interceptedRequest.url(), skipNavigation: isUrlPdf(interceptedRequest.url()) });
+                return;
+              }
+            });
+          }
 
-          await page.route('**/*', async route => {
-            const interceptedRequest = route.request();
-            if (interceptedRequest.resourceType() === 'document') {
-              await requestQueue.addRequest({ url: interceptedRequest.url(), skipNavigation: isUrlPdf(interceptedRequest.url()) });
-              return;
-            }
-          })
-          urlsCrawled.error.push({ url: request.url });
+        } catch (e) {
+          // Do nothing since the error will be pushed
         }
+        urlsCrawled.error.push({ url: request.url });
       }
     },
     failedRequestHandler: async ({ request }) => {
@@ -570,11 +575,11 @@ const crawlDomain = async (
     const pdfResults = await mapPdfScanResults(randomToken, uuidToPdfMapping);
 
     // get screenshots from pdf docs
-    // if (includeScreenshots) {
-    //   await Promise.all(pdfResults.map(
-    //     async result => await doPdfScreenshots(randomToken, result)
-    //   ));
-    // }
+    if (includeScreenshots) {
+      await Promise.all(pdfResults.map(
+        async result => await doPdfScreenshots(randomToken, result)
+      ));
+    }
 
     // push results for each pdf document to key value store
     await Promise.all(pdfResults.map(result => dataset.pushData(result)));
