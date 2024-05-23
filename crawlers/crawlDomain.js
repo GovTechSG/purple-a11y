@@ -326,7 +326,7 @@ const crawlDomain = async (
         });
 
         // Ensure page navigation completes to capture final URL in a redirect chain
-        await page.goto(request.url, { waitUntil: 'networkidle' });
+        await page.goto(request.url, { waitUntil: 'domcontentloaded', timeout: 10000 });
 
         const actualUrl = page.url(); // Initialize with the actual URL
 
