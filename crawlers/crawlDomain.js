@@ -273,13 +273,22 @@ const crawlDomain = async (
     preNavigationHooks: basicAuthRegex.test(url)
       ? [
         async ({ page, request }) => {
+
+          request.url = encodeURI(request.url);
           await page.setExtraHTTPHeaders({
             Authorization: authHeader,
             ...extraHTTPHeaders,
           });
         },
       ]
-      : preNavigationHooks(extraHTTPHeaders),
+      : [
+        async ({ page, request }) => {
+        request.url = encodeURI(request.url);
+        preNavigationHooks(extraHTTPHeaders)
+        //insert other code here
+        },
+      ]
+      ,
     requestHandler: async ({
       browserController,
       page,
@@ -319,15 +328,22 @@ const crawlDomain = async (
       }
 
       try {
-
         // Set basic auth header
-        await page.setExtraHTTPHeaders({
+        if (isBasicAuth) await page.setExtraHTTPHeaders({
           'Authorization': authHeader
         });
+        
+        // Best effort to check if page has loaded
+        // TODO: Possibility of using both networkidle and load to check page load state
+        // await page.goto(request.url, { waitUntil: 'networkidle', timeout: 5000 });
+        await page.goto(request.url, { waitUntil: 'load' });
 
-        // Ensure page navigation completes to capture final URL in a redirect chain
-        await page.goto(request.url, { waitUntil: 'networkidle' });
+      } catch (e) {
+        silentLogger.info("Error resolving page as loaded " , page.url);
+        silentLogger.info(e);
+      }
 
+      try {
         const actualUrl = page.url(); // Initialize with the actual URL
 
         if (!isScanPdfs) {
