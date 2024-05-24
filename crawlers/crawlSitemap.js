@@ -249,6 +249,10 @@ const crawlSitemap = async (
     },
     failedRequestHandler: async ({ request }) => {
 
+      if (isBasicAuth){
+        request.url ? request.url = `${request.url.split('://')[0]}://${request.url.split('@')[1]}` : null;
+      }
+
       // check if scanned pages have reached limit due to multi-instances of handler running
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
         return;
