@@ -288,8 +288,8 @@ const crawlDomain = async (
         preNavigationHooks(extraHTTPHeaders)
         //insert other code here
         },
-      ]
-      ,
+      ],
+    requestHandlerTimeoutSecs: 90, // Alow each page to be processed by up from default 60 seconds
     requestHandler: async ({
       browserController,
       page,

@@ -6,9 +6,11 @@ import path from 'path';
 
 const screenshotMap = {}; // Map of screenshot hashkey to its buffer value and screenshot path
 
-export const takeScreenshotForHTMLElements = async (violations, page, randomToken, locatorTimeout = 2000) => {
+export const takeScreenshotForHTMLElements = async (violations, page, randomToken, locatorTimeout = 2000, maxScreenshots = 50) => {
     let newViolations = [];
+    let screenshotCount = 0;
     for (const violation of violations) {
+        if (screenshotCount >= maxScreenshots) break;
         const { id: rule } = violation; 
         let newViolationNodes = [];
         for (const node of violation.nodes) {
@@ -24,6 +26,7 @@ export const takeScreenshotForHTMLElements = async (violations, page, randomToke
                     const buffer = await locator.screenshot({ timeout: locatorTimeout });
                     const screenshotPath = getScreenshotPath(buffer, randomToken);
                     node.screenshotPath = screenshotPath; 
+                    screenshotCount++;
                 } catch (e) {
                     silentLogger.info(e);
                 }
