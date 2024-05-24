@@ -253,7 +253,8 @@ const crawlDomain = async (
     launchContext: {
       launcher: constants.launcher,
       launchOptions: getPlaywrightLaunchOptions(browser),
-      userDataDir: userDataDirectory || '',
+      // Bug in Chrome which causes brwoser pool crash when userDataDirectory is set in non-headless mode
+      userDataDir: userDataDirectory ? (process.env.CRAWLEE_HEADLESS !== '0' ? userDataDirectory : '') : '',
     },
     retryOnBlocked: true,
     browserPoolOptions: {
@@ -329,20 +330,20 @@ const crawlDomain = async (
 
       try {
 
-        // Attempt to launch page and wait for it to either load or networkidle
-        try {
-          // Set basic auth header if needed
-          if (isBasicAuth) await page.setExtraHTTPHeaders({
-            'Authorization': authHeader
-          });
-          
-          await page.goto(request.url, { waitUntil: 'load'});
-
-        } catch (e) {
-          // Fallback to just assuming page has loaded
-          silentLogger.info(`Unable to determine if page has fully loaded for ${request.url}`);
+        // Set basic auth header if needed
+        if (isBasicAuth) await page.setExtraHTTPHeaders({
+          'Authorization': authHeader
+        });
+        
+        const waitForPageLoaded = async (page, timeout = 30000) => {
+          return Promise.race([
+              page.waitForLoadState('load'),
+              page.waitForLoadState('networkidle'),
+              new Promise((resolve) => setTimeout(resolve, timeout))
+          ]);
         }
 
+        await waitForPageLoaded(page, 15000);
         const actualUrl = page.url(); // Initialize with the actual URL
 
         if (!isScanPdfs) {
