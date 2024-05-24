@@ -20,13 +20,15 @@ export const takeScreenshotForHTMLElements = async (violations, page, randomToke
             if (selector) {
                 try {
                     const locator = page.locator(selector);
-                    // catch uncommon cases where components are not found in screenshot line
-                    await locator.waitFor({ state: 'visible', timeout: locatorTimeout});
-                    await locator.scrollIntoViewIfNeeded({ timeout: locatorTimeout });
-                    const buffer = await locator.screenshot({ timeout: locatorTimeout });
-                    const screenshotPath = getScreenshotPath(buffer, randomToken);
-                    node.screenshotPath = screenshotPath; 
-                    screenshotCount++;
+                    const locators = await locator.all();
+                    for (const currLocator of locators) {
+                            await currLocator.scrollIntoViewIfNeeded({ timeout: locatorTimeout });
+                            const buffer = await currLocator.screenshot({ timeout: locatorTimeout });
+                            const screenshotPath = getScreenshotPath(buffer, randomToken);
+                            node.screenshotPath = screenshotPath;
+                            screenshotCount++;
+                            break; // Stop looping after finding the first visible locator
+                    }
                 } catch (e) {
                     silentLogger.info(e);
                 }
