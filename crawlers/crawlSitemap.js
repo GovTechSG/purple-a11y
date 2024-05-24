@@ -14,6 +14,7 @@ import {
   getPlaywrightLaunchOptions,
   messageOptions,
   isSkippedUrl,
+  waitForPageLoaded,
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
@@ -115,7 +116,8 @@ const crawlSitemap = async (
     launchContext: {
       launcher: constants.launcher,
       launchOptions: getPlaywrightLaunchOptions(browser),
-      userDataDir: userDataDirectory || '',
+      // Bug in Chrome which causes brwoser pool crash when userDataDirectory is set in non-headless mode
+      userDataDir: userDataDirectory ? (process.env.CRAWLEE_HEADLESS !== '0' ? userDataDirectory : '') : '',
     },
     retryOnBlocked: true,
     browserPoolOptions: {
@@ -133,7 +135,10 @@ const crawlSitemap = async (
     },
     requestList,
     preNavigationHooks: preNavigationHooks(extraHTTPHeaders),
+    requestHandlerTimeoutSecs: 90, // Alow each page to be processed by up from default 60 seconds
     requestHandler: async ({ page, request, response, sendRequest }) => {
+
+      await waitForPageLoaded(page, 10000);
 
       // remove basic auth credentials so it wont be displayed in report
       if (isBasicAuth){

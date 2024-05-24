@@ -1656,3 +1656,11 @@ export const getPlaywrightLaunchOptions = browser => {
   }
   return options;
 };
+
+export const waitForPageLoaded = async (page, timeout = 10000) => {
+  return Promise.race([
+      page.waitForLoadState('load'),
+      page.waitForLoadState('networkidle'),
+      new Promise((resolve) => setTimeout(resolve, timeout))
+  ]);
+}

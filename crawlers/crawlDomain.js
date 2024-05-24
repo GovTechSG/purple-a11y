@@ -20,6 +20,7 @@ import {
   isDisallowedInRobotsTxt,
   getUrlsFromRobotsTxt,
   getBlackListedPatterns,
+  waitForPageLoaded,
 } from '../constants/common.js';
 import { areLinksEqual, isFollowStrategy } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
@@ -334,14 +335,6 @@ const crawlDomain = async (
         if (isBasicAuth) await page.setExtraHTTPHeaders({
           'Authorization': authHeader
         });
-        
-        const waitForPageLoaded = async (page, timeout = 10000) => {
-          return Promise.race([
-              page.waitForLoadState('load'),
-              page.waitForLoadState('networkidle'),
-              new Promise((resolve) => setTimeout(resolve, timeout))
-          ]);
-        }
 
         await waitForPageLoaded(page, 10000);
         const actualUrl = page.url(); // Initialize with the actual URL
