@@ -335,7 +335,7 @@ const crawlDomain = async (
           'Authorization': authHeader
         });
         
-        const waitForPageLoaded = async (page, timeout = 30000) => {
+        const waitForPageLoaded = async (page, timeout = 10000) => {
           return Promise.race([
               page.waitForLoadState('load'),
               page.waitForLoadState('networkidle'),
@@ -343,7 +343,7 @@ const crawlDomain = async (
           ]);
         }
 
-        await waitForPageLoaded(page, 15000);
+        await waitForPageLoaded(page, 10000);
         const actualUrl = page.url(); // Initialize with the actual URL
 
         if (!isScanPdfs) {
