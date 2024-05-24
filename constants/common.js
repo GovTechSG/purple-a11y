@@ -721,7 +721,9 @@ export const getLinksFromSitemap = async (
   browser,
   userDataDirectory,
   userUrlInput,
-  isIntelligent
+  isIntelligent,
+  username,
+  password
 ) => {
 
   const urls = {}; // dictionary of requests to urls to be scanned
@@ -731,11 +733,22 @@ export const getLinksFromSitemap = async (
   const addToUrlList = url => {
     if (!url) return;
     if (isDisallowedInRobotsTxt(url)) return;
+
+    // add basic auth credentials to the URL
+    (username && password)? url = addBasicAuthCredentials(url, username, password): url;
+
     const request = new Request({ url: encodeURI(url) });
     if (isUrlPdf(url)) {
       request.skipNavigation = true;
     }
     urls[url] = request;
+};
+
+  const addBasicAuthCredentials = (url, username, password) => {
+      const urlObject = new URL(url);
+      urlObject.username = username;
+      urlObject.password = password;
+      return urlObject.toString();
   };
 
   const calculateCloseness = (sitemapUrl) => {

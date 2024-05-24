@@ -63,7 +63,10 @@ const crawlSitemap = async (
     }
   }
 
-  linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory, userUrlInputFromIntelligent, fromCrawlIntelligentSitemap)
+  const username = basicAuthRegex.test(sitemapUrl) ? sitemapUrl.split('://')[1].split(':')[0] : null;
+  const password = basicAuthRegex.test(sitemapUrl) ? sitemapUrl.split(':')[2].split('@')[0] : null;
+  
+  linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory, userUrlInputFromIntelligent, fromCrawlIntelligentSitemap, username, password)
   
   /**
    * Regex to match http://username:password@hostname.com
@@ -131,6 +134,13 @@ const crawlSitemap = async (
     requestList,
     preNavigationHooks: preNavigationHooks(extraHTTPHeaders),
     requestHandler: async ({ page, request, response, sendRequest }) => {
+
+      // remove basic auth credentials so it wont be displayed in report
+      if (isBasicAuth){
+        request.url ? request.url = `${request.url.split('://')[0]}://${request.url.split('@')[1]}` : null;
+        request.loadedUrl ? request.loadedUrl = `${request.loadedUrl.split('://')[0]}://${request.loadedUrl.split('@')[1]}` : null;
+      }
+      
       const actualUrl = request.loadedUrl || request.url;
 
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
@@ -238,6 +248,10 @@ const crawlSitemap = async (
       }
     },
     failedRequestHandler: async ({ request }) => {
+
+      if (isBasicAuth){
+        request.url ? request.url = `${request.url.split('://')[0]}://${request.url.split('@')[1]}` : null;
+      }
 
       // check if scanned pages have reached limit due to multi-instances of handler running
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
