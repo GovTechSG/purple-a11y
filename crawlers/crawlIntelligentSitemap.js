@@ -59,8 +59,12 @@ import {chromium} from 'playwright';
   
     function getHomeUrl(url) {
       const urlObject = new URL(url);
+      if (urlObject.username !== '' && urlObject.password !== '') {
+        return `${urlObject.protocol}//${urlObject.username}:${urlObject.password}@${urlObject.hostname}${urlObject.port ? ':' + urlObject.port : ''}`;
+      }
+      
       return `${urlObject.protocol}//${urlObject.hostname}${urlObject.port ? ':' + urlObject.port : ''}`;
-  }
+    }
     
     const checkUrlExists = async (page, url) => {
       try {
@@ -78,7 +82,7 @@ import {chromium} from 'playwright';
 
     
     try {
-      sitemapUrl = await findSitemap(url)
+      sitemapUrl = await findSitemap(url);
     } catch (error) {
       silentLogger.error(error);
     }
