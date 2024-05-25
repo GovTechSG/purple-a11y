@@ -9,7 +9,6 @@ import {
   isUrlPdf,
 } from './commonCrawlerFunc.js';
 import constants, {
-  basicAuthRegex,
   blackListedFileExtensions,
   guiInfoStatusTypes,
 } from '../constants/constants.js';
@@ -72,41 +71,35 @@ const crawlDomain = async (
   const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
   const { maxConcurrency } = constants;
   const { playwrightDeviceDetailsObject } = viewportSettings;
-  let actualUrl;
+  
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth = false;
+  let authHeader = "";
 
-  /**
-   * Regex to match http://username:password@hostname.com
-   * utilised in scan strategy to ensure subsequent URLs within the same domain are scanned.
-   * First time scan with original `url` containing credentials is strictly to authenticate for browser session
-   * subsequent URLs are without credentials.
-   */
-  const username = basicAuthRegex.test(url) ? url.split('://')[1].split(':')[0] : null;
-  const password = basicAuthRegex.test(url) ? url.split(':')[2].split('@')[0] : null;
-  const authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
-
-  try {
-    url = encodeURI(url);
-  }
-  catch (e) {
-    silentLogger.info(e);
-  }
-
-  if (basicAuthRegex.test(url)) {
+  // Test basic auth and add auth header if auth exist
+  const parsedUrl = new URL(url);
+  if (parsedUrl.username !=="" && parsedUrl.password !=="") {
     isBasicAuth = true;
-    actualUrl = `${url.split('://')[0]}://${url.split('@')[1]}`;
+    const username = decodeURIComponent(parsedUrl.username);
+    const password = decodeURIComponent(parsedUrl.password);
+
+    // Create auth header
+    authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
+    
+    // Remove username from parsedUrl
+    parsedUrl.username = "";
+    parsedUrl.password = "";
+    // Send the finalUrl without credentials by setting auth header instead
+    const finalUrl = parsedUrl.toString();
+
     await requestQueue.addRequest({
-      url: actualUrl, skipNavigation: isUrlPdf(actualUrl), headers: {
+      url: finalUrl, skipNavigation: isUrlPdf(finalUrl), headers: {
         'Authorization': authHeader
       }
     });
   } else {
-
     await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
-
   }
-
 
   const enqueueProcess = async (page, enqueueLinks, enqueueLinksByClickingElements) => {
     try {
@@ -271,7 +264,7 @@ const crawlDomain = async (
       ],
     },
     requestQueue,
-    preNavigationHooks: basicAuthRegex.test(url)
+    preNavigationHooks: isBasicAuth
       ? [
         async ({ page, request }) => {
 
