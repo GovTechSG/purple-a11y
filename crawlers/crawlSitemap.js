@@ -48,7 +48,7 @@ const crawlSitemap = async (
   let isBasicAuth;
   let basicAuthPage = 0;
   let finalLinks = []; 
-  
+  let authHeader = "";
   
   if (fromCrawlIntelligentSitemap){
     dataset=datasetFromIntelligent;
@@ -63,9 +63,22 @@ const crawlSitemap = async (
     }
   }
 
-  const username = basicAuthRegex.test(sitemapUrl) ? sitemapUrl.split('://')[1].split(':')[0] : null;
-  const password = basicAuthRegex.test(sitemapUrl) ? sitemapUrl.split(':')[2].split('@')[0] : null;
-  
+  const parsedUrl = new URL(sitemapUrl);
+  let username = ""
+  let password = "";
+  if (parsedUrl.username !=="" && parsedUrl.password !=="") {
+    isBasicAuth = true;
+    username = decodeURIComponent(parsedUrl.username);
+    password = decodeURIComponent(parsedUrl.password);
+
+    // Create auth header
+    authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
+
+    parsedUrl.username = "";
+    parsedUrl.password = "";
+
+  }
+
   linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory, userUrlInputFromIntelligent, fromCrawlIntelligentSitemap, username, password)
   
   /**
@@ -78,8 +91,7 @@ const crawlSitemap = async (
 
   sitemapUrl = encodeURI(sitemapUrl)
     
-  if (basicAuthRegex.test(sitemapUrl)) {
-    isBasicAuth = true;
+  if (isBasicAuth) {
     // request to basic auth URL to authenticate for browser session
     finalLinks.push(new Request({ url: sitemapUrl, uniqueKey: `auth:${sitemapUrl}` }));
     const finalUrl = `${sitemapUrl.split('://')[0]}://${sitemapUrl.split('@')[1]}`;
@@ -87,7 +99,7 @@ const crawlSitemap = async (
     // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
     finalLinks.push(new Request({ url: finalUrl }));
     basicAuthPage = -2;
-    } 
+  } 
   
   
   let pdfDownloads = [];
@@ -109,7 +121,6 @@ const crawlSitemap = async (
   });
   await requestList.initialize();
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
-
 
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
@@ -133,14 +144,30 @@ const crawlSitemap = async (
       ],
     },
     requestList,
-    preNavigationHooks: preNavigationHooks(extraHTTPHeaders),
+    preNavigationHooks: isBasicAuth
+      ? [
+        async ({ page, request }) => {
+
+          request.url = encodeURI(request.url);
+          await page.setExtraHTTPHeaders({
+            Authorization: authHeader,
+            ...extraHTTPHeaders,
+          });
+        },
+      ]
+      : [
+        async ({ page, request }) => {
+        request.url = encodeURI(request.url);
+        preNavigationHooks(extraHTTPHeaders)
+        //insert other code here
+        },
+      ],
     requestHandler: async ({ page, request, response, sendRequest }) => {
 
-      // remove basic auth credentials so it wont be displayed in report
-      if (isBasicAuth){
-        request.url ? request.url = `${request.url.split('://')[0]}://${request.url.split('@')[1]}` : null;
-        request.loadedUrl ? request.loadedUrl = `${request.loadedUrl.split('://')[0]}://${request.loadedUrl.split('@')[1]}` : null;
-      }
+      // Set basic auth header if needed
+      if (isBasicAuth) await page.setExtraHTTPHeaders({
+        'Authorization': authHeader
+      });
       
       const actualUrl = request.loadedUrl || request.url;
 

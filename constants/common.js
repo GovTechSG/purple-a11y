@@ -740,7 +740,7 @@ export const getLinksFromSitemap = async (
     if (isDisallowedInRobotsTxt(url)) return;
 
     // add basic auth credentials to the URL
-    (username && password)? url = addBasicAuthCredentials(url, username, password): url;
+    (username !=="" && password !=="") ? url = addBasicAuthCredentials(url, username, password): url;
 
     const request = new Request({ url: encodeURI(url) });
     if (isUrlPdf(url)) {
@@ -821,19 +821,34 @@ export const getLinksFromSitemap = async (
   }
 
   const fetchUrls = async url => {
+
     let data;
     let sitemapType;
+    let isBasicAuth = false;
 
+    const parsedUrl = new URL(url);
+    let username = ""
+    let password = "";
+
+    if (parsedUrl.username !=="" && parsedUrl.password !=="") {
+      isBasicAuth = true;
+      username = decodeURIComponent(parsedUrl.username);
+      password = decodeURIComponent(parsedUrl.password);
+      parsedUrl.username = "";
+      parsedUrl.password = "";
+    }
 
     const getDataUsingPlaywright = async () => {
       const browserContext = await constants.launcher.launchPersistentContext(
         finalUserDataDirectory,
         {
           ...getPlaywrightLaunchOptions(browser),
+          // Not necessary to parse http_credentials as I am parsing it directly in URL
         },
       );
 
       const page = await browserContext.newPage();
+
       await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
 
       if (constants.launcher === webkit) {
@@ -873,6 +888,10 @@ export const getLinksFromSitemap = async (
               rejectUnauthorized: false,
               keepAlive: true,
             }),
+            auth: {
+              username: username,
+              password: password,
+            },
           });
           data = await (await instance.get(url, { timeout: 80000 })).data;
         } catch (error) {
