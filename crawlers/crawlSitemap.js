@@ -14,6 +14,7 @@ import {
   getPlaywrightLaunchOptions,
   messageOptions,
   isSkippedUrl,
+  urlWithoutAuth,
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
@@ -249,20 +250,20 @@ const crawlSitemap = async (
             }
   
             urlsCrawled.scanned.push({
-              url: request.url,
+              url: urlWithoutAuth(request.url),
               pageTitle: results.pageTitle,
               actualUrl: request.loadedUrl, // i.e. actualUrl
             });
   
             urlsCrawled.scannedRedirects.push({
-              fromUrl: request.url,
+              fromUrl: urlWithoutAuth(request.url),
               toUrl: request.loadedUrl, // i.e. actualUrl
             });
   
             results.url = request.url;
             results.actualUrl = request.loadedUrl;
           } else {
-            urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
+            urlsCrawled.scanned.push({ url: urlWithoutAuth(request.url), pageTitle: results.pageTitle });
           }
           await dataset.pushData(results);
         } else {

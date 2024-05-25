@@ -19,6 +19,7 @@ import {
   isDisallowedInRobotsTxt,
   getUrlsFromRobotsTxt,
   getBlackListedPatterns,
+  urlWithoutAuth
 } from '../constants/common.js';
 import { areLinksEqual, isFollowStrategy } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
@@ -337,7 +338,11 @@ const crawlDomain = async (
         }
 
         await waitForPageLoaded(page, 10000);
-        const actualUrl = page.url(); // Initialize with the actual URL
+        let actualUrl = request.url;
+
+        if (page.url() !== 'about:blank') {
+          actualUrl = page.url();
+        }
 
         if (!isScanPdfs) {
           if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
@@ -478,13 +483,13 @@ const crawlDomain = async (
               });
 
               urlsCrawled.scanned.push({
-                url: request.url,
+                url: urlWithoutAuth(request.url),
                 pageTitle: results.pageTitle,
                 actualUrl: request.loadedUrl, // i.e. actualUrl
               });
 
               urlsCrawled.scannedRedirects.push({
-                fromUrl: request.url,
+                fromUrl: urlWithoutAuth(request.url),
                 toUrl: request.loadedUrl, // i.e. actualUrl
               });
 
@@ -498,9 +503,9 @@ const crawlDomain = async (
             if (urlsCrawled.scanned.length < maxRequestsPerCrawl) {
               guiInfoLog(guiInfoStatusTypes.SCANNED, {
                 numScanned: urlsCrawled.scanned.length,
-                urlScanned: request.url,
+                urlScanned: urlWithoutAuth(request.url),
               });
-              urlsCrawled.scanned.push({ url: request.url, pageTitle: results.pageTitle });
+              urlsCrawled.scanned.push({ url: urlWithoutAuth(request.url), pageTitle: results.pageTitle });
               await dataset.pushData(results);
             }
           }

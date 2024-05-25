@@ -7,7 +7,8 @@ import {
   deleteClonedProfiles, 
   getBrowserToRun, 
   getPlaywrightLaunchOptions, 
-  submitForm 
+  submitForm,
+  urlWithoutAuth
 } from './constants/common.js'
 import { createCrawleeSubFolders, filterAxeResults } from './crawlers/commonCrawlerFunc.js';
 import {
@@ -126,7 +127,7 @@ export const init = async (
     }
     const pageIndex = urlsCrawled.scanned.length + 1; 
     const filteredResults = filterAxeResults(res.axeScanResults, res.pageTitle, { pageIndex , metadata });
-    urlsCrawled.scanned.push({ url: res.pageUrl, pageTitle: `${pageIndex}: ${res.pageTitle}` });
+    urlsCrawled.scanned.push({ url: urlWithoutAuth(res.pageUrl), pageTitle: `${pageIndex}: ${res.pageTitle}` });
 
     mustFixIssues += filteredResults.mustFix ? filteredResults.mustFix.totalItems : 0;
     goodToFixIssues += filteredResults.goodToFix ? filteredResults.goodToFix.totalItems : 0;
