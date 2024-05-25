@@ -24,7 +24,7 @@ import constants, {
   getExecutablePath,
   removeQuarantineFlag,
 } from '#root/constants/constants.js';
-import { isSkippedUrl, submitForm, getBlackListedPatterns } from '#root/constants/common.js';
+import { isSkippedUrl, submitForm, getBlackListedPatterns, urlWithoutAuth } from '#root/constants/common.js';
 import { getDefaultChromeDataDir, getDefaultEdgeDataDir } from './constants/constants.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -69,7 +69,7 @@ const playwrightAxeGenerator = async data => {
     import fs from 'fs';
     import path from 'path';
     import printMessage from 'print-message';
-    import { isSkippedUrl, submitForm, getBlackListedPatterns } from '#root/constants/common.js';
+    import { isSkippedUrl, submitForm, getBlackListedPatterns, urlWithoutAuth } from '#root/constants/common.js';
     import { consoleLogger, silentLogger, guiInfoLog } from '#root/logs.js';
 
   `;
@@ -195,8 +195,8 @@ const checkIfScanRequired = async page => {
   if (!urlImageDictionary[pageUrl]) {
     urlImageDictionary[pageUrl] = [imgPath];
 
-    consoleLogger.info(\`Process page at: \${page.url()} , Scan required? true\`);
-    silentLogger.info(\`Process page at: \${page.url()} , Scan required? true\`);
+    consoleLogger.info(\`Process page at: \${urlWithoutAuth(page.url())} , Scan required? true\`);
+    silentLogger.info(\`Process page at: \${urlWithoutAuth(page.url())} , Scan required? true\`);
     
     return {
       scanRequired: true,
@@ -231,8 +231,8 @@ const checkIfScanRequired = async page => {
         urlImageDictionary[pageUrl].push(imgPath)
       }
 
-      consoleLogger.info(\`Process page at: \${page.url()} , Scan required? \${!isSimilarPage}\`);
-      silentLogger.info(\`Process page at: \${page.url()} , Scan required? \${!isSimilarPage}\`);
+      consoleLogger.info(\`Process page at: \${urlWithoutAuth(page.url())} , Scan required? \${!isSimilarPage}\`);
+      silentLogger.info(\`Process page at: \${urlWithoutAuth(page.url())} , Scan required? \${!isSimilarPage}\`);
 
       return {
         scanRequired: !isSimilarPage, 
@@ -250,7 +250,7 @@ const runAxeScan = async (includeScreenshots, page, customFlowDetails) => {
   )}, customFlowDetails);
   await dataset.pushData(result);
   urlsCrawled.scanned.push({ 
-    url: page.url(), 
+    url: urlWithoutAuth(page.url()), 
     pageTitle: result.pageTitle, 
     pageImagePath: customFlowDetails.pageImagePath 
 });
@@ -277,7 +277,7 @@ const processPage = async page => {
     if (scanRequired) {
       guiInfoLog(guiInfoStatusTypes.SCANNED, {
         numScanned: urlsCrawled.scanned.length,
-        urlScanned: pageUrl,
+        urlScanned: urlWithoutAuth(pageUrl),
       });
       await runAxeScan(${includeScreenshots}, page, { pageIndex: urlsCrawled.scanned.length + 1, pageImagePath });
     }
@@ -493,7 +493,7 @@ const waitForCaptcha = async (page, captchaLocator) => {
   const generatedScript = `${customFlowScripts}/${generatedScriptName}`;
 
   console.log(
-    ` ℹ️  A new browser will be launched shortly.\n Navigate and record custom steps for ${data.url} in the new browser.\n Close the browser when you are done recording your steps.`,
+    ` ℹ️  A new browser will be launched shortly.\n Navigate and record custom steps for ${urlWithoutAuth(data.url)} in the new browser.\n Close the browser when you are done recording your steps.`,
   );
 
   try {

@@ -26,7 +26,7 @@ import constants, {
   getDefaultEdgeDataDir,
   guiInfoStatusTypes,
 } from '#root/constants/constants.js';
-import { isSkippedUrl, submitForm, getBlackListedPatterns } from '#root/constants/common.js';
+import { isSkippedUrl, submitForm, getBlackListedPatterns, urlWithoutAuth } from '#root/constants/common.js';
 import { consoleLogger, silentLogger, guiInfoLog } from './logs.js';
 
 const generatedScript = argv[2];

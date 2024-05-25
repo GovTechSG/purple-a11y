@@ -1656,3 +1656,10 @@ export const getPlaywrightLaunchOptions = browser => {
   }
   return options;
 };
+
+export const urlWithoutAuth = (url) => {
+  const parsedUrl = new URL(url);
+  parsedUrl.username = '';
+  parsedUrl.password = '';
+  return parsedUrl;
+};

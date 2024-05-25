@@ -6,7 +6,7 @@ import path from 'path';
 import { runAxeScript } from '../commonCrawlerFunc.js';
 import { consoleLogger, guiInfoLog, silentLogger } from '../../logs.js';
 import { guiInfoStatusTypes } from '../../constants/constants.js';
-import { isSkippedUrl } from '../../constants/common.js';
+import { isSkippedUrl, urlWithoutAuth } from '../../constants/common.js';
 
 export const DEBUG = false;
 export const log = str => {
@@ -73,8 +73,8 @@ export const screenshotFullPage = async (page, screenshotsDir, screenshotIdx) =>
     window.scrollTo(0, 0);
   });
 
-  consoleLogger.info(`Screenshot page at: ${page.url()}`);
-  silentLogger.info(`Screenshot page at: ${page.url()}`);
+  consoleLogger.info(`Screenshot page at: ${urlWithoutAuth(page.url())}`);
+  silentLogger.info(`Screenshot page at: ${urlWithoutAuth(page.url())}`);
 
   await page.screenshot({
     path: imgPath,
@@ -108,10 +108,11 @@ export const runAxeScan = async (
     customFlowDetails,
   );
 
+
   await dataset.pushData(result);
 
   urlsCrawled.scanned.push({
-    url: page.url(),
+    url: urlWithoutAuth(page.url()),
     pageTitle: result.pageTitle,
     pageImagePath: customFlowDetails.pageImagePath,
   });
