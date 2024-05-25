@@ -5,7 +5,8 @@ import fs from 'fs-extra';
 import printMessage from 'print-message';
 import path from 'path';
 import { fileURLToPath} from 'url';
-import constants, { basicAuthRegex } from './constants/constants.js';
+import constants from './constants/constants.js';
+import { urlWithoutAuth } from './constants/common.js';
 import ejs from 'ejs';
 import { createScreenshotsFolder, getFormattedTime, getStoragePath, getVersion, getWcagPassPercentage, formatDateTimeForMassScanner, retryFunction } from './utils.js';
 import { consoleLogger, silentLogger } from './logs.js';
@@ -14,7 +15,7 @@ import { chromium } from 'playwright';
 import { createWriteStream } from 'fs';
 import { AsyncParser } from '@json2csv/node';
 import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
-import { all } from 'axios';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -389,9 +390,7 @@ export const generateArtifacts = async (
   const storagePath = getStoragePath(randomToken);
   const directory = `${storagePath}/${constants.allIssueFileName}`;
 
-  if (basicAuthRegex.test(urlScanned)) {
-    urlScanned = `${urlScanned.split('://')[0]}://${urlScanned.split('@')[1]}`;
-  }
+  urlScanned = urlWithoutAuth(urlScanned);
 
   const formatAboutStartTime = dateString => {
     const utcStartTimeDate = new Date(dateString);

@@ -4,8 +4,8 @@ import crawlDomain from './crawlers/crawlDomain.js';
 import crawlIntelligentSitemap from './crawlers/crawlIntelligentSitemap.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
-import constants, { basicAuthRegex } from './constants/constants.js';
-import { getBlackListedPatterns, submitForm } from './constants/common.js';
+import constants from './constants/constants.js';
+import { getBlackListedPatterns, submitForm, urlWithoutAuth } from './constants/common.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import runCustom from './crawlers/runCustom.js';
 
@@ -54,10 +54,7 @@ const combineRun = async (details, deviceToScan) => {
   }
 
   // remove basic-auth credentials from URL
-  let finalUrl = url;
-  if (basicAuthRegex.test(url)) {
-    finalUrl = `${url.split('://')[0]}://${url.split('@')[1]}`;
-  }
+  let finalUrl = urlWithoutAuth(url);
 
   const scanDetails = {
     startTime: new Date(),
