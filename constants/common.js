@@ -263,12 +263,17 @@ export const sanitizeUrlInput = url => {
 const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
   // User-Agent is modified to emulate a browser to handle cases where some sites ban non browser agents, resulting in a 403 error
   const res = {};
+  const parsedUrl = new URL(url);
   await axios
-    .get(url, {
+    .get(parsedUrl, {
       headers: {
         ...extraHTTPHeaders,
         'User-Agent': devices['Desktop Chrome HiDPI'].userAgent,
-        'Host': new URL(url).host
+        'Host': parsedUrl.host
+      },
+      auth: {
+        username: decodeURIComponent(parsedUrl.username),
+        password: decodeURIComponent(parsedUrl.password),
       },
       httpsAgent,
       timeout: 5000,
