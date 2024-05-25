@@ -115,7 +115,8 @@ const crawlSitemap = async (
     launchContext: {
       launcher: constants.launcher,
       launchOptions: getPlaywrightLaunchOptions(browser),
-      userDataDir: userDataDirectory || '',
+      // Bug in Chrome which causes brwoser pool crash when userDataDirectory is set in non-headless mode
+      userDataDir: userDataDirectory ? (process.env.CRAWLEE_HEADLESS !== '0' ? userDataDirectory : '') : '',
     },
     retryOnBlocked: true,
     browserPoolOptions: {
