@@ -295,6 +295,8 @@ const crawlDomain = async (
       enqueueLinksByClickingElements,
     }) => {
 
+      url = request.url;
+      
       function isExcluded(url) {
         // Check if duplicate scan URL
         if (urlsCrawled.scanned.some(item => item.url === url)) {
