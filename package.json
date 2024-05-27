@@ -48,6 +48,8 @@
     "tough-cookie": "^5.0.0-rc.2"
   },
   "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
     "test": "node --experimental-vm-modules ./node_modules/.bin/jest",
     "lint": "eslint . --ext js --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --fix --ext js --report-unused-disable-directives --max-warnings 0"
