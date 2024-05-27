@@ -4,7 +4,7 @@
   "version": "0.9.59",
   "type": "module",
   "imports": {
-    "#root/*.js": "./*.js"
+    "#root/*.js": "./dist/*.js"
   },
   "dependencies": {
     "@json2csv/node": "^7.0.3",

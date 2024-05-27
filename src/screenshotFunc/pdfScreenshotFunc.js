@@ -328,7 +328,7 @@ export const getPageFromContext = async (context, pdfFilePath) => {
   const loadingTask = pdfjs.getDocument({
     url: pdfFilePath,
     // canvasFactory,
-    standardFontDataUrl: path.join(__dirname, '../node_modules/pdfjs-dist/standard_fonts/'),
+    standardFontDataUrl: path.join(__dirname, '../../node_modules/pdfjs-dist/standard_fonts/'),
     disableFontFace: true,
     verbosity: 0,
   });
