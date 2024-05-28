@@ -331,6 +331,7 @@ const crawlDomain = async (
           'Authorization': authHeader
         });
         
+        // Wait until document is loaded
         const waitForPageLoaded = async (page, timeout = 10000) => {
           return Promise.race([
               page.waitForLoadState('load'),
@@ -340,6 +341,24 @@ const crawlDomain = async (
         }
 
         await waitForPageLoaded(page, 10000);
+
+        // Keep checking DOM every 500ms until no changes detected
+        const waitForElementsStable = async () => {
+            let previousDOM = await page.content();
+            let count = 0;
+            while (count < 20) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+              const currentDOM = await page.content();
+              if (currentDOM === previousDOM) {
+                break;
+              }
+              previousDOM = currentDOM;
+              count++;
+            }
+          }
+
+        await waitForElementsStable();
+
         let actualUrl = request.url;
 
         if (page.url() !== 'about:blank') {
