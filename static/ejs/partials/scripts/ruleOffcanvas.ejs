@@ -384,10 +384,7 @@ category summary is clicked %>
                   <button
                     aria-label="Page ${index + 1}: ${page.pageTitle}, ${page.items.length} ${page.items.length === 1 ? 'occurrence' : 'occurrences'}" class="accordion-button collapsed"
                     type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#${accordionId}-content"
-                    aria-expanded="false"
-                    aria-controls="${accordionId}-content"
+                    
                   >
                     <span class="sr-only visually-hidden">${page.items.length} ${page.items.length === 1 ? 'occurrence' : 'occurrences'}</span>
                     <div class="me-3">${page.metadata ? page.metadata : page.pageTitle}</div>
@@ -417,6 +414,46 @@ category summary is clicked %>
           </li>
         `);
 
+        accordion.querySelector('button').addEventListener('click', function(event) {
+          var accordionBody = accordion.querySelector(".accordion-body");
+
+          // So that It does not keep adding
+          if (!accordionBody.querySelector(".unbulleted-list"))
+          {
+            buildExpandedRuleCategoryContentAccordian(accordionId,category,ruleInCategory,page,index);
+
+            this.setAttribute('data-bs-target', '#' + accordionId+"-content");
+
+            // Remove the event listener temporarily
+            this.removeEventListener('click', arguments.callee);
+
+            // Programmatically trigger a click on the button to open the accordion
+            this.click();
+          }
+        });
+
+        accordion.querySelector('button').addEventListener('click', function(event) {
+          // Set data attributes
+          this.setAttribute('data-bs-toggle', 'collapse');
+          this.setAttribute('data-bs-target', '#' + accordionId + "-content");
+          this.setAttribute('aria-expanded', 'false');
+          this.setAttribute('aria-controls', accordionId + "-content");
+
+          // Initialize  the Collapse plugin on the button element
+          var collapse = new bootstrap.Collapse(this, {
+            toggle: false // Set to true if you want to toggle the collapsed state on initialization
+          });
+
+          // Remove the event listener temporarily
+          this.removeEventListener('click', arguments.callee);
+
+          // Programmatically trigger a click on the button to open the accordion
+          setTimeout(() => { // Delaying to ensure the content is added before triggering the click
+              this.click();
+          }, 0);
+
+        })
+
         if (isCustomFlow) {
           const customScreenshotElem = accordion.getElementsByClassName(`custom-flow-screenshot`)[0];
           customScreenshotElem.onerror = function(event) {
@@ -430,8 +467,65 @@ category summary is clicked %>
         }
 
         accordionsList.appendChild(accordion);
+        return accordion;
+      });
+      contentContainer.replaceChildren(contentTitle, accordionsList);
 
-        const accordionBody = accordion.getElementsByClassName('accordion-body')[0];
+      hljs.highlightAll();
+    }
+
+    function generateItemMessageElement(displayNeedsReview, rawMessage) {
+      if (rawMessage.includes('\n\nFix')) {
+        rawMessage = rawMessage.replace('\n\nFix', '\n  Fix');
+      }
+
+      const htmlEscapedMessageArray = rawMessage.split('\n  ').map(m => htmlEscapeString(m));
+
+      if (displayNeedsReview) {
+        if (htmlEscapedMessageArray.length === 1) {
+          return `<p class="mb-0">${htmlEscapedMessageArray[0]}</p>`;
+        } else {
+          return `<ul>${htmlEscapedMessageArray.map(m => `<li>${m}</li>`).join('')}</ul>`;
+        }
+      } else {
+        let i = 0;
+        const elements = [];
+        while (i < htmlEscapedMessageArray.length) {
+          if (htmlEscapedMessageArray[i].startsWith('Fix ')) {
+            elements.push(`<p class="mb-0">${htmlEscapedMessageArray[i]}</p>`);
+            i++;
+          } else {
+            const fixesList = [];
+            while (
+              i < htmlEscapedMessageArray.length &&
+              !htmlEscapedMessageArray[i].startsWith('Fix a')
+            ) {
+              fixesList.push(`<li>${htmlEscapedMessageArray[i]}</li>`);
+              i++;
+            }
+            elements.push(`<ul>${fixesList.join('')}</ul>`);
+          }
+        }
+
+        return elements.join('');
+      }
+    }
+
+    function buildExpandedRuleCategoryContentAccordian(accordionId, ruleInCategory)
+    {
+      console.log('Accordion ID:', accordionId);
+      console.log('ruleInCategory',JSON.stringify(ruleInCategory))
+    }
+
+    function buildExpandedRuleCategoryContentAccordian(accordionId,category,ruleInCategory,page,index)
+    {
+      var accordionAIId = `${ruleInCategory.rule}-${category}-accordion-AI-${index}`;
+      var buttonAIId = `${ruleInCategory.rule}-${category}-button-AI-${index}`;
+      var errorAIId = `${ruleInCategory.rule}-${category}-error-AI-${index}`;
+      let accordion = document.getElementById(`${accordionId}-title`).parentElement.parentElement.parentElement
+
+
+      const accordionBody = accordion.getElementsByClassName('accordion-body')[0];
         const elementCardsList = createElementFromString('<ul class="unbulleted-list"></ul>');
 
         page.items.forEach(async (item, index) => {
@@ -595,48 +689,7 @@ category summary is clicked %>
         });
 
         accordionBody.appendChild(elementCardsList);
-        return accordion;
-      });
-      contentContainer.replaceChildren(contentTitle, accordionsList);
 
-      hljs.highlightAll();
-    }
-
-    function generateItemMessageElement(displayNeedsReview, rawMessage) {
-      if (rawMessage.includes('\n\nFix')) {
-        rawMessage = rawMessage.replace('\n\nFix', '\n  Fix');
-      }
-
-      const htmlEscapedMessageArray = rawMessage.split('\n  ').map(m => htmlEscapeString(m));
-
-      if (displayNeedsReview) {
-        if (htmlEscapedMessageArray.length === 1) {
-          return `<p class="mb-0">${htmlEscapedMessageArray[0]}</p>`;
-        } else {
-          return `<ul>${htmlEscapedMessageArray.map(m => `<li>${m}</li>`).join('')}</ul>`;
-        }
-      } else {
-        let i = 0;
-        const elements = [];
-        while (i < htmlEscapedMessageArray.length) {
-          if (htmlEscapedMessageArray[i].startsWith('Fix ')) {
-            elements.push(`<p class="mb-0">${htmlEscapedMessageArray[i]}</p>`);
-            i++;
-          } else {
-            const fixesList = [];
-            while (
-              i < htmlEscapedMessageArray.length &&
-              !htmlEscapedMessageArray[i].startsWith('Fix a')
-            ) {
-              fixesList.push(`<li>${htmlEscapedMessageArray[i]}</li>`);
-              i++;
-            }
-            elements.push(`<ul>${fixesList.join('')}</ul>`);
-          }
-        }
-
-        return elements.join('');
-      }
     }
 
     const whyItMatters = {
