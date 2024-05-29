@@ -51,8 +51,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "node --experimental-vm-modules ./node_modules/.bin/jest",
-    "lint": "eslint . --ext js --report-unused-disable-directives --max-warnings 0",
-    "lint:fix": "eslint . --fix --ext js --report-unused-disable-directives --max-warnings 0"
+    "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --fix --report-unused-disable-directives --max-warnings 0"
   },
   "author": "",
   "license": "MIT",
