@@ -26,8 +26,8 @@ import { areLinksEqual, isFollowStrategy } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
 import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
-import puppeteer from 'puppeteer'
 import printMessage from 'print-message';
+import playwright from 'playwright';
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const crawlDomain = async (
@@ -103,7 +103,7 @@ const crawlDomain = async (
       }
     });
   } else {
-    const browser = await puppeteer.launch({
+    const browser = await playwright.chromium.launch({
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -112,7 +112,6 @@ const crawlDomain = async (
       ],
       ignoreHTTPSErrors: true,
       defaultViewport: null,
-      headless: false,
       timeout: 60000 // Set timeout to 60 seconds
     });
 
@@ -125,7 +124,7 @@ const crawlDomain = async (
     let redirectUrl=url;
     try {
       // Navigate to the URL
-      await page.goto(url, { waitUntil: 'networkidle2' });
+      await page.goto(url, { waitUntil: 'networkidle' });
       await delay(2000);
     } catch (e) {
       console.log('Error:', e);
