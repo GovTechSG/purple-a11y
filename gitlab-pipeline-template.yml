@@ -1,0 +1,54 @@
+variables:
+  # DOCKER_IMAGE: <GitLab URL>/<username>/<project name>:latest
+  DOCKER_IMAGE: <GitLab URL>/<username>/<project name>:latest
+  # A11Y_SCAN_URL: https://www.example.com
+  A11Y_SCAN_URL: "https://example.com"
+  # A11Y_SCAN_TYPE: [choices: "sitemap", "website", "intelligent"]
+  A11Y_SCAN_TYPE: "website"
+  # A11Y_SCAN_DEVICE: "Desktop"
+  # A full list of devices is available at https://github.com/GovTechSG/purple-a11y#mobile-device-options
+  A11Y_SCAN_DEVICE: "Desktop"
+  # A11Y_SCAN_MAX_NUM_PAGES: 100
+  A11Y_SCAN_MAX_NUM_PAGES: 200
+  # A11Y_MAX_CONCURRENT_PAGES: 25
+  # If scan encounters blocked pages / error 403, reduce to 1
+  A11Y_MAX_CONCURRENT_PAGES: 1
+  # Speed up tests by excluding screenshots
+  # A11Y_INCLUDE_SCREENSHOTS: [choices: "screenshots", "none"]
+  A11Y_INCLUDE_SCREENSHOTS: "none"
+  # Safe Mode to prevent unexpected dynamic page behaviours
+  # A11Y_SCAN_SAFE_MODE: [choices: "yes", "no"]
+  A11Y_SCAN_SAFE_MODE: "yes"
+  # A11Y_SCAN_ARTIFACT_NAME: "a11y-scan-results.zip"
+  A11Y_SCAN_ARTIFACT_NAME: "a11y-scan-results.zip"
+  # A11Y_SCAN_NAME_EMAIL: "John Doe:john@domain.com"
+  A11Y_SCAN_NAME_EMAIL: ""
+
+a11y-scan:
+  stage: test
+  tags:
+    # - some tag
+  image:
+    name: $DOCKER_IMAGE
+    entrypoint: [ "/bin/bash", "-lc" ] 
+  script:
+    # Start in the app dir
+    - cd /app
+    # Run accessibility scan
+    - PURPLE_A11Y_VERBOSE=true node cli.js -b chromium -c "$A11Y_SCAN_TYPE" -d "$A11Y_SCAN_DEVICE" -o "$CI_PROJECT_DIR/$A11Y_SCAN_ARTIFACT_NAME" -u "$A11Y_SCAN_URL" -p "$A11Y_SCAN_MAX_NUM_PAGES" -a "$A11Y_INCLUDE_SCREENSHOTS" -f "$A11Y_SCAN_SAFE_MODE" -k "$A11Y_SCAN_NAME_EMAIL" || true
+    # Move the results directory to artifacts
+    - results_directory=$(find results -mindepth 1 -maxdepth 1 -type d -print -quit)  # Get the first directory within ./results
+    - if [ -n "$results_directory" ]; then mv "$results_directory" "$CI_PROJECT_DIR/artifacts"; fi # Move the directory to ./artifacts
+  artifacts:
+    paths:
+      # Stores the passed_items JSON, report CSV, HTML, summary PDF only to save storage space
+      - artifacts/reports/passed_items.json.txt
+      - artifacts/reports/report.csv
+      - artifacts/reports/report.html
+      - artifacts/reports/summary.pdf
+      # Include screenhots folder
+      # - artifacts/reports/elemScreenshots/
+      # Stores the reports folder so it can be accessed through Browse
+      # - artifacts/reports
+      # Uploads the results as zipped file
+      # - $A11Y_SCAN_ARTIFACT_NAME
