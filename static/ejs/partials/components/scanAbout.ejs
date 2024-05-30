@@ -1,38 +1,12 @@
+<head>
+  <script src="../../../../mergeAxeResults.js"></script>
+  <script>
+    // Access scanData
+    var scanData = <%= JSON.stringify(scanData) %>;
+  </script>  
+</head>
 <aside id="scan-about" class="flex-shrink-0">
   <h2 class="mb-3">About this scan</h2>
-  <script id="scanMetadata" >
-
-    const scanData = {
-      "startTime": "2024-05-28 14:30:00",
-      "urlScanned": "https://example.com",
-      "viewport": "Desktop",
-      "pagesScanned": {
-        "isCustomFlow": false ,
-        "customFlowLabel": "",
-        "totalPagesScanned": 5,
-        "totalPagesNotScanned": 2,
-        "scanType": "Full Scan"
-      },
-      "items": {
-        "mustFix": {
-          "totalItems": 10
-        },
-        "goodToFix": {
-          "totalItems": 5
-        },
-        "passed": {
-          "totalItems": 20
-        },
-        "total": 35
-      }
-    };
-
-    document.getElementById('aboutStartTime').innerText = scanData.startTime;
-    document.getElementById('urlScanned').innerText = scanData.urlScanned;
-    document.getElementById('aboutViewport').innerText = scanData.viewport;
-
-  </script>
-
   <ul>
     <li>
       <svg
