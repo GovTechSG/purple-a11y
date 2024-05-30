@@ -19,12 +19,16 @@ import {
   isDisallowedInRobotsTxt,
   getUrlsFromRobotsTxt,
   getBlackListedPatterns,
-  urlWithoutAuth
+  urlWithoutAuth,
+  messageOptions,
 } from '../constants/common.js';
 import { areLinksEqual, isFollowStrategy } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
 import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
+import puppeteer from 'puppeteer'
+import printMessage from 'print-message';
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const crawlDomain = async (
   url,
@@ -72,21 +76,21 @@ const crawlDomain = async (
   const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
   const { maxConcurrency } = constants;
   const { playwrightDeviceDetailsObject } = viewportSettings;
-  
+
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth = false;
   let authHeader = "";
 
   // Test basic auth and add auth header if auth exist
   const parsedUrl = new URL(url);
-  if (parsedUrl.username !=="" && parsedUrl.password !=="") {
+  if (parsedUrl.username !== "" && parsedUrl.password !== "") {
     isBasicAuth = true;
     const username = decodeURIComponent(parsedUrl.username);
     const password = decodeURIComponent(parsedUrl.password);
 
     // Create auth header
     authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
-    
+
     // Remove username from parsedUrl
     parsedUrl.username = "";
     parsedUrl.password = "";
@@ -99,7 +103,50 @@ const crawlDomain = async (
       }
     });
   } else {
-    await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+    const browser = await puppeteer.launch({
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--ignore-certificate-errors',
+        '--disable-http2' // Disable HTTP/2
+      ],
+      ignoreHTTPSErrors: true,
+      defaultViewport: null,
+      headless: false,
+      timeout: 60000 // Set timeout to 60 seconds
+    });
+
+    const page = await browser.newPage();
+    console.log(url)
+
+    page.on('response', response => {
+      console.log('Response URL:', response.url());  // Logs out each URL that loads
+    });
+    let redirectUrl=url;
+    try {
+      // Navigate to the URL
+      await page.goto(url, { waitUntil: 'networkidle2' });
+      await delay(2000);
+    } catch (e) {
+      console.log('Error:', e);
+      await browser.close();
+    } finally {
+      redirectUrl = page.url()
+      await browser.close();
+    }
+
+    console.log('Final URL:', typeof (page.url()), page.url(), 'hi');
+    if (typeof page.url() !== 'string' || page.url().trim() === '') {
+      console.error('Invalid URL:', url);
+    } else {
+      if (redirectUrl == "chrome-error://chromewebdata/") {
+        console.log('hi')
+        printMessage([`No pages were scanned.`]);
+        return;
+    }
+      console.log("help")
+      await requestQueue.addRequest({ url: redirectUrl, skipNavigation: isUrlPdf(redirectUrl) });
+    }
   }
 
   const enqueueProcess = async (page, enqueueLinks, enqueueLinksByClickingElements) => {
@@ -178,7 +225,7 @@ const crawlDomain = async (
         document.addEventListener('click', (event) => handleOnClickEvent(event));
       })
 
-      
+
       page.on('request', async request => {
         try {
           // Intercepting requests to handle cases where request was issued before the frame is created
@@ -201,7 +248,7 @@ const crawlDomain = async (
           silentLogger.info(e);
         }
       })
-    
+
       // If safeMode flag is enabled, skip enqueueLinksByClickingElements
       if (!safeMode) {
         // Try catch is necessary as clicking links is best effort, it may result in new pages that cause browser load or navigation errors that PlaywrightCrawler does not handle
@@ -278,9 +325,9 @@ const crawlDomain = async (
       ]
       : [
         async ({ page, request }) => {
-        request.url = encodeURI(request.url);
-        preNavigationHooks(extraHTTPHeaders)
-        //insert other code here
+          request.url = encodeURI(request.url);
+          preNavigationHooks(extraHTTPHeaders)
+          //insert other code here
         },
       ],
     requestHandlerTimeoutSecs: 90, // Alow each page to be processed by up from default 60 seconds
@@ -294,9 +341,9 @@ const crawlDomain = async (
       enqueueLinks,
       enqueueLinksByClickingElements,
     }) => {
-
+      console.log("url",url)
       url = request.url;
-      
+
       function isExcluded(url) {
         // Check if duplicate scan URL
         if (urlsCrawled.scanned.some(item => item.url === url)) {
@@ -330,12 +377,12 @@ const crawlDomain = async (
         if (isBasicAuth) await page.setExtraHTTPHeaders({
           'Authorization': authHeader
         });
-        
+
         const waitForPageLoaded = async (page, timeout = 10000) => {
           return Promise.race([
-              page.waitForLoadState('load'),
-              page.waitForLoadState('networkidle'),
-              new Promise((resolve) => setTimeout(resolve, timeout))
+            page.waitForLoadState('load'),
+            page.waitForLoadState('networkidle'),
+            new Promise((resolve) => setTimeout(resolve, timeout))
           ]);
         }
 
@@ -524,18 +571,18 @@ const crawlDomain = async (
         await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
       } catch (e) {
         try {
-          
+
           if (!e.message.includes("page.evaluate")) {
             silentLogger.info(e);
             guiInfoLog(guiInfoStatusTypes.ERROR, {
               numScanned: urlsCrawled.scanned.length,
               urlScanned: request.url,
             });
-            
+
             const browser = browserController.browser;
             page = await browser.newPage();
             await page.goto(request.url);
-  
+
             await page.route('**/*', async route => {
               const interceptedRequest = route.request();
               if (interceptedRequest.resourceType() === 'document') {
