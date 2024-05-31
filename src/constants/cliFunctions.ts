@@ -1,3 +1,4 @@
+import { Options } from 'yargs';
 import constants from './constants.js';
 
 export const messageOptions = {
@@ -11,10 +12,11 @@ export const alertMessageOptions = {
   borderColor: 'red',
 };
 
-export const cliOptions = {
+export const cliOptions: { [key: string]: Options } = {
   c: {
     alias: 'scanner',
-    describe: 'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow, 4) custom flow 2.0, 5) intelligent',
+    describe:
+      'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow, 4) custom flow 2.0, 5) intelligent',
     choices: Object.keys(constants.scannerTypes),
     demandOption: true,
   },
@@ -51,7 +53,8 @@ export const cliOptions = {
   },
   f: {
     alias: 'safeMode',
-    describe: 'Option to disable dynamically clicking of page buttons and links to find links, which resolve issues on some websites. Defaults to no.',
+    describe:
+      'Option to disable dynamically clicking of page buttons and links to find links, which resolve issues on some websites. Defaults to no.',
     type: 'string',
     choices: ['yes', 'no'],
     requiresArg: true,
@@ -77,7 +80,8 @@ export const cliOptions = {
   },
   s: {
     alias: 'strategy',
-    describe: 'Crawls up to general (same parent) domains, or only specific hostname. Defaults to "same-domain".',
+    describe:
+      'Crawls up to general (same parent) domains, or only specific hostname. Defaults to "same-domain".',
     choices: ['same-domain', 'same-hostname'],
     requiresArg: true,
     demandOption: false,
@@ -109,7 +113,7 @@ export const cliOptions = {
     type: 'number',
     demandOption: false,
   },
-  
+
   i: {
     alias: 'fileTypes',
     describe: 'File types to include in the scan. Defaults to html-only.',
@@ -164,10 +168,10 @@ export const cliOptions = {
   },
 };
 
-export const configureReportSetting = isEnabled => {
+export const configureReportSetting = (isEnabled: boolean): void => {
   if (isEnabled) {
-    process.env.REPORT_BREAKDOWN = 1;
+    process.env.REPORT_BREAKDOWN = '1';
   } else {
-    process.env.REPORT_BREAKDOWN = 0;
+    process.env.REPORT_BREAKDOWN = '0';
   }
 };

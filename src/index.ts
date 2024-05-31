@@ -25,7 +25,60 @@ import combineRun from './combine.js';
 import playwrightAxeGenerator from './playwrightAxeGenerator.js';
 import constants from './constants/constants.js';
 
-const runScan = async answers => {
+export type Answers = {
+  headless: string;
+  deviceChosen: string;
+  customDevice: string;
+  viewportWidth: number;
+  browserToRun: string;
+  scanner: string;
+  url: string;
+  clonedBrowserDataDir: string;
+  playwrightDeviceDetailsObject: Object;
+  nameEmail: string;
+  fileTypes: string;
+  metadata: string;
+  maxpages: number;
+  strategy: string;
+  isLocalSitemap: boolean;
+  finalUrl: string;
+  customFlowLabel: string;
+  specifiedMaxConcurrency: number;
+  blacklistedPatternsFilename: string;
+  additional: string;
+  followRobots: string;
+  header: string;
+  safeMode: string;
+};
+
+export type Data = {
+  type: string;
+  url: string;
+  entryUrl: string;
+  isHeadless: boolean;
+  deviceChosen: string;
+  customDevice: string;
+  viewportWidth: number;
+  playwrightDeviceDetailsObject: Object;
+  maxRequestsPerCrawl: number;
+  strategy: string;
+  isLocalSitemap: boolean;
+  browser: string;
+  nameEmail: string;
+  customFlowLabel: string;
+  specifiedMaxConcurrency: number;
+  randomToken: string;
+  fileTypes: string;
+  blacklistedPatternsFilename: string;
+  includeScreenshots: boolean;
+  metadata: string;
+  followRobots: boolean;
+  extraHTTPHeaders: string;
+  safeMode: boolean;
+  userDataDirectory?: string;
+};
+
+const runScan = async (answers: Answers) => {
   const screenToScan = getScreenToScan(
     answers.deviceChosen,
     answers.customDevice,
@@ -36,7 +89,7 @@ const runScan = async answers => {
     answers.customDevice,
     answers.viewportWidth,
   );
-  let { browserToRun, clonedDataDir } = getBrowserToRun(constants.browserTypes.chrome);
+  let { browserToRun } = getBrowserToRun(constants.browserTypes.chrome);
   deleteClonedProfiles(browserToRun);
   answers.browserToRun = browserToRun;
 
@@ -54,8 +107,7 @@ const runScan = async answers => {
   }
 
   const data = await prepareData(answers);
-  clonedDataDir = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
-  data.userDataDirectory = clonedDataDir;
+  data.userDataDirectory = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
 
   setHeadlessMode(data.browser, data.isHeadless);
   printMessage(['Scanning website...'], messageOptions);
@@ -63,7 +115,7 @@ const runScan = async answers => {
   if (answers.scanner === constants.scannerTypes.custom && !isNewCustomFlow) {
     await playwrightAxeGenerator(data);
   } else {
-    await combineRun(await data, screenToScan);
+    await combineRun(data, screenToScan);
   }
 
   // Delete cloned directory
@@ -126,7 +178,7 @@ if (userData) {
   );
 
   inquirer.prompt(questions).then(async answers => {
-    const { name, email} = answers;
+    const { name, email } = answers;
     answers.nameEmail = `${name}:${email}`;
     await writeToUserDataTxt('name', name);
     await writeToUserDataTxt('email', email);

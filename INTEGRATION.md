@@ -393,7 +393,7 @@ You will see Purple A11y results generated in <code>results</code> folder.
                 console.log('Cookies retrieved.\n');
                 // where -m "..." are the headers needed in the format "header1 value1, header2 value2" etc
                 // where -u ".../loginSuccess/" is the destination page after login
-                const command = `node cli.js -c website -u "https://authenticationtest.com/loginSuccess/" -p 1 -k "Your Name:email@domain.com" -m "${formattedCookies}"`;
+                const command = `npm run cli -- -c website -u "https://authenticationtest.com/loginSuccess/" -p 1 -k "Your Name:email@domain.com" -m "${formattedCookies}"`;
                 console.log(`Executing PurpleA11y scan command:\n> ${command}\n`);
                 runPurpleA11yScan(command);
             })

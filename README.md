@@ -23,7 +23,7 @@ If you wish to use Purple A11y as a NodeJS module that can be integrated with en
 
 ### Portable Purple A11y
 
-Portable Purple A11y is the recommended way to run Purple A11y as it reduces the difficulty for installation. Refer to [Installation Guide](/INSTALLATION.md) for step-by-step instructions.
+Portable Purple A11y is the recommended way to run Purple A11y as it reduces the difficulty for installation. Refer to [Installation Guide](./INSTALLATION.md) for step-by-step instructions.
 
 ### Manual Installation
 
@@ -37,6 +37,7 @@ node -v
 - If you do not have node, or if there is a need to manage your node versions, you can consider using [Node Version Manager (NVM)](https://github.com/nvm-sh/nvm).
 - Make sure NVM is pointing to a node version >= 15.10.0. Please refer to [Usage of Node Version Manager (NVM)](<#usage-of-node-version-manager-(NVM)>)
 - Install the required NPM packages with `npm install`.
+- Build the project with `npm run build` before you try to run it with `npm start`.
 
 #### Usage of Node Version Manager (NVM)
 
@@ -58,7 +59,7 @@ Please refer to [Troubleshooting section](#troubleshooting) for more information
 
 Purple A11y can perform the following to scan the target URL.
 
-- To **run** Purple A11y in **terminal**, run `node index`. Questions will be prompted to assist you in providing the right inputs.
+- To **run** Purple A11y in **terminal**, run `npm start`. Questions will be prompted to assist you in providing the right inputs.
 - Results will be compiled in JSON format, followed by generating a HTML report.
 
 > NOTE: For your initial scan, there may be some loading time required before use. Purple-A11y will also ask for your name and email address and collect your app usage data to personalise your experience. Your information fully complies with [GovTech’s Privacy Policy](https://www.tech.gov.sg/privacy/).
@@ -69,7 +70,7 @@ Purple A11y can perform the following to scan the target URL.
 > - Windows (PowerShell): `rm "$env:APPDATA\Purple A11y\userData.txt"`
 > - MacOS (Terminal): `rm "$HOME/Library/Application Support/Purple A11y/userData.txt"`
 
-If `userData.txt` does not exists just run `node index`.
+If `userData.txt` does not exists just run `npm start`.
 
 
 ### Scan Selection
@@ -77,7 +78,7 @@ If `userData.txt` does not exists just run `node index`.
 You can interact via your arrow keys.
 
 ```shell
-% node index
+% npm start
 ┌────────────────────────────────────────────────────────────┐
 │  Purple A11y (ver      )                                   │
 │  We recommend using Chrome browser for the best experience.│
@@ -96,7 +97,7 @@ You can interact via your arrow keys.
 Headless mode would allow you to run the scan in the background. If you would like to observe the scraping process, please enter `n`
 
 ```shell
- % node index
+ % npm start
 ┌────────────────────────────────────────────────────────────┐
 │ Purple A11y (ver      )                                    │
 │ We recommend using Chrome browser for the best experience. │
@@ -111,7 +112,7 @@ Headless mode would allow you to run the scan in the background. If you would li
 ### Sitemap Scan
 
 ```shell
-% node index
+% npm start
 ┌────────────────────────────────────────────────────────────┐
 │ Purple A11y (ver      )                                     │
 │ We recommend using Chrome browser for the best experience. │
@@ -147,7 +148,7 @@ If the sitemap URL provided is invalid, an error message will be prompted for yo
 ### Website Scan
 
 ```shell
-% node index
+% npm start
 ┌────────────────────────────────────────────────────────────┐
 │ Purple A11y (ver      )                                    │
 │ We recommend using Chrome browser for the best experience. │
@@ -171,7 +172,7 @@ If the website URL provided is invalid, an error message will be prompted for yo
 ### Customised Mobile Device Scan
 
 ``` shell
-% node index
+% npm start
 ┌────────────────────────────────────────────────────────────┐
 │ Purple A11y (ver      )                                   │
 │ We recommend using Chrome browser for the best experience. │
@@ -196,7 +197,7 @@ Custom flow allows you to record a series of actions in the browser and re-play 
 1. Start by choosing the `Custom flow` in the menu selection.
 
 ```shell
-% node index
+% npm start
 ┌────────────────────────────────────────────────────────────┐
 │ Purple A11y (ver      )                                   │
 │ We recommend using Chrome browser for the best experience. │
@@ -241,11 +242,11 @@ npx playwright@1.27.1 install
 ### CLI Mode
 
 CLI mode is designed to be run in continuous integration (CI) environment. 
- Run `node cli.js` for a set of command-line parameters available. 
+ Run `npm run cli` for a set of command-line parameters available. 
 
 
 ```shell
-Usage: node cli.js -c <crawler> -d <device> -w <view
+Usage: npm run cli -- -c <crawler> -d <device> -w <view
 port> -u <url> OPTIONS
 
 Options:
@@ -319,11 +320,11 @@ Options:
                                      ss to restricted resources.        [string]
 
 Examples:
-  To scan sitemap of website:', 'node cli.js -c [ 1 | sitemap ] -u <url_link>
+  To scan sitemap of website:', 'npm run cli -- -c [ 1 | sitemap ] -u <url_link>
   [ -d <device> | -w <viewport_width> ]
-  To scan a website', 'node cli.js -c [ 2 | website ] -u <url_link> [ -d <devi
+  To scan a website', 'npm run cli -- -c [ 2 | website ] -u <url_link> [ -d <devi
   ce> | -w <viewport_width> ]
-  To start a custom flow scan', 'node cli.js -c [ 3 | custom ] -u <url_link> [
+  To start a custom flow scan', 'npm run cli -- -c [ 3 | custom ] -u <url_link> [
    -d <device> | -w <viewport_width> ]
 
 ```
@@ -457,7 +458,7 @@ Please note that ```-d``` and ```-w``` are mutually exclusive. If none are speci
 For example, to conduct a website scan to the URL "http://localhost:8000" and write to "a11y-scan-results.zip" with an 'iPad (gen 7) landscape' screen, run
 
 ```shell
-node cli.js -c 2 -o a11y-scan-results.zip -u http://localhost:8000 -d 'iPad (gen 7) landscape'
+npm run cli -- -c 2 -o a11y-scan-results.zip -u http://localhost:8000 -d 'iPad (gen 7) landscape'
 ```
 
 If the site you want to scan has a query string wrap the link in single quotes when entered into the CLI.
@@ -465,7 +466,7 @@ If the site you want to scan has a query string wrap the link in single quotes w
 For example, to conduct a website scan to the URL "http://localhost:8000" and write to "a11y-scan-results.zip" with a custom screen width '360', run
 
 ```shell
-node cli.js -c 2 -o a11y-scan-results.zip -u "http://localhost:8000" -w 360
+npm run cli -- -c 2 -o a11y-scan-results.zip -u "http://localhost:8000" -w 360
 ```
 
 ## Report
@@ -477,7 +478,7 @@ A report will be downloaded into the current working directory.
 
 Each Issue has its own severity "Must Fix" / "Good to Fix" based on the [WCAG Conformance](https://www.w3.org/TR/WCAG21/). 
 
-For details on which accessibility scan results triggers a  "Must Fix" / "Good to Fix" findings, you may refer to [Scan Issue Details](https://github.com/GovTechSG/purple-a11y/blob/master/DETAILS.md).
+For details on which accessibility scan results triggers a  "Must Fix" / "Good to Fix" findings, you may refer to [Scan Issue Details](./DETAILS.md).
 
 ## Troubleshooting
 
@@ -544,7 +545,7 @@ zsh: abort      node index.js
 
 If you find a scan takes too long to complete due to large website, or there are too many pages in a sitemap to scan, you may choose to limit number of pages scanned.
 
-To do this, run CLI mode `node cli.js` with the needed settings and specify `-p 10` where `10` is the number of pages you wish to scan.
+To do this, run CLI mode `npm run cli --` with the needed settings and specify `-p 10` where `10` is the number of pages you wish to scan.
 
 ### I am a new developer and I have some knowledge gap.
 
