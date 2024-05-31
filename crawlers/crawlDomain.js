@@ -206,11 +206,8 @@ const crawlDomain = async (
       if (!safeMode) {
         // Try catch is necessary as clicking links is best effort, it may result in new pages that cause browser load or navigation errors that PlaywrightCrawler does not handle
         try {
-          console.log('ELBCE start');
           await customEnqueueLinksByClickingElements(page, browserController);
-          console.log('ELBCE end');
         } catch (e) {
-          console.log('ELBCE main error :',e);
           silentLogger.info(e);
         }
       }
@@ -231,43 +228,38 @@ const crawlDomain = async (
     }
 
     const setPageListeners = page => {
+
+      // event listener to handle new page popups upon button click
       page.on('popup', async newPage => {
         try {
-          console.log('ELBCE [POPUP 1/2] url:', newPage.url());
-          if (newPage.url() == initialPageUrl || isExcluded(newPage.url())) {
-            console.log('ELBCE [POPUP closed!] url:', newPage.url());
+          if (newPage.url() != initialPageUrl && !isExcluded(newPage.url())) {
+            await requestQueue.addRequest({
+              url: encodeURI(newPage.url()),
+              skipNavigation: isUrlPdf(newPage.url()),
+            });
+          } else {
             newPage.close();
-            return;
           }
-          await requestQueue.addRequest({
-            url: encodeURI(newPage.url()),
-            skipNavigation: isUrlPdf(newPage.url()),
-          });
-          console.log('ELBCE [POPUP 2/2] url added to requestQueue:', newPage.url());
           return;
         } catch (e) {
-          console.log('ELBCE [POPUP error]:', e);
+          // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
+          // Handles browser page object been closed.
         }
       });
 
-      page.on('framenavigated', async frame => {
+      // event listener to handle navigation to new url within same page upon button click
+      page.on('framenavigated', async newFrame => {
         try {
-          console.log('ELBCE [FRAME 1/3] url:', frame.url());
-          if (frame.url() == 'about:blank') {
-            console.log('ELBCE [FRAME 2/2] url is about blank so its excluded:', frame.url());
-          } else if (frame.url() !== initialPageUrl && !isExcluded(frame.url())) {
+          if (newFrame.url() !== initialPageUrl && !isExcluded(newFrame.url()) && !(newFrame.url() == 'about:blank')) {
             await requestQueue.addRequest({
-              url: frame.url(),
-              skipNavigation: isUrlPdf(frame.url()),
+              url: newFrame.url(),
+              skipNavigation: isUrlPdf(newFrame.url()),
             });
-            console.log(
-              'ELBCE [FRAME 2/2] url is new and not excluded, added to requestQueue:',
-              frame.url(),
-            );
           }
           return;
         } catch (e) {
-          console.log('ELBCE [FRAME error]:', e);
+          // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
+          // Handles browser page object been closed.
         }
       });
     };
@@ -278,18 +270,15 @@ const crawlDomain = async (
 
     while (true) {
       try {
+
+        //navigate back to initial page if clicking on a button previously caused it to navigate to a new url
         if (page.url() != initialPageUrl) {
-          console.log(
-            'page.url() != initialPageUrl. heading back to initialPageUrl',
-            initialPageUrl,
-          );
           await page.close();
           page = await browserController.browser.newPage();
           await page.goto(initialPageUrl, {
-            waitUntil: 'domcontentloaded', // You can also specify other events like 'load', 'networkidle'
+            waitUntil: 'domcontentloaded', 
           });
           setPageListeners(page);
-          console.log('finish page goto');
         }
 
         const selectedElements = await page.$$(':not(a):is([role="link"], button[onclick])');
@@ -302,13 +291,9 @@ const crawlDomain = async (
         }
         let element = selectedElements[currentElementIndex];
         currentElementIndex += 1;
-        const id = await element.getAttribute('id');
 
-        let newUrl = null;
+        let newUrlFoundInButton = null;
         if (await element.isVisible()) {
-          console.log(
-            `ELBCE [CLICK 1/3 START] url: ${page.url()} , selectedElements.length: ${selectedElements.length}, id: ${id}`,
-          );
           // Find url in buttons without clicking them
           await page
             .evaluate(element => {
@@ -321,33 +306,23 @@ const crawlDomain = async (
               }
 
               let hrefLink = element.getAttribute('href');
-              let newUrlOnPage = undefined;
-              newUrlOnPage = onClickLink || hrefLink || null;
-              return newUrlOnPage;
+              let urlFoundInButton = onClickLink || hrefLink || null;
+              return urlFoundInButton;
             }, element)
             .then(result => {
-              newUrl = result;
+              newUrlFoundInButton = result;
             });
 
-          if (newUrl && !isExcluded(newUrl)) {
-            console.log('ELBCE [CLICK 2/3] autofind PASS - newUrl found & not excluded:', newUrl);
-            // (!isExcluded(newUrl)) ? await requestQueue.addRequest({ url: newUrl, skipNavigation: isUrlPdf(newUrl) }) : undefined;
-            await requestQueue.addRequest({ url: newUrl, skipNavigation: isUrlPdf(newUrl) });
-            console.log(
-              'ELBCE [CLICK 3/3 END] autofind PASS - newUrl added to requestQueue:',
-              newUrl,
-            );
-          } else if (!newUrl) {
+          if (newUrlFoundInButton && !isExcluded(newUrlFoundInButton)) {
+            await requestQueue.addRequest({ url: newUrlFoundInButton, skipNavigation: isUrlPdf(newUrlFoundInButton) });
+          } else if (!newUrlFoundInButton) {
             try {
-              console.log('ELBCE [CLICK 2/3] manual click START - because autofind FAIL');
-              // Find url in buttons by clicking them
-
+              // Find url in buttons by manually clicking them. New page navigation/popups will be handled by event listeners above
               await element.click();
-              console.log('ELBCE [CLICK 3/3 END] manual click end');
-
               await page.waitForTimeout(1000); // Add a delay of 1 second between each button click
             } catch (e) {
-              console.log(`ELBCE [ClICK] manual click error:`, e);
+              // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
+              // Handles browser page object been closed.
             }
           }
         }
@@ -357,7 +332,8 @@ const crawlDomain = async (
           break;
         }
       } catch (e) {
-        console.log(`ELBCE [CLICK] main error:`, e);
+        // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
+        // Handles browser page object been closed.
       }
     }
 
@@ -365,10 +341,8 @@ const crawlDomain = async (
   };
 
   function isBlacklisted(url) {
-    // Check if any pattern matches the URL.
     const blacklistedPatterns = getBlackListedPatterns();
     if (!blacklistedPatterns) {
-      // Check if there are blacklistedPatterns.
       return false;
     }
     try {
@@ -381,6 +355,8 @@ const crawlDomain = async (
       return false;
     }
   }
+
+  let isAbortingScanNow = false;
 
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
@@ -431,10 +407,7 @@ const crawlDomain = async (
       sendRequest,
       enqueueLinks,
     }) => {
-      console.log('[REQUEST HANDLER] request.url :',request.url);
-
       try {
-
         // Set basic auth header if needed
         if (isBasicAuth) await page.setExtraHTTPHeaders({
           'Authorization': authHeader
@@ -464,6 +437,7 @@ const crawlDomain = async (
         }
 
         if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
+          isAbortingScanNow = true;
           crawler.autoscaledPool.abort();
           return;
         }
@@ -647,7 +621,10 @@ const crawlDomain = async (
         } catch (e) {
           // Do nothing since the error will be pushed
         }
-        urlsCrawled.error.push({ url: request.url });
+
+        // when max pages have been scanned, scan will abort and all relevant pages still opened will close instantly. 
+        // a browser close error will then be flagged. Since this is an intended behaviour, this error will be excluded.
+        (!isAbortingScanNow) ? urlsCrawled.error.push({ url: request.url }) : undefined;
       }
     },
     failedRequestHandler: async ({ request }) => {
