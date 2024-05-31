@@ -220,7 +220,7 @@ const crawlDomain = async (
   const customEnqueueLinksByClickingElements = async (page, browserController) => {
     const initialPageUrl = page.url().toString();
 
-    function isExcluded(newPageUrl) {
+    const isExcluded = newPageUrl => {
       const isAlreadyScanned = urlsCrawled.scanned.some(item => item.url === newPageUrl);
       const isBlacklistedUrl = isBlacklisted(newPageUrl);
       const isNotFollowStrategy = !isFollowStrategy(newPageUrl, initialPageUrl, strategy);
@@ -340,7 +340,7 @@ const crawlDomain = async (
     return;
   };
 
-  function isBlacklisted(url) {
+  const isBlacklisted = url => {
     const blacklistedPatterns = getBlackListedPatterns();
     if (!blacklistedPatterns) {
       return false;
