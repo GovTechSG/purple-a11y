@@ -102,7 +102,7 @@ const crawlDomain = async (
     await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
   }
 
-  const enqueueProcess = async (page, enqueueLinks, enqueueLinksByClickingElements) => {
+  const enqueueProcess = async (page, enqueueLinks, browserController) => {
     try {
 
       await enqueueLinks({
@@ -206,34 +206,11 @@ const crawlDomain = async (
       if (!safeMode) {
         // Try catch is necessary as clicking links is best effort, it may result in new pages that cause browser load or navigation errors that PlaywrightCrawler does not handle
         try {
-          await enqueueLinksByClickingElements({
-            // set selector matches
-            // NOT <a>
-            // IS role='link' or button onclick
-            // enqueue new page URL
-            // handle onclick
-            selector: ':not(a):is([role="link"], button[onclick])',
-            transformRequestFunction(req) {
-              try {
-                req.url = encodeURI(req.url)
-              }
-              catch (e) {
-                silentLogger.info(e);
-              }
-              if (urlsCrawled.scanned.some(item => item.url === req.url)) {
-                req.skipNavigation = true;
-              }
-              if (isDisallowedInRobotsTxt(req.url)) return null;
-              req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-              if (isUrlPdf(req.url) || urlsCrawled.scanned.some(item => item.url === req.url)) {
-                // playwright headless mode does not support navigation to pdf document
-                req.skipNavigation = true;
-              }
-
-              return req;
-            },
-          })
+          console.log('ELBCE start');
+          await customEnqueueLinksByClickingElements(page, browserController);
+          console.log('ELBCE end');
         } catch (e) {
+          console.log('ELBCE main error :',e);
           silentLogger.info(e);
         }
       }
@@ -242,6 +219,168 @@ const crawlDomain = async (
       // Handles browser page object been closed.
     }
   };
+  
+  const customEnqueueLinksByClickingElements = async (page, browserController) => {
+    const initialPageUrl = page.url().toString();
+
+    function isExcluded(newPageUrl) {
+      const isAlreadyScanned = urlsCrawled.scanned.some(item => item.url === newPageUrl);
+      const isBlacklistedUrl = isBlacklisted(newPageUrl);
+      const isNotFollowStrategy = !isFollowStrategy(newPageUrl, initialPageUrl, strategy);
+      return isAlreadyScanned || isBlacklistedUrl || isNotFollowStrategy;
+    }
+
+    const setPageListeners = page => {
+      page.on('popup', async newPage => {
+        try {
+          console.log('ELBCE [POPUP 1/2] url:', newPage.url());
+          if (newPage.url() == initialPageUrl || isExcluded(newPage.url())) {
+            console.log('ELBCE [POPUP closed!] url:', newPage.url());
+            newPage.close();
+            return;
+          }
+          await requestQueue.addRequest({
+            url: encodeURI(newPage.url()),
+            skipNavigation: isUrlPdf(newPage.url()),
+          });
+          console.log('ELBCE [POPUP 2/2] url added to requestQueue:', newPage.url());
+          return;
+        } catch (e) {
+          console.log('ELBCE [POPUP error]:', e);
+        }
+      });
+
+      page.on('framenavigated', async frame => {
+        try {
+          console.log('ELBCE [FRAME 1/3] url:', frame.url());
+          if (frame.url() == 'about:blank') {
+            console.log('ELBCE [FRAME 2/2] url is about blank so its excluded:', frame.url());
+          } else if (frame.url() !== initialPageUrl && !isExcluded(frame.url())) {
+            await requestQueue.addRequest({
+              url: frame.url(),
+              skipNavigation: isUrlPdf(frame.url()),
+            });
+            console.log(
+              'ELBCE [FRAME 2/2] url is new and not excluded, added to requestQueue:',
+              frame.url(),
+            );
+          }
+          return;
+        } catch (e) {
+          console.log('ELBCE [FRAME error]:', e);
+        }
+      });
+    };
+
+    setPageListeners(page);
+    let currentElementIndex = 0;
+    let isAllElementsHandled = false;
+
+    while (true) {
+      try {
+        if (page.url() != initialPageUrl) {
+          console.log(
+            'page.url() != initialPageUrl. heading back to initialPageUrl',
+            initialPageUrl,
+          );
+          await page.close();
+          page = await browserController.browser.newPage();
+          await page.goto(initialPageUrl, {
+            waitUntil: 'domcontentloaded', // You can also specify other events like 'load', 'networkidle'
+          });
+          setPageListeners(page);
+          console.log('finish page goto');
+        }
+
+        const selectedElements = await page.$$(':not(a):is([role="link"], button[onclick])');
+        if (currentElementIndex + 1 > selectedElements.length || !selectedElements) {
+          break;
+        }
+
+        if (currentElementIndex + 2 > selectedElements.length) {
+          isAllElementsHandled = true;
+        }
+        let element = selectedElements[currentElementIndex];
+        currentElementIndex += 1;
+        const id = await element.getAttribute('id');
+
+        let newUrl = null;
+        if (await element.isVisible()) {
+          console.log(
+            `ELBCE [CLICK 1/3 START] url: ${page.url()} , selectedElements.length: ${selectedElements.length}, id: ${id}`,
+          );
+          // Find url in buttons without clicking them
+          await page
+            .evaluate(element => {
+              let onClickLink = null;
+              let onClickLinkAttr = element.getAttribute('onclick');
+
+              if (onClickLinkAttr) {
+                urlRegexDetected = onClickLinkAttr.match(/window\.location\.href\s?=\s?'([^']+)'/);
+                onClickLink = urlRegexDetected ? urlRegexDetected[1] : undefined;
+              }
+
+              let hrefLink = element.getAttribute('href');
+              let newUrlOnPage = undefined;
+              newUrlOnPage = onClickLink || hrefLink || null;
+              return newUrlOnPage;
+            }, element)
+            .then(result => {
+              newUrl = result;
+            });
+
+          if (newUrl && !isExcluded(newUrl)) {
+            console.log('ELBCE [CLICK 2/3] autofind PASS - newUrl found & not excluded:', newUrl);
+            // (!isExcluded(newUrl)) ? await requestQueue.addRequest({ url: newUrl, skipNavigation: isUrlPdf(newUrl) }) : undefined;
+            await requestQueue.addRequest({ url: newUrl, skipNavigation: isUrlPdf(newUrl) });
+            console.log(
+              'ELBCE [CLICK 3/3 END] autofind PASS - newUrl added to requestQueue:',
+              newUrl,
+            );
+          } else if (!newUrl) {
+            try {
+              console.log('ELBCE [CLICK 2/3] manual click START - because autofind FAIL');
+              // Find url in buttons by clicking them
+
+              await element.click();
+              console.log('ELBCE [CLICK 3/3 END] manual click end');
+
+              await page.waitForTimeout(1000); // Add a delay of 1 second between each button click
+            } catch (e) {
+              console.log(`ELBCE [ClICK] manual click error:`, e);
+            }
+          }
+        }
+
+        if (isAllElementsHandled) {
+          await page.close();
+          break;
+        }
+      } catch (e) {
+        console.log(`ELBCE [CLICK] main error:`, e);
+      }
+    }
+
+    return;
+  };
+
+  function isBlacklisted(url) {
+    // Check if any pattern matches the URL.
+    const blacklistedPatterns = getBlackListedPatterns();
+    if (!blacklistedPatterns) {
+      // Check if there are blacklistedPatterns.
+      return false;
+    }
+    try {
+      const parsedUrl = new URL(url);
+      return blacklistedPatterns.some(
+        pattern => new RegExp(pattern).test(parsedUrl.hostname) || new RegExp(pattern).test(url),
+      );
+    } catch (error) {
+      console.error(`Error parsing URL: ${url}`, error);
+      return false;
+    }
+  }
 
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
@@ -280,7 +419,6 @@ const crawlDomain = async (
         async ({ page, request }) => {
         request.url = encodeURI(request.url);
         preNavigationHooks(extraHTTPHeaders)
-        //insert other code here
         },
       ],
     requestHandlerTimeoutSecs: 90, // Alow each page to be processed by up from default 60 seconds
@@ -292,37 +430,8 @@ const crawlDomain = async (
       crawler,
       sendRequest,
       enqueueLinks,
-      enqueueLinksByClickingElements,
     }) => {
-
-      url = request.url;
-      
-      function isExcluded(url) {
-        // Check if duplicate scan URL
-        if (urlsCrawled.scanned.some(item => item.url === url)) {
-          guiInfoLog(guiInfoStatusTypes.DUPLICATE, {
-            numScanned: urlsCrawled.scanned.length,
-            urlScanned: url,
-          });
-
-          return false;
-        }
-
-        // Check if any pattern matches the URL.
-        const blacklistedPatterns = getBlackListedPatterns();
-        if (!blacklistedPatterns) { // Check if there are blacklistedPatterns.
-          return false;
-        }
-        try {
-          const parsedUrl = new URL(url);
-          return blacklistedPatterns.some(pattern =>
-            new RegExp(pattern).test(parsedUrl.hostname) || new RegExp(pattern).test(url)
-          );
-        } catch (error) {
-          console.error(`Error parsing URL: ${url}`, error);
-          return false;
-        }
-      }
+      console.log('[REQUEST HANDLER] request.url :',request.url);
 
       try {
 
@@ -346,22 +455,12 @@ const crawlDomain = async (
           actualUrl = page.url();
         }
 
-        if (!isScanPdfs) {
-          if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
-            guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-              numScanned: urlsCrawled.scanned.length,
-              urlScanned: actualUrl,
-            });
-            return;
-          }
-
-          if (isExcluded(actualUrl) || isUrlPdf(actualUrl)) {
-            guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-              numScanned: urlsCrawled.scanned.length,
-              urlScanned: actualUrl,
-            });
-            return; // Skip processing this URL
-          }
+        if (isBlacklisted(actualUrl) || (isUrlPdf(actualUrl) && !isScanPdfs)) {
+          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+            numScanned: urlsCrawled.scanned.length,
+            urlScanned: actualUrl,
+          });
+          return;
         }
 
         if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
@@ -371,12 +470,12 @@ const crawlDomain = async (
 
         // if URL has already been scanned
         if (urlsCrawled.scanned.some(item => item.url === request.url)) {
-          await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
+          await enqueueProcess(page, enqueueLinks, browserController);
           return;
         }
 
         if (isDisallowedInRobotsTxt(request.url)) {
-          await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
+          await enqueueProcess(page, enqueueLinks, browserController);
           return;
         }
 
@@ -426,7 +525,7 @@ const crawlDomain = async (
 
         if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
           urlsCrawled.userExcluded.push(request.url);
-          await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
+          await enqueueProcess(page, enqueueLinks, browserController);
           return;
         }
 
@@ -453,7 +552,7 @@ const crawlDomain = async (
           const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
 
           // check if redirected link is following strategy (same-domain/same-hostname)
-          const isLoadedUrlFollowStrategy = isFollowStrategy(request.loadedUrl, url, strategy);
+          const isLoadedUrlFollowStrategy = isFollowStrategy(request.loadedUrl, request.url, strategy);
           if (isRedirected && !isLoadedUrlFollowStrategy) {
             urlsCrawled.notScannedRedirects.push({
               fromUrl: request.url,
@@ -521,7 +620,7 @@ const crawlDomain = async (
         }
 
         if (followRobots) await getUrlsFromRobotsTxt(request.url, browser);
-        await enqueueProcess(page, enqueueLinks, enqueueLinksByClickingElements);
+        await enqueueProcess(page, enqueueLinks, browserController);
       } catch (e) {
         try {
           
