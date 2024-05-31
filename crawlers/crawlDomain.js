@@ -103,48 +103,52 @@ const crawlDomain = async (
       }
     });
   } else {
-    const browser = await playwright.chromium.launch({
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--ignore-certificate-errors',
-        '--disable-http2' // Disable HTTP/2
-      ],
-      ignoreHTTPSErrors: true,
-      defaultViewport: null,
-      timeout: 60000 // Set timeout to 60 seconds
-    });
-
-    const page = await browser.newPage();
-    console.log(url)
-
-    page.on('response', response => {
-      console.log('Response URL:', response.url());  // Logs out each URL that loads
-    });
-    let redirectUrl=url;
     try {
-      // Navigate to the URL
-      await page.goto(url, { waitUntil: 'networkidle' });
-      await delay(2000);
-    } catch (e) {
-      console.log('Error:', e);
-      await browser.close();
-    } finally {
-      redirectUrl = page.url()
-      await browser.close();
-    }
+      const browser = await playwright.chromium.launch({
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--ignore-certificate-errors',
+          '--disable-http2' // Disable HTTP/2
+        ],
+        ignoreHTTPSErrors: true,
+        defaultViewport: null,
+        timeout: 60000 // Set timeout to 60 seconds
+      });
 
-    console.log('Final URL:', typeof (page.url()), page.url(), 'hi');
-    if (typeof page.url() !== 'string' || page.url().trim() === '') {
-      console.error('Invalid URL:', url);
-    } else {
-      if (redirectUrl == "chrome-error://chromewebdata/") {
-        console.log('hi')
-        printMessage([`No pages were scanned.`]);
-        return;
-    }
-      console.log("help")
-      await requestQueue.addRequest({ url: redirectUrl, skipNavigation: isUrlPdf(redirectUrl) });
+      const page = await browser.newPage();
+      console.log(url)
+
+      page.on('response', response => {
+        console.log('Response URL:', response.url());  // Logs out each URL that loads
+      });
+      let redirectUrl = url;
+      try {
+        // Navigate to the URL
+        await page.goto(url, { waitUntil: 'networkidle' });
+        await delay(2000);
+      } catch (e) {
+        console.log('Error:', e);
+        await browser.close();
+      } finally {
+        redirectUrl = page.url()
+        await browser.close();
+      }
+
+      console.log('Final URL:', typeof (page.url()), page.url(), 'hi');
+      if (typeof page.url() !== 'string' || page.url().trim() === '') {
+        console.error('Invalid URL:', url);
+      } else {
+        if (redirectUrl == "chrome-error://chromewebdata/") {
+          console.log('hi')
+          printMessage([`No pages were scanned.`]);
+          return;
+        }
+        console.log("help")
+        await requestQueue.addRequest({ url: redirectUrl, skipNavigation: isUrlPdf(redirectUrl) });
+      }
+    } catch (e) {
+      console.log(e)
     }
   }
 
@@ -175,7 +179,6 @@ const crawlDomain = async (
           return req;
         },
       });
-
       const handleOnWindowOpen = async url => {
         if (!isDisallowedInRobotsTxt(url)) {
           await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
@@ -340,7 +343,7 @@ const crawlDomain = async (
       enqueueLinks,
       enqueueLinksByClickingElements,
     }) => {
-      console.log("url",url)
+      console.log("url", url)
       url = request.url;
 
       function isExcluded(url) {
@@ -384,7 +387,7 @@ const crawlDomain = async (
             new Promise((resolve) => setTimeout(resolve, timeout))
           ]);
         }
-        
+
         await waitForPageLoaded(page, 10000);
         let actualUrl = request.url;
 
