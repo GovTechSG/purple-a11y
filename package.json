@@ -33,6 +33,8 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.0.2",
     "@eslint/js": "^9.2.0",
+    "@types/fs-extra": "^11.0.4",
+    "@types/inquirer": "^9.0.7",
     "eslint": "^8.57.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.6.0",
@@ -48,8 +50,11 @@
     "tough-cookie": "^5.0.0-rc.2"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "npm run copyfiles && tsc",
+    "build:watch": "npm run build -- --watch",
+    "copyfiles": "mkdir -p dist && cp exclusions.txt dist/",
     "start": "node dist/index.js",
+    "cli": "node dist/cli.js",
     "test": "node --experimental-vm-modules ./node_modules/.bin/jest",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --fix --report-unused-disable-directives --max-warnings 0"

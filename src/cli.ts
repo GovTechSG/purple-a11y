@@ -30,6 +30,7 @@ import playwrightAxeGenerator from './playwrightAxeGenerator.js';
 import { silentLogger } from './logs.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { Answers } from './index.js';
 
 const appVersion = getVersion();
 const yargs = _yargs(hideBin(process.argv));
@@ -38,19 +39,19 @@ const options = yargs
   .version(false)
   .usage(
     `Purple A11y version: ${appVersion}
-Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
+Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   )
   .strictOptions(true)
   .options(cliOptions)
   .example([
     [
-      `To scan sitemap of website:', 'node cli.js -c [ 1 | sitemap ] -u <url_link> [ -d <device> | -w <viewport_width> ]`,
+      `To scan sitemap of website:', 'npm run cli -- -c [ 1 | sitemap ] -u <url_link> [ -d <device> | -w <viewport_width> ]`,
     ],
     [
-      `To scan a website', 'node cli.js -c [ 2 | website ] -u <url_link> [ -d <device> | -w <viewport_width> ]`,
+      `To scan a website', 'npm run cli -- -c [ 2 | website ] -u <url_link> [ -d <device> | -w <viewport_width> ]`,
     ],
     [
-      `To start a custom flow scan', 'node cli.js -c [ 3 | custom ] -u <url_link> [ -d <device> | -w <viewport_width> ]`,
+      `To start a custom flow scan', 'npm run cli -- -c [ 3 | custom ] -u <url_link> [ -d <device> | -w <viewport_width> ]`,
     ],
   ])
   .coerce('c', option => {
@@ -177,10 +178,7 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     try {
       return validateFilePath(option, __dirname);
     } catch (err) {
-      printMessage(
-        [`Invalid blacklistedPatternsFilename file path. ${validationErrors}`],
-        messageOptions,
-      );
+      printMessage([`Invalid blacklistedPatternsFilename file path. ${err}`], messageOptions);
       process.exit(1);
     }
   })
@@ -227,7 +225,7 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     const headerValues = option.split(', ');
     const allHeaders = {};
 
-    headerValues.map(headerValue => {
+    headerValues.map((headerValue: string) => {
       const headerValuePair = headerValue.split(/ (.*)/s);
       if (headerValuePair.length < 2) {
         printMessage(
@@ -240,7 +238,7 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
       }
       allHeaders[headerValuePair[0]] = headerValuePair[1]; // {"header": "value", "header2": "value2", ...}
     });
-    
+
     return allHeaders;
   })
   .check(argvs => {
@@ -258,17 +256,17 @@ Usage: node cli.js -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   .conflicts('d', 'w')
   .epilogue('').argv;
 
-const scanInit = async argvs => {
+const scanInit = async (argvs: Answers): Promise<void> => {
   let isNewCustomFlow = false;
   if (constants.scannerTypes[argvs.scanner] === constants.scannerTypes.custom2) {
     argvs.scanner = constants.scannerTypes.custom;
     isNewCustomFlow = true;
   } else {
+    argvs.headless = argvs.headless === 'yes';
+    argvs.followRobots = argvs.followRobots === 'yes';
+    argvs.safeMode = argvs.safeMode === 'yes';
     argvs.scanner = constants.scannerTypes[argvs.scanner];
   }
-  argvs.headless = argvs.headless === 'yes';
-  argvs.followRobots = argvs.followRobots === 'yes';
-  argvs.safeMode = argvs.safeMode === 'yes';
   argvs.browserToRun = constants.browserTypes[argvs.browserToRun];
 
   // let chromeDataDir = null;
@@ -359,20 +357,22 @@ const scanInit = async argvs => {
 
   // File clean up after url check
   // files will clone a second time below if url check passes
-  process.env.PURPLE_A11Y_VERBOSE ? deleteClonedProfiles(data.browser,data.randomToken): deleteClonedProfiles(data.browser) //first deletion
+  process.env.PURPLE_A11Y_VERBOSE
+    ? deleteClonedProfiles(data.browser, data.randomToken)
+    : deleteClonedProfiles(data.browser); //first deletion
 
   if (argvs.exportDirectory) {
     constants.exportDirectory = argvs.exportDirectory;
   }
 
-  if (process.env.RUNNING_FROM_PH_GUI || process.env.PURPLE_A11Y_VERBOSE){
+  if (process.env.RUNNING_FROM_PH_GUI || process.env.PURPLE_A11Y_VERBOSE) {
     let randomTokenMessage = {
       type: 'randomToken',
-      payload: `${data.randomToken}`
+      payload: `${data.randomToken}`,
+    };
+    if (process.send) {
+      process.send(JSON.stringify(randomTokenMessage));
     }
-    if (process.send){
-    process.send(JSON.stringify(randomTokenMessage));
-  }
   }
 
   setHeadlessMode(data.browser, data.isHeadless);
@@ -400,7 +400,9 @@ const scanInit = async argvs => {
   }
 
   // Delete cloned directory
-  process.env.PURPLE_A11Y_VERBOSE ? deleteClonedProfiles(data.browser,data.randomToken): deleteClonedProfiles(data.browser) //second deletion
+  process.env.PURPLE_A11Y_VERBOSE
+    ? deleteClonedProfiles(data.browser, data.randomToken)
+    : deleteClonedProfiles(data.browser); //second deletion
 
   // Delete dataset and request queues
   await cleanUp(data.randomToken);
@@ -412,10 +414,9 @@ scanInit(options).then(async storagePath => {
   // Take option if set
   if (typeof options.zip === 'string') {
     constants.cliZipFileName = options.zip;
-    
-    if (!options.zip.endsWith('.zip')){
-      constants.cliZipFileName += '.zip';
 
+    if (!options.zip.endsWith('.zip')) {
+      constants.cliZipFileName += '.zip';
     }
   }
 
@@ -437,16 +438,13 @@ scanInit(options).then(async storagePath => {
       if (process.send && process.env.PURPLE_A11Y_VERBOSE && process.env.REPORT_BREAKDOWN != '1') {
         let zipFileNameMessage = {
           type: 'zipFileName',
-          payload: `${constants.cliZipFileName}`
-        }
+          payload: `${constants.cliZipFileName}`,
+        };
 
         process.send(JSON.stringify(zipFileNameMessage));
-       
       }
-      
 
       printMessage(messageToDisplay);
-      
 
       process.exit(0);
     })

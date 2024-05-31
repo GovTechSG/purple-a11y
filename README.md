@@ -242,11 +242,11 @@ npx playwright@1.27.1 install
 ### CLI Mode
 
 CLI mode is designed to be run in continuous integration (CI) environment. 
- Run `node cli.js` for a set of command-line parameters available. 
+ Run `npm run cli` for a set of command-line parameters available. 
 
 
 ```shell
-Usage: node cli.js -c <crawler> -d <device> -w <view
+Usage: npm run cli -- -c <crawler> -d <device> -w <view
 port> -u <url> OPTIONS
 
 Options:
@@ -320,11 +320,11 @@ Options:
                                      ss to restricted resources.        [string]
 
 Examples:
-  To scan sitemap of website:', 'node cli.js -c [ 1 | sitemap ] -u <url_link>
+  To scan sitemap of website:', 'npm run cli -- -c [ 1 | sitemap ] -u <url_link>
   [ -d <device> | -w <viewport_width> ]
-  To scan a website', 'node cli.js -c [ 2 | website ] -u <url_link> [ -d <devi
+  To scan a website', 'npm run cli -- -c [ 2 | website ] -u <url_link> [ -d <devi
   ce> | -w <viewport_width> ]
-  To start a custom flow scan', 'node cli.js -c [ 3 | custom ] -u <url_link> [
+  To start a custom flow scan', 'npm run cli -- -c [ 3 | custom ] -u <url_link> [
    -d <device> | -w <viewport_width> ]
 
 ```
@@ -458,7 +458,7 @@ Please note that ```-d``` and ```-w``` are mutually exclusive. If none are speci
 For example, to conduct a website scan to the URL "http://localhost:8000" and write to "a11y-scan-results.zip" with an 'iPad (gen 7) landscape' screen, run
 
 ```shell
-node cli.js -c 2 -o a11y-scan-results.zip -u http://localhost:8000 -d 'iPad (gen 7) landscape'
+npm run cli -- -c 2 -o a11y-scan-results.zip -u http://localhost:8000 -d 'iPad (gen 7) landscape'
 ```
 
 If the site you want to scan has a query string wrap the link in single quotes when entered into the CLI.
@@ -466,7 +466,7 @@ If the site you want to scan has a query string wrap the link in single quotes w
 For example, to conduct a website scan to the URL "http://localhost:8000" and write to "a11y-scan-results.zip" with a custom screen width '360', run
 
 ```shell
-node cli.js -c 2 -o a11y-scan-results.zip -u "http://localhost:8000" -w 360
+npm run cli -- -c 2 -o a11y-scan-results.zip -u "http://localhost:8000" -w 360
 ```
 
 ## Report
@@ -545,7 +545,7 @@ zsh: abort      node index.js
 
 If you find a scan takes too long to complete due to large website, or there are too many pages in a sitemap to scan, you may choose to limit number of pages scanned.
 
-To do this, run CLI mode `node cli.js` with the needed settings and specify `-p 10` where `10` is the number of pages you wish to scan.
+To do this, run CLI mode `npm run cli --` with the needed settings and specify `-p 10` where `10` is the number of pages you wish to scan.
 
 ### I am a new developer and I have some knowledge gap.
 

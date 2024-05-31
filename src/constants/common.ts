@@ -15,7 +15,7 @@ import * as https from 'https';
 import os from 'os';
 import { minimatch } from 'minimatch';
 import { Glob, globSync } from 'glob';
-import { devices, webkit } from 'playwright';
+import { BrowserContext, LaunchOptions, devices, webkit } from 'playwright';
 import printMessage from 'print-message';
 import constants, {
   getDefaultChromeDataDir,
@@ -23,14 +23,16 @@ import constants, {
   getDefaultChromiumDataDir,
   proxy,
   formDataFields,
+  BrowserTypes,
 } from './constants.js';
 import { silentLogger } from '../logs.js';
 import { isUrlPdf } from '../crawlers/commonCrawlerFunc.js';
 import { randomThreeDigitNumberString } from '../utils.js';
+import { Answers, Data } from '#root/index.js';
 
 // validateDirPath validates a provided directory path
 // returns null if no error
-export const validateDirPath = dirPath => {
+export const validateDirPath = (dirPath: string): string => {
   if (typeof dirPath !== 'string') {
     return 'Please provide string value of directory path.';
   }
@@ -47,7 +49,7 @@ export const validateDirPath = dirPath => {
   }
 };
 
-export const validateCustomFlowLabel = customFlowLabel => {
+export const validateCustomFlowLabel = (customFlowLabel: string) => {
   const containsReserveWithDot = constants.reserveFileNameKeywords.some(char =>
     customFlowLabel.toLowerCase().includes(`${char.toLowerCase()}.`),
   );
@@ -82,7 +84,7 @@ export const validateCustomFlowLabel = customFlowLabel => {
 
 // validateFilePath validates a provided file path
 // returns null if no error
-export const validateFilePath = (filePath, cliDir) => {
+export const validateFilePath = (filePath: string, cliDir: string) => {
   if (typeof filePath !== 'string') {
     throw new Error('Please provide string value of file path.');
   }
@@ -104,7 +106,7 @@ export const validateFilePath = (filePath, cliDir) => {
   }
 };
 
-export const getBlackListedPatterns = blacklistedPatternsFilename => {
+export const getBlackListedPatterns = (blacklistedPatternsFilename: string) => {
   let exclusionsFile = null;
   if (blacklistedPatternsFilename) {
     exclusionsFile = blacklistedPatternsFilename;
@@ -131,7 +133,7 @@ export const getBlackListedPatterns = blacklistedPatternsFilename => {
   return blacklistedPatterns;
 };
 
-export const isBlacklistedFileExtensions = (url, blacklistedFileExtensions) => {
+export const isBlacklistedFileExtensions = (url: string, blacklistedFileExtensions: string[]) => {
   const urlExtension = url.split('.').pop();
   return blacklistedFileExtensions.includes(urlExtension);
 };
@@ -156,8 +158,8 @@ const urlOptions = {
   require_tld: false,
 };
 
-const queryCheck = s => document.createDocumentFragment().querySelector(s);
-export const isSelectorValid = selector => {
+const queryCheck = (s: string) => document.createDocumentFragment().querySelector(s);
+export const isSelectorValid = (selector: string): boolean => {
   try {
     queryCheck(selector);
   } catch (e) {
@@ -269,7 +271,7 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
       headers: {
         ...extraHTTPHeaders,
         'User-Agent': devices['Desktop Chrome HiDPI'].userAgent,
-        'Host': parsedUrl.host
+        Host: parsedUrl.host,
       },
       auth: {
         username: decodeURIComponent(parsedUrl.username),
@@ -283,19 +285,22 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
       res.status = constants.urlCheckStatuses.success.code;
       let data;
       if (typeof response.data === 'string' || response.data instanceof String) {
-          data = response.data;
+        data = response.data;
       } else if (typeof response.data === 'object' && response.data !== null) {
-          try {
-              data = JSON.stringify(response.data);
-          } catch (error) {
-              console.log("Error converting object to JSON:", error);
-          }
+        try {
+          data = JSON.stringify(response.data);
+        } catch (error) {
+          console.log('Error converting object to JSON:', error);
+        }
       } else {
-          console.log("Unsupported data type:", typeof response.data);
+        console.log('Unsupported data type:', typeof response.data);
       }
       let modifiedHTML = data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
 
-      const metaRefreshMatch = /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?\s*url=(?:'([^']*)'|"([^"]*)"|([^>]*))"/i.exec(modifiedHTML);
+      const metaRefreshMatch =
+        /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?\s*url=(?:'([^']*)'|"([^"]*)"|([^>]*))"/i.exec(
+          modifiedHTML,
+        );
 
       const hasMetaRefresh = metaRefreshMatch && metaRefreshMatch.length > 1;
 
@@ -306,7 +311,6 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
       }
 
       if (hasMetaRefresh) {
-
         let urlOrRelativePath;
 
         for (let i = 1; i < metaRefreshMatch.length; i++) {
@@ -371,7 +375,7 @@ const checkUrlConnectivityWithBrowser = async (
   clonedDataDir,
   playwrightDeviceDetailsObject,
   isNewCustomFlow,
-  extraHTTPHeaders
+  extraHTTPHeaders,
 ) => {
   const res = {};
 
@@ -399,7 +403,7 @@ const checkUrlConnectivityWithBrowser = async (
         ...getPlaywrightLaunchOptions(browserToRun),
         ...(viewport && { viewport }),
         ...(userAgent && { userAgent }),
-        ...(extraHTTPHeaders && { extraHTTPHeaders })
+        ...(extraHTTPHeaders && { extraHTTPHeaders }),
       });
     } catch (err) {
       printMessage([`Unable to launch browser\n${err}`], messageOptions);
@@ -487,7 +491,7 @@ export const checkUrl = async (
   clonedDataDir,
   playwrightDeviceDetailsObject,
   isNewCustomFlow,
-  extraHTTPHeaders
+  extraHTTPHeaders,
 ) => {
   let res;
   if (proxy) {
@@ -497,7 +501,7 @@ export const checkUrl = async (
       clonedDataDir,
       playwrightDeviceDetailsObject,
       isNewCustomFlow,
-      extraHTTPHeaders
+      extraHTTPHeaders,
     );
   } else {
     res = await checkUrlConnectivity(url, isNewCustomFlow, extraHTTPHeaders);
@@ -509,7 +513,7 @@ export const checkUrl = async (
           clonedDataDir,
           playwrightDeviceDetailsObject,
           isNewCustomFlow,
-          extraHTTPHeaders
+          extraHTTPHeaders,
         );
       }
     }
@@ -528,15 +532,15 @@ export const checkUrl = async (
   return res;
 };
 
-const isEmptyObject = obj => !Object.keys(obj).length;
+const isEmptyObject = (obj: Object): boolean => !Object.keys(obj).length;
 
-export const prepareData = async argv => {
+export const prepareData = async (argv: Answers): Promise<Data> => {
   if (isEmptyObject(argv)) {
     throw Error('No inputs should be provided');
   }
   const {
     scanner,
-    headless,
+    headless, 
     url,
     deviceChosen,
     customDevice,
@@ -556,15 +560,15 @@ export const prepareData = async argv => {
     metadata,
     followRobots,
     header,
-    safeMode
+    safeMode,
   } = argv;
 
   // construct filename for scan results
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
   const domain = argv.isLocalSitemap ? 'custom' : new URL(argv.url).hostname;
   const sanitisedLabel = customFlowLabel ? `_${customFlowLabel.replaceAll(' ', '_')}` : '';
-  let resultFilename;
-  const randomThreeDigitNumber = randomThreeDigitNumberString()
+  let resultFilename: string;
+  const randomThreeDigitNumber = randomThreeDigitNumberString();
   if (process.env.PURPLE_A11Y_VERBOSE) {
     resultFilename = `${date}_${time}${sanitisedLabel}_${domain}_${randomThreeDigitNumber}`;
   } else {
@@ -580,7 +584,7 @@ export const prepareData = async argv => {
     type: scanner,
     url: finalUrl,
     entryUrl: url,
-    isHeadless: headless,
+    isHeadless: headless, 
     deviceChosen,
     customDevice,
     viewportWidth,
@@ -599,18 +603,18 @@ export const prepareData = async argv => {
     metadata,
     followRobots,
     extraHTTPHeaders: header,
-    safeMode
+    safeMode,
   };
 };
 
-export const getUrlsFromRobotsTxt = async (url, browserToRun) => {
+export const getUrlsFromRobotsTxt = async (url: string, browserToRun: string): Promise<void> => {
   if (!constants.robotsTxtUrls) return;
 
   const domain = new URL(url).origin;
   if (constants.robotsTxtUrls[domain]) return;
   const robotsUrl = domain.concat('/robots.txt');
 
-  let robotsTxt;
+  let robotsTxt: string;
   try {
     if (proxy) {
       robotsTxt = await getRobotsTxtViaPlaywright(robotsUrl, browserToRun);
@@ -630,15 +634,16 @@ export const getUrlsFromRobotsTxt = async (url, browserToRun) => {
 
   const lines = robotsTxt.split(/\r?\n/);
   let shouldCapture = false;
-  let disallowedUrls = [], allowedUrls = [];
+  let disallowedUrls = [],
+    allowedUrls = [];
 
-  const sanitisePattern = (pattern) => {
+  const sanitisePattern = (pattern: string): string => {
     const directoryRegex = /^\/(?:[^?#/]+\/)*[^?#]*$/;
     const subdirWildcardRegex = /\/\*\//g;
-    const filePathRegex = /^\/(?:[^\/]+\/)*[^\/]+\.[a-zA-Z0-9]{1,6}$/
+    const filePathRegex = /^\/(?:[^\/]+\/)*[^\/]+\.[a-zA-Z0-9]{1,6}$/;
 
     if (subdirWildcardRegex.test(pattern)) {
-      pattern = pattern.replace(subdirWildcardRegex, "/**/");
+      pattern = pattern.replace(subdirWildcardRegex, '/**/');
     }
     if (pattern.match(directoryRegex) && !pattern.match(filePathRegex)) {
       if (pattern.endsWith('*')) {
@@ -650,7 +655,7 @@ export const getUrlsFromRobotsTxt = async (url, browserToRun) => {
     }
     const final = domain.concat(pattern);
     return final;
-  }
+  };
 
   for (const line of lines) {
     if (line.toLowerCase().startsWith('user-agent: *')) {
@@ -672,21 +677,21 @@ export const getUrlsFromRobotsTxt = async (url, browserToRun) => {
     }
   }
   constants.robotsTxtUrls[domain] = { disallowedUrls, allowedUrls };
-}
+};
 
-const getRobotsTxtViaPlaywright = async (robotsUrl, browser) => {
-  const browserContext = await constants.launcher.launchPersistentContext(
-    '', { ...getPlaywrightLaunchOptions(browser) },
-  );
+const getRobotsTxtViaPlaywright = async (robotsUrl: string, browser: string): Promise<void> => {
+  const browserContext = await constants.launcher.launchPersistentContext('', {
+    ...getPlaywrightLaunchOptions(browser),
+  });
 
   const page = await browserContext.newPage();
   await page.goto(robotsUrl, { waitUntil: 'networkidle', timeout: 30000 });
 
   const robotsTxt = await page.evaluate(() => document.body.textContent);
   return robotsTxt;
-}
+};
 
-const getRobotsTxtViaAxios = async (robotsUrl) => {
+const getRobotsTxtViaAxios = async (robotsUrl: string): Promise<void> => {
   const instance = axios.create({
     httpsAgent: new https.Agent({
       rejectUnauthorized: false,
@@ -696,70 +701,75 @@ const getRobotsTxtViaAxios = async (robotsUrl) => {
 
   const robotsTxt = await (await instance.get(robotsUrl, { timeout: 2000 })).data;
   return robotsTxt;
-}
+};
 
-export const isDisallowedInRobotsTxt = (url) => {
+export const isDisallowedInRobotsTxt = (url: string): boolean => {
   if (!constants.robotsTxtUrls) return;
 
   const domain = new URL(url).origin;
   if (constants.robotsTxtUrls[domain]) {
     const { disallowedUrls, allowedUrls } = constants.robotsTxtUrls[domain];
 
-    const isDisallowed = disallowedUrls.filter(disallowedUrl => {
-      const disallowed = minimatch(url, disallowedUrl);
-      return disallowed;
-    }).length > 0;
+    const isDisallowed =
+      disallowedUrls.filter((disallowedUrl: string) => {
+        const disallowed = minimatch(url, disallowedUrl);
+        return disallowed;
+      }).length > 0;
 
-    const isAllowed = allowedUrls.filter(allowedUrl => {
-      const allowed = minimatch(url, allowedUrl);
-      return allowed;
-    }).length > 0;
+    const isAllowed =
+      allowedUrls.filter((allowedUrl: string) => {
+        const allowed = minimatch(url, allowedUrl);
+        return allowed;
+      }).length > 0;
 
     return isDisallowed && !isAllowed;
   }
   return false;
-}
+};
 
 export const getLinksFromSitemap = async (
-  sitemapUrl,
-  maxLinksCount,
-  browser,
-  userDataDirectory,
-  userUrlInput,
-  isIntelligent,
-  username,
-  password
+  sitemapUrl: string,
+  maxLinksCount: number,
+  browser: string,
+  userDataDirectory: string,
+  userUrlInput: string,
+  isIntelligent: boolean,
+  username: string,
+  password: string,
 ) => {
-
   const urls = {}; // dictionary of requests to urls to be scanned
 
-  const isLimitReached = () => urls.size >= maxLinksCount;
+  const isLimitReached = () => Object.keys(urls).length >= maxLinksCount;
 
   const addToUrlList = url => {
     if (!url) return;
     if (isDisallowedInRobotsTxt(url)) return;
 
     // add basic auth credentials to the URL
-    (username !=="" && password !=="") ? url = addBasicAuthCredentials(url, username, password): url;
+    username !== '' && password !== ''
+      ? (url = addBasicAuthCredentials(url, username, password))
+      : url;
 
     const request = new Request({ url: encodeURI(url) });
     if (isUrlPdf(url)) {
       request.skipNavigation = true;
     }
     urls[url] = request;
-};
-
-  const addBasicAuthCredentials = (url, username, password) => {
-      const urlObject = new URL(url);
-      urlObject.username = username;
-      urlObject.password = password;
-      return urlObject.toString();
   };
 
-  const calculateCloseness = (sitemapUrl) => {
+  const addBasicAuthCredentials = (url, username, password) => {
+    const urlObject = new URL(url);
+    urlObject.username = username;
+    urlObject.password = password;
+    return urlObject.toString();
+  };
+
+  const calculateCloseness = sitemapUrl => {
     // Remove 'http://', 'https://', and 'www.' prefixes from the URLs
     const normalizedSitemapUrl = sitemapUrl.replace(/^(https?:\/\/)?(www\.)?/, '');
-    const normalizedUserUrlInput = userUrlInput.replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/$/, ''); // Remove trailing slash also
+    const normalizedUserUrlInput = userUrlInput
+      .replace(/^(https?:\/\/)?(www\.)?/, '')
+      .replace(/\/$/, ''); // Remove trailing slash also
 
     if (normalizedSitemapUrl == normalizedUserUrlInput) {
       return 2;
@@ -768,14 +778,14 @@ export const getLinksFromSitemap = async (
     } else {
       return 0;
     }
-  }
+  };
   const processXmlSitemap = async ($, sitemapType, linkSelector, dateSelector, sectionSelector) => {
     const urlList = [];
     // Iterate through each URL element in the sitemap, collect url and modified date
     $(sectionSelector).each((index, urlElement) => {
       let url;
       if (sitemapType === constants.xmlSitemapTypes.atom) {
-        url = $(urlElement).find(linkSelector).prop('href')
+        url = $(urlElement).find(linkSelector).prop('href');
       } else {
         url = $(urlElement).find(linkSelector).text();
       }
@@ -803,13 +813,12 @@ export const getLinksFromSitemap = async (
     for (const { url } of urlList.slice(0, maxLinksCount)) {
       addToUrlList(url);
     }
-
-
   };
 
   const processNonStandardSitemap = data => {
-
-    const urlsFromData = crawlee.extractUrls({ string: data, urlRegExp: new RegExp("^(http|https):/{2}.+$", "gmi") }).slice(0, maxLinksCount);
+    const urlsFromData = crawlee
+      .extractUrls({ string: data, urlRegExp: new RegExp('^(http|https):/{2}.+$', 'gmi') })
+      .slice(0, maxLinksCount);
     urlsFromData.forEach(url => {
       addToUrlList(url);
     });
@@ -821,21 +830,20 @@ export const getLinksFromSitemap = async (
   }
 
   const fetchUrls = async url => {
-
     let data;
     let sitemapType;
     let isBasicAuth = false;
 
     const parsedUrl = new URL(url);
-    let username = ""
-    let password = "";
+    let username = '';
+    let password = '';
 
-    if (parsedUrl.username !=="" && parsedUrl.password !=="") {
+    if (parsedUrl.username !== '' && parsedUrl.password !== '') {
       isBasicAuth = true;
       username = decodeURIComponent(parsedUrl.username);
       password = decodeURIComponent(parsedUrl.password);
-      parsedUrl.username = "";
-      parsedUrl.password = "";
+      parsedUrl.username = '';
+      parsedUrl.password = '';
     }
 
     const getDataUsingPlaywright = async () => {
@@ -907,12 +915,9 @@ export const getLinksFromSitemap = async (
 
     // This case is when the document is not an XML format document
     if ($(':root').length === 0) {
-
       processNonStandardSitemap(data);
       return;
     }
-
-
 
     // Root element
     const root = $(':root')[0];
@@ -932,14 +937,11 @@ export const getLinksFromSitemap = async (
       sitemapType = constants.xmlSitemapTypes.unknown;
     }
 
-
-
     switch (sitemapType) {
       case constants.xmlSitemapTypes.xmlIndex:
         silentLogger.info(`This is a XML format sitemap index.`);
         for (const childSitemapUrl of $('loc')) {
           if (isLimitReached()) {
-
             break;
           }
 
@@ -961,24 +963,19 @@ export const getLinksFromSitemap = async (
       default:
         silentLogger.info(`This is an unrecognised XML sitemap format.`);
         processNonStandardSitemap(data);
-
     }
   };
 
   try {
     await fetchUrls(sitemapUrl);
   } catch (e) {
-    silentLogger.error(e)
+    silentLogger.error(e);
   }
-
 
   const requestList = Object.values(urls);
 
   return requestList;
 };
-
-
-
 
 export const validEmail = email => {
   const emailRegex = /^.+@.+\..+$/u;
@@ -987,7 +984,7 @@ export const validEmail = email => {
 };
 
 // For new user flow.
-export const validName = (name) => {
+export const validName = name => {
   // Allow only printable characters from any language
   const regex = /^[\p{L}\p{N}\s'".,()\[\]{}!?:؛،؟…]+$/u;
 
@@ -1014,11 +1011,14 @@ export const validName = (name) => {
 
 /**
  * Check for browser available to run scan and clone data directory of the browser if needed.
- * @param {*} preferredBrowser string of user's preferred browser
- * @param {*} isCli boolean flag to indicate if function is called from cli
+ * @param preferredBrowser string of user's preferred browser
+ * @param isCli boolean flag to indicate if function is called from cli
  * @returns object consisting of browser to run and cloned data directory
  */
-export const getBrowserToRun = (preferredBrowser, isCli) => {
+export const getBrowserToRun = (
+  preferredBrowser: string,
+  isCli = false,
+): { browserToRun: string; clonedBrowserDataDir: string } => {
   const platform = os.platform();
   if (preferredBrowser === constants.browserTypes.chrome) {
     const chromeData = getChromeData();
@@ -1091,16 +1091,14 @@ export const getBrowserToRun = (preferredBrowser, isCli) => {
  * overridden after each browser session - i.e. logs user out
  * after checkingUrl and unable to utilise same cookie for scan
  * */
-export const getClonedProfilesWithRandomToken = (browser, randomToken) => {
-  let clonedDataDir;
+export const getClonedProfilesWithRandomToken = (browser: string, randomToken: string): string => {
   if (browser === constants.browserTypes.chrome) {
-    clonedDataDir = cloneChromeProfiles(randomToken);
+    return cloneChromeProfiles(randomToken);
   } else if (browser === constants.browserTypes.edge) {
-    clonedDataDir = cloneEdgeProfiles(randomToken);
+    return cloneEdgeProfiles(randomToken);
   } else {
-    clonedDataDir = cloneChromiumProfiles(randomToken);
+    return cloneChromiumProfiles(randomToken);
   }
-  return clonedDataDir;
 };
 
 export const getChromeData = () => {
@@ -1173,10 +1171,16 @@ const cloneChromeProfileCookieFiles = (options, destDir) => {
           } catch (err) {
             silentLogger.error(err);
             if (err.code === 'EBUSY') {
-              console.log(`Unable to copy the file for ${profileName} because it is currently in use.`);
-              console.log('Please close any applications that might be using this file and try again.');
+              console.log(
+                `Unable to copy the file for ${profileName} because it is currently in use.`,
+              );
+              console.log(
+                'Please close any applications that might be using this file and try again.',
+              );
             } else {
-              console.log(`An unexpected error occurred for ${profileName} while copying the file: ${err.message}`);
+              console.log(
+                `An unexpected error occurred for ${profileName} while copying the file: ${err.message}`,
+              );
             }
             // printMessage([err], messageOptions);
             success = false;
@@ -1243,8 +1247,12 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
           } catch (err) {
             silentLogger.error(err);
             if (err.code === 'EBUSY') {
-              console.log(`Unable to copy the file for ${profileName} because it is currently in use.`);
-              console.log('Please close any applications that might be using this file and try again.');
+              console.log(
+                `Unable to copy the file for ${profileName} because it is currently in use.`,
+              );
+              console.log(
+                'Please close any applications that might be using this file and try again.',
+              );
             } else {
               console.log(`An unexpected error occurred while copying the file: ${err.message}`);
             }
@@ -1284,7 +1292,9 @@ const cloneLocalStateFile = (options, destDir) => {
           console.log(`Unable to copy the file because it is currently in use.`);
           console.log('Please close any applications that might be using this file and try again.');
         } else {
-          console.log(`An unexpected error occurred for ${profileName} while copying the file: ${err.message}`);
+          console.log(
+            `An unexpected error occurred for ${profileName} while copying the file: ${err.message}`,
+          );
         }
         printMessage([err], messageOptions);
         success = false;
@@ -1305,7 +1315,7 @@ const cloneLocalStateFile = (options, destDir) => {
  * @param {string} randomToken - random token to append to the cloned directory
  * @returns {string} cloned data directory, null if any of the sub files failed to copy
  */
-export const cloneChromeProfiles = randomToken => {
+export const cloneChromeProfiles = (randomToken?: string): string => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
@@ -1321,7 +1331,9 @@ export const cloneChromeProfiles = randomToken => {
   }
 
   if (fs.existsSync(destDir)) {
-    process.env.PURPLE_A11Y_VERBOSE ? deleteClonedChromeProfiles(randomToken) : deleteClonedChromeProfiles();
+    process.env.PURPLE_A11Y_VERBOSE
+      ? deleteClonedChromeProfiles(randomToken)
+      : deleteClonedChromeProfiles();
   }
 
   if (!fs.existsSync(destDir)) {
@@ -1342,14 +1354,14 @@ export const cloneChromeProfiles = randomToken => {
   return null;
 };
 
-export const cloneChromiumProfiles = randomToken => {
+export const cloneChromiumProfiles = (randomToken?: string): string => {
   const baseDir = getDefaultChromiumDataDir();
 
   if (!baseDir) {
     return;
   }
 
-  let destDir;
+  let destDir: string;
 
   if (randomToken) {
     destDir = path.join(baseDir, `purple-a11y-${randomToken}`);
@@ -1388,7 +1400,9 @@ export const cloneEdgeProfiles = randomToken => {
   }
 
   if (fs.existsSync(destDir)) {
-    process.env.PURPLE_A11Y_VERBOSE ? deleteClonedEdgeProfiles(randomToken) : deleteClonedEdgeProfiles();
+    process.env.PURPLE_A11Y_VERBOSE
+      ? deleteClonedEdgeProfiles(randomToken)
+      : deleteClonedEdgeProfiles();
   }
 
   if (!fs.existsSync(destDir)) {
@@ -1410,7 +1424,7 @@ export const cloneEdgeProfiles = randomToken => {
   return null;
 };
 
-export const deleteClonedProfiles = (browser,randomToken) => {
+export const deleteClonedProfiles = (browser: string, randomToken?: string): void => {
   if (browser === constants.browserTypes.chrome) {
     deleteClonedChromeProfiles(randomToken);
   } else if (browser === constants.browserTypes.edge) {
@@ -1424,21 +1438,19 @@ export const deleteClonedProfiles = (browser,randomToken) => {
  * Deletes all the cloned Purple-A11y directories in the Chrome data directory
  * @returns null
  */
-export const deleteClonedChromeProfiles = (randomToken) => {
-  
+export const deleteClonedChromeProfiles = (randomToken?: string): void => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
     return;
   }
-  let destDir
+  let destDir: string[];
   if (randomToken) {
     destDir = [`${baseDir}/purple-a11y-${randomToken}`];
   } else {
     // Find all the Purple-A11y directories in the Chrome data directory
-    destDir = globSync("**/purple-a11y*", {
+    destDir = globSync('**/purple-a11y*', {
       cwd: baseDir,
-      recursive: true,
       absolute: true,
     });
   }
@@ -1449,7 +1461,9 @@ export const deleteClonedChromeProfiles = (randomToken) => {
         try {
           fs.rmSync(dir, { recursive: true });
         } catch (err) {
-          silentLogger.error(`CHROME Unable to delete ${dir} folder in the Chrome data directory. ${err}`);
+          silentLogger.error(
+            `CHROME Unable to delete ${dir} folder in the Chrome data directory. ${err}`,
+          );
         }
       }
     });
@@ -1464,7 +1478,7 @@ export const deleteClonedChromeProfiles = (randomToken) => {
  * Deletes all the cloned Purple-A11y directories in the Edge data directory
  * @returns null
  */
-export const deleteClonedEdgeProfiles = (randomToken) => {
+export const deleteClonedEdgeProfiles = (randomToken?: string): void => {
   if (process.env.PURPLE_A11Y_VERBOSE) {
     return;
   }
@@ -1474,14 +1488,13 @@ export const deleteClonedEdgeProfiles = (randomToken) => {
     console.warn(`Unable to find Edge data directory in the system.`);
     return;
   }
-  let destDir
+  let destDir: string[];
   if (randomToken) {
     destDir = [`${baseDir}/purple-a11y-${randomToken}`];
   } else {
     // Find all the Purple-A11y directories in the Chrome data directory
-    destDir = globSync("**/purple-a11y*", {
+    destDir = globSync('**/purple-a11y*', {
       cwd: baseDir,
-      recursive: true,
       absolute: true,
     });
   }
@@ -1492,7 +1505,9 @@ export const deleteClonedEdgeProfiles = (randomToken) => {
         try {
           fs.rmSync(dir, { recursive: true });
         } catch (err) {
-          silentLogger.error(`EDGE Unable to delete ${dir} folder in the Chrome data directory. ${err}`);
+          silentLogger.error(
+            `EDGE Unable to delete ${dir} folder in the Chrome data directory. ${err}`,
+          );
         }
       }
     });
@@ -1500,20 +1515,19 @@ export const deleteClonedEdgeProfiles = (randomToken) => {
   }
 };
 
-export const deleteClonedChromiumProfiles = (randomToken) => {
+export const deleteClonedChromiumProfiles = (randomToken?: string): void => {
   const baseDir = getDefaultChromiumDataDir();
 
   if (!baseDir) {
     return;
   }
-  let destDir;
+  let destDir: string[];
   if (randomToken) {
     destDir = [`${baseDir}/purple-a11y-${randomToken}`];
   } else {
     // Find all the Purple-A11y directories in the Chrome data directory
-    destDir = globSync("**/purple-a11y*", {
+    destDir = globSync('**/purple-a11y*', {
       cwd: baseDir,
-      recursive: true,
       absolute: true,
     });
   }
@@ -1524,7 +1538,9 @@ export const deleteClonedChromiumProfiles = (randomToken) => {
         try {
           fs.rmSync(dir, { recursive: true });
         } catch (err) {
-          silentLogger.error(`CHROMIUM Unable to delete ${dir} folder in the Chromium data directory. ${err}`);
+          silentLogger.error(
+            `CHROMIUM Unable to delete ${dir} folder in the Chromium data directory. ${err}`,
+          );
         }
       }
     });
@@ -1535,7 +1551,11 @@ export const deleteClonedChromiumProfiles = (randomToken) => {
   console.warn('Unable to find Purple-A11y directory in Chromium support directory');
 };
 
-export const getPlaywrightDeviceDetailsObject = (deviceChosen, customDevice, viewportWidth) => {
+export const getPlaywrightDeviceDetailsObject = (
+  deviceChosen: string,
+  customDevice: string,
+  viewportWidth: number,
+) => {
   let playwrightDeviceDetailsObject = {};
   if (deviceChosen === 'Mobile' || customDevice === 'iPhone 11') {
     playwrightDeviceDetailsObject = devices['iPhone 11'];
@@ -1546,27 +1566,32 @@ export const getPlaywrightDeviceDetailsObject = (deviceChosen, customDevice, vie
       viewport: { width: Number(viewportWidth), height: 720 },
     };
   } else if (customDevice) {
-    playwrightDeviceDetailsObject = devices[customDevice.replace('_', / /g)];
+    playwrightDeviceDetailsObject = devices[customDevice.replace(/_/g, ' ')];
   }
   return playwrightDeviceDetailsObject;
 };
 
-export const getScreenToScan = (deviceChosen, customDevice, viewportWidth) => {
-  let screenToScan;
+export const getScreenToScan = (
+  deviceChosen: string,
+  customDevice: string,
+  viewportWidth: number,
+): string => {
   if (deviceChosen) {
-    screenToScan = deviceChosen;
+    return deviceChosen;
   } else if (customDevice) {
-    screenToScan = customDevice;
+    return customDevice;
   } else if (viewportWidth) {
-    screenToScan = `CustomWidth_${viewportWidth}px`;
+    return `CustomWidth_${viewportWidth}px`;
   } else {
-    screenToScan = 'Desktop';
+    return 'Desktop';
   }
-  return screenToScan;
 };
 
-export const submitFormViaPlaywright = async (browserToRun, userDataDirectory, finalUrl) => {
-  let browserContext;
+export const submitFormViaPlaywright = async (
+  browserToRun: string,
+  userDataDirectory: string,
+  finalUrl: string,
+) => {
   const dirName = `clone-${Date.now()}`;
   let clonedDir = null;
   if (proxy && browserToRun === constants.browserTypes.edge) {
@@ -1574,7 +1599,7 @@ export const submitFormViaPlaywright = async (browserToRun, userDataDirectory, f
   } else if (proxy && browserToRun === constants.browserTypes.chrome) {
     clonedDir = cloneChromeProfiles(dirName);
   }
-  browserContext = await constants.launcher.launchPersistentContext(
+  const browserContext = await constants.launcher.launchPersistentContext(
     clonedDir || userDataDirectory,
     {
       ...getPlaywrightLaunchOptions(browserToRun),
@@ -1584,7 +1609,7 @@ export const submitFormViaPlaywright = async (browserToRun, userDataDirectory, f
   const page = await browserContext.newPage();
 
   try {
-    const response = await page.goto(finalUrl, {
+    await page.goto(finalUrl, {
       timeout: 30000,
       ...(proxy && { waitUntil: 'commit' }),
     });
@@ -1607,24 +1632,23 @@ export const submitFormViaPlaywright = async (browserToRun, userDataDirectory, f
 };
 
 export const submitForm = async (
-  browserToRun,
-  userDataDirectory,
-  scannedUrl,
-  entryUrl,
-  scanType,
-  email,
-  name,
-  scanResultsJson,
-  numberOfPagesScanned,
-  numberOfRedirectsScanned,
-  numberOfPagesNotScanned,
-  metadata,
+  browserToRun: string,
+  userDataDirectory: string,
+  scannedUrl: string,
+  entryUrl: string,
+  scanType: string,
+  email: string,
+  name: string,
+  scanResultsJson: string,
+  numberOfPagesScanned: number,
+  numberOfRedirectsScanned: number,
+  numberOfPagesNotScanned: number,
+  metadata: string,
 ) => {
-
   const additionalPageDataJson = JSON.stringify({
     redirectsScanned: numberOfRedirectsScanned,
-    pagesNotScanned: numberOfPagesNotScanned
-  })
+    pagesNotScanned: numberOfPagesNotScanned,
+  });
 
   let finalUrl =
     `${formDataFields.formUrl}?` +
@@ -1659,12 +1683,12 @@ export const submitForm = async (
  * @param {string} browser browser name ("chrome" or "edge", null for chromium, the default Playwright browser)
  * @returns playwright launch options object. For more details: https://playwright.dev/docs/api/class-browsertype#browser-type-launch
  */
-export const getPlaywrightLaunchOptions = browser => {
-  let channel;
+export const getPlaywrightLaunchOptions = (browser?: string): LaunchOptions => {
+  let channel: string;
   if (browser) {
     channel = browser;
   }
-  const options = {
+  const options: LaunchOptions = {
     // Drop the --use-mock-keychain flag to allow MacOS devices
     // to use the cloned cookies.
     ignoreDefaultArgs: ['--use-mock-keychain'],
@@ -1681,7 +1705,7 @@ export const getPlaywrightLaunchOptions = browser => {
   return options;
 };
 
-export const urlWithoutAuth = (url) => {
+export const urlWithoutAuth = (url: string): URL => {
   const parsedUrl = new URL(url);
   parsedUrl.username = '';
   parsedUrl.password = '';

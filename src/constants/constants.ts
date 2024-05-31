@@ -59,7 +59,7 @@ export const getDefaultChromeDataDir = () => {
         'Chrome',
       );
     }
-    
+
     if (defaultChromeDataDir && fs.existsSync(defaultChromeDataDir)) {
       return defaultChromeDataDir;
     } else {
@@ -108,15 +108,9 @@ export const getDefaultEdgeDataDir = () => {
 export const getDefaultChromiumDataDir = () => {
   try {
     let defaultChromiumDataDir = null;
-    
+
     if (os.platform() === 'win32') {
-      defaultChromiumDataDir = path.join(
-        os.homedir(),
-        'AppData',
-        'Local',
-        'Chromium',
-        'User Data',
-      );
+      defaultChromiumDataDir = path.join(os.homedir(), 'AppData', 'Local', 'Chromium', 'User Data');
     } else if (os.platform() === 'darwin') {
       defaultChromiumDataDir = path.join(
         os.homedir(),
@@ -125,11 +119,8 @@ export const getDefaultChromiumDataDir = () => {
         'Chromium',
       );
     } else {
-      defaultChromiumDataDir = path.join(
-        process.cwd(),
-        'Chromium Support',
-      );
-    
+      defaultChromiumDataDir = path.join(process.cwd(), 'Chromium Support');
+
       try {
         fs.mkdirSync(defaultChromiumDataDir, { recursive: true }); // Use { recursive: true } to create parent directories if they don't exist
       } catch (error) {
@@ -137,7 +128,6 @@ export const getDefaultChromiumDataDir = () => {
       }
 
       silentLogger.warn(`Using Chromium support directory at ${defaultChromiumDataDir}`);
-    
     }
 
     if (defaultChromiumDataDir && fs.existsSync(defaultChromiumDataDir)) {
@@ -211,7 +201,7 @@ const scannerTypes = {
   website: 'Website',
   custom: 'Custom',
   custom2: 'Custom2',
-  intelligent: 'Intelligent'
+  intelligent: 'Intelligent',
 };
 
 export const guiInfoStatusTypes = {
@@ -282,12 +272,12 @@ export const impactOrder = {
 export const formDataFields = {
   formUrl: `https://docs.google.com/forms/d/e/1FAIpQLSem5C8fyNs5TiU5Vv2Y63-SH7CHN86f-LEPxeN_1u_ldUbgUA/formResponse`, // prod
   entryUrlField: 'entry.1562345227',
-  redirectUrlField: 'entry.473072563', 
+  redirectUrlField: 'entry.473072563',
   scanTypeField: 'entry.1148680657',
   emailField: 'entry.52161304',
   nameField: 'entry.1787318910',
   resultsField: 'entry.904051439',
-  numberOfPagesScannedField: 'entry.238043773', 
+  numberOfPagesScannedField: 'entry.238043773',
   additionalPageDataField: 'entry.2090887881',
   metadataField: 'entry.1027769131',
 };
@@ -308,8 +298,8 @@ export const sitemapPaths = [
   '/sitemap.xml.bz2',
   '/sitemap.xml.xz',
   '/sitemap_index.xml.bz2',
-  '/sitemap_index.xml.xz'
-]
+  '/sitemap_index.xml.xz',
+];
 
 const wcagLinks = {
   'WCAG 1.1.1': 'https://www.w3.org/TR/WCAG21/#non-text-content',
@@ -329,7 +319,7 @@ const wcagLinks = {
   'WCAG 3.1.1': 'https://www.w3.org/TR/WCAG21/#language-of-page',
   'WCAG 3.1.2': 'https://www.w3.org/TR/WCAG21/#labels-or-instructions',
   'WCAG 4.1.1': 'https://www.w3.org/TR/WCAG21/#parsing',
-  'WCAG 4.1.2': 'https://www.w3.org/TR/WCAG21/#name-role-value'
+  'WCAG 4.1.2': 'https://www.w3.org/TR/WCAG21/#name-role-value',
 };
 
 const urlCheckStatuses = {
@@ -358,6 +348,12 @@ const urlCheckStatuses = {
   },
   axiosTimeout: { code: 18, message: 'Axios timeout exceeded. Falling back on browser checks.' },
 };
+
+export enum BrowserTypes {
+  CHROMIUM,
+  CHROME,
+  EDGE,
+}
 
 const browserTypes = {
   //order affects cliFunctions '-b'
@@ -419,6 +415,7 @@ export default {
   forbiddenCharactersInDirPath,
   reserveFileNameKeywords,
   wcagLinks,
+  robotsTxtUrls: null,
 };
 
 export const rootPath = __dirname;
