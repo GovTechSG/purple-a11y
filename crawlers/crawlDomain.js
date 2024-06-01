@@ -45,9 +45,7 @@ const crawlDomain = async (
   fromCrawlIntelligentSitemap = false, //optional
   datasetFromIntelligent = null, //optional
   urlsCrawledFromIntelligent = null, //optional
-
 ) => {
-
   let dataset;
   let urlsCrawled
   let requestQueue;
@@ -102,7 +100,7 @@ const crawlDomain = async (
     await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
   }
 
-  const enqueueProcess = async (page, enqueueLinks, browserController) => {
+  const enqueueProcess = async (page, enqueueLinks, browserController, baseURL) => {
     try {
 
       await enqueueLinks({
@@ -206,7 +204,7 @@ const crawlDomain = async (
       if (!safeMode) {
         // Try catch is necessary as clicking links is best effort, it may result in new pages that cause browser load or navigation errors that PlaywrightCrawler does not handle
         try {
-          await customEnqueueLinksByClickingElements(page, browserController);
+          await customEnqueueLinksByClickingElements(page, browserController, baseURL);
         } catch (e) {
           silentLogger.info(e);
         }
@@ -217,12 +215,12 @@ const crawlDomain = async (
     }
   };
   
-  const customEnqueueLinksByClickingElements = async (page, browserController) => {
+  const customEnqueueLinksByClickingElements = async (page, browserController, baseURL) => {
     const initialPageUrl = page.url().toString();
 
     const isExcluded = newPageUrl => {
       const isAlreadyScanned = urlsCrawled.scanned.some(item => item.url === newPageUrl);
-      const isBlacklistedUrl = isBlacklisted(newPageUrl);
+      const isBlacklistedUrl = isBlacklisted(newPageUrl, baseURL);
       const isNotFollowStrategy = !isFollowStrategy(newPageUrl, initialPageUrl, strategy);
       return isAlreadyScanned || isBlacklistedUrl || isNotFollowStrategy;
     }
@@ -340,12 +338,18 @@ const crawlDomain = async (
     return;
   };
 
-  const isBlacklisted = url => {
+  const isBlacklisted = (url, baseURL) => {
     const blacklistedPatterns = getBlackListedPatterns();
     if (!blacklistedPatterns) {
       return false;
     }
     try {
+      // Check if the URL is relative
+      if (!url.startsWith('http') && !url.startsWith('https')) {
+        // Construct absolute URL using base URL
+        const absoluteUrl = new URL(url, baseURL).toString();
+        url = absoluteUrl;
+      }
       const parsedUrl = new URL(url);
       return blacklistedPatterns.some(
         pattern => new RegExp(pattern).test(parsedUrl.hostname) || new RegExp(pattern).test(url),
@@ -383,7 +387,6 @@ const crawlDomain = async (
     preNavigationHooks: isBasicAuth
       ? [
         async ({ page, request }) => {
-
           request.url = encodeURI(request.url);
           await page.setExtraHTTPHeaders({
             Authorization: authHeader,
@@ -393,11 +396,11 @@ const crawlDomain = async (
       ]
       : [
         async ({ page, request }) => {
-        request.url = encodeURI(request.url);
-        preNavigationHooks(extraHTTPHeaders)
+          request.url = encodeURI(request.url);
+          preNavigationHooks(extraHTTPHeaders)
         },
       ],
-    requestHandlerTimeoutSecs: 90, // Alow each page to be processed by up from default 60 seconds
+    requestHandlerTimeoutSecs: 90, // Allow each page to be processed by up from default 60 seconds
     requestHandler: async ({
       browserController,
       page,
@@ -444,12 +447,12 @@ const crawlDomain = async (
 
         // if URL has already been scanned
         if (urlsCrawled.scanned.some(item => item.url === request.url)) {
-          await enqueueProcess(page, enqueueLinks, browserController);
+          await enqueueProcess(page, enqueueLinks, browserController, url);
           return;
         }
 
         if (isDisallowedInRobotsTxt(request.url)) {
-          await enqueueProcess(page, enqueueLinks, browserController);
+          await enqueueProcess(page, enqueueLinks, browserController, url);
           return;
         }
 
@@ -499,7 +502,7 @@ const crawlDomain = async (
 
         if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
           urlsCrawled.userExcluded.push(request.url);
-          await enqueueProcess(page, enqueueLinks, browserController);
+          await enqueueProcess(page, enqueueLinks, browserController, url);
           return;
         }
 
@@ -594,7 +597,7 @@ const crawlDomain = async (
         }
 
         if (followRobots) await getUrlsFromRobotsTxt(request.url, browser);
-        await enqueueProcess(page, enqueueLinks, browserController);
+        await enqueueProcess(page, enqueueLinks, browserController, url);
       } catch (e) {
         try {
           
@@ -667,7 +670,6 @@ const crawlDomain = async (
   }
 
   return urlsCrawled;
-
-
 };
+
 export default crawlDomain;
