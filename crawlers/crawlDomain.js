@@ -180,7 +180,7 @@ const crawlDomain = async (
       page.on('request', async request => {
         try {
           // Intercepting requests to handle cases where request was issued before the frame is created
-          await page.context().route(request.url(), async route => {
+          await page.context().route(encodeURI(request.url()), async route => {
             const isTopFrameNavigationRequest = () => {
               return route.request().isNavigationRequest()
                 && route.request().frame() === page.mainFrame();
