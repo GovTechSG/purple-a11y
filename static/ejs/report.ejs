@@ -106,7 +106,7 @@
         const formattedViewerLocalStartTime = formatAboutStartTime(scanData.startTime);
         document.getElementById('aboutStartTime').innerHTML = formattedViewerLocalStartTime;
         document.getElementById('urlScanned').innerHTML = scanData.urlScanned;
-        document.getElementById('viewport').innerHTML = scanData.viewport.startsWith("CustomWidth") ? `${scanData.viewport.split("_")[1]} width viewport` : scanData.viewport;
+        document.getElementById('viewport').innerHTML = scanData.viewport.startsWith("CustomWidth") ? `${scanData.viewport.split("_")[1]} width viewport` : scanData.viewport + ' viewport';
         document.getElementById('pagesScannedModalToggle').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
 
         var itemsElement = document.getElementById('items');
@@ -114,7 +114,7 @@
         var passedItems = scanData.items.passed.totalItems;
         var itemsContent = `${failedItems} ${failedItems === 1 ? 'occurrence' : 'occurrences'} failed,<br>${passedItems} ${passedItems === 1 ? 'occurrence' : 'occurrences'} passed`;
         itemsElement.innerHTML = itemsContent;
-
+ 
         var phAppVersionElement = document.getElementById('phAppVersion');
         var versionContent = 'Purple A11y Version ' + scanData.phAppVersion;
         phAppVersionElement.innerHTML = versionContent;
