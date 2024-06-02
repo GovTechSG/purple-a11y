@@ -110,13 +110,13 @@
         document.getElementById('pagesScannedModalToggle').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
 
         var itemsElement = document.getElementById('items');
-        var failedItems = scanItems.items.mustFix.totalItems + scanItems.items.goodToFix.totalItems;
-        var passedItems = scanItems.items.passed.totalItems;
+        var failedItems = scanData.items.mustFix.totalItems + scanData.items.goodToFix.totalItems;
+        var passedItems = scanData.items.passed.totalItems;
         var itemsContent = `${failedItems} ${failedItems === 1 ? 'occurrence' : 'occurrences'} failed,<br>${passedItems} ${passedItems === 1 ? 'occurrence' : 'occurrences'} passed`;
         itemsElement.innerHTML = itemsContent;
 
         var phAppVersionElement = document.getElementById('phAppVersion');
-        var versionContent = 'Purple A11y Version ' + phAppVersion;
+        var versionContent = 'Purple A11y Version ' + scanData.phAppVersion;
         phAppVersionElement.innerHTML = versionContent;
 
 
