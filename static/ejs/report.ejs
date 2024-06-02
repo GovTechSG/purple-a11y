@@ -44,7 +44,39 @@
         // const phAppVersion = <%- JSON.stringify(phAppVersion)%>;
         // const cypressScanAboutMetadata = <%- JSON.stringify(cypressScanAboutMetadata)%>;
 
-        
+        // const scanData = {
+        //   startTime: <%- JSON.stringify(startTime) %>,
+        //   urlScanned: <%- JSON.stringify(urlScanned) %>,
+        //   viewport: <%- JSON.stringify(viewport) %>,
+        //   scanType: <%- JSON.stringify(scanType) %>,
+        //   isCustomFlow: <%- JSON.stringify(isCustomFlow) %>,
+        //   totalPagesScanned: <%- JSON.stringify(totalPagesScanned) %>,
+        //   totalPagesNotScanned: <%- JSON.stringify(totalPagesNotScanned) %>,
+        //   pagesScanned: <%- JSON.stringify(pagesScanned) %>,
+        //   pagesNotScanned: <%- JSON.stringify(pagesNotScanned) %>,
+        //   customFlowLabel: <%- JSON.stringify(customFlowLabel) %>,
+        //   phAppVersion: <%- JSON.stringify(phAppVersion) %>,
+        //   cypressScanAboutMetadata: <%- JSON.stringify(cypressScanAboutMetadata) %>
+        // };
+
+        const scanData = <%- JSON.stringify({
+          startTime,
+          urlScanned,
+          viewport,
+          scanType,
+          isCustomFlow,
+          totalPagesScanned,
+          totalPagesNotScanned,
+          pagesScanned,
+          pagesNotScanned,
+          items,
+          isCustomFlow,
+          customFlowLabel,
+          phAppVersion,
+          cypressScanAboutMetadata
+        }
+        ) %>;
+
 
     </script>
   </head>
@@ -71,8 +103,23 @@
       }
 
       const initAboutStartTime = () => {
-        const formattedViewerLocalStartTime = formatAboutStartTime(startTime);
+        const formattedViewerLocalStartTime = formatAboutStartTime(scanData.startTime);
         document.getElementById('aboutStartTime').innerHTML = formattedViewerLocalStartTime;
+        document.getElementById('urlScanned').innerHTML = scanData.urlScanned;
+        document.getElementById('viewport').innerHTML = scanData.viewport.startsWith("CustomWidth") ? `${scanData.viewport.split("_")[1]} width viewport` : scanData.viewport;
+        document.getElementById('pagesScannedModalToggle').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
+
+        var itemsElement = document.getElementById('items');
+        var failedItems = scanItems.items.mustFix.totalItems + scanItems.items.goodToFix.totalItems;
+        var passedItems = scanItems.items.passed.totalItems;
+        var itemsContent = `${failedItems} ${failedItems === 1 ? 'occurrence' : 'occurrences'} failed,<br>${passedItems} ${passedItems === 1 ? 'occurrence' : 'occurrences'} passed`;
+        itemsElement.innerHTML = itemsContent;
+
+        var phAppVersionElement = document.getElementById('phAppVersion');
+        var versionContent = 'Purple A11y Version ' + phAppVersion;
+        phAppVersionElement.innerHTML = versionContent;
+
+
       };
 
       const formatAboutStartTime = dateString => {

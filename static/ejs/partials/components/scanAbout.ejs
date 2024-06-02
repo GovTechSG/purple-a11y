@@ -1,3 +1,19 @@
+<script>
+  const startTime = scanData.startTime;
+  const urlScanned = scanData.urlScanned;
+  const viewport = scanData.viewport;
+  const scanType = scanData.scanType;
+  const isCustomFlow = scanData.isCustomFlow;
+  const totalPagesScanned = scanData.totalPagesScanned;
+  const totalPagesNotScanned = scanData.totalPagesNotScanned;
+  const pagesScanned = scanData.pagesScanned;
+  const pagesNotScanned = scanData.pagesNotScanned;
+  const customFlowLabel = scanData.customFlowLabel;
+  const phAppVersion = scanData.phAppVersion;
+  const cypressScanAboutMetadata = scanData.cypressScanAboutMetadata;
+</script>
+
+
 <aside id="scan-about" class="flex-shrink-0">
   <h2 class="mb-3">About this scan</h2>
   <ul>
@@ -35,7 +51,7 @@
           fill="#CED4DA"
         />
       </svg>
-      <a href="<%= urlScanned %>" target="_blank"><%= urlScanned %></a>
+      <a id="urlScanned" href="<%= urlScanned %>" target="_blank"><%= urlScanned %></a>
     </li>
     <% if (viewport !== null) { %>
       <li>
@@ -86,6 +102,7 @@
           />
         </svg>
         <% } %>
+        <span id="viewport">
           <%= viewport.startsWith("CustomWidth") ? `${viewport.split("_")[1]} width` : viewport %>
           viewport 
         </span>
@@ -196,7 +213,7 @@
           </clipPath>
         </defs>
       </svg>
-      <span>
+      <span id="items">
         <%= items.mustFix.totalItems + items.goodToFix.totalItems  %> <%= (items.mustFix.totalItems + items.goodToFix.totalItems === 1 ? 'occurrence' : 'occurrences') %> failed,<br>
         <%= items.passed.totalItems %> <%= (items.passed.totalItems === 1 ? 'occurrence' : 'occurrences') %> passed
         <svg
@@ -242,7 +259,7 @@
         <rect x="-291" y="-101" width="1451" height="1409" fill="#B5C5CA"/>
         </g>
       </svg>
-      <span><%= 'Purple A11y Version ' + phAppVersion %></span>
+      <span id="phAppVersion"><%= 'Purple A11y Version ' + phAppVersion %></span>
     </li>
     <% if (cypressScanAboutMetadata) { %>
       <% const metadataItems = Object.keys(cypressScanAboutMetadata); %>
