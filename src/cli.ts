@@ -260,8 +260,7 @@ const scanInit = async (argvs: Answers): Promise<void> => {
   if (constants.scannerTypes[argvs.scanner] === constants.scannerTypes.custom) {
     isCustomFlow = true;
   } else {
-    argvs.followRobots = argvs.followRobots === 'yes';
-    argvs.safeMode = argvs.safeMode === 'yes';
+    argvs.scanner = constants.scannerTypes[argvs.scanner];
   }
   argvs.scanner = constants.scannerTypes[argvs.scanner];
   argvs.browserToRun = constants.browserTypes[argvs.browserToRun];

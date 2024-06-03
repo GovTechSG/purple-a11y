@@ -45,9 +45,9 @@ export type Answers = {
   specifiedMaxConcurrency: number;
   blacklistedPatternsFilename: string;
   additional: string;
-  followRobots: string;
+  followRobots: boolean;
   header: string;
-  safeMode: string;
+  safeMode: boolean;
 };
 
 export type Data = {

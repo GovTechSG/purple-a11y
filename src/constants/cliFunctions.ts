@@ -54,16 +54,24 @@ export const cliOptions: { [key: string]: Options } = {
   f: {
     alias: 'safeMode',
     describe:
-      'Option to disable dynamically clicking of page buttons and links to find links, which resolve issues on some websites. Defaults to no.',
+      'Disable dynamically clicking of page buttons and links to find links, which resolve issues on some websites. [yes / no]',
     type: 'string',
-    choices: ['yes', 'no'],
     requiresArg: true,
     default: 'no',
     demandOption: false,
+    coerce: (value: string) => {
+      if (value.toLowerCase() === 'yes') {
+        return true;
+      } else if (value.toLowerCase() === 'no') {
+        return false;
+      } else {
+        throw new Error(`Invalid value "${value}" for -f, --safeMode. Use "yes" or "no".`);
+      }
+    },
   },
   h: {
     alias: 'headless',
-    describe: 'Whether to run the scan in headless mode. [yes / no]',
+    describe: 'Run the scan in headless mode. [yes / no]',
     type: 'string',
     requiresArg: true,
     default: 'yes',
@@ -158,12 +166,20 @@ export const cliOptions: { [key: string]: Options } = {
   },
   r: {
     alias: 'followRobots',
-    describe: 'Option for crawler to adhere to robots.txt rules if it exists',
+    describe: 'Crawler adheres to robots.txt rules if it exists. [yes / no]',
     type: 'string',
-    choices: ['yes', 'no'],
     requiresArg: true,
     default: 'no',
     demandOption: false,
+    coerce: (value: string) => {
+      if (value.toLowerCase() === 'yes') {
+        return true;
+      } else if (value.toLowerCase() === 'no') {
+        return false;
+      } else {
+        throw new Error(`Invalid value "${value}" for -r, --followRobots. Use "yes" or "no".`);
+      }
+    },
   },
   m: {
     alias: 'header',
