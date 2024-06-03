@@ -15,5 +15,8 @@ export default [
       pluginImport,
       pluginPrettier,
     },
+    rules: {
+      'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
+    },
   },
 ];
