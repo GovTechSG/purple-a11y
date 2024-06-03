@@ -102,7 +102,7 @@ export const validateFilePath = (filePath: string, cliDir: string) => {
 
     return absolutePath;
   } catch (error) {
-    throw new Error('Please ensure path provided exists.');
+    throw new Error(`Please ensure path provided exists: ${absolutePath}`);
   }
 };
 

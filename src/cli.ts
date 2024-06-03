@@ -173,7 +173,7 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   })
   .coerce('x', option => {
     const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename);
+    const __dirname = path.dirname(__filename) + "/../"; // check in the parent of dist directory
 
     try {
       return validateFilePath(option, __dirname);
