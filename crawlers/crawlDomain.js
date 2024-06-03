@@ -19,7 +19,8 @@ import {
   isDisallowedInRobotsTxt,
   getUrlsFromRobotsTxt,
   getBlackListedPatterns,
-  urlWithoutAuth
+  urlWithoutAuth,
+  waitForPageLoaded,
 } from '../constants/common.js';
 import { areLinksEqual, isFollowStrategy } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
@@ -47,7 +48,7 @@ const crawlDomain = async (
   urlsCrawledFromIntelligent = null, //optional
 ) => {
   let dataset;
-  let urlsCrawled
+  let urlsCrawled;
   let requestQueue;
 
   if (fromCrawlIntelligentSitemap) {
@@ -70,39 +71,43 @@ const crawlDomain = async (
   const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
   const { maxConcurrency } = constants;
   const { playwrightDeviceDetailsObject } = viewportSettings;
-  
+
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth = false;
-  let authHeader = "";
+  let authHeader = '';
 
   // Test basic auth and add auth header if auth exist
   const parsedUrl = new URL(url);
-  if (parsedUrl.username !=="" && parsedUrl.password !=="") {
+  if (parsedUrl.username !== '' && parsedUrl.password !== '') {
     isBasicAuth = true;
     const username = decodeURIComponent(parsedUrl.username);
     const password = decodeURIComponent(parsedUrl.password);
 
     // Create auth header
     authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
-    
+
     // Remove username from parsedUrl
-    parsedUrl.username = "";
-    parsedUrl.password = "";
+    parsedUrl.username = '';
+    parsedUrl.password = '';
     // Send the finalUrl without credentials by setting auth header instead
     const finalUrl = parsedUrl.toString();
 
     await requestQueue.addRequest({
-      url: finalUrl, skipNavigation: isUrlPdf(finalUrl), headers: {
-        'Authorization': authHeader
-      }
+      url: encodeURI(finalUrl),
+      skipNavigation: isUrlPdf(encodeURI(finalUrl)),
+      headers: {
+        Authorization: authHeader,
+      },
     });
   } else {
-    await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+    await requestQueue.addRequest({
+      url: encodeURI(url),
+      skipNavigation: isUrlPdf(encodeURI(url)),
+    });
   }
 
-  const enqueueProcess = async (page, enqueueLinks, browserController, baseURL) => {
+  const enqueueProcess = async (page, enqueueLinks, browserController) => {
     try {
-
       await enqueueLinks({
         // set selector matches anchor elements with href but not contains # or starting with mailto:
         selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
@@ -110,9 +115,8 @@ const crawlDomain = async (
         requestQueue,
         transformRequestFunction(req) {
           try {
-            req.url = encodeURI(req.url)
-          }
-          catch (e) {
+            req.url = encodeURI(req.url);
+          } catch (e) {
             silentLogger.info(e);
           }
           if (urlsCrawled.scanned.some(item => item.url === req.url)) {
@@ -130,11 +134,13 @@ const crawlDomain = async (
 
       const handleOnWindowOpen = async url => {
         if (!isDisallowedInRobotsTxt(url)) {
-          await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+          await requestQueue.addRequest({
+            url: encodeURI(url),
+            skipNavigation: isUrlPdf(encodeURI(url)),
+          });
         }
       };
       await page.exposeFunction('handleOnWindowOpen', handleOnWindowOpen);
-
 
       await page.evaluate(() => {
         // Override window.open
@@ -144,20 +150,25 @@ const crawlDomain = async (
       });
 
       const handleOnClickEvent = async () => {
-        // Intercepting click events to handle cases where request was issued before the frame is created 
-        // when a new tab/window is opened 
+        // Intercepting click events to handle cases where request was issued before the frame is created
+        // when a new tab/window is opened
         await page.context().route('**/*', async route => {
           if (route.request().resourceType() === 'document') {
             try {
               const isTopFrameNavigationRequest = () => {
-                return route.request().isNavigationRequest()
-                  && route.request().frame() === page.mainFrame();
-              }
+                return (
+                  route.request().isNavigationRequest() &&
+                  route.request().frame() === page.mainFrame()
+                );
+              };
 
               if (isTopFrameNavigationRequest()) {
                 const url = route.request().url();
                 if (!isDisallowedInRobotsTxt(url)) {
-                  await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+                  await requestQueue.addRequest({
+                    url: encodeURI(url),
+                    skipNavigation: isUrlPdf(encodeURI(url)),
+                  });
                 }
                 await route.abort('aborted');
               } else {
@@ -168,43 +179,47 @@ const crawlDomain = async (
               route.continue();
             }
           }
-        })
-      }
-      await page.exposeFunction('handleOnClickEvent', handleOnClickEvent)
+        });
+      };
+      await page.exposeFunction('handleOnClickEvent', handleOnClickEvent);
 
       await page.evaluate(() => {
-        document.addEventListener('click', (event) => handleOnClickEvent(event));
-      })
+        document.addEventListener('click', event => handleOnClickEvent(event));
+      });
 
-      
       page.on('request', async request => {
         try {
           // Intercepting requests to handle cases where request was issued before the frame is created
-          await page.context().route(encodeURI(request.url()), async route => {
+          await page.context().route(request.url(), async route => {
             const isTopFrameNavigationRequest = () => {
-              return route.request().isNavigationRequest()
-                && route.request().frame() === page.mainFrame();
-            }
+              return (
+                route.request().isNavigationRequest() &&
+                route.request().frame() === page.mainFrame()
+              );
+            };
 
             if (route.request().resourceType() === 'document') {
               if (isTopFrameNavigationRequest()) {
                 const url = route.request().url();
                 if (!isDisallowedInRobotsTxt(url)) {
-                  await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+                  await requestQueue.addRequest({
+                    url: encodeURI(url),
+                    skipNavigation: isUrlPdf(encodeURI(url)),
+                  });
                 }
               }
             }
-          })
+          });
         } catch (e) {
           silentLogger.info(e);
         }
-      })
-    
+      });
+
       // If safeMode flag is enabled, skip enqueueLinksByClickingElements
       if (!safeMode) {
         // Try catch is necessary as clicking links is best effort, it may result in new pages that cause browser load or navigation errors that PlaywrightCrawler does not handle
         try {
-          await customEnqueueLinksByClickingElements(page, browserController, baseURL);
+          await customEnqueueLinksByClickingElements(page, browserController);
         } catch (e) {
           silentLogger.info(e);
         }
@@ -214,26 +229,25 @@ const crawlDomain = async (
       // Handles browser page object been closed.
     }
   };
-  
-  const customEnqueueLinksByClickingElements = async (page, browserController, baseURL) => {
+
+  const customEnqueueLinksByClickingElements = async (page, browserController) => {
     const initialPageUrl = page.url().toString();
 
     const isExcluded = newPageUrl => {
       const isAlreadyScanned = urlsCrawled.scanned.some(item => item.url === newPageUrl);
-      const isBlacklistedUrl = isBlacklisted(newPageUrl, baseURL);
+      const isBlacklistedUrl = isBlacklisted(newPageUrl);
       const isNotFollowStrategy = !isFollowStrategy(newPageUrl, initialPageUrl, strategy);
       return isAlreadyScanned || isBlacklistedUrl || isNotFollowStrategy;
-    }
+    };
 
     const setPageListeners = page => {
-
       // event listener to handle new page popups upon button click
       page.on('popup', async newPage => {
         try {
           if (newPage.url() != initialPageUrl && !isExcluded(newPage.url())) {
             await requestQueue.addRequest({
               url: encodeURI(newPage.url()),
-              skipNavigation: isUrlPdf(newPage.url()),
+              skipNavigation: isUrlPdf(encodeURI(newPage.url())),
             });
           } else {
             newPage.close();
@@ -248,10 +262,14 @@ const crawlDomain = async (
       // event listener to handle navigation to new url within same page upon button click
       page.on('framenavigated', async newFrame => {
         try {
-          if (newFrame.url() !== initialPageUrl && !isExcluded(newFrame.url()) && !(newFrame.url() == 'about:blank')) {
+          if (
+            newFrame.url() !== initialPageUrl &&
+            !isExcluded(newFrame.url()) &&
+            !(newFrame.url() == 'about:blank')
+          ) {
             await requestQueue.addRequest({
-              url: newFrame.url(),
-              skipNavigation: isUrlPdf(newFrame.url()),
+              url: encodeURI(newFrame.url()),
+              skipNavigation: isUrlPdf(encodeURI(newFrame.url())),
             });
           }
           return;
@@ -268,13 +286,12 @@ const crawlDomain = async (
 
     while (true) {
       try {
-
         //navigate back to initial page if clicking on a button previously caused it to navigate to a new url
         if (page.url() != initialPageUrl) {
           await page.close();
           page = await browserController.browser.newPage();
           await page.goto(initialPageUrl, {
-            waitUntil: 'domcontentloaded', 
+            waitUntil: 'domcontentloaded',
           });
           setPageListeners(page);
         }
@@ -302,17 +319,32 @@ const crawlDomain = async (
                 urlRegexDetected = onClickLinkAttr.match(/window\.location\.href\s?=\s?'([^']+)'/);
                 onClickLink = urlRegexDetected ? urlRegexDetected[1] : undefined;
               }
-
               let hrefLink = element.getAttribute('href');
               let urlFoundInButton = onClickLink || hrefLink || null;
               return urlFoundInButton;
             }, element)
             .then(result => {
               newUrlFoundInButton = result;
+              const pageUrl = new URL(page.url());
+              const baseUrl = `${pageUrl.protocol}//${pageUrl.host}`;
+              let absoluteUrl; 
+
+                // Construct absolute URL using base URL
+              try {
+                // Check if newUrlFoundInButton is a valid absolute URL
+                absoluteUrl = new URL(newUrlFoundInButton);
+              } catch (e) {
+                // If it's not a valid URL, treat it as a relative URL
+                absoluteUrl = new URL(baseUrl,newUrlFoundInButton);
+              }
+              newUrlFoundInButton = absoluteUrl.href;
             });
 
           if (newUrlFoundInButton && !isExcluded(newUrlFoundInButton)) {
-            await requestQueue.addRequest({ url: newUrlFoundInButton, skipNavigation: isUrlPdf(newUrlFoundInButton) });
+            await requestQueue.addRequest({
+              url: encodeURI(newUrlFoundInButton),
+              skipNavigation: isUrlPdf(encodeURI(newUrlFoundInButton)),
+            });
           } else if (!newUrlFoundInButton) {
             try {
               // Find url in buttons by manually clicking them. New page navigation/popups will be handled by event listeners above
@@ -338,18 +370,12 @@ const crawlDomain = async (
     return;
   };
 
-  const isBlacklisted = (url, baseURL) => {
+  const isBlacklisted = url => {
     const blacklistedPatterns = getBlackListedPatterns();
     if (!blacklistedPatterns) {
       return false;
     }
     try {
-      // Check if the URL is relative
-      if (!url.startsWith('http') && !url.startsWith('https')) {
-        // Construct absolute URL using base URL
-        const absoluteUrl = new URL(url, baseURL).toString();
-        url = absoluteUrl;
-      }
       const parsedUrl = new URL(url);
       return blacklistedPatterns.some(
         pattern => new RegExp(pattern).test(parsedUrl.hostname) || new RegExp(pattern).test(url),
@@ -358,7 +384,7 @@ const crawlDomain = async (
       console.error(`Error parsing URL: ${url}`, error);
       return false;
     }
-  }
+  };
 
   let isAbortingScanNow = false;
 
@@ -367,7 +393,11 @@ const crawlDomain = async (
       launcher: constants.launcher,
       launchOptions: getPlaywrightLaunchOptions(browser),
       // Bug in Chrome which causes brwoser pool crash when userDataDirectory is set in non-headless mode
-      userDataDir: userDataDirectory ? (process.env.CRAWLEE_HEADLESS !== '0' ? userDataDirectory : '') : '',
+      userDataDir: userDataDirectory
+        ? process.env.CRAWLEE_HEADLESS !== '0'
+          ? userDataDirectory
+          : ''
+        : '',
     },
     retryOnBlocked: true,
     browserPoolOptions: {
@@ -386,21 +416,21 @@ const crawlDomain = async (
     requestQueue,
     preNavigationHooks: isBasicAuth
       ? [
-        async ({ page, request }) => {
-          request.url = encodeURI(request.url);
-          await page.setExtraHTTPHeaders({
-            Authorization: authHeader,
-            ...extraHTTPHeaders,
-          });
-        },
-      ]
+          async ({ page, request }) => {
+            request.url = encodeURI(request.url);
+            await page.setExtraHTTPHeaders({
+              Authorization: authHeader,
+              ...extraHTTPHeaders,
+            });
+          },
+        ]
       : [
-        async ({ page, request }) => {
-          request.url = encodeURI(request.url);
-          preNavigationHooks(extraHTTPHeaders)
-        },
-      ],
-    requestHandlerTimeoutSecs: 90, // Allow each page to be processed by up from default 60 seconds
+          async ({ page, request }) => {
+            request.url = encodeURI(request.url);
+            preNavigationHooks(extraHTTPHeaders);
+          },
+        ],
+    requestHandlerTimeoutSecs: 90, // Alow each page to be processed by up from default 60 seconds
     requestHandler: async ({
       browserController,
       page,
@@ -412,17 +442,10 @@ const crawlDomain = async (
     }) => {
       try {
         // Set basic auth header if needed
-        if (isBasicAuth) await page.setExtraHTTPHeaders({
-          'Authorization': authHeader
-        });
-        
-        const waitForPageLoaded = async (page, timeout = 10000) => {
-          return Promise.race([
-              page.waitForLoadState('load'),
-              page.waitForLoadState('networkidle'),
-              new Promise((resolve) => setTimeout(resolve, timeout))
-          ]);
-        }
+        if (isBasicAuth)
+          await page.setExtraHTTPHeaders({
+            Authorization: authHeader,
+          });
 
         await waitForPageLoaded(page, 10000);
         let actualUrl = request.url;
@@ -447,12 +470,12 @@ const crawlDomain = async (
 
         // if URL has already been scanned
         if (urlsCrawled.scanned.some(item => item.url === request.url)) {
-          await enqueueProcess(page, enqueueLinks, browserController, url);
+          await enqueueProcess(page, enqueueLinks, browserController);
           return;
         }
 
         if (isDisallowedInRobotsTxt(request.url)) {
-          await enqueueProcess(page, enqueueLinks, browserController, url);
+          await enqueueProcess(page, enqueueLinks, browserController);
           return;
         }
 
@@ -502,7 +525,7 @@ const crawlDomain = async (
 
         if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
           urlsCrawled.userExcluded.push(request.url);
-          await enqueueProcess(page, enqueueLinks, browserController, url);
+          await enqueueProcess(page, enqueueLinks, browserController);
           return;
         }
 
@@ -529,7 +552,11 @@ const crawlDomain = async (
           const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
 
           // check if redirected link is following strategy (same-domain/same-hostname)
-          const isLoadedUrlFollowStrategy = isFollowStrategy(request.loadedUrl, request.url, strategy);
+          const isLoadedUrlFollowStrategy = isFollowStrategy(
+            request.loadedUrl,
+            request.url,
+            strategy,
+          );
           if (isRedirected && !isLoadedUrlFollowStrategy) {
             urlsCrawled.notScannedRedirects.push({
               fromUrl: request.url,
@@ -576,18 +603,19 @@ const crawlDomain = async (
               await dataset.pushData(results);
             }
           } else {
-
             // One more check if scanned pages have reached limit due to multi-instances of handler running
             if (urlsCrawled.scanned.length < maxRequestsPerCrawl) {
               guiInfoLog(guiInfoStatusTypes.SCANNED, {
                 numScanned: urlsCrawled.scanned.length,
                 urlScanned: urlWithoutAuth(request.url),
               });
-              urlsCrawled.scanned.push({ url: urlWithoutAuth(request.url), pageTitle: results.pageTitle });
+              urlsCrawled.scanned.push({
+                url: urlWithoutAuth(request.url),
+                pageTitle: results.pageTitle,
+              });
               await dataset.pushData(results);
             }
           }
-
         } else {
           guiInfoLog(guiInfoStatusTypes.SKIPPED, {
             numScanned: urlsCrawled.scanned.length,
@@ -597,37 +625,38 @@ const crawlDomain = async (
         }
 
         if (followRobots) await getUrlsFromRobotsTxt(request.url, browser);
-        await enqueueProcess(page, enqueueLinks, browserController, url);
+        await enqueueProcess(page, enqueueLinks, browserController);
       } catch (e) {
         try {
-          
-          if (!e.message.includes("page.evaluate")) {
+          if (!e.message.includes('page.evaluate')) {
             silentLogger.info(e);
             guiInfoLog(guiInfoStatusTypes.ERROR, {
               numScanned: urlsCrawled.scanned.length,
               urlScanned: request.url,
             });
-            
+
             const browser = browserController.browser;
             page = await browser.newPage();
             await page.goto(request.url);
-  
+
             await page.route('**/*', async route => {
               const interceptedRequest = route.request();
               if (interceptedRequest.resourceType() === 'document') {
-                await requestQueue.addRequest({ url: interceptedRequest.url(), skipNavigation: isUrlPdf(interceptedRequest.url()) });
+                await requestQueue.addRequest({
+                  url: interceptedRequest.url(),
+                  skipNavigation: isUrlPdf(interceptedRequest.url()),
+                });
                 return;
               }
             });
           }
-
         } catch (e) {
           // Do nothing since the error will be pushed
         }
 
-        // when max pages have been scanned, scan will abort and all relevant pages still opened will close instantly. 
+        // when max pages have been scanned, scan will abort and all relevant pages still opened will close instantly.
         // a browser close error will then be flagged. Since this is an intended behaviour, this error will be excluded.
-        (!isAbortingScanNow) ? urlsCrawled.error.push({ url: request.url }) : undefined;
+        !isAbortingScanNow ? urlsCrawled.error.push({ url: request.url }) : undefined;
       }
     },
     failedRequestHandler: async ({ request }) => {
@@ -656,9 +685,9 @@ const crawlDomain = async (
 
     // get screenshots from pdf docs
     if (includeScreenshots) {
-      await Promise.all(pdfResults.map(
-        async result => await doPdfScreenshots(randomToken, result)
-      ));
+      await Promise.all(
+        pdfResults.map(async result => await doPdfScreenshots(randomToken, result)),
+      );
     }
 
     // push results for each pdf document to key value store
@@ -671,5 +700,4 @@ const crawlDomain = async (
 
   return urlsCrawled;
 };
-
 export default crawlDomain;
