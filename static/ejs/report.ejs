@@ -102,7 +102,7 @@
         });
       }
 
-      const initAboutStartTime = () => {
+      const scanDataHTML = () => {
         const formattedViewerLocalStartTime = formatAboutStartTime(scanData.startTime);
         document.getElementById('aboutStartTime').innerHTML = formattedViewerLocalStartTime;
         document.getElementById('urlScanned').innerHTML = scanData.urlScanned;
@@ -119,6 +119,56 @@
         var versionContent = 'Purple A11y Version ' + scanData.phAppVersion;
         phAppVersionElement.innerHTML = versionContent;
 
+        document.getElementById('pagesScannedModalLabel').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
+        document.getElementById('totalPagesScannedLabel').innerHTML = scanData.totalPagesScanned;
+        document.getElementById('totalPagesNotScannedLabel').innerHTML = scanData.totalPagesNotScanned;
+        
+        var isCustomFlow = scanData.isCustomFlow; 
+        var pagesScanned = scanData.pagesScanned;
+        var pagesScannedList = document.getElementById('pagesScannedList');
+
+        pagesScanned.forEach((page, index) => {
+          var listItem = document.createElement('li');
+
+          if (isCustomFlow) {
+            listItem.innerHTML = `
+              <div class="custom-flow-screenshot-container">
+                <img 
+                  src="${page.pageImagePath}" 
+                  alt="Screenshot of ${page.url}"
+                  class="custom-flow-screenshot"
+                  onerror="this.onerror = null; this.remove();"
+                >
+                <div class="display-url-container">
+                  <a href="${page.url}" target="_blank">${page.pageTitle.length > 0 ? page.pageTitle : page.url}</a>
+                  <p>${page.url}</p>
+                </div>
+              </div>
+            `;
+          } else {
+            listItem.innerHTML = `
+              <a href="${page.url}" target="_blank">${page.pageTitle.length > 0 ? page.pageTitle : page.url}</a>
+              <p>${page.url}</p>
+            `;
+          }
+
+          pagesScannedList.appendChild(listItem);
+        });
+
+        var totalPagesNotScanned = scanData.totalPagesNotScanned; 
+        var pagesNotScanned = scanData.pagesNotScanned;
+
+        var pagesNotScannedList = document.getElementById('pagesNotScannedList');
+
+        // Only update if there are pages not scanned
+        if (totalPagesNotScanned > 0) {
+
+          pagesNotScanned.forEach((page, index) => {
+            var listItem = document.createElement('li');
+            listItem.innerHTML = `<a class="not-scanned-url" href="${page.url}" target="_blank">${page.url}</a>`;
+            pagesNotScannedList.appendChild(listItem);
+          });
+        }
 
       };
 
@@ -151,7 +201,7 @@
 
       document.addEventListener('DOMContentLoaded', () => {
         initTooltips();
-        initAboutStartTime();
+        scanDataHTML();
       });
     </script>
     <!-- Checks if js runs -->
