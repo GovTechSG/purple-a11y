@@ -15,6 +15,7 @@ import {
   messageOptions,
   isSkippedUrl,
   urlWithoutAuth,
+  waitForPageLoaded,
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
@@ -163,7 +164,10 @@ const crawlSitemap = async (
         //insert other code here
         },
       ],
+    requestHandlerTimeoutSecs: 90,
     requestHandler: async ({ page, request, response, sendRequest }) => {
+
+      await waitForPageLoaded(page, 10000);
 
       // Set basic auth header if needed
       if (isBasicAuth) await page.setExtraHTTPHeaders({

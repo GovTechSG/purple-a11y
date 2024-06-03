@@ -1711,3 +1711,11 @@ export const urlWithoutAuth = (url: string): URL => {
   parsedUrl.password = '';
   return parsedUrl;
 };
+
+export const waitForPageLoaded = async (page, timeout = 10000) => {
+  return Promise.race([
+      page.waitForLoadState('load'),
+      page.waitForLoadState('networkidle'),
+      new Promise((resolve) => setTimeout(resolve, timeout))
+  ]);
+}
