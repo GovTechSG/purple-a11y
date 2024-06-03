@@ -374,17 +374,17 @@ const moveElemScreenshots = (randomToken, storagePath) => {
   }
 };
 
-const writescanHTML = async (scanData, storagePath, htmlFilename = 'report') => {
-const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/report.ejs'), 'utf-8');
-const template = ejs.compile(ejsString, {
-  filename: path.join(__dirname, './static/ejs/report.ejs'),
-});
+// const writescanHTML = async (scanData, storagePath, htmlFilename = 'report') => {
+// const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/report.ejs'), 'utf-8');
+// const template = ejs.compile(ejsString, {
+//   filename: path.join(__dirname, './static/ejs/report.ejs'),
+// });
 
-// Render the template with scanData object
-const html = template({ scanData });
+// // Render the template with scanData object
+// const html = template({ scanData });
 
-fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
-};
+// fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
+// };
 
 export const generateArtifacts = async (
   randomToken,
@@ -585,7 +585,7 @@ export const generateArtifacts = async (
   await writeResults(allIssues, storagePath);
   await writeCsv(allIssues, storagePath);
   await writeHTML(allIssues, storagePath);
-  await writescanHTML(scanData, storagePath);
+  // await writescanHTML(scanData, storagePath);
   await writeSummaryHTML(allIssues, storagePath);
   await retryFunction(() => writeSummaryPdf(storagePath), 1);
   return createRuleIdJson(allIssues);
