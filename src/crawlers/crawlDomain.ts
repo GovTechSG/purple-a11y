@@ -94,12 +94,12 @@ const crawlDomain = async (
     const finalUrl = parsedUrl.toString();
 
     await requestQueue.addRequest({
-      url: finalUrl, skipNavigation: isUrlPdf(finalUrl), headers: {
+      url: encodeURI(finalUrl), skipNavigation: isUrlPdf(encodeURI(finalUrl)), headers: {
         'Authorization': authHeader
       }
     });
   } else {
-    await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+    await requestQueue.addRequest({ url: encodeURI(url), skipNavigation: isUrlPdf(encodeURI(url)) });
   }
 
   const enqueueProcess = async (page, enqueueLinks, browserController) => {
@@ -132,7 +132,7 @@ const crawlDomain = async (
 
       const handleOnWindowOpen = async url => {
         if (!isDisallowedInRobotsTxt(url)) {
-          await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+          await requestQueue.addRequest({ url: encodeURI(url), skipNavigation: isUrlPdf(encodeURI(url)) });
         }
       };
       await page.exposeFunction('handleOnWindowOpen', handleOnWindowOpen);
@@ -159,7 +159,7 @@ const crawlDomain = async (
               if (isTopFrameNavigationRequest()) {
                 const url = route.request().url();
                 if (!isDisallowedInRobotsTxt(url)) {
-                  await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+                  await requestQueue.addRequest({ url: encodeURI(url), skipNavigation: isUrlPdf(encodeURI(url)) });
                 }
                 await route.abort('aborted');
               } else {
@@ -192,7 +192,7 @@ const crawlDomain = async (
               if (isTopFrameNavigationRequest()) {
                 const url = route.request().url();
                 if (!isDisallowedInRobotsTxt(url)) {
-                  await requestQueue.addRequest({ url, skipNavigation: isUrlPdf(url) });
+                  await requestQueue.addRequest({ url: encodeURI(url), skipNavigation: isUrlPdf(encodeURI(url)) });
                 }
               }
             }
@@ -235,7 +235,7 @@ const crawlDomain = async (
           if (newPage.url() != initialPageUrl && !isExcluded(newPage.url())) {
             await requestQueue.addRequest({
               url: encodeURI(newPage.url()),
-              skipNavigation: isUrlPdf(newPage.url()),
+              skipNavigation: isUrlPdf(encodeURI(newPage.url())),
             });
           } else {
             newPage.close();
@@ -252,8 +252,8 @@ const crawlDomain = async (
         try {
           if (newFrame.url() !== initialPageUrl && !isExcluded(newFrame.url()) && !(newFrame.url() == 'about:blank')) {
             await requestQueue.addRequest({
-              url: newFrame.url(),
-              skipNavigation: isUrlPdf(newFrame.url()),
+              url: encodeURI(newFrame.url()),
+              skipNavigation: isUrlPdf(encodeURI(newFrame.url())),
             });
           }
           return;
@@ -314,7 +314,7 @@ const crawlDomain = async (
             });
 
           if (newUrlFoundInButton && !isExcluded(newUrlFoundInButton)) {
-            await requestQueue.addRequest({ url: newUrlFoundInButton, skipNavigation: isUrlPdf(newUrlFoundInButton) });
+            await requestQueue.addRequest({ url: encodeURI(newUrlFoundInButton), skipNavigation: isUrlPdf(encodeURI(newUrlFoundInButton)) });
           } else if (!newUrlFoundInButton) {
             try {
               // Find url in buttons by manually clicking them. New page navigation/popups will be handled by event listeners above
