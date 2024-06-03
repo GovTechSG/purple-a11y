@@ -243,7 +243,6 @@ const crawlDomain = async (
     const setPageListeners = page => {
       // event listener to handle new page popups upon button click
       page.on('popup', async newPage => {
-        console.log('newpage', newPage.url());
         try {
           if (newPage.url() != initialPageUrl && !isExcluded(newPage.url())) {
             await requestQueue.addRequest({
@@ -263,7 +262,6 @@ const crawlDomain = async (
       // event listener to handle navigation to new url within same page upon button click
       page.on('framenavigated', async newFrame => {
         try {
-          console.log('newFrame1', newFrame.url());
           if (
             newFrame.url() !== initialPageUrl &&
             !isExcluded(newFrame.url()) &&
@@ -373,7 +371,6 @@ const crawlDomain = async (
   };
 
   const isBlacklisted = url => {
-    console.log('url', url);
     const blacklistedPatterns = getBlackListedPatterns();
     if (!blacklistedPatterns) {
       return false;
