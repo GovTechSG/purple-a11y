@@ -63,12 +63,20 @@ export const cliOptions: { [key: string]: Options } = {
   },
   h: {
     alias: 'headless',
-    describe: 'Whether to run the scan in headless mode. Defaults to yes.',
+    describe: 'Whether to run the scan in headless mode. [yes / no]',
     type: 'string',
-    choices: ['yes', 'no'],
     requiresArg: true,
     default: 'yes',
     demandOption: false,
+    coerce: (value: string) => {
+      if (value.toLowerCase() === 'yes') {
+        return true;
+      } else if (value.toLowerCase() === 'no') {
+        return false;
+      } else {
+        throw new Error(`Invalid value "${value}" for -h, --headless. Use "yes" or "no".`);
+      }
+    },
   },
   b: {
     alias: 'browserToRun',

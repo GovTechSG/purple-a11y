@@ -25,7 +25,7 @@ import combineRun from './combine.js';
 import constants from './constants/constants.js';
 
 export type Answers = {
-  headless: string;
+  headless: boolean;
   deviceChosen: string;
   customDevice: string;
   viewportWidth: number;

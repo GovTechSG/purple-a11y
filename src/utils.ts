@@ -243,13 +243,13 @@ export const formatDateTimeForMassScanner = date => {
   return formattedDateTime;
 };
 
-export const setHeadlessMode = (browser, isHeadless) => {
+export const setHeadlessMode = (browser: string, isHeadless: boolean): void => {
   const isWindowsOSAndEdgeBrowser =
     browser === constants.browserTypes.edge && os.platform() === 'win32';
   if (isHeadless || isWindowsOSAndEdgeBrowser) {
-    process.env.CRAWLEE_HEADLESS = 1;
+    process.env.CRAWLEE_HEADLESS = '1';
   } else {
-    process.env.CRAWLEE_HEADLESS = 0;
+    process.env.CRAWLEE_HEADLESS = '0';
   }
 };
 

@@ -253,14 +253,13 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return true;
   })
   .conflicts('d', 'w')
-  .epilogue('').argv;
+  .parse()
 
 const scanInit = async (argvs: Answers): Promise<void> => {
   let isCustomFlow = false;
   if (constants.scannerTypes[argvs.scanner] === constants.scannerTypes.custom) {
     isCustomFlow = true;
   } else {
-    argvs.headless = argvs.headless === 'yes';
     argvs.followRobots = argvs.followRobots === 'yes';
     argvs.safeMode = argvs.safeMode === 'yes';
   }
