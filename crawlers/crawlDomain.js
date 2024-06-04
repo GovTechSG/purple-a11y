@@ -26,6 +26,10 @@ import { areLinksEqual, isFollowStrategy } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
 import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
+import printMessage from 'print-message';
+import playwright from 'playwright';
+
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const crawlDomain = async (
   url,
@@ -100,10 +104,58 @@ const crawlDomain = async (
       },
     });
   } else {
-    await requestQueue.addRequest({
-      url: encodeURI(url),
-      skipNavigation: isUrlPdf(encodeURI(url)),
-    });
+    try {
+      const browser = await playwright.chromium.launch({
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--ignore-certificate-errors',
+          '--disable-http2' // Disable HTTP/2
+        ],
+        ignoreHTTPSErrors: true,
+        defaultViewport: null,
+        timeout: 60000 // Set timeout to 60 seconds
+      });
+
+      const page = await browser.newPage();
+      console.log(url)
+
+      page.on('response', response => {
+        console.log('Response URL:', response.url());  // Logs out each URL that loads
+      });
+      let redirectUrl = url;
+      try {
+        // Navigate to the URL
+        await page.goto(url, { waitUntil: 'networkidle' });
+        await delay(2000);
+      } catch (e) {
+        console.log('Error:', e);
+        await browser.close();
+      } finally {
+        redirectUrl = page.url()
+        await browser.close();
+      }
+
+      console.log('Final URL:', typeof (page.url()), page.url(), 'hi');
+      if (typeof page.url() !== 'string' || page.url().trim() === '') {
+        console.error('Invalid URL:', url);
+      } else {
+        if (redirectUrl == "chrome-error://chromewebdata/") {
+          console.log('hi')
+          printMessage([`No pages were scanned.`]);
+          return;
+        } else if (isFollowStrategy(url, redirectUrl, strategy)) {
+        
+        console.log("help")
+        await requestQueue.addRequest({ url: encodeURI(redirectUrl), skipNavigation: isUrlPdf(encodeURI(redirectUrl)) });
+        } else {
+          printMessage([`No pages were scanned.`]);
+          return;
+        }
+      }
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   const enqueueProcess = async (page, enqueueLinks, browserController) => {
@@ -120,6 +172,9 @@ const crawlDomain = async (
             silentLogger.info(e);
           }
           if (urlsCrawled.scanned.some(item => item.url === req.url)) {
+            req.skipNavigation = true;
+          }
+          if (req.url === parsedUrl.href) {
             req.skipNavigation = true;
           }
           if (isDisallowedInRobotsTxt(req.url)) return null;
@@ -232,7 +287,7 @@ const crawlDomain = async (
 
   const customEnqueueLinksByClickingElements = async (page, browserController) => {
     const initialPageUrl = page.url().toString();
-
+    //console.log("Its from there",page.url());
     const isExcluded = newPageUrl => {
       const isAlreadyScanned = urlsCrawled.scanned.some(item => item.url === newPageUrl);
       const isBlacklistedUrl = isBlacklisted(newPageUrl);
