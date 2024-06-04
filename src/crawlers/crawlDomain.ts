@@ -324,20 +324,21 @@ const crawlDomain = async (
               return urlFoundInButton;
             }, element)
             .then(result => {
-              newUrlFoundInButton = result;
-              const pageUrl = new URL(page.url());
-              const baseUrl = `${pageUrl.protocol}//${pageUrl.host}`;
-              let absoluteUrl; 
-
+              if (result) {
+                newUrlFoundInButton = result;
+                const pageUrl = new URL(page.url());
+                const baseUrl = `${pageUrl.protocol}//${pageUrl.host}`;
+                let absoluteUrl;
                 // Construct absolute URL using base URL
-              try {
-                // Check if newUrlFoundInButton is a valid absolute URL
-                absoluteUrl = new URL(newUrlFoundInButton);
-              } catch (e) {
-                // If it's not a valid URL, treat it as a relative URL
-                absoluteUrl = new URL(baseUrl,newUrlFoundInButton);
+                try {
+                  // Check if newUrlFoundInButton is a valid absolute URL
+                  absoluteUrl = new URL(newUrlFoundInButton);
+                } catch (e) {
+                  // If it's not a valid URL, treat it as a relative URL
+                  absoluteUrl = new URL(newUrlFoundInButton, baseUrl);
+                }
+                newUrlFoundInButton = absoluteUrl.href;
               }
-              newUrlFoundInButton = absoluteUrl.href;
             });
 
           if (newUrlFoundInButton && !isExcluded(newUrlFoundInButton)) {
