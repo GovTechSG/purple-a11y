@@ -190,7 +190,7 @@ const crawlDomain = async (
       page.on('request', async request => {
         try {
           // Intercepting requests to handle cases where request was issued before the frame is created
-          await page.context().route(encodeURI(request.url()), async route => {
+          await page.context().route(request.url(), async route => {
             const isTopFrameNavigationRequest = () => {
               return (
                 route.request().isNavigationRequest() &&
@@ -288,7 +288,7 @@ const crawlDomain = async (
     let currentElementIndex = 0;
     let isAllElementsHandled = false;
 
-    while (true) {
+    while (!isAllElementsHandled) {
       try {
         //navigate back to initial page if clicking on a button previously caused it to navigate to a new url
         if (page.url() != initialPageUrl) {
@@ -305,13 +305,17 @@ const crawlDomain = async (
         }
 
         const selectedElements = await page.$$(':not(a):is([role="link"], button[onclick])');
+
+        // edge case where there might be buttons on page that appears intermittently
         if (currentElementIndex + 1 > selectedElements.length || !selectedElements) {
           break;
         }
 
-        if (currentElementIndex + 2 > selectedElements.length) {
+        // handle the last element in selectedElements
+        if (currentElementIndex + 1 == selectedElements.length) {
           isAllElementsHandled = true;
         }
+
         let element = selectedElements[currentElementIndex];
         currentElementIndex += 1;
 
@@ -332,20 +336,21 @@ const crawlDomain = async (
               return urlFoundInButton;
             }, element)
             .then(result => {
-              newUrlFoundInButton = result;
-              const pageUrl = new URL(page.url());
-              const baseUrl = `${pageUrl.protocol}//${pageUrl.host}`;
-              let absoluteUrl; 
-
+              if (result) {
+                newUrlFoundInButton = result;
+                const pageUrl = new URL(page.url());
+                const baseUrl = `${pageUrl.protocol}//${pageUrl.host}`;
+                let absoluteUrl;
                 // Construct absolute URL using base URL
-              try {
-                // Check if newUrlFoundInButton is a valid absolute URL
-                absoluteUrl = new URL(newUrlFoundInButton);
-              } catch (e) {
-                // If it's not a valid URL, treat it as a relative URL
-                absoluteUrl = new URL(baseUrl,newUrlFoundInButton);
+                try {
+                  // Check if newUrlFoundInButton is a valid absolute URL
+                  absoluteUrl = new URL(newUrlFoundInButton);
+                } catch (e) {
+                  // If it's not a valid URL, treat it as a relative URL
+                  absoluteUrl = new URL(newUrlFoundInButton, baseUrl);
+                }
+                newUrlFoundInButton = absoluteUrl.href;
               }
-              newUrlFoundInButton = absoluteUrl.href;
             });
 
           if (newUrlFoundInButton && !isExcluded(newUrlFoundInButton)) {
@@ -363,15 +368,6 @@ const crawlDomain = async (
               // Handles browser page object been closed.
             }
           }
-        }
-
-        if (isAllElementsHandled) {
-          try{
-          await page.close();
-          } catch (e) {
-            console.log(e);
-          } 
-          break;
         }
       } catch (e) {
         // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
