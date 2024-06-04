@@ -41,16 +41,10 @@ ENV PLAYWRIGHT_BROWSERS_PATH="/opt/ms-playwright"
 ENV PATH="/opt/verapdf:${PATH}"
 
 # Install dependencies
-RUN npm install
+RUN npm ci --omit=dev
 
 # Install Playwright browsers
 RUN npx playwright install chromium webkit
-
-# Temp: Print folder contents
-RUN ls -al
-
-# Compile TypeScript
-RUN npm run build
 
 # Add non-privileged user
 RUN addgroup -S purple && adduser -S -G purple purple
@@ -61,3 +55,6 @@ USER purple
 
 # Copy application and support files
 COPY . .
+
+# Compile TypeScript
+RUN npm run build
