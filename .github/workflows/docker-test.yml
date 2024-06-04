@@ -26,7 +26,7 @@ jobs:
     - name: Run Node CLI command inside the Docker container
       run: |
         # Execute a webisite crawl
-        docker exec purple-hats-container node cli -u "${{ vars.A11Y_SCAN_URL }}" -c 2 -p "${{ vars.A11Y_SCAN_MAX_NUM_PAGES }}" -t "${{ vars.A11Y_SCAN_MAX_CONCURRENCY }}" -k "${{ github.actor }}:${{ github.actor }}@users.noreply.github.com" -b chromium || true
+        docker exec purple-hats-container npm run cli -- -u "${{ vars.A11Y_SCAN_URL }}" -c 2 -p "${{ vars.A11Y_SCAN_MAX_NUM_PAGES }}" -t "${{ vars.A11Y_SCAN_MAX_CONCURRENCY }}" -k "${{ github.actor }}:${{ github.actor }}@users.noreply.github.com" -b chromium || true
        
     - name: Print errors
       run: |
