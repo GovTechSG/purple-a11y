@@ -46,6 +46,9 @@ RUN npm install
 # Install Playwright browsers
 RUN npx playwright install chromium webkit
 
+# Temp: Print folder contents
+RUN ls -al
+
 # Compile TypeScript
 RUN npm run build
 
