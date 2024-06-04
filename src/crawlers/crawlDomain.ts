@@ -297,6 +297,9 @@ const crawlDomain = async (
         }
 
         const selectedElements = await page.$$(':not(a):is([role="link"], button[onclick])');
+        if (!selectedElements) {
+          break;
+        }
         if (currentElementIndex + 1 > selectedElements.length || !selectedElements) {
           break;
         }
