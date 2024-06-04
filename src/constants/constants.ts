@@ -31,14 +31,16 @@ export const blackListedFileExtensions = [
   'json',
 ];
 
-export const getIntermediateScreenshotsPath = datasetsPath => `${datasetsPath}/screenshots`;
-export const destinationPath = storagePath => `${storagePath}/reports/screenshots`;
+export const getIntermediateScreenshotsPath = (datasetsPath: string): string =>
+  `${datasetsPath}/screenshots`;
+export const destinationPath = (storagePath: string): string =>
+  `${storagePath}/reports/screenshots`;
 
 /**  Get the path to Default Profile in the Chrome Data Directory
  * as per https://chromium.googlesource.com/chromium/src/+/master/docs/user_data_dir.md
- * @returns {string} path to Default Profile in the Chrome Data Directory
+ * @returns path to Default Profile in the Chrome Data Directory
  */
-export const getDefaultChromeDataDir = () => {
+export const getDefaultChromeDataDir = (): string => {
   try {
     let defaultChromeDataDir = null;
     if (os.platform() === 'win32') {
@@ -72,9 +74,9 @@ export const getDefaultChromeDataDir = () => {
 
 /**
  * Get the path to Default Profile in the Edge Data Directory
- * @returns {string} - path to Default Profile in the Edge Data Directory
+ * @returns path to Default Profile in the Edge Data Directory
  */
-export const getDefaultEdgeDataDir = () => {
+export const getDefaultEdgeDataDir = (): string => {
   try {
     let defaultEdgeDataDir = null;
     if (os.platform() === 'win32') {
@@ -140,17 +142,17 @@ export const getDefaultChromiumDataDir = () => {
   }
 };
 
-export const removeQuarantineFlag = function (searchPath) {
+export const removeQuarantineFlag = function (searchPath: string) {
   if (os.platform() === 'darwin') {
-    let execPaths = globSync(searchPath, { absolute: true, recursive: true, nodir: true });
+    let execPaths = globSync(searchPath, { absolute: true, nodir: true });
     if (execPaths.length > 0) {
       execPaths.forEach(filePath => spawnSync('xattr', ['-d', 'com.apple.quarantine', filePath]));
     }
   }
 };
 
-export const getExecutablePath = function (dir, file) {
-  let execPaths = globSync(dir + '/' + file, { absolute: true, recursive: true, nodir: true });
+export const getExecutablePath = function (dir: string, file: string): string {
+  let execPaths = globSync(dir + '/' + file, { absolute: true, nodir: true });
 
   if (execPaths.length === 0) {
     let execInPATH = which.sync(file, { nothrow: true });
@@ -162,7 +164,7 @@ export const getExecutablePath = function (dir, file) {
         os.platform() === 'win32' ? process.env.PATH.split(';') : process.env.PATH.split(':');
 
       for (let path in splitPath) {
-        execPaths = globSync(path + '/' + file, { absolute: true, recursive: true, nodir: true });
+        execPaths = globSync(path + '/' + file, { absolute: true, nodir: true });
         if (execPaths.length !== 0) return fs.realpathSync(execPaths[0]);
       }
       return null;
@@ -220,7 +222,7 @@ if (fs.existsSync('/.dockerenv')) {
 
 export const getProxy = () => {
   if (os.platform() === 'win32') {
-    let internetSettings;
+    let internetSettings: string[];
     try {
       internetSettings = execSync(
         'Get-ItemProperty -Path "Registry::HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"',
@@ -233,7 +235,7 @@ export const getProxy = () => {
       silentLogger.error(e.toString());
     }
 
-    const getSettingValue = settingName =>
+    const getSettingValue = (settingName: string) =>
       internetSettings
         .find(s => s.startsWith(settingName))
         // split only once at with ':' as the delimiter
