@@ -46,6 +46,9 @@ RUN npm ci --omit=dev
 # Install Playwright browsers
 RUN npx playwright install chromium webkit
 
+# Compile TypeScript
+RUN npm run build
+
 # Add non-privileged user
 RUN addgroup -S purple && adduser -S -G purple purple
 RUN chown -R purple:purple ./
