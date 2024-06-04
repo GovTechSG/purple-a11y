@@ -86,3 +86,6 @@ fi
 
 echo "Installing Node dependencies to $PWD"
 npm ci
+
+echo "Build TypeScript"
+npm run build
