@@ -284,7 +284,7 @@ const crawlDomain = async (
     let currentElementIndex = 0;
     let isAllElementsHandled = false;
 
-    while (true) {
+    while (!isAllElementsHandled) {
       try {
         //navigate back to initial page if clicking on a button previously caused it to navigate to a new url
         if (page.url() != initialPageUrl) {
@@ -297,16 +297,17 @@ const crawlDomain = async (
         }
 
         const selectedElements = await page.$$(':not(a):is([role="link"], button[onclick])');
-        if (!selectedElements) {
-          break;
-        }
+
+        // edge case where there might be buttons on page that appears intermittently
         if (currentElementIndex + 1 > selectedElements.length || !selectedElements) {
           break;
         }
 
-        if (currentElementIndex + 2 > selectedElements.length) {
+        // handle the last element in selectedElements
+        if (currentElementIndex + 1 == selectedElements.length) {
           isAllElementsHandled = true;
         }
+
         let element = selectedElements[currentElementIndex];
         currentElementIndex += 1;
 
@@ -359,11 +360,6 @@ const crawlDomain = async (
               // Handles browser page object been closed.
             }
           }
-        }
-
-        if (isAllElementsHandled) {
-          await page.close();
-          break;
         }
       } catch (e) {
         // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
