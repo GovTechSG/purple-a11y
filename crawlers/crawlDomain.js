@@ -190,7 +190,7 @@ const crawlDomain = async (
       page.on('request', async request => {
         try {
           // Intercepting requests to handle cases where request was issued before the frame is created
-          await page.context().route(request.url(), async route => {
+          await page.context().route(encodeURI(request.url()), async route => {
             const isTopFrameNavigationRequest = () => {
               return (
                 route.request().isNavigationRequest() &&
@@ -250,7 +250,11 @@ const crawlDomain = async (
               skipNavigation: isUrlPdf(encodeURI(newPage.url())),
             });
           } else {
+            try{
             newPage.close();
+            } catch (e) {
+              console.log(e);
+            }
           }
           return;
         } catch (e) {
@@ -288,7 +292,11 @@ const crawlDomain = async (
       try {
         //navigate back to initial page if clicking on a button previously caused it to navigate to a new url
         if (page.url() != initialPageUrl) {
+          try{
           await page.close();
+          } catch (e) {
+            console.log(e);
+          }
           page = await browserController.browser.newPage();
           await page.goto(initialPageUrl, {
             waitUntil: 'domcontentloaded',
@@ -358,7 +366,11 @@ const crawlDomain = async (
         }
 
         if (isAllElementsHandled) {
+          try{
           await page.close();
+          } catch (e) {
+            console.log(e);
+          } 
           break;
         }
       } catch (e) {
