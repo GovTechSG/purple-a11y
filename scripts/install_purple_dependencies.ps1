@@ -84,11 +84,18 @@ if (Test-Path purple-a11y) {
 
         Write-Output "Install Playwright browsers"
         & "npx playwright install chromium"
-        
+
         if (Test-Path .git) {
             Write-Output "Unhide .git folder"
             attrib -s -h .git
         }
+	
+	try {
+		Write-Output "Building Typescript" 
+		npm run build
+ 	} catch {
+ 		Write-Output "Build with some errors but continuing" 
+	} 
 
     } else {
         Write-Output "Could not find purple-a11y"
