@@ -200,7 +200,6 @@ const scannerTypes = {
   sitemap: 'Sitemap',
   website: 'Website',
   custom: 'Custom',
-  custom2: 'Custom2',
   intelligent: 'Intelligent',
 };
 

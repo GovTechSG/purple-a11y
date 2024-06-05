@@ -26,7 +26,6 @@ import {
 import constants from './constants/constants.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
 import combineRun from './combine.js';
-import playwrightAxeGenerator from './playwrightAxeGenerator.js';
 import { silentLogger } from './logs.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
@@ -242,13 +241,13 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return allHeaders;
   })
   .check(argvs => {
-    if ((argvs.scanner === 'custom' || argvs.scanner === 'custom2') && argvs.maxpages) {
+    if ((argvs.scanner === constants.scannerTypes.custom) && argvs.maxpages) {
       throw new Error('-p or --maxpages is only available in website and sitemap scans.');
     }
     return true;
   })
   .check(argvs => {
-    if (argvs.scanner !== 'website' && argvs.strategy) {
+    if (argvs.scanner !== constants.scannerTypes.website && argvs.strategy) {
       throw new Error('-s or --strategy is only available in website scans.');
     }
     return true;
@@ -257,15 +256,13 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   .epilogue('').argv;
 
 const scanInit = async (argvs: Answers): Promise<void> => {
-  let isNewCustomFlow = false;
-  if (constants.scannerTypes[argvs.scanner] === constants.scannerTypes.custom2) {
-    argvs.scanner = constants.scannerTypes.custom;
-    isNewCustomFlow = true;
+  let isCustomFlow = false;
+  if (argvs.scanner === constants.scannerTypes.custom) {
+    isCustomFlow = true;
   } else {
     argvs.headless = argvs.headless === 'yes';
     argvs.followRobots = argvs.followRobots === 'yes';
     argvs.safeMode = argvs.safeMode === 'yes';
-    argvs.scanner = constants.scannerTypes[argvs.scanner];
   }
   argvs.browserToRun = constants.browserTypes[argvs.browserToRun];
 
@@ -298,7 +295,7 @@ const scanInit = async (argvs: Answers): Promise<void> => {
     argvs.browserToRun,
     clonedDataDir,
     argvs.playwrightDeviceDetailsObject,
-    isNewCustomFlow,
+    isCustomFlow,
     argvs.header,
   );
   switch (res.status) {
@@ -385,19 +382,9 @@ const scanInit = async (argvs: Answers): Promise<void> => {
 
   printMessage([`Purple A11y version: ${appVersion}`, 'Starting scan...'], messageOptions);
 
-  if (argvs.scanner === constants.scannerTypes.custom && !isNewCustomFlow) {
-    try {
-      await playwrightAxeGenerator(data);
-    } catch (error) {
-      silentLogger.error(error);
-      printMessage([
-        `An error has occurred when running the custom flow scan. Please see above and errors.txt for more details.`,
-      ]);
-      process.exit(2);
-    }
-  } else {
-    await combineRun(data, screenToScan);
-  }
+ 
+  await combineRun(data, screenToScan);
+  
 
   // Delete cloned directory
   process.env.PURPLE_A11Y_VERBOSE

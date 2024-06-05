@@ -16,8 +16,8 @@ export const cliOptions: { [key: string]: Options } = {
   c: {
     alias: 'scanner',
     describe:
-      'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow, 4) custom flow 2.0, 5) intelligent',
-    choices: Object.keys(constants.scannerTypes),
+      'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow, 5) intelligent',
+    choices: Object.values(constants.scannerTypes),
     demandOption: true,
   },
   u: {
