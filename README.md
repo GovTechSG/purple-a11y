@@ -252,7 +252,7 @@ port> -u <url> OPTIONS
 Options:
       --help                         Show help                         [boolean]
   -c, --scanner                      Type of scan, 1) sitemap, 2) website crawl,
-                                      3) custom flow, 5) int
+                                      3) custom flow, 4) intelligent
                                      elligent
   [required] [choices: "sitemap", "website", "custom", "intelligent"]
   -u, --url                          Website URL you want to scan
