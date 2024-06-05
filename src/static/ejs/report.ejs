@@ -84,15 +84,18 @@
 
         // Function to decode Base64
         const base64Decode = (data) => {
-            return JSON.parse(atob(data));
+          const compressedBytes = Uint8Array.from(atob(data), c => c.charCodeAt(0));
+          const decompressedBytes = pako.inflate(compressedBytes);
+          const jsonString = new TextDecoder().decode(decompressedBytes);
+          return JSON.parse(jsonString);
         };
 
         // Get current URL query parameters
         const params = getQueryParams(window.location.href);
 
         // Decode scanData and scanItems or use defaults
-        scanItems = params.scanItems ? base64Decode(params.scanItems) : scanItems;
-        scanData = params.scanData ? base64Decode(params.scanData) : scanData;
+        let scanItems = params.scanItems ? base64Decode(params.scanItems) : scanItems;
+        let scanData = params.scanData ? base64Decode(params.scanData) : scanData;
 
     </script>
   </head>
@@ -126,8 +129,8 @@
         document.getElementById('pagesScannedModalToggle').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
 
         var itemsElement = document.getElementById('items');
-        var failedItems = scanData.items.mustFix.totalItems + scanData.items.goodToFix.totalItems;
-        var passedItems = scanData.items.passed.totalItems;
+        var failedItems = scanItems.mustFix.totalItems + scanItems.goodToFix.totalItems;
+        var passedItems = scanItems.passed.totalItems;
         var itemsContent = `${failedItems} ${failedItems === 1 ? 'occurrence' : 'occurrences'} failed,<br>${passedItems} ${passedItems === 1 ? 'occurrence' : 'occurrences'} passed`;
         itemsElement.innerHTML = itemsContent;
  
