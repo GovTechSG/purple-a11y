@@ -200,51 +200,61 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
 
   const queryString = `?scanData=${encodedScanData}&scanItems=${encodedScanItems}`;
 
-  // Define the file path where you want to save the encoded scan data
-  const filePath = path.join(__dirname, 'reports', 'encodedScanData.txt');
+  const filePath = path.join(__dirname, storagePath, 'reports', 'encodedScanData.txt');
+
+  // Ensure directory existence
+  const directoryPath = path.dirname(filePath);
+  if (!fs.existsSync(directoryPath)) {
+    fs.mkdirSync(directoryPath, { recursive: true });
+  }
 
   // Write the encoded scan data to the file
   fs.writeFile(filePath, queryString, (err) => {
     if (err) {
       console.error('Error writing encoded scan data to file:', err);
       return;
-  }
-
-  // Read the existing HTML file
-  let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
-
-  // Find the position to insert the script tag in the head section
-  const headIndex = htmlContent.indexOf('<head>');
-  const injectScript = `
-  <script>
-  function hasQueryString() {
-    var url = window.location.href;
-    if(url.indexOf('?') !== -1) {
-        return true;
-    } else {
-        return false;
     }
-  }
-  if (!hasQueryString())
-  {
-    window.location.search += '${queryString}';
-  }
-  </script>
-  `;
+    console.log('Encoded scan data written to file:', filePath);
+  });
 
-  if (headIndex !== -1) {
+    // Read the existing HTML file
+    const htmlFilePath = path.join(storagePath, 'reports', htmlFilename);
+    let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
+
+    // Find the position to insert the script tag in the head section
+    const headIndex = htmlContent.indexOf('<head>');
+    const injectScript = `
+    <script>
+    function hasQueryString() {
+      var url = window.location.href;
+      if(url.indexOf('?') !== -1) {
+          return true;
+      } else {
+          return false;
+      }
+    }
+    if (!hasQueryString())
+    {
+      window.location.search += '${queryString}';
+    }
+    </script>
+    `;
+
+    if (headIndex !== -1) {
       // If </head> tag is found, insert the script tag before it
       htmlContent = htmlContent.slice(0, headIndex + '<head>'.length) + injectScript + htmlContent.slice(headIndex + '<head>'.length);
     } else {
       // If </head> tag is not found, append the script tag at the end of the file
       htmlContent += injectScript;
-  }
+    }
 
-  // Write the updated HTML content back to the file
-  fs.writeFileSync(htmlFilePath, htmlContent);
+    // Write the updated HTML content back to the file
+    fs.writeFileSync(htmlFilePath, htmlContent);
 
-  console.log('HTML file updated successfully:', htmlFilePath);
+    console.log('HTML file updated successfully:', htmlFilePath);
+  });
 };
+
 
 
 let browserChannel = 'chrome';
@@ -642,7 +652,7 @@ export const generateArtifacts = async (
   await writeCsv(allIssues, storagePath);
   await writeHTML(allIssues, storagePath);
   await writeSummaryHTML(allIssues, storagePath);
-  // await writeQueryString(allIssues, storagePath);
+  await writeQueryString(allIssues, storagePath);
   await retryFunction(() => writeSummaryPdf(storagePath), 1);
   return createRuleIdJson(allIssues);
 };
