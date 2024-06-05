@@ -94,8 +94,8 @@
         const params = getQueryParams(window.location.href);
 
         // Decode scanData and scanItems or use defaults
-        let scanItems = params.scanItems ? base64Decode(params.scanItems) : scanItems;
-        let scanData = params.scanData ? base64Decode(params.scanData) : scanData;
+        scanItems = params.scanItems ? base64Decode(params.scanItems) : scanItems;
+        scanData = params.scanData ? base64Decode(params.scanData) : scanData;
 
     </script>
   </head>
