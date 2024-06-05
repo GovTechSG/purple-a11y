@@ -16,6 +16,9 @@ import { createWriteStream } from 'fs';
 import { AsyncParser } from '@json2csv/node';
 import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
 import { all } from 'axios';
+import { deflateSync } from 'zlib';
+import { randomBytes } from 'crypto';
+
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -211,16 +214,41 @@ const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary'
 //   console.log('File written successfully:', filePath);
 // };
 
-// Function to Base64 encode the data
-const base64Encode = (data) => {
-  return Buffer.from(JSON.stringify(data)).toString('base64');
+// Helper function to perform base64 URL-safe encoding
+const base64UrlSafeEncode = (input) => {
+  return input.toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+};
+
+// Helper function to compress JSON data
+const compressAndEncode = (data) => {
+  const json = JSON.stringify(data);
+  const compressed = deflateSync(Buffer.from(json));
+  return base64UrlSafeEncode(compressed);
 };
 
 const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.html') => {
+  
+  const scanData = {
+    "url": allIssues.urlScanned,
+    "startTime": allIssues.startTime,
+    "viewport": allIssues.viewport,
+    "scanType": allIssues.scanType,
+    "isCustomFlow": allIssues.isCustomFlow,
+    "totalPagesScanned": allIssues.totalPagesScanned,
+    "totalPagesNotScanned": allIssues.totalPagesNotScanned,
+    "pagesScanned": allIssues.pagesScanned,
+    "pagesNotScanned": allIssues.pagesNotScanned,
+    "customFlowLabel": allIssues.customFlowLabel,
+    "phAppVersion": allIssues.phAppVersion,
+    "cypressScanAboutMetadata": allIssues.cypressScanAboutMetadata
+  };  
 
-  // Encode the data
-  const encodedScanItems = base64Encode(allIssues.items);
-  const encodedScanData = base64Encode(allIssues);
+  // Encode the data with compression
+  const encodedScanItems = compressAndEncode(allIssues.items);
+  const encodedScanData = compressAndEncode(scanData);
 
   // Construct the query string
   const queryString = `?scanData=${encodedScanData}&scanItems=${encodedScanItems}`;
