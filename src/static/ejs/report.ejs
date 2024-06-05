@@ -48,25 +48,25 @@
         }
         ) %>;
 
-        const base64Encode = (data) => {
-            return btoa(JSON.stringify(data));
-        };
+        // const base64Encode = (data) => {
+        //     return btoa(JSON.stringify(data));
+        // };
 
-        const encodedScanItems = base64Encode(scanItems);
-        const encodedScanData = base64Encode(scanData);
+        // const encodedScanItems = base64Encode(scanItems);
+        // const encodedScanData = base64Encode(scanData);
 
-        const createQueryString = (params) => {
-            return Object.keys(params)
-                .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
-                .join('&');
-        };
+        // const createQueryString = (params) => {
+        //     return Object.keys(params)
+        //         .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+        //         .join('&');
+        // };
 
-        const queryParams = createQueryString({
-            scan_items: encodedScanItems,
-            scan_data: encodedScanData
-        });
+        // const queryParams = createQueryString({
+        //     scan_items: encodedScanItems,
+        //     scan_data: encodedScanData
+        // });
 
-        console.log(queryParams)
+        // console.log(queryParams)
 
         // Function to get query parameters
         const getQueryParams = (url) => {

@@ -8,11 +8,15 @@
   },
   "dependencies": {
     "@json2csv/node": "^7.0.3",
+    "@types/express": "^4.17.21",
     "axe-core": "^4.8.2",
     "axios": "^1.6.2",
+    "body-parser": "^1.20.2",
     "cheerio": "^1.0.0-rc.12",
     "crawlee": "^3.8.1",
-    "ejs": "^3.1.9",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "fs": "^0.0.1-security",
     "fs-extra": "^11.2.0",
     "glob": "^10.3.10",
     "inquirer": "^9.2.12",
@@ -70,5 +74,6 @@
   "bugs": {
     "url": "https://github.com/GovTechSG/purple-a11y/issues"
   },
-  "homepage": "https://github.com/GovTechSG/purple-a11y#readme"
+  "homepage": "https://github.com/GovTechSG/purple-a11y#readme",
+  "keywords": []
 }

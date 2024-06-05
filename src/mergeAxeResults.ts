@@ -18,6 +18,10 @@ import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
 import { all } from 'axios';
 import { deflateSync } from 'zlib';
 import { randomBytes } from 'crypto';
+import * as http from 'http';
+import express, { Request, Response } from 'express';
+import * as bodyParser from 'body-parser';
+
 
 
 
@@ -183,16 +187,45 @@ const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary'
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
 };
 
-// // Function to Base64 encode the data
-// const base64Encode = (data) => {
-//   return Buffer.from(JSON.stringify(data)).toString('base64');
+// // Helper function to perform base64 URL-safe encoding
+// const base64UrlSafeEncode = (input) => {
+//   return input.toString('base64')
+//     .replace(/\+/g, '-')
+//     .replace(/\//g, '_')
+//     .replace(/=+$/, '');
 // };
 
-// const writeQueryString = async (allIssues, storagePath, htmlFilename = 'encodedScanData') => {
+// // Helper function to compress JSON data
+// const compressAndEncode = (data) => {
+//   const json = JSON.stringify(data);
+//   const compressed = deflateSync(Buffer.from(json));
+//   return base64UrlSafeEncode(compressed);
+// };
 
-//   // Encode the data
-//   const encodedScanItems = base64Encode(allIssues.items);
-//   const encodedScanData = base64Encode(allIssues);
+// const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.html') => {
+  
+//   const scanData = {
+//     "url": allIssues.urlScanned,
+//     "startTime": allIssues.startTime,
+//     "viewport": allIssues.viewport,
+//     "scanType": allIssues.scanType,
+//     "isCustomFlow": allIssues.isCustomFlow,
+//     "totalPagesScanned": allIssues.totalPagesScanned,
+//     "totalPagesNotScanned": allIssues.totalPagesNotScanned,
+//     "pagesScanned": allIssues.pagesScanned,
+//     "pagesNotScanned": allIssues.pagesNotScanned,
+//     "customFlowLabel": allIssues.customFlowLabel,
+//     "phAppVersion": allIssues.phAppVersion,
+//     "cypressScanAboutMetadata": allIssues.cypressScanAboutMetadata
+//   };  
+
+//   // Encode the data with compression
+//   const encodedScanItems = compressAndEncode(allIssues.items);
+//   const encodedScanData = compressAndEncode(scanData);
+//   var sizeInBytes = new Blob([encodedScanData]).size;
+//   console.log(sizeInBytes)
+//   var sizeInBytesi = new Blob([encodedScanItems]).size;
+//   console.log(sizeInBytesi)
 
 //   // Construct the query string
 //   const queryString = `?scanData=${encodedScanData}&scanItems=${encodedScanItems}`;
@@ -201,95 +234,95 @@ const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary'
 //   const content = `${encodedScanData}\n${encodedScanItems}\n${queryString}`;
 
 //   // File path to write the results
-//   const filePath = path.join(storagePath, 'reports', 'encodedScanData.txt');
+//   const txtFilePath = path.join(storagePath, 'reports', 'encodedScanData.txt');
 
 //   // Ensure the results directory exists
-//   if (!fs.existsSync(path.dirname(filePath))) {
-//       fs.mkdirSync(path.dirname(filePath), { recursive: true });
+//   if (!fs.existsSync(path.dirname(txtFilePath))) {
+//       fs.mkdirSync(path.dirname(txtFilePath), { recursive: true });
 //   }
 
 //   // Write the content to the file
-//   fs.writeFileSync(filePath, content);
+//   fs.writeFileSync(txtFilePath, content);
 
-//   console.log('File written successfully:', filePath);
+//   console.log('Text file written successfully:', txtFilePath);
+
+//   // File path for the HTML file
+//   const htmlFilePath = path.join(storagePath, 'reports', htmlFilename);
+
+//   // Check if the HTML file exists
+//   if (!fs.existsSync(htmlFilePath)) {
+//       console.error('HTML file does not exist:', htmlFilePath);
+//       return;
+//   }
+
+//   // Read the existing HTML file
+//   let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
+
+//   // Append the query string to the HTML content
+//   htmlContent += `<script>window.location.search = '${queryString}';</script>`;
+
+//   // Write the updated HTML content back to the file
+//   fs.writeFileSync(htmlFilePath, htmlContent);
+
+//   console.log('HTML file updated successfully:', htmlFilePath);
 // };
 
-// Helper function to perform base64 URL-safe encoding
-const base64UrlSafeEncode = (input) => {
+const base64UrlSafeEncode = (input: Buffer): string => {
   return input.toString('base64')
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '');
 };
 
-// Helper function to compress JSON data
-const compressAndEncode = (data) => {
+const compressAndEncode = (data: any): string => {
   const json = JSON.stringify(data);
   const compressed = deflateSync(Buffer.from(json));
   return base64UrlSafeEncode(compressed);
 };
 
-const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.html') => {
-  
-  const scanData = {
-    "url": allIssues.urlScanned,
-    "startTime": allIssues.startTime,
-    "viewport": allIssues.viewport,
-    "scanType": allIssues.scanType,
-    "isCustomFlow": allIssues.isCustomFlow,
-    "totalPagesScanned": allIssues.totalPagesScanned,
-    "totalPagesNotScanned": allIssues.totalPagesNotScanned,
-    "pagesScanned": allIssues.pagesScanned,
-    "pagesNotScanned": allIssues.pagesNotScanned,
-    "customFlowLabel": allIssues.customFlowLabel,
-    "phAppVersion": allIssues.phAppVersion,
-    "cypressScanAboutMetadata": allIssues.cypressScanAboutMetadata
-  };  
+const app = express();
+const port = process.env.PORT || 3000;
 
-  // Encode the data with compression
-  const encodedScanItems = compressAndEncode(allIssues.items);
-  const encodedScanData = compressAndEncode(scanData);
+app.use(bodyParser.urlencoded({ extended: true }));
 
-  // Construct the query string
+app.set('view engine', 'ejs');
+
+app.get('/', (req: Request, res: Response) => {
+  res.render('form');
+});
+
+app.post('/submit', (req: Request) => {
+  interface FormData {
+    scanData: string;
+    scanItems: string;
+  }
+
+  const formData: FormData = {
+    scanData: req.body.scanData,
+    scanItems: req.body.scanItems
+  };
+
+  const encodedScanItems = compressAndEncode(formData.scanItems);
+  const encodedScanData = compressAndEncode(formData.scanData);
+
   const queryString = `?scanData=${encodedScanData}&scanItems=${encodedScanItems}`;
 
-  // Create the content to write to the file
-  const content = `${encodedScanData}\n${encodedScanItems}\n${queryString}`;
+  // Define the file path where you want to save the encoded scan data
+  const filePath = path.join(__dirname, 'reports', 'encodedScanData.txt');
 
-  // File path to write the results
-  const txtFilePath = path.join(storagePath, 'reports', 'encodedScanData.txt');
-
-  // Ensure the results directory exists
-  if (!fs.existsSync(path.dirname(txtFilePath))) {
-      fs.mkdirSync(path.dirname(txtFilePath), { recursive: true });
-  }
-
-  // Write the content to the file
-  fs.writeFileSync(txtFilePath, content);
-
-  console.log('Text file written successfully:', txtFilePath);
-
-  // File path for the HTML file
-  const htmlFilePath = path.join(storagePath, 'reports', htmlFilename);
-
-  // Check if the HTML file exists
-  if (!fs.existsSync(htmlFilePath)) {
-      console.error('HTML file does not exist:', htmlFilePath);
+  // Write the encoded scan data to the file
+  fs.writeFile(filePath, queryString, (err) => {
+    if (err) {
+      console.error('Error writing encoded scan data to file:', err);
       return;
-  }
+    }
+    console.log('Encoded scan data written to file:', filePath);
+  });
+});
 
-  // Read the existing HTML file
-  let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
-
-  // Append the query string to the HTML content
-  htmlContent += `<script>window.location.search = '${queryString}';</script>`;
-
-  // Write the updated HTML content back to the file
-  fs.writeFileSync(htmlFilePath, htmlContent);
-
-  console.log('HTML file updated successfully:', htmlFilePath);
-};
-
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}/`);
+});
 
 let browserChannel = 'chrome';
 
@@ -686,7 +719,7 @@ export const generateArtifacts = async (
   await writeCsv(allIssues, storagePath);
   await writeHTML(allIssues, storagePath);
   await writeSummaryHTML(allIssues, storagePath);
-  await writeQueryString(allIssues, storagePath);
+  // await writeQueryString(allIssues, storagePath);
   await retryFunction(() => writeSummaryPdf(storagePath), 1);
   return createRuleIdJson(allIssues);
 };
