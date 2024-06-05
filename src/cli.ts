@@ -241,13 +241,13 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return allHeaders;
   })
   .check(argvs => {
-    if ((argvs.scanner === constants.scannerTypes.custom) && argvs.maxpages) {
+    if ((argvs.scanner === 'custom') && argvs.maxpages) {
       throw new Error('-p or --maxpages is only available in website and sitemap scans.');
     }
     return true;
   })
   .check(argvs => {
-    if (argvs.scanner !== constants.scannerTypes.website && argvs.strategy) {
+    if (argvs.scanner !== 'website' && argvs.strategy) {
       throw new Error('-s or --strategy is only available in website scans.');
     }
     return true;
@@ -257,13 +257,14 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
 
 const scanInit = async (argvs: Answers): Promise<void> => {
   let isCustomFlow = false;
-  if (argvs.scanner === constants.scannerTypes.custom) {
+  if (constants.scannerTypes[argvs.scanner] === constants.scannerTypes.custom) {
     isCustomFlow = true;
   } else {
     argvs.headless = argvs.headless === 'yes';
     argvs.followRobots = argvs.followRobots === 'yes';
     argvs.safeMode = argvs.safeMode === 'yes';
   }
+  argvs.scanner = constants.scannerTypes[argvs.scanner];
   argvs.browserToRun = constants.browserTypes[argvs.browserToRun];
 
   // let chromeDataDir = null;
