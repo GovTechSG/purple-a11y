@@ -166,8 +166,8 @@ const writeHTML = async (allIssues, storagePath, htmlFilename = 'report') => {
   const template = ejs.compile(ejsString, {
     filename: path.join(__dirname, './static/ejs/report.ejs'),
   });
-  const html = template(allIssues);
-  fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
+  // const html = template(allIssues);
+  fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`,template);
 };
 
 const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary') => {
@@ -175,8 +175,8 @@ const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary'
   const template = ejs.compile(ejsString, {
     filename: path.join(__dirname, './static/ejs/summary.ejs'),
   });
-  const html = template(allIssues);
-  fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
+  // const html = template(allIssues);
+  fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, template);
 };
 
 let browserChannel = 'chrome';

@@ -48,6 +48,49 @@
         }
         ) %>;
 
+        const base64Encode = (data) => {
+            return btoa(JSON.stringify(data));
+        };
+
+        const encodedScanItems = base64Encode(scanItems);
+        const encodedScanData = base64Encode(scanData);
+
+        const createQueryString = (params) => {
+            return Object.keys(params)
+                .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+                .join('&');
+        };
+
+        const queryParams = createQueryString({
+            scan_items: encodedScanItems,
+            scan_data: encodedScanData
+        });
+
+        // Function to get query parameters
+        const getQueryParams = (url) => {
+            const params = {};
+            const parser = new URL(url);
+            const queryString = parser.search.slice(1).split('&');
+
+            queryString.forEach(param => {
+                const [key, value] = param.split('=');
+                params[decodeURIComponent(key)] = decodeURIComponent(value);
+            });
+
+            return params;
+        };
+
+        // Function to decode Base64
+        const base64Decode = (data) => {
+            return JSON.parse(atob(data));
+        };
+
+        // Get current URL query parameters
+        const params = getQueryParams(window.location.href);
+
+        // Decode scanData and scanItems or use defaults
+        scanItems = params.scanItems ? base64Decode(params.scanItems) : scanItems;
+        scanData = params.scanData ? base64Decode(params.scanData) : scanData;
 
     </script>
   </head>
