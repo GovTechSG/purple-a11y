@@ -15,6 +15,7 @@ import { chromium } from 'playwright';
 import { createWriteStream } from 'fs';
 import { AsyncParser } from '@json2csv/node';
 import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
+import { all } from 'axios';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -166,8 +167,8 @@ const writeHTML = async (allIssues, storagePath, htmlFilename = 'report') => {
   const template = ejs.compile(ejsString, {
     filename: path.join(__dirname, './static/ejs/report.ejs'),
   });
-  // const html = template(allIssues);
-  fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`,template);
+  const html = template(allIssues);
+  fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`,html);
 };
 
 const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary') => {
@@ -175,9 +176,92 @@ const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary'
   const template = ejs.compile(ejsString, {
     filename: path.join(__dirname, './static/ejs/summary.ejs'),
   });
-  // const html = template(allIssues);
-  fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, template);
+  const html = template(allIssues);
+  fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
 };
+
+// // Function to Base64 encode the data
+// const base64Encode = (data) => {
+//   return Buffer.from(JSON.stringify(data)).toString('base64');
+// };
+
+// const writeQueryString = async (allIssues, storagePath, htmlFilename = 'encodedScanData') => {
+
+//   // Encode the data
+//   const encodedScanItems = base64Encode(allIssues.items);
+//   const encodedScanData = base64Encode(allIssues);
+
+//   // Construct the query string
+//   const queryString = `?scanData=${encodedScanData}&scanItems=${encodedScanItems}`;
+
+//   // Create the content to write to the file
+//   const content = `${encodedScanData}\n${encodedScanItems}\n${queryString}`;
+
+//   // File path to write the results
+//   const filePath = path.join(storagePath, 'reports', 'encodedScanData.txt');
+
+//   // Ensure the results directory exists
+//   if (!fs.existsSync(path.dirname(filePath))) {
+//       fs.mkdirSync(path.dirname(filePath), { recursive: true });
+//   }
+
+//   // Write the content to the file
+//   fs.writeFileSync(filePath, content);
+
+//   console.log('File written successfully:', filePath);
+// };
+
+// Function to Base64 encode the data
+const base64Encode = (data) => {
+  return Buffer.from(JSON.stringify(data)).toString('base64');
+};
+
+const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.html') => {
+
+  // Encode the data
+  const encodedScanItems = base64Encode(allIssues.items);
+  const encodedScanData = base64Encode(allIssues);
+
+  // Construct the query string
+  const queryString = `?scanData=${encodedScanData}&scanItems=${encodedScanItems}`;
+
+  // Create the content to write to the file
+  const content = `${encodedScanData}\n${encodedScanItems}\n${queryString}`;
+
+  // File path to write the results
+  const txtFilePath = path.join(storagePath, 'reports', 'encodedScanData.txt');
+
+  // Ensure the results directory exists
+  if (!fs.existsSync(path.dirname(txtFilePath))) {
+      fs.mkdirSync(path.dirname(txtFilePath), { recursive: true });
+  }
+
+  // Write the content to the file
+  fs.writeFileSync(txtFilePath, content);
+
+  console.log('Text file written successfully:', txtFilePath);
+
+  // File path for the HTML file
+  const htmlFilePath = path.join(storagePath, 'reports', htmlFilename);
+
+  // Check if the HTML file exists
+  if (!fs.existsSync(htmlFilePath)) {
+      console.error('HTML file does not exist:', htmlFilePath);
+      return;
+  }
+
+  // Read the existing HTML file
+  let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
+
+  // Append the query string to the HTML content
+  htmlContent += `<script>window.location.search = '${queryString}';</script>`;
+
+  // Write the updated HTML content back to the file
+  fs.writeFileSync(htmlFilePath, htmlContent);
+
+  console.log('HTML file updated successfully:', htmlFilePath);
+};
+
 
 let browserChannel = 'chrome';
 
@@ -574,6 +658,7 @@ export const generateArtifacts = async (
   await writeCsv(allIssues, storagePath);
   await writeHTML(allIssues, storagePath);
   await writeSummaryHTML(allIssues, storagePath);
+  await writeQueryString(allIssues, storagePath);
   await retryFunction(() => writeSummaryPdf(storagePath), 1);
   return createRuleIdJson(allIssues);
 };
