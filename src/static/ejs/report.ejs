@@ -18,56 +18,8 @@
     />
     <%- include('partials/styles/bootstrap') %> <%- include('partials/styles/highlightjs') %> <%-
     include('partials/styles/styles') %>
-
-    <script>
-      const scanItems = <%- JSON.stringify(
-          {
-            ...items,
-            passed: {
-              rules: items.passed.rules.map(r => delete r.pagesAffected),
-              ...items.passed
-            },
-          }
-        ) %>;
-
-        const scanData = <%- JSON.stringify({
-          startTime,
-          urlScanned,
-          viewport,
-          scanType,
-          isCustomFlow,
-          totalPagesScanned,
-          totalPagesNotScanned,
-          pagesScanned,
-          pagesNotScanned,
-          items,
-          isCustomFlow,
-          customFlowLabel,
-          phAppVersion,
-          cypressScanAboutMetadata
-        }
-        ) %>;
-
-        const base64Encode = (data) => {
-            return btoa(JSON.stringify(data));
-        };
-
-        const encodedScanItems = base64Encode(scanItems);
-        const encodedScanData = base64Encode(scanData);
-
-        const createQueryString = (params) => {
-            return Object.keys(params)
-                .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
-                .join('&');
-        };
-
-        const queryParams = createQueryString({
-            scan_items: encodedScanItems,
-            scan_data: encodedScanData
-        });
-
-        console.log(queryParams)
-
+    <%-include('partials/script/pako.min.ejs') %>
+    <script>  
         // Function to get query parameters
         const getQueryParams = (url) => {
             const params = {};
@@ -84,15 +36,18 @@
 
         // Function to decode Base64
         const base64Decode = (data) => {
-            return JSON.parse(atob(data));
+          const compressedBytes = Uint8Array.from(atob(data), c => c.charCodeAt(0));
+          const decompressedBytes = pako.inflate(compressedBytes);
+          const jsonString = new TextDecoder().decode(decompressedBytes);
+          return JSON.parse(jsonString);
         };
 
         // Get current URL query parameters
         const params = getQueryParams(window.location.href);
 
         // Decode scanData and scanItems or use defaults
-        scanItems = params.scanItems ? base64Decode(params.scanItems) : scanItems;
-        scanData = params.scanData ? base64Decode(params.scanData) : scanData;
+        let scanItems = params.scanItems ? base64Decode(params.scanItems) : scanItems;
+        let scanData = params.scanData ? base64Decode(params.scanData) : scanData;
 
     </script>
   </head>
@@ -126,8 +81,8 @@
         document.getElementById('pagesScannedModalToggle').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
 
         var itemsElement = document.getElementById('items');
-        var failedItems = scanData.items.mustFix.totalItems + scanData.items.goodToFix.totalItems;
-        var passedItems = scanData.items.passed.totalItems;
+        var failedItems = scanItems.mustFix.totalItems + scanItems.goodToFix.totalItems;
+        var passedItems = scanItems.passed.totalItems;
         var itemsContent = `${failedItems} ${failedItems === 1 ? 'occurrence' : 'occurrences'} failed,<br>${passedItems} ${passedItems === 1 ? 'occurrence' : 'occurrences'} passed`;
         itemsElement.innerHTML = itemsContent;
  

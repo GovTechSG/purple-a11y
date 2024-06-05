@@ -16,9 +16,7 @@ import { createWriteStream } from 'fs';
 import { AsyncParser } from '@json2csv/node';
 import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
 import { all } from 'axios';
-import { deflateSync } from 'zlib';
-import { randomBytes } from 'crypto';
-
+import zlib from 'zlib';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -183,72 +181,22 @@ const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary'
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
 };
 
-// // Function to Base64 encode the data
-// const base64Encode = (data) => {
-//   return Buffer.from(JSON.stringify(data)).toString('base64');
-// };
-
-// const writeQueryString = async (allIssues, storagePath, htmlFilename = 'encodedScanData') => {
-
-//   // Encode the data
-//   const encodedScanItems = base64Encode(allIssues.items);
-//   const encodedScanData = base64Encode(allIssues);
-
-//   // Construct the query string
-//   const queryString = `?scanData=${encodedScanData}&scanItems=${encodedScanItems}`;
-
-//   // Create the content to write to the file
-//   const content = `${encodedScanData}\n${encodedScanItems}\n${queryString}`;
-
-//   // File path to write the results
-//   const filePath = path.join(storagePath, 'reports', 'encodedScanData.txt');
-
-//   // Ensure the results directory exists
-//   if (!fs.existsSync(path.dirname(filePath))) {
-//       fs.mkdirSync(path.dirname(filePath), { recursive: true });
-//   }
-
-//   // Write the content to the file
-//   fs.writeFileSync(filePath, content);
-
-//   console.log('File written successfully:', filePath);
-// };
-
-// Helper function to perform base64 URL-safe encoding
-const base64UrlSafeEncode = (input) => {
-  return input.toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-};
-
-// Helper function to compress JSON data
-const compressAndEncode = (data) => {
-  const json = JSON.stringify(data);
-  const compressed = deflateSync(Buffer.from(json));
-  return base64UrlSafeEncode(compressed);
+// Function to Base64 encode the data
+const base64Encode = (data) => {
+  const jsonString = JSON.stringify(data);
+  const buffer = Buffer.from(jsonString, 'utf8');
+  const compressed = zlib.deflateSync(buffer);
+  return compressed.toString('base64');
 };
 
 const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.html') => {
-  
-  const scanData = {
-    "url": allIssues.urlScanned,
-    "startTime": allIssues.startTime,
-    "viewport": allIssues.viewport,
-    "scanType": allIssues.scanType,
-    "isCustomFlow": allIssues.isCustomFlow,
-    "totalPagesScanned": allIssues.totalPagesScanned,
-    "totalPagesNotScanned": allIssues.totalPagesNotScanned,
-    "pagesScanned": allIssues.pagesScanned,
-    "pagesNotScanned": allIssues.pagesNotScanned,
-    "customFlowLabel": allIssues.customFlowLabel,
-    "phAppVersion": allIssues.phAppVersion,
-    "cypressScanAboutMetadata": allIssues.cypressScanAboutMetadata
-  };  
 
-  // Encode the data with compression
-  const encodedScanItems = compressAndEncode(allIssues.items);
-  const encodedScanData = compressAndEncode(scanData);
+  //Spread the data 
+  const { items, ...rest } = allIssues;
+
+  // Encode the data
+  const encodedScanItems = base64Encode(items);
+  const encodedScanData = base64Encode(rest);
 
   // Construct the query string
   const queryString = `?scanData=${encodedScanData}&scanItems=${encodedScanItems}`;
@@ -281,8 +229,32 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
   // Read the existing HTML file
   let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
 
-  // Append the query string to the HTML content
-  htmlContent += `<script>window.location.search = '${queryString}';</script>`;
+  // Find the position to insert the script tag in the head section
+  const headIndex = htmlContent.indexOf('<head>');
+  const injectScript = `
+  <script>
+  function hasQueryString() {
+    var url = window.location.href;
+    if(url.indexOf('?') !== -1) {
+        return true;
+    } else {
+        return false;
+    }
+  }
+  if (!hasQueryString())
+  {
+    window.location.search += '${queryString}';
+  }
+  </script>
+  `;
+
+  if (headIndex !== -1) {
+      // If </head> tag is found, insert the script tag before it
+      htmlContent = htmlContent.slice(0, headIndex + '<head>'.length) + injectScript + htmlContent.slice(headIndex + '<head>'.length);
+    } else {
+      // If </head> tag is not found, append the script tag at the end of the file
+      htmlContent += injectScript;
+  }
 
   // Write the updated HTML content back to the file
   fs.writeFileSync(htmlFilePath, htmlContent);
