@@ -201,13 +201,13 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return allHeaders;
   })
   .check(argvs => {
-    if ((argvs.scanner === 'custom') && argvs.maxpages) {
+    if ((argvs.scanner === ScannerTypes.CUSTOM) && argvs.maxpages) {
       throw new Error('-p or --maxpages is only available in website and sitemap scans.');
     }
     return true;
   })
   .check(argvs => {
-    if (argvs.scanner !== 'website' && argvs.strategy) {
+    if (argvs.scanner !== ScannerTypes.WEBSITE && argvs.strategy) {
       throw new Error('-s or --strategy is only available in website scans.');
     }
     return true;
