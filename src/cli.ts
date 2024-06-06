@@ -26,7 +26,6 @@ import {
 import constants, { ScannerTypes } from './constants/constants.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
 import combineRun from './combine.js';
-import { silentLogger } from './logs.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import { Answers } from './index.js';
@@ -240,7 +239,6 @@ const scanInit = async (argvs: Answers): Promise<void> => {
   if (argvs.scanner === ScannerTypes.CUSTOM) {
     isCustomFlow = true;
   }
-  argvs.scanner = constants.scannerTypes[argvs.scanner];
   argvs.browserToRun = constants.browserTypes[argvs.browserToRun];
 
   // let chromeDataDir = null;
