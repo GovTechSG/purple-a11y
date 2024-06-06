@@ -53,7 +53,7 @@
   "scripts": {
     "build": "npm run copyfiles && tsc",
     "build:watch": "npm run build -- --watch",
-    "copyfiles": "mkdir -p dist/static/ejs && cp -R src/static/ejs/* dist/static/ejs",
+    "copyfiles": "node ./scripts/copyFiles.js src/static/ejs dist/static/ejs",
     "start": "node dist/index.js",
     "cli": "node dist/cli.js",
     "test": "node --experimental-vm-modules ./node_modules/.bin/jest",
