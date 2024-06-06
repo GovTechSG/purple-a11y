@@ -64,7 +64,7 @@ if (Test-Path -Path .\jdk -PathType Container) {
 # Install Node dependencies
 if (Test-Path purple-a11y) {
     Write-Output "Installing node dependencies"
-    & ".\a11y_shell_ps.ps1" "cd purple-a11y;npm ci --force"
+    & ".\a11y_shell_ps.ps1" "cd purple-a11y;npm ci --force;cd .."
 
     # Omit installing Playwright browsers as it is not reuqired
     # Write-Output "Install Playwright browsers"
@@ -73,9 +73,10 @@ if (Test-Path purple-a11y) {
     try {
 	Write-Output "Building Typescript" 
 	& ".\a11y_shell_ps.ps1" "cd purple-a11y;npm run build" 
-	} catch {
- 	Write-Output "Build with some errors but continuing" 
-	} 
+    } catch {
+	Write-Output "Build with some errors but continuing. $_.Exception.Message" 
+    } 
+    
     if (Test-Path purple-a11y\.git) {
         Write-Output "Unhide .git folder"
         attrib -s -h purple-a11y\.git
