@@ -7,11 +7,13 @@ const crypto = require('crypto');
 const { validate } = require('express-jsonschema');
 const { cliSchema } = require('./json_schema.js');
 const fs = require('fs');
+const bodyParser = require("body-parser");
 
 
 // Express Information
 const app = express();
-app.use(express.json());
+app.use(bodyParser.json());
+// app.use(express.json());
 
 // Constants
 const processes = {};
@@ -25,6 +27,34 @@ function generateUniqueId(url) {
   hash.update(data);
   return hash.digest('hex');
 }
+
+// Function to generate storage path for report HTML file
+function getStoragePath(token) {
+  const storagePath = path.join(__dirname, "storagePath", "reports");
+  return path.join(storagePath, `${token}.html`);
+}
+
+// Function to generate random tokens
+function generateRandomToken(length = 8) {
+  return crypto.randomBytes(Math.ceil(length / 2))
+    .toString("hex")
+    .slice(0, length);
+}
+
+app.post("/submit-scan", (req, res) => {
+  const { scanData, scanItems } = req.body;
+
+  const randomToken = generateRandomToken(10);
+  const storagePath = 'results/20240606_141255_www.tech.gov.sg';
+  console.log("storagePath",storagePath)
+  const rootDir = '../';
+  const fullPath = path.resolve(rootDir, storagePath);
+
+  console.log(`${fullPath}/reports/report.html?scanData=${scanData}&scanItems=${scanItems}`);
+
+  // Redirect to report page with query parameters
+  res.redirect(`${fullPath}/reports/report.html?scanData=${scanData}&scanItems=${scanItems}`);
+});
 
 // GET requests
 app.get("/",(req,res) =>{

@@ -1,0 +1,28 @@
+<form id="scanForm" method="post" action="/submit-scan">
+    <input type="text" name="scanData" id="scanDataInput" placeholder="Enter scan data"><br>
+    <input type="text" name="scanItems" id="scanItemsInput" placeholder="Enter scan items"><br>
+    <button type="submit">Submit</button>
+  </form>
+<script>
+    document.getElementById("scanForm").addEventListener("submit", function(event) {
+  event.preventDefault();
+  
+  const scanData = document.getElementById("scanDataInput").value;
+  const scanItems = document.getElementById("scanItemsInput").value;
+
+  fetch("/submit-scan", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ scanData, scanItems })
+  })
+  .then(response => {
+    // Handle response
+  })
+  .catch(error => {
+    // Handle error
+  });
+});
+
+</script>  
