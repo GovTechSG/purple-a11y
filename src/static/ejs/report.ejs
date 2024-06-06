@@ -60,25 +60,7 @@
 
         //     return params;
         // };
-
-        // Function to decode Base64
-        const base64Decode = (data) => {
-          const compressedBytes = Uint8Array.from(atob(data), c => c.charCodeAt(0));
-          // const decompressedBytes = pako.inflate(compressedBytes);
-          const jsonString = new TextDecoder().decode(compressedBytes);
-          return JSON.parse(jsonString);
-        };
-
-        // // Get current URL query parameters
-        // const params = getQueryParams(window.location.href);
-
-        // Decode scanData and scanItems or use defaults
-        console.log(typeof encodedscanData)
-       // Decode scanItems and scanData if encoded versions are provided, otherwise use default values
-       scanItems = typeof encodedscanItems !== 'undefined' ? base64Decode(encodedscanItems) : scanItems;
-       scanData = typeof encodedscanData !== 'undefined' ? base64Decode(encodedscanData) : scanData;
-              
-
+        
     </script>
   </head>
 

@@ -181,76 +181,70 @@ const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary'
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
 };
 
-// Function to Base64 encode the data
+// Proper base64 encoding function using Buffer
 const base64Encode = (data) => {
-  const jsonString = JSON.stringify(data);
-  // const compressed = zlib.deflateSync(jsonString);
-  return btoa(jsonString);
+  try {
+    return Buffer.from(JSON.stringify(data)).toString('base64');
+  } catch (error) {
+    console.error('Error encoding data to base64:', error);
+    throw error;
+  }
 };
 
 const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.html') => {
-  try {
-    // Spread the data
-    const { items, ...rest } = allIssues;
+  // Spread the data
+  const { items, ...rest } = allIssues;
 
-    // Encode the data
-    const encodedScanItems = base64Encode(items);
-    const encodedScanData = base64Encode(rest);
+  // Encode the data
+  const encodedScanItems = base64Encode(items);
+  const encodedScanData = base64Encode(rest);
 
-    // Path to the file where the encoded data will be saved
-    const filePath = path.join(storagePath, 'reports', 'encodedScanData.txt');
+  // Path to the file where the encoded data will be saved
+  const filePath = path.join(storagePath, 'reports', 'encodedScanData.txt');
 
-    // Ensure directory existence
-    const directoryPath = path.dirname(filePath);
-    console.log("directoryPath:", directoryPath);
-    if (!fs.existsSync(directoryPath)) {
+  // Ensure directory existence
+  const directoryPath = path.dirname(filePath);
+  if (!fs.existsSync(directoryPath)) {
       fs.mkdirSync(directoryPath, { recursive: true });
-    }
-
-    // Write the encoded scan data to the file
-    await fs.promises.writeFile(filePath, `encodedScanData=${encodedScanData}\nencodedScanItems=${encodedScanItems}`);
-    console.log('Encoded scan data written to file:', filePath);
-  } catch (err) {
-    console.error('Error writing encoded scan data to file:', err);
   }
 
-    // // Read the existing HTML file
-    // const htmlFilePath = path.join(storagePath, 'reports', htmlFilename);
-    // let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
+  // Write the encoded scan data to the file
+  await fs.promises.writeFile(filePath, `encodedScanData=${encodedScanData}\nencodedScanItems=${encodedScanItems}`);
 
-    // // Find the position to insert the script tag in the head section
-    // const headIndex = htmlContent.indexOf('<head lang="en">');
-    // const injectScript = `
-    // <script>
-    // function hasQueryString() {
-    //   var url = window.location.href;
-    //   if(url.indexOf('?') !== -1) {
-    //       return true;
-    //   } else {
-    //       return false;
-    //   }
-    // }
-    // if (!hasQueryString())
-    // {
-    //   window.location.search += '${queryString}';
-    // }
-    // </script>
-    // `;
+  // Read the existing HTML file
+  const htmlFilePath = path.join(storagePath, 'reports', htmlFilename);
+  let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
 
-    // if (headIndex !== -1) {
-    //   // If </head> tag is found, insert the script tag before it
-    //   htmlContent = htmlContent.slice(0, headIndex + '<head lang="en">'.length) + injectScript + htmlContent.slice(headIndex + '<head lang="en">'.length);
-    // } else {
-    //   // If </head> tag is not found, append the script tag at the end of the file
-    //   htmlContent += injectScript;
-    // }
+  // Find the position to insert the script tag in the head section
+  const headIndex = htmlContent.indexOf('</head>');
+  const injectScript = `
+  <script>
+    // Function to decode Base64
+    const base64Decode = (data) => {
+      const compressedBytes = Uint8Array.from(atob(data), c => c.charCodeAt(0));
+      const jsonString = new TextDecoder().decode(compressedBytes);
+      return JSON.parse(jsonString);
+    };
 
-    // // Write the updated HTML content back to the file
-    // fs.writeFileSync(htmlFilePath, htmlContent);
+    // Check if encodedScanData and encodedScanItems are defined
+    // Decode the encoded data
+    scanData = base64Decode('${encodedScanData}');
+    scanItems = base64Decode('${encodedScanItems}');
 
-    // console.log('HTML file updated successfully:', htmlFilePath);
+  </script>
+  `;
+
+  if (headIndex !== -1) {
+    // If </head> tag is found, insert the script tag before it
+    htmlContent = htmlContent.slice(0, headIndex) + injectScript + htmlContent.slice(headIndex);
+  } else {
+    // If </head> tag is not found, append the script tag at the end of the file
+    htmlContent += injectScript;
+  }
+
+  // Write the updated HTML content back to the file
+  fs.writeFileSync(htmlFilePath, htmlContent);
 };
-
 
 
 let browserChannel = 'chrome';
