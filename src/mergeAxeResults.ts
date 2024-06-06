@@ -184,8 +184,7 @@ const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary'
 // Function to Base64 encode the data
 const base64Encode = (data) => {
   const jsonString = JSON.stringify(data);
-  const buffer = Buffer.from(jsonString, 'utf8');
-  const compressed = zlib.deflateSync(buffer);
+  const compressed = zlib.deflateSync(jsonString);
   return compressed.toString('base64');
 };
 
