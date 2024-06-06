@@ -198,12 +198,12 @@ const urlsCrawledObj = {
   everything: [],
 };
 
-const scannerTypes = {
-  sitemap: 'Sitemap',
-  website: 'Website',
-  custom: 'Custom',
-  intelligent: 'Intelligent',
-};
+export enum ScannerTypes {
+  SITEMAP = "Sitemap",
+  WEBSITE = "Website",
+  CUSTOM = "Custom",
+  INTELLIGENT = "Intelligent",
+}
 
 export const guiInfoStatusTypes = {
   SCANNED: 'scanned',
@@ -220,7 +220,7 @@ if (fs.existsSync('/.dockerenv')) {
   launchOptionsArgs = ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage'];
 }
 
-export const getProxy = () => {
+export const getProxy = (): { type: string; url: string } | null => {
   if (os.platform() === 'win32') {
     let internetSettings: string[];
     try {
@@ -407,7 +407,7 @@ export default {
   exportDirectory: `${process.cwd()}`,
   maxRequestsPerCrawl,
   maxConcurrency: 25,
-  scannerTypes,
+  scannerTypes: ScannerTypes,
   browserTypes,
   urlsCrawledObj,
   impactOrder,

@@ -1,17 +1,19 @@
-import { getUserDataTxt, writeToUserDataTxt } from '../utils.js';
+import { Answers } from '#root/index.js';
+import { Question } from 'inquirer';
+import { getUserDataTxt } from '../utils.js';
 import {
   checkUrl,
   deleteClonedProfiles,
   getBrowserToRun,
   getPlaywrightDeviceDetailsObject,
   getUrlMessage,
-  isFileSitemap,
+  getFileSitemap,
   sanitizeUrlInput,
   validEmail,
   validName,
   validateCustomFlowLabel,
 } from './common.js';
-import constants from './constants.js';
+import constants, { ScannerTypes } from './constants.js';
 
 const userData = getUserDataTxt();
 
@@ -22,7 +24,13 @@ const startScanQuestions = [
     type: 'list',
     name: 'scanner',
     message: 'What would you like to scan?',
-    choices: Object.values(constants.scannerTypes),
+    choices: [
+      { name: 'Sitemap', value: ScannerTypes.SITEMAP },
+      { name: 'Website', value: ScannerTypes.WEBSITE },
+      { name: 'Custom', value: ScannerTypes.CUSTOM },
+      { name: 'Custom2', value: ScannerTypes.CUSTOM2 },
+      { name: 'Intelligent', value: ScannerTypes.INTELLIGENT },
+    ],
   },
   {
     type: 'confirm',
@@ -40,17 +48,17 @@ const startScanQuestions = [
     type: 'list',
     name: 'customDevice',
     message: 'Custom: (use arrow keys)',
-    when: answers => answers.deviceChosen === 'Custom',
+    when: (answers: Answers) => answers.deviceChosen === 'Custom',
     choices: ['iPhone 11', 'Samsung Galaxy S9+', 'Specify viewport'],
   },
   {
-    type: 'input',
+    type: 'number',
     name: 'viewportWidth',
     message: 'Specify width of the viewport in pixels (e.g. 360):',
-    when: answers => answers.customDevice === 'Specify viewport',
-    validate: viewport => {
-      if (!Number.isInteger(Number(viewport))) {
-        return 'Invalid viewport width. Please provide a number.';
+    when: (answers: Answers) => answers.customDevice === 'Specify viewport',
+    validate: (viewport: number) => {
+      if (!Number.isInteger(viewport)) {
+        return 'Invalid viewport width. Please provide an integer.';
       }
       if (viewport < 320 || viewport > 1080) {
         return 'Invalid viewport width! Please provide a viewport width between 320-1080 pixels.';
@@ -61,13 +69,11 @@ const startScanQuestions = [
   {
     type: 'input',
     name: 'url',
-    message: answers => getUrlMessage(answers.scanner),
+    message: (answers: Answers) => getUrlMessage(answers.scanner),
     // eslint-disable-next-line func-names
     // eslint-disable-next-line object-shorthand
-    validate: async function (url, answers) {
-      const checkIfExit = url.toLowerCase();
-
-      if (checkIfExit === 'exit') {
+    validate: async function (url: string, answers: Answers) {
+      if (url.toLowerCase() === 'exit') {
         process.exit(1);
       }
 
@@ -97,14 +103,14 @@ const startScanQuestions = [
         case statuses.systemError.code:
           return statuses.systemError.message;
         case statuses.invalidUrl.code:
-          if (answers.scanner !== constants.scannerTypes.sitemap) {
+          if (answers.scanner !== ScannerTypes.SITEMAP) {
             return statuses.invalidUrl.message;
           }
 
           /* if sitemap scan is selected, treat this URL as a filepath
               isFileSitemap will tell whether the filepath exists, and if it does, whether the
               file is a sitemap */
-          const finalFilePath = await isFileSitemap(url); 
+          const finalFilePath = getFileSitemap(url);
           if (finalFilePath) {
             answers.isLocalSitemap = true;
             answers.finalUrl = finalFilePath;
@@ -116,14 +122,14 @@ const startScanQuestions = [
           return statuses.notASitemap.message;
       }
     },
-    filter: input => sanitizeUrlInput(input.trim()).url,
+    filter: (input: string) => sanitizeUrlInput(input.trim()).url,
   },
   {
     type: 'input',
     name: 'customFlowLabel',
     message: 'Give a preferred label to your custom scan flow (Optional)',
-    when: answers => answers.scanner === constants.scannerTypes.custom,
-    validate: label => {
+    when: (answers: Answers) => answers.scanner === ScannerTypes.CUSTOM,
+    validate: (label: string) => {
       const { isValid, errorMessage } = validateCustomFlowLabel(label);
       if (!isValid) {
         return errorMessage;
@@ -133,15 +139,12 @@ const startScanQuestions = [
   },
 ];
 
-const newUserQuestions = [
+const newUserQuestions: Question[] = [
   {
     type: 'input',
     name: 'name',
     message: `Name:`,
-    validate: name => {
-      // if (name === '' || name === undefined || name === null) {
-      //   return true;
-      // }
+    validate: (name: string): string | boolean => {
       if (!validName(name)) {
         return 'Invalid name. Please provide a valid name. Only alphabets in under 50 characters allowed.';
       }
@@ -152,10 +155,7 @@ const newUserQuestions = [
     type: 'input',
     name: 'email',
     message: `Email:`,
-    validate: email => {
-      // if (email === '' || email === undefined || email === null) {
-      //   return true;
-      // }
+    validate: (email: string): string | boolean => {
       if (!validEmail(email)) {
         return 'Invalid email address. Please provide a valid email address.';
       }

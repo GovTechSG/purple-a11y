@@ -14,8 +14,8 @@ import safe from 'safe-regex';
 import * as https from 'https';
 import os from 'os';
 import { minimatch } from 'minimatch';
-import { Glob, globSync } from 'glob';
-import { BrowserContext, LaunchOptions, devices, webkit } from 'playwright';
+import { globSync } from 'glob';
+import { LaunchOptions, devices, webkit } from 'playwright';
 import printMessage from 'print-message';
 import constants, {
   getDefaultChromeDataDir,
@@ -23,7 +23,7 @@ import constants, {
   getDefaultChromiumDataDir,
   proxy,
   formDataFields,
-  BrowserTypes,
+  ScannerTypes,
 } from './constants.js';
 import { silentLogger } from '../logs.js';
 import { isUrlPdf } from '../crawlers/commonCrawlerFunc.js';
@@ -171,23 +171,21 @@ export const isSelectorValid = (selector: string): boolean => {
 // Refer to NPM validator's special characters under sanitizers for escape()
 const blackListCharacters = '\\<>&\'"';
 
-export const isValidXML = async content => {
-  // fs.writeFileSync('sitemapcontent.txt', content);
-  let status;
-  let parsedContent = '';
-  parseString(content, (err, result) => {
+export const validateXML = (content: string): { isValid: boolean; parsedContent: string } => {
+  let isValid: boolean;
+  let parsedContent: string;
+  parseString(content, (_err, result) => {
     if (result) {
-      status = true;
+      isValid = true;
       parsedContent = result;
-    }
-    if (err) {
-      status = false;
+    } else {
+      isValid = false;
     }
   });
-  return { status, parsedContent };
+  return { isValid, parsedContent };
 };
 
-export const isSkippedUrl = (pageUrl, whitelistedDomains) => {
+export const isSkippedUrl = (pageUrl: string, whitelistedDomains: string[]) => {
   const matched =
     whitelistedDomains.filter(p => {
       const pattern = p.replace(/[\n\r]+/g, '');
@@ -204,7 +202,7 @@ export const isSkippedUrl = (pageUrl, whitelistedDomains) => {
   return matched;
 };
 
-export const isFileSitemap = async filePath => {
+export const getFileSitemap = (filePath: string): string | null => {
   if (filePath.startsWith('file:///')) {
     if (os.platform() === 'win32') {
       filePath = filePath.match(/^file:\/\/\/([A-Z]:\/[^?#]+)/)?.[1];
@@ -218,16 +216,16 @@ export const isFileSitemap = async filePath => {
   }
 
   const file = fs.readFileSync(filePath, 'utf8');
-  const isLocalSitemap = await isSitemapContent(file);
+  const isLocalSitemap = isSitemapContent(file);
   return isLocalSitemap ? filePath : null;
 };
 
-export const getUrlMessage = scanner => {
+export const getUrlMessage = (scanner: ScannerTypes): string => {
   switch (scanner) {
-    case constants.scannerTypes.website:
-    case constants.scannerTypes.custom:
+    case ScannerTypes.WEBSITE:
+    case ScannerTypes.CUSTOM:
       return 'Please enter URL of website: ';
-    case constants.scannerTypes.sitemap:
+    case ScannerTypes.SITEMAP:
       return 'Please enter URL or file path to sitemap, or drag and drop a sitemap file here: ';
 
     default:
@@ -247,18 +245,14 @@ export const isInputValid = inputString => {
   return false;
 };
 
-export const sanitizeUrlInput = url => {
+export const sanitizeUrlInput = (url: string): { isValid: boolean; url: string } => {
   // Sanitize that there is no blacklist characters
   const sanitizeUrl = validator.blacklist(url, blackListCharacters);
-  const data = {};
   if (validator.isURL(sanitizeUrl, urlOptions)) {
-    data.isValid = true;
+    return { isValid: true, url: sanitizeUrl };
   } else {
-    data.isValid = false;
+    return { isValid: false, url: sanitizeUrl };
   }
-
-  data.url = sanitizeUrl;
-  return data;
 };
 
 const requestToUrl = async (url, isCustomFlow, extraHTTPHeaders) => {
@@ -462,8 +456,8 @@ const checkUrlConnectivityWithBrowser = async (
   return res;
 };
 
-export const isSitemapContent = async content => {
-  const { status: isValid } = await isValidXML(content);
+export const isSitemapContent = (content: string) => {
+  const { isValid } = validateXML(content);
   if (isValid) {
     return true;
   }
@@ -472,11 +466,11 @@ export const isSitemapContent = async content => {
   const regexForXmlSitemap = new RegExp('<(?:urlset|feed|rss)+?.*>', 'gmi');
   const regexForUrl = new RegExp('^.*(http|https):/{2}.*$', 'gmi');
 
-  if (String(content).match(regexForHtml) && String(content).match(regexForXmlSitemap)) {
+  if (content.match(regexForHtml) && content.match(regexForXmlSitemap)) {
     // is an XML sitemap wrapped in a HTML document
     return true;
   }
-  if (!String(content).match(regexForHtml) && String(content).match(regexForUrl)) {
+  if (!content.match(regexForHtml) && content.match(regexForUrl)) {
     // treat this as a txt sitemap where all URLs will be extracted for crawling
     return true;
   }
@@ -519,11 +513,8 @@ export const checkUrl = async (
     }
   }
 
-  if (
-    res.status === constants.urlCheckStatuses.success.code &&
-    scanner === constants.scannerTypes.sitemap
-  ) {
-    const isSitemap = await isSitemapContent(res.content);
+  if (res.status === constants.urlCheckStatuses.success.code && scanner === ScannerTypes.SITEMAP) {
+    const isSitemap = isSitemapContent(res.content);
 
     if (!isSitemap) {
       res.status = constants.urlCheckStatuses.notASitemap.code;
@@ -540,7 +531,7 @@ export const prepareData = async (argv: Answers): Promise<Data> => {
   }
   const {
     scanner,
-    headless, 
+    headless,
     url,
     deviceChosen,
     customDevice,
@@ -584,7 +575,7 @@ export const prepareData = async (argv: Answers): Promise<Data> => {
     type: scanner,
     url: finalUrl,
     entryUrl: url,
-    isHeadless: headless, 
+    isHeadless: headless,
     deviceChosen,
     customDevice,
     viewportWidth,
@@ -1563,7 +1554,7 @@ export const getPlaywrightDeviceDetailsObject = (
     playwrightDeviceDetailsObject = devices['Galaxy S9+'];
   } else if (viewportWidth) {
     playwrightDeviceDetailsObject = {
-      viewport: { width: Number(viewportWidth), height: 720 },
+      viewport: { width: viewportWidth, height: 720 },
     };
   } else if (customDevice) {
     playwrightDeviceDetailsObject = devices[customDevice.replace(/_/g, ' ')];

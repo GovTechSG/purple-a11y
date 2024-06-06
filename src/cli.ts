@@ -11,7 +11,7 @@ import { cleanUp, zipResults, setHeadlessMode, getVersion, getStoragePath } from
 import {
   checkUrl,
   prepareData,
-  isFileSitemap,
+  getFileSitemap,
   validEmail,
   validName,
   getBrowserToRun,
@@ -23,7 +23,7 @@ import {
   validateFilePath,
   validateCustomFlowLabel,
 } from './constants/common.js';
-import constants from './constants/constants.js';
+import constants, { ScannerTypes } from './constants/constants.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
 import combineRun from './combine.js';
 import { silentLogger } from './logs.js';
@@ -53,26 +53,6 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
       `To start a custom flow scan', 'npm run cli -- -c [ 3 | custom ] -u <url_link> [ -d <device> | -w <viewport_width> ]`,
     ],
   ])
-  .coerce('c', option => {
-    const { choices } = cliOptions.c;
-    if (typeof option === 'number') {
-      // Will also allow integer choices
-      if (Number.isInteger(option) && option > 0 && option <= choices.length) {
-        option = choices[option - 1];
-      } else {
-        printMessage(
-          [
-            'Invalid option',
-            `Please enter an integer (1 to ${choices.length}) or keywords (${choices.join(', ')}).`,
-          ],
-          messageOptions,
-        );
-        process.exit(1);
-      }
-    }
-
-    return option;
-  })
   .coerce('d', option => {
     const device = devices[option];
     if (!device && option !== 'Desktop' && option !== 'Mobile') {
@@ -257,10 +237,8 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
 
 const scanInit = async (argvs: Answers): Promise<void> => {
   let isCustomFlow = false;
-  if (constants.scannerTypes[argvs.scanner] === constants.scannerTypes.custom) {
+  if (argvs.scanner === ScannerTypes.CUSTOM) {
     isCustomFlow = true;
-  } else {
-    argvs.scanner = constants.scannerTypes[argvs.scanner];
   }
   argvs.scanner = constants.scannerTypes[argvs.scanner];
   argvs.browserToRun = constants.browserTypes[argvs.browserToRun];
@@ -315,14 +293,14 @@ const scanInit = async (argvs: Answers): Promise<void> => {
       printMessage([statuses.systemError.message], messageOptions);
       process.exit(res.status);
     case statuses.invalidUrl.code:
-      if (argvs.scanner !== constants.scannerTypes.sitemap) {
+      if (argvs.scanner !== ScannerTypes.SITEMAP) {
         printMessage([statuses.invalidUrl.message], messageOptions);
         process.exit(res.status);
       }
       /* if sitemap scan is selected, treat this URL as a filepath
           isFileSitemap will tell whether the filepath exists, and if it does, whether the
           file is a sitemap */
-      const finalFilePath = await isFileSitemap(argvs.url);
+      const finalFilePath = getFileSitemap(argvs.url);
       if (finalFilePath) {
         argvs.isLocalSitemap = true;
         argvs.finalUrl = finalFilePath;
@@ -345,7 +323,7 @@ const scanInit = async (argvs: Answers): Promise<void> => {
       break;
   }
 
-  if (argvs.scanner === constants.scannerTypes.website && !argvs.strategy) {
+  if (argvs.scanner === ScannerTypes.WEBSITE && !argvs.strategy) {
     argvs.strategy = 'same-domain';
   }
 
@@ -381,9 +359,7 @@ const scanInit = async (argvs: Answers): Promise<void> => {
 
   printMessage([`Purple A11y version: ${appVersion}`, 'Starting scan...'], messageOptions);
 
- 
   await combineRun(data, screenToScan);
-  
 
   // Delete cloned directory
   process.env.PURPLE_A11Y_VERBOSE

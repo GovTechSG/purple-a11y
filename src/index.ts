@@ -22,7 +22,7 @@ import {
 } from './constants/common.js';
 import questions from './constants/questions.js';
 import combineRun from './combine.js';
-import constants from './constants/constants.js';
+import constants, { ScannerTypes } from './constants/constants.js';
 
 export type Answers = {
   headless: boolean;
@@ -30,7 +30,7 @@ export type Answers = {
   customDevice: string;
   viewportWidth: number;
   browserToRun: string;
-  scanner: string;
+  scanner: ScannerTypes;
   url: string;
   clonedBrowserDataDir: string;
   playwrightDeviceDetailsObject: Object;
@@ -51,7 +51,7 @@ export type Answers = {
 };
 
 export type Data = {
-  type: string;
+  type: ScannerTypes;
   url: string;
   entryUrl: string;
   isHeadless: boolean;
@@ -99,21 +99,14 @@ const runScan = async (answers: Answers) => {
   answers.fileTypes = 'html-only';
   answers.metadata = '{}';
 
-  let isCustomFlow = false;
-  if (answers.scanner === constants.scannerTypes.custom) {
-    isCustomFlow = true;
-  }
-
   const data = await prepareData(answers);
   data.userDataDirectory = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
 
   setHeadlessMode(data.browser, data.isHeadless);
   printMessage(['Scanning website...'], messageOptions);
 
-
   await combineRun(data, screenToScan);
   
-
   // Delete cloned directory
   deleteClonedProfiles(data.browser);
 

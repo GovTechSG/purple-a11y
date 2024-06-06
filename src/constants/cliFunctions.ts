@@ -1,5 +1,6 @@
 import { Options } from 'yargs';
-import constants from './constants.js';
+import constants, { ScannerTypes } from './constants.js';
+import printMessage from 'print-message';
 
 export const messageOptions = {
   border: false,
@@ -15,9 +16,36 @@ export const alertMessageOptions = {
 export const cliOptions: { [key: string]: Options } = {
   c: {
     alias: 'scanner',
-    describe:
-      'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow, 5) intelligent',
-    choices: Object.keys(constants.scannerTypes),
+    describe: 'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow, 4) intelligent',
+    coerce: option => {
+      const choices = ['sitemap', 'website', 'custom', 'intelligent'];
+      if (typeof option === 'number') {
+        // Will also allow integer choices
+        if (Number.isInteger(option) && option > 0 && option <= choices.length) {
+          option = choices[option - 1];
+        }
+      }
+
+      switch (option) {
+        case 'sitemap':
+          return ScannerTypes.SITEMAP;
+        case 'website':
+          return ScannerTypes.WEBSITE;
+        case 'custom':
+          return ScannerTypes.CUSTOM;
+        case 'intelligent':
+          return ScannerTypes.INTELLIGENT;
+        default:
+          printMessage(
+            [
+              'Invalid option',
+              `Please enter an integer (1 to ${choices.length}) or keywords (${choices.join(', ')}).`,
+            ],
+            messageOptions,
+          );
+          process.exit(1);
+      }
+    },
     demandOption: true,
   },
   u: {
