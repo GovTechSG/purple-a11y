@@ -189,28 +189,25 @@ const base64Encode = (data) => {
 };
 
 const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.html') => {
-
-  //Spread the data 
-  const { items, ...rest } = allIssues;
-
-  // Encode the data
-  const encodedScanItems = base64Encode(items);
-  const encodedScanData = base64Encode(rest);
-
-  // const queryString = `?scanData=${encodedScanData}&scanItems=${encodedScanItems}`;
-
-  // Path to the file where the encoded data will be saved
-  const filePath = path.join(storagePath, 'reports', 'encodedScanData.txt');
-
-  // Ensure directory existence
-  const directoryPath = path.dirname(filePath);
-  console.log("directoryPath:", directoryPath);
-  if (!fs.existsSync(directoryPath)) {
-    fs.mkdirSync(directoryPath, { recursive: true });
-  }
-
-  // Write the encoded scan data to the file
   try {
+    // Spread the data
+    const { items, ...rest } = allIssues;
+
+    // Encode the data
+    const encodedScanItems = base64Encode(items);
+    const encodedScanData = base64Encode(rest);
+
+    // Path to the file where the encoded data will be saved
+    const filePath = path.join(storagePath, 'reports', 'encodedScanData.txt');
+
+    // Ensure directory existence
+    const directoryPath = path.dirname(filePath);
+    console.log("directoryPath:", directoryPath);
+    if (!fs.existsSync(directoryPath)) {
+      fs.mkdirSync(directoryPath, { recursive: true });
+    }
+
+    // Write the encoded scan data to the file
     await fs.promises.writeFile(filePath, `encodedScanData=${encodedScanData}\nencodedScanItems=${encodedScanItems}`);
     console.log('Encoded scan data written to file:', filePath);
   } catch (err) {
