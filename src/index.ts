@@ -48,6 +48,8 @@ export type Answers = {
   followRobots: boolean;
   header: string;
   safeMode: boolean;
+  exportDirectory: string;
+  zip: string;
 };
 
 export type Data = {

@@ -1,7 +1,4 @@
 #!/usr/bin/env node
-/* eslint-disable no-fallthrough */
-/* eslint-disable no-undef */
-/* eslint-disable no-param-reassign */
 import fs from 'fs-extra';
 import _yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
@@ -132,7 +129,7 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   })
   .coerce('x', option => {
     const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename) + "/../"; // check in the parent of dist directory
+    const __dirname = path.dirname(__filename) + '/../'; // check in the parent of dist directory
 
     try {
       return validateFilePath(option, __dirname);
@@ -201,7 +198,7 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return allHeaders;
   })
   .check(argvs => {
-    if ((argvs.scanner === ScannerTypes.CUSTOM) && argvs.maxpages) {
+    if (argvs.scanner === ScannerTypes.CUSTOM && argvs.maxpages) {
       throw new Error('-p or --maxpages is only available in website and sitemap scans.');
     }
     return true;
@@ -213,9 +210,9 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return true;
   })
   .conflicts('d', 'w')
-  .parse()
+  .parse();
 
-const scanInit = async (argvs: Answers): Promise<void> => {
+const scanInit = async (argvs: Answers): Promise<string> => {
   let isCustomFlow = false;
   if (argvs.scanner === ScannerTypes.CUSTOM) {
     isCustomFlow = true;
@@ -350,12 +347,40 @@ const scanInit = async (argvs: Answers): Promise<void> => {
   return getStoragePath(data.randomToken);
 };
 
-scanInit(options).then(async storagePath => {
-  // Take option if set
-  if (typeof options.zip === 'string') {
-    constants.cliZipFileName = options.zip;
+const optionsAnswer: Answers = {
+  scanner: options['scanner'],
+  header: options['header'],
+  browserToRun: options['browserToRun'],
+  zip: options['zip'],
+  url: options['url'],
+  finalUrl: options['finalUrl'],
+  headless: options['headless'],
+  maxpages: options['maxpages'],
+  metadata: options['metadata'],
+  safeMode: options['safeMode'],
+  strategy: options['strategy'],
+  fileTypes: options['fileTypes'],
+  nameEmail: options['newEmail'],
+  additional: options['additional'],
+  customDevice: options['customDevice'],
+  deviceChosen: options['deviceChosen'],
+  followRobots: options['followRobots'],
+  customFlowLabel: options['customFlowLabel'],
+  viewportWidth: options['viewportWidth'],
+  isLocalSitemap: options['isLocalSitemap'],
+  exportDirectory: options['exportDirectory'],
+  clonedBrowserDataDir: options['clonedBrowserDataDir'],
+  specifiedMaxConcurrency: options['specifiedMaxConcurrency'],
+  blacklistedPatternsFilename: options['blacklistedPatternsFilename'],
+  playwrightDeviceDetailsObject: options['playwrightDeviceDetailsObject'],
+};
 
-    if (!options.zip.endsWith('.zip')) {
+scanInit(optionsAnswer).then(async (storagePath: string) => {
+  // Take option if set
+  if (typeof optionsAnswer.zip === 'string') {
+    constants.cliZipFileName = optionsAnswer.zip;
+
+    if (!optionsAnswer.zip.endsWith('.zip')) {
       constants.cliZipFileName += '.zip';
     }
   }

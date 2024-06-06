@@ -1,5 +1,5 @@
 import { Options } from 'yargs';
-import constants, { BrowserTypes, ScannerTypes } from './constants.js';
+import { BrowserTypes, ScannerTypes } from './constants.js';
 import printMessage from 'print-message';
 
 export const messageOptions = {
