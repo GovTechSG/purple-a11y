@@ -22,7 +22,7 @@
     <%-include('partials/scripts/pako.min.ejs') %>
 
     <script>
-       let jsonscanItems = <%- JSON.stringify(
+       let scanItems = <%- JSON.stringify(
           {
             ...items,
             passed: {
@@ -32,7 +32,7 @@
           }
         ) %>;
 
-        let jsonscanData = <%- JSON.stringify({
+        let scanData = <%- JSON.stringify({
           startTime,
           urlScanned,
           viewport,
@@ -76,7 +76,7 @@
         const params = getQueryParams(window.location.href);
 
         // Decode scanData and scanItems or use defaults
-        if (params !== undefined)
+        if (Object.keys(params).length === 2)
         {
           scanItems = params.scanItems ? base64Decode(params.scanItems) : scanItems;
           scanData = params.scanData ? base64Decode(params.scanData) : scanData;
