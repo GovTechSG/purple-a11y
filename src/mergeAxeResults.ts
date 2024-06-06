@@ -204,6 +204,7 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
 
   // Ensure directory existence
   const directoryPath = path.dirname(filePath);
+  console.log("directoryPath:",directoryPath)
   if (!fs.existsSync(directoryPath)) {
     fs.mkdirSync(directoryPath, { recursive: true });
   }
