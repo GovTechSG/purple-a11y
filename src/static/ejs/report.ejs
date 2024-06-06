@@ -18,7 +18,7 @@
     />
     <%- include('partials/styles/bootstrap') %> <%- include('partials/styles/highlightjs') %> <%-
     include('partials/styles/styles') %>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.3/pako.min.js"></script>
     <script>
       const scanItems = <%- JSON.stringify(
           {
@@ -68,34 +68,84 @@
 
         // console.log(queryParams)
 
-        // Function to get query parameters
-        const getQueryParams = (url) => {
-            const params = {};
-            const parser = new URL(url);
-            const queryString = parser.search.slice(1).split('&');
+        // // Function to get query parameters
+        // const getQueryParams = (url) => {
+        //     const params = {};
+        //     const parser = new URL(url);
+        //     const queryString = parser.search.slice(1).split('&');
 
-            queryString.forEach(param => {
-                const [key, value] = param.split('=');
-                params[decodeURIComponent(key)] = decodeURIComponent(value);
-            });
+        //     queryString.forEach(param => {
+        //         const [key, value] = param.split('=');
+        //         params[decodeURIComponent(key)] = decodeURIComponent(value);
+        //     });
 
-            return params;
+        //     return params;
+        // };
+
+        // // Function to decode Base64
+        // const base64Decode = (data) => {
+        //   const compressedBytes = Uint8Array.from(atob(data), c => c.charCodeAt(0));
+        //   const decompressedBytes = pako.inflate(compressedBytes);
+        //   const jsonString = new TextDecoder().decode(decompressedBytes);
+        //   return JSON.parse(jsonString);
+        // };
+
+        // // Get current URL query parameters
+        // const params = getQueryParams(window.location.href);
+
+        // console.log(params);
+
+        // // Decode scanData and scanItems or use defaults
+        // scanItems = params.scanItems ? base64Decode(params.scanItems) : scanItems;
+        // scanData = params.scanData ? base64Decode(params.scanData) : scanData;
+
+        // const base64Decode = (encodedString) => {
+        //   const buffer = Buffer.from(encodedString, 'base64');
+        //   const decompressed = zlib.inflateSync(buffer);
+        //   return JSON.parse(decompressed.toString('utf8'));
+        // };
+        
+        // Function to Base64 decode the data
+        const base64Decode = (encodedString) => {
+          try {
+            // Decode the URL-encoded string
+            const decodedUrlString = decodeURIComponent(encodedString);
+            // Decode the base64 string
+            const binaryString = atob(decodedUrlString);
+            // Convert binary string to Uint8Array
+            const binaryArray = Uint8Array.from(binaryString, char => char.charCodeAt(0));
+            // Decompress the binary array
+            const decompressed = pako.inflate(binaryArray, { to: 'string' });
+            // Parse the JSON string
+            return JSON.parse(decompressed);
+          } catch (error) {
+            console.error('Error decoding base64 string:', error);
+            return null;
+          }
         };
 
-        // Function to decode Base64
-        const base64Decode = (data) => {
-          const compressedBytes = Uint8Array.from(atob(data), c => c.charCodeAt(0));
-          const decompressedBytes = pako.inflate(compressedBytes);
-          const jsonString = new TextDecoder().decode(decompressedBytes);
-          return JSON.parse(jsonString);
+        const checkQueryString = () => {
+          const queryString = window.location.search;
+          const urlParams = new URLSearchParams(queryString);
+          const scanData = urlParams.get('scanData');
+          const scanItems = urlParams.get('scanItems');
+
+          if (scanData && scanItems) {
+            // Decode the base64 data from queryString
+            const decodedScanData = base64Decode(scanData);
+            const decodedScanItems = base64Decode(scanItems);
+            return { decodedScanData, decodedScanItems };
+          } else {
+            // Assume const ... is still there
+            return { decodedScanData: encodedScanData, decodedScanItems: encodedScanItems };
+          }
         };
 
-        // Get current URL query parameters
-        const params = getQueryParams(window.location.href);
+        // Call checkQueryString to get decoded data
+        const { decodedScanData, decodedScanItems } = checkQueryString();
+        console.log(decodedScanData)
+        console.log(decodedScanItems)
 
-        // Decode scanData and scanItems or use defaults
-        scanItems = params.scanItems ? base64Decode(params.scanItems) : scanItems;
-        scanData = params.scanData ? base64Decode(params.scanData) : scanData;
 
     </script>
   </head>

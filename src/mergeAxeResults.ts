@@ -200,7 +200,7 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
 
   const queryString = `?scanData=${encodedScanData}&scanItems=${encodedScanItems}`;
 
-  const filePath = path.join(__dirname, storagePath, 'reports', 'encodedScanData.txt');
+  const filePath = path.join(storagePath, 'reports', 'encodedScanData.txt');
 
   // Ensure directory existence
   const directoryPath = path.dirname(filePath);
@@ -252,7 +252,6 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
     fs.writeFileSync(htmlFilePath, htmlContent);
 
     console.log('HTML file updated successfully:', htmlFilePath);
-  });
 };
 
 
