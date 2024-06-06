@@ -750,7 +750,7 @@ export const getLinksFromSitemap = async (
       ? (url = addBasicAuthCredentials(url, username, password))
       : url;
 
-    const request = new Request({ url: encodeURI(url) });
+    const request = new Request({ url: url });
     if (isUrlPdf(url)) {
       request.skipNavigation = true;
     }

@@ -114,7 +114,7 @@ const crawlSitemap = async (
 
 
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
-
+  
 
   finalLinks = [...finalLinks, ...linksFromSitemap];
 
@@ -149,8 +149,6 @@ const crawlSitemap = async (
     preNavigationHooks: isBasicAuth
       ? [
         async ({ page, request }) => {
-
-          request.url = encodeURI(request.url);
           await page.setExtraHTTPHeaders({
             Authorization: authHeader,
             ...extraHTTPHeaders,
@@ -159,7 +157,6 @@ const crawlSitemap = async (
       ]
       : [
         async ({ page, request }) => {
-        request.url = encodeURI(request.url);
         preNavigationHooks(extraHTTPHeaders)
         //insert other code here
         },
