@@ -223,7 +223,7 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
     let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
 
     // Find the position to insert the script tag in the head section
-    const headIndex = htmlContent.indexOf('<head>');
+    const headIndex = htmlContent.indexOf('<head lang="en">');
     const injectScript = `
     <script>
     function hasQueryString() {
@@ -243,7 +243,7 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
 
     if (headIndex !== -1) {
       // If </head> tag is found, insert the script tag before it
-      htmlContent = htmlContent.slice(0, headIndex + '<head>'.length) + injectScript + htmlContent.slice(headIndex + '<head>'.length);
+      htmlContent = htmlContent.slice(0, headIndex + '<head lang="en">'.length) + injectScript + htmlContent.slice(headIndex + '<head lang="en">'.length);
     } else {
       // If </head> tag is not found, append the script tag at the end of the file
       htmlContent += injectScript;
