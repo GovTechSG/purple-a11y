@@ -28,7 +28,6 @@ const startScanQuestions = [
       { name: 'Sitemap', value: ScannerTypes.SITEMAP },
       { name: 'Website', value: ScannerTypes.WEBSITE },
       { name: 'Custom', value: ScannerTypes.CUSTOM },
-      { name: 'Custom2', value: ScannerTypes.CUSTOM2 },
       { name: 'Intelligent', value: ScannerTypes.INTELLIGENT },
     ],
   },
