@@ -199,10 +199,10 @@ const urlsCrawledObj = {
 };
 
 export enum ScannerTypes {
-  SITEMAP = "Sitemap",
-  WEBSITE = "Website",
-  CUSTOM = "Custom",
-  INTELLIGENT = "Intelligent",
+  SITEMAP = 'Sitemap',
+  WEBSITE = 'Website',
+  CUSTOM = 'Custom',
+  INTELLIGENT = 'Intelligent',
 }
 
 export const guiInfoStatusTypes = {
@@ -323,7 +323,7 @@ const wcagLinks = {
   'WCAG 3.1.1': 'https://www.w3.org/TR/WCAG21/#language-of-page',
   'WCAG 3.1.2': 'https://www.w3.org/TR/WCAG21/#labels-or-instructions',
   'WCAG 4.1.1': 'https://www.w3.org/TR/WCAG21/#parsing',
-  'WCAG 4.1.2': 'https://www.w3.org/TR/WCAG21/#name-role-value'
+  'WCAG 4.1.2': 'https://www.w3.org/TR/WCAG21/#name-role-value',
 };
 
 const urlCheckStatuses = {
@@ -354,17 +354,10 @@ const urlCheckStatuses = {
 };
 
 export enum BrowserTypes {
-  CHROMIUM,
-  CHROME,
-  EDGE,
+  CHROMIUM = 'chromium',
+  CHROME = 'chrome',
+  EDGE = 'msedge',
 }
-
-const browserTypes = {
-  //order affects cliFunctions '-b'
-  chromium: 'chromium',
-  chrome: 'chrome',
-  edge: 'msedge',
-};
 
 const xmlSitemapTypes = {
   xml: 0,
@@ -407,8 +400,6 @@ export default {
   exportDirectory: `${process.cwd()}`,
   maxRequestsPerCrawl,
   maxConcurrency: 25,
-  scannerTypes: ScannerTypes,
-  browserTypes,
   urlsCrawledObj,
   impactOrder,
   launchOptionsArgs: launchOptionsArgs,

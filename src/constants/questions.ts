@@ -13,7 +13,7 @@ import {
   validName,
   validateCustomFlowLabel,
 } from './common.js';
-import constants, { ScannerTypes } from './constants.js';
+import constants, { BrowserTypes, ScannerTypes } from './constants.js';
 
 const userData = getUserDataTxt();
 
@@ -77,7 +77,7 @@ const startScanQuestions = [
       }
 
       const statuses = constants.urlCheckStatuses;
-      const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(constants.browserTypes.chrome);
+      const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(BrowserTypes.CHROME);
       const playwrightDeviceDetailsObject = getPlaywrightDeviceDetailsObject(
         answers.deviceChosen,
         answers.customDevice,

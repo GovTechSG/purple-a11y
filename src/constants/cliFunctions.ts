@@ -1,5 +1,5 @@
 import { Options } from 'yargs';
-import constants, { ScannerTypes } from './constants.js';
+import constants, { BrowserTypes, ScannerTypes } from './constants.js';
 import printMessage from 'print-message';
 
 export const messageOptions = {
@@ -17,6 +17,7 @@ export const cliOptions: { [key: string]: Options } = {
   c: {
     alias: 'scanner',
     describe: 'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow, 4) intelligent',
+    requiresArg: true,
     coerce: option => {
       const choices = ['sitemap', 'website', 'custom', 'intelligent'];
       if (typeof option === 'number') {
@@ -38,7 +39,7 @@ export const cliOptions: { [key: string]: Options } = {
         default:
           printMessage(
             [
-              'Invalid option',
+              `Invalid option: ${option}`,
               `Please enter an integer (1 to ${choices.length}) or keywords (${choices.join(', ')}).`,
             ],
             messageOptions,
@@ -117,9 +118,34 @@ export const cliOptions: { [key: string]: Options } = {
   b: {
     alias: 'browserToRun',
     describe: 'Browser to run the scan on: 1) Chromium, 2) Chrome, 3) Edge. Defaults to Chromium.',
-    choices: Object.keys(constants.browserTypes),
     requiresArg: true,
-    default: 'chrome',
+    coerce: option => {
+      const choices = ['chromium', 'chrome', 'edge'];
+      if (typeof option === 'number') {
+        // Will also allow integer choices
+        if (Number.isInteger(option) && option > 0 && option <= choices.length) {
+          option = choices[option - 1];
+        }
+      }
+
+      switch (option) {
+        case 'chromium':
+          return BrowserTypes.CHROMIUM;
+        case 'chrome':
+          return BrowserTypes.CHROME;
+        case 'edge':
+          return BrowserTypes.EDGE;
+        default:
+          printMessage(
+            [
+              `Invalid option: ${option}`,
+              `Please enter an integer (1 to ${choices.length}) or keywords (${choices.join(', ')}).`,
+            ],
+            messageOptions,
+          );
+          process.exit(1);
+      }
+    },
     demandOption: false,
   },
   s: {

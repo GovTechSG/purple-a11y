@@ -86,25 +86,6 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     }
     return option;
   })
-  .coerce('b', option => {
-    const { choices } = cliOptions.b;
-    if (typeof option === 'number') {
-      if (Number.isInteger(option) && option > 0 && option <= choices.length) {
-        option = choices[option - 1];
-      } else {
-        printMessage(
-          [
-            'Invalid option',
-            `Please enter an integer (1 to ${choices.length}) or keywords (${choices.join(', ')}).`,
-          ],
-          messageOptions,
-        );
-        process.exit(1);
-      }
-    }
-
-    return option;
-  })
   .coerce('t', option => {
     if (!Number.isInteger(option) || Number(option) <= 0) {
       printMessage(
@@ -239,7 +220,6 @@ const scanInit = async (argvs: Answers): Promise<void> => {
   if (argvs.scanner === ScannerTypes.CUSTOM) {
     isCustomFlow = true;
   }
-  argvs.browserToRun = constants.browserTypes[argvs.browserToRun];
 
   // let chromeDataDir = null;
   // let edgeDataDir = null;

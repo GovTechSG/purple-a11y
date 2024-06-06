@@ -24,6 +24,7 @@ import constants, {
   proxy,
   formDataFields,
   ScannerTypes,
+  BrowserTypes,
 } from './constants.js';
 import { silentLogger } from '../logs.js';
 import { isUrlPdf } from '../crawlers/commonCrawlerFunc.js';
@@ -1007,11 +1008,11 @@ export const validName = name => {
  * @returns object consisting of browser to run and cloned data directory
  */
 export const getBrowserToRun = (
-  preferredBrowser: string,
+  preferredBrowser: BrowserTypes,
   isCli = false,
-): { browserToRun: string; clonedBrowserDataDir: string } => {
+): { browserToRun: BrowserTypes; clonedBrowserDataDir: string } => {
   const platform = os.platform();
-  if (preferredBrowser === constants.browserTypes.chrome) {
+  if (preferredBrowser === BrowserTypes.CHROME) {
     const chromeData = getChromeData();
     if (chromeData) return chromeData;
 
@@ -1036,7 +1037,7 @@ export const getBrowserToRun = (
       if (isCli)
         printMessage(['Unable to use Chrome, falling back to Chromium browser...'], messageOptions);
     }
-  } else if (preferredBrowser === constants.browserTypes.edge) {
+  } else if (preferredBrowser === BrowserTypes.EDGE) {
     const edgeData = getEdgeData();
     if (edgeData) return edgeData;
 
@@ -1071,7 +1072,7 @@ export const getBrowserToRun = (
 
   // defaults to chromium
   return {
-    browserToRun: constants.browserTypes.chromium,
+    browserToRun: BrowserTypes.CHROMIUM,
     clonedBrowserDataDir: cloneChromiumProfiles(),
   };
 };
@@ -1083,9 +1084,9 @@ export const getBrowserToRun = (
  * after checkingUrl and unable to utilise same cookie for scan
  * */
 export const getClonedProfilesWithRandomToken = (browser: string, randomToken: string): string => {
-  if (browser === constants.browserTypes.chrome) {
+  if (browser === BrowserTypes.CHROME) {
     return cloneChromeProfiles(randomToken);
-  } else if (browser === constants.browserTypes.edge) {
+  } else if (browser === BrowserTypes.EDGE) {
     return cloneEdgeProfiles(randomToken);
   } else {
     return cloneChromiumProfiles(randomToken);
@@ -1096,7 +1097,7 @@ export const getChromeData = () => {
   const browserDataDir = getDefaultChromeDataDir();
   const clonedBrowserDataDir = cloneChromeProfiles();
   if (browserDataDir && clonedBrowserDataDir) {
-    const browserToRun = constants.browserTypes.chrome;
+    const browserToRun = BrowserTypes.CHROME;
     return { browserToRun, clonedBrowserDataDir };
   } else {
     return null;
@@ -1107,7 +1108,7 @@ export const getEdgeData = () => {
   const browserDataDir = getDefaultEdgeDataDir();
   const clonedBrowserDataDir = cloneEdgeProfiles();
   if (browserDataDir && clonedBrowserDataDir) {
-    const browserToRun = constants.browserTypes.edge;
+    const browserToRun = BrowserTypes.EDGE;
     return { browserToRun, clonedBrowserDataDir };
   }
 };
@@ -1375,7 +1376,7 @@ export const cloneChromiumProfiles = (randomToken?: string): string => {
  * @param {string} randomToken - random token to append to the cloned directory
  * @returns {string} cloned data directory, null if any of the sub files failed to copy
  */
-export const cloneEdgeProfiles = randomToken => {
+export const cloneEdgeProfiles = (randomToken?: string): string => {
   const baseDir = getDefaultEdgeDataDir();
 
   if (!baseDir) {
@@ -1416,11 +1417,11 @@ export const cloneEdgeProfiles = randomToken => {
 };
 
 export const deleteClonedProfiles = (browser: string, randomToken?: string): void => {
-  if (browser === constants.browserTypes.chrome) {
+  if (browser === BrowserTypes.CHROME) {
     deleteClonedChromeProfiles(randomToken);
-  } else if (browser === constants.browserTypes.edge) {
+  } else if (browser === BrowserTypes.EDGE) {
     deleteClonedEdgeProfiles(randomToken);
-  } else if (browser === constants.browserTypes.chromium) {
+  } else if (browser === BrowserTypes.CHROMIUM) {
     deleteClonedChromiumProfiles(randomToken);
   }
 };
@@ -1585,9 +1586,9 @@ export const submitFormViaPlaywright = async (
 ) => {
   const dirName = `clone-${Date.now()}`;
   let clonedDir = null;
-  if (proxy && browserToRun === constants.browserTypes.edge) {
+  if (proxy && browserToRun === BrowserTypes.EDGE) {
     clonedDir = cloneEdgeProfiles(dirName);
-  } else if (proxy && browserToRun === constants.browserTypes.chrome) {
+  } else if (proxy && browserToRun === BrowserTypes.CHROME) {
     clonedDir = cloneChromeProfiles(dirName);
   }
   const browserContext = await constants.launcher.launchPersistentContext(
@@ -1614,16 +1615,16 @@ export const submitFormViaPlaywright = async (
     silentLogger.error(error);
   } finally {
     await browserContext.close();
-    if (proxy && browserToRun === constants.browserTypes.edge) {
+    if (proxy && browserToRun === BrowserTypes.EDGE) {
       !process.env.PURPLE_A11Y_VERBOSE ? deleteClonedEdgeProfiles() : undefined;
-    } else if (proxy && browserToRun === constants.browserTypes.chrome) {
+    } else if (proxy && browserToRun === BrowserTypes.CHROME) {
       !process.env.PURPLE_A11Y_VERBOSE ? deleteClonedChromeProfiles() : undefined;
     }
   }
 };
 
 export const submitForm = async (
-  browserToRun: string,
+  browserToRun: BrowserTypes,
   userDataDirectory: string,
   scannedUrl: string,
   entryUrl: string,
@@ -1689,7 +1690,7 @@ export const getPlaywrightLaunchOptions = (browser?: string): LaunchOptions => {
   if (proxy) {
     options.headless = false;
     options.slowMo = 1000; // To ensure server-side rendered proxy page is loaded
-  } else if (browser === constants.browserTypes.edge && os.platform() === 'win32') {
+  } else if (browser === BrowserTypes.EDGE && os.platform() === 'win32') {
     // edge should be in non-headless mode
     options.headless = false;
   }

@@ -22,14 +22,14 @@ import {
 } from './constants/common.js';
 import questions from './constants/questions.js';
 import combineRun from './combine.js';
-import constants, { ScannerTypes } from './constants/constants.js';
+import constants, { BrowserTypes, ScannerTypes } from './constants/constants.js';
 
 export type Answers = {
   headless: boolean;
   deviceChosen: string;
   customDevice: string;
   viewportWidth: number;
-  browserToRun: string;
+  browserToRun: BrowserTypes;
   scanner: ScannerTypes;
   url: string;
   clonedBrowserDataDir: string;
@@ -88,7 +88,7 @@ const runScan = async (answers: Answers) => {
     answers.customDevice,
     answers.viewportWidth,
   );
-  let { browserToRun } = getBrowserToRun(constants.browserTypes.chrome);
+  let { browserToRun } = getBrowserToRun(BrowserTypes.CHROME);
   deleteClonedProfiles(browserToRun);
   answers.browserToRun = browserToRun;
 

@@ -9,7 +9,6 @@ import { getBlackListedPatterns, submitForm, urlWithoutAuth } from './constants/
 import { consoleLogger, silentLogger } from './logs.js';
 import runCustom from './crawlers/runCustom.js';
 
-
 const combineRun = async (details, deviceToScan) => {
   const envDetails = { ...details };
 
@@ -36,7 +35,7 @@ const combineRun = async (details, deviceToScan) => {
     metadata,
     customFlowLabel = 'Custom Flow',
     extraHTTPHeaders,
-    safeMode
+    safeMode,
   } = envDetails;
 
   process.env.CRAWLEE_LOG_LEVEL = 'ERROR';
@@ -94,12 +93,12 @@ const combineRun = async (details, deviceToScan) => {
         fileTypes,
         blacklistedPatterns,
         includeScreenshots,
-        extraHTTPHeaders
+        extraHTTPHeaders,
       );
       break;
 
     case ScannerTypes.INTELLIGENT:
-        urlsCrawled = await crawlIntelligentSitemap(
+      urlsCrawled = await crawlIntelligentSitemap(
         url,
         randomToken,
         host,
@@ -114,7 +113,7 @@ const combineRun = async (details, deviceToScan) => {
         includeScreenshots,
         followRobots,
         extraHTTPHeaders,
-        safeMode
+        safeMode,
       );
       break;
 
@@ -134,9 +133,9 @@ const combineRun = async (details, deviceToScan) => {
         includeScreenshots,
         followRobots,
         extraHTTPHeaders,
-        safeMode
+        safeMode,
       );
-    break;
+      break;
 
     default:
       consoleLogger.error(`type: ${type} not defined`);
@@ -150,9 +149,9 @@ const combineRun = async (details, deviceToScan) => {
   if (scanDetails.urlsCrawled.scanned.length > 0) {
     await createAndUpdateResultsFolders(randomToken);
     const pagesNotScanned = [
-      ...urlsCrawled.error, 
-      ...urlsCrawled.invalid, 
-      ...urlsCrawled.forbidden
+      ...urlsCrawled.error,
+      ...urlsCrawled.invalid,
+      ...urlsCrawled.forbidden,
     ];
     const basicFormHTMLSnippet = await generateArtifacts(
       randomToken,
@@ -163,10 +162,10 @@ const combineRun = async (details, deviceToScan) => {
       pagesNotScanned,
       customFlowLabel,
       undefined,
-      scanDetails
+      scanDetails,
     );
     const [name, email] = nameEmail.split(':');
-    
+
     await submitForm(
       browser,
       userDataDirectory,
@@ -177,7 +176,7 @@ const combineRun = async (details, deviceToScan) => {
       name,
       JSON.stringify(basicFormHTMLSnippet),
       urlsCrawled.scanned.length,
-      urlsCrawled.scannedRedirects.length, 
+      urlsCrawled.scannedRedirects.length,
       pagesNotScanned.length,
       metadata,
     );

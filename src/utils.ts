@@ -1,7 +1,7 @@
 import { execSync, spawnSync } from 'child_process';
 import path from 'path';
 import os from 'os';
-import { destinationPath, getIntermediateScreenshotsPath } from './constants/constants.js';
+import { BrowserTypes, destinationPath, getIntermediateScreenshotsPath } from './constants/constants.js';
 import fs from 'fs-extra';
 import constants from './constants/constants.js';
 import { silentLogger } from './logs.js';
@@ -245,7 +245,7 @@ export const formatDateTimeForMassScanner = date => {
 
 export const setHeadlessMode = (browser: string, isHeadless: boolean): void => {
   const isWindowsOSAndEdgeBrowser =
-    browser === constants.browserTypes.edge && os.platform() === 'win32';
+    browser === BrowserTypes.EDGE && os.platform() === 'win32';
   if (isHeadless || isWindowsOSAndEdgeBrowser) {
     process.env.CRAWLEE_HEADLESS = '1';
   } else {

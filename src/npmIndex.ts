@@ -2,19 +2,16 @@ import fs from 'fs';
 import path from 'path';
 import printMessage from 'print-message';
 import { fileURLToPath } from 'url';
-import constants from './constants/constants.js';
-import { 
-  deleteClonedProfiles, 
-  getBrowserToRun, 
-  getPlaywrightLaunchOptions, 
-  submitForm,
-  urlWithoutAuth
-} from './constants/common.js'
-import { createCrawleeSubFolders, filterAxeResults } from './crawlers/commonCrawlerFunc.js';
+import constants, { BrowserTypes } from './constants/constants.js';
 import {
-  createAndUpdateResultsFolders,
-  createDetailsAndLogs,
-} from './utils.js';
+  deleteClonedProfiles,
+  getBrowserToRun,
+  getPlaywrightLaunchOptions,
+  submitForm,
+  urlWithoutAuth,
+} from './constants/common.js';
+import { createCrawleeSubFolders, filterAxeResults } from './crawlers/commonCrawlerFunc.js';
+import { createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 import { takeScreenshotForHTMLElements } from './screenshotFunc/htmlScreenshotFunc.js';
 import { silentLogger } from './logs.js';
@@ -23,29 +20,24 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export const init = async (
-  entryUrl, 
-  testLabel, 
-  name = "Your Name", 
-  email = "email@domain.com", 
-  includeScreenshots = false, 
+  entryUrl,
+  testLabel,
+  name = 'Your Name',
+  email = 'email@domain.com',
+  includeScreenshots = false,
   viewportSettings = { width: 1000, height: 660 }, // cypress' default viewport settings
-  thresholds = {}, 
-  scanAboutMetadata = undefined, 
+  thresholds = {},
+  scanAboutMetadata = undefined,
 ) => {
   console.log('Starting Purple A11y');
 
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
   const domain = new URL(entryUrl).hostname;
-  const sanitisedLabel = testLabel
-    ? `_${testLabel.replaceAll(' ', '_')}`
-    : '';
+  const sanitisedLabel = testLabel ? `_${testLabel.replaceAll(' ', '_')}` : '';
   const randomToken = `${date}_${time}${sanitisedLabel}_${domain}`;
 
   // max numbers of mustFix/goodToFix occurrences before test returns a fail
-  const {
-    mustFix: mustFixThreshold,
-    goodToFix: goodToFixThreshold,
-  } = thresholds;
+  const { mustFix: mustFixThreshold, goodToFix: goodToFixThreshold } = thresholds;
 
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
@@ -100,34 +92,49 @@ export const init = async (
     throwErrorIfTerminated();
     if (includeScreenshots) {
       // use chrome by default
-      const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(constants.browserTypes.chrome); 
+      const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(BrowserTypes.CHROME);
       const browserContext = await constants.launcher.launchPersistentContext(
-        clonedBrowserDataDir, 
-        { viewport: scanAboutMetadata.viewport, 
-          ...getPlaywrightLaunchOptions(browserToRun)}
+        clonedBrowserDataDir,
+        { viewport: scanAboutMetadata.viewport, ...getPlaywrightLaunchOptions(browserToRun) },
       );
-      const page = await browserContext.newPage(); 
+      const page = await browserContext.newPage();
       await page.goto(res.pageUrl);
-      await page.waitForLoadState('networkidle'); 
+      await page.waitForLoadState('networkidle');
 
-      // click on elements to reveal hidden elements so screenshots can be taken 
+      // click on elements to reveal hidden elements so screenshots can be taken
       elementsToClick?.forEach(async elem => {
         try {
-          await page.locator(elem).click()
+          await page.locator(elem).click();
         } catch (e) {
           silentLogger.info(e);
         }
       });
 
-      res.axeScanResults.violations = await takeScreenshotForHTMLElements(res.axeScanResults.violations, page, randomToken, 3000);
-      res.axeScanResults.incomplete = await takeScreenshotForHTMLElements(res.axeScanResults.incomplete, page, randomToken, 3000);  
+      res.axeScanResults.violations = await takeScreenshotForHTMLElements(
+        res.axeScanResults.violations,
+        page,
+        randomToken,
+        3000,
+      );
+      res.axeScanResults.incomplete = await takeScreenshotForHTMLElements(
+        res.axeScanResults.incomplete,
+        page,
+        randomToken,
+        3000,
+      );
 
       await browserContext.close();
       deleteClonedProfiles(browserToRun);
     }
-    const pageIndex = urlsCrawled.scanned.length + 1; 
-    const filteredResults = filterAxeResults(res.axeScanResults, res.pageTitle, { pageIndex , metadata });
-    urlsCrawled.scanned.push({ url: urlWithoutAuth(res.pageUrl), pageTitle: `${pageIndex}: ${res.pageTitle}` });
+    const pageIndex = urlsCrawled.scanned.length + 1;
+    const filteredResults = filterAxeResults(res.axeScanResults, res.pageTitle, {
+      pageIndex,
+      metadata,
+    });
+    urlsCrawled.scanned.push({
+      url: urlWithoutAuth(res.pageUrl),
+      pageTitle: `${pageIndex}: ${res.pageTitle}`,
+    });
 
     mustFixIssues += filteredResults.mustFix ? filteredResults.mustFix.totalItems : 0;
     goodToFixIssues += filteredResults.goodToFix ? filteredResults.goodToFix.totalItems : 0;
@@ -143,7 +150,7 @@ export const init = async (
   const testThresholds = () => {
     // check against thresholds to fail tests
     let isThresholdExceeded = false;
-    let thresholdFailMessage = "Exceeded thresholds:\n";
+    let thresholdFailMessage = 'Exceeded thresholds:\n';
     if (mustFixThreshold !== undefined && mustFixIssues > mustFixThreshold) {
       isThresholdExceeded = true;
       thresholdFailMessage += `mustFix occurrences found: ${mustFixIssues} > ${mustFixThreshold}\n`;
@@ -176,10 +183,13 @@ export const init = async (
     } else {
       await createDetailsAndLogs(scanDetails, randomToken);
       await createAndUpdateResultsFolders(randomToken);
-      const pagesNotScanned = [...scanDetails.urlsCrawled.error, ...scanDetails.urlsCrawled.invalid];
+      const pagesNotScanned = [
+        ...scanDetails.urlsCrawled.error,
+        ...scanDetails.urlsCrawled.invalid,
+      ];
       scanAboutMetadata = {
-        viewport: `${viewportSettings.width} x ${viewportSettings.height}`, 
-        ...scanAboutMetadata
+        viewport: `${viewportSettings.width} x ${viewportSettings.height}`,
+        ...scanAboutMetadata,
       };
       const basicFormHTMLSnippet = await generateArtifacts(
         randomToken,
@@ -190,11 +200,11 @@ export const init = async (
         pagesNotScanned,
         testLabel,
         scanAboutMetadata,
-        scanDetails
+        scanDetails,
       );
 
       await submitForm(
-        constants.browserTypes.chromium,
+        BrowserTypes.CHROMIUM,
         '',
         scanDetails.requestUrl,
         null,
@@ -203,9 +213,8 @@ export const init = async (
         name,
         JSON.stringify(basicFormHTMLSnippet),
         urlsCrawled.scanned.length,
-        "{}",
+        '{}',
       );
-
     }
 
     return null;
@@ -221,4 +230,4 @@ export const init = async (
   };
 };
 
-export default init
+export default init;
