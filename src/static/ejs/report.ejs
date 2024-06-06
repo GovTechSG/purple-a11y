@@ -18,9 +18,6 @@
     />
     <%- include('partials/styles/bootstrap') %> <%- include('partials/styles/highlightjs') %> <%-
     include('partials/styles/styles') %>
-
-    <%-include('partials/scripts/pako.min.ejs') %>
-
     <script>
        let scanItems = <%- JSON.stringify(
           {
@@ -50,38 +47,37 @@
         }
         ) %>;
 
-        // Function to get query parameters
-        const getQueryParams = (url) => {
-            const params = {};
-            const parser = new URL(url);
-            const queryString = parser.search.slice(1).split('&');
+        // // Function to get query parameters
+        // const getQueryParams = (url) => {
+        //     const params = {};
+        //     const parser = new URL(url);
+        //     const queryString = parser.search.slice(1).split('&');
 
-            queryString.forEach(param => {
-                const [key, value] = param.split('=');
-                params[decodeURIComponent(key)] = decodeURIComponent(value);
-            });
+        //     queryString.forEach(param => {
+        //         const [key, value] = param.split('=');
+        //         params[decodeURIComponent(key)] = decodeURIComponent(value);
+        //     });
 
-            return params;
-        };
+        //     return params;
+        // };
 
         // Function to decode Base64
         const base64Decode = (data) => {
           const compressedBytes = Uint8Array.from(atob(data), c => c.charCodeAt(0));
-          const decompressedBytes = pako.inflate(compressedBytes);
-          const jsonString = new TextDecoder().decode(decompressedBytes);
+          // const decompressedBytes = pako.inflate(compressedBytes);
+          const jsonString = new TextDecoder().decode(compressedBytes);
           return JSON.parse(jsonString);
         };
 
-        // Get current URL query parameters
-        const params = getQueryParams(window.location.href);
+        // // Get current URL query parameters
+        // const params = getQueryParams(window.location.href);
 
         // Decode scanData and scanItems or use defaults
-        if (Object.keys(params).length === 2)
-        {
-          scanItems = params.scanItems ? base64Decode(params.scanItems) : scanItems;
-          scanData = params.scanData ? base64Decode(params.scanData) : scanData;
-        }
-        
+        console.log(typeof encodedscanData)
+       // Decode scanItems and scanData if encoded versions are provided, otherwise use default values
+       scanItems = typeof encodedscanItems !== 'undefined' ? base64Decode(encodedscanItems) : scanItems;
+       scanData = typeof encodedscanData !== 'undefined' ? base64Decode(encodedscanData) : scanData;
+              
 
     </script>
   </head>
