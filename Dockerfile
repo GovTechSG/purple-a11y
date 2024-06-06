@@ -55,6 +55,8 @@ USER purple
 
 # Copy application and support files
 COPY . .
+RUN pwd
+RUN ls
 
 # Compile TypeScript
 RUN npm run build || true  # true exits with code 0 - temp workaround until errors are resolved
