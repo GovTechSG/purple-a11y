@@ -12,7 +12,7 @@ const platform = os.platform();
 
 if (platform === 'win32') {
   // Windows
-  exec(`powershell -Command "New-Item -Path '${destDir}' -ItemType 'directory' -Force" && xcopy "${sourceDir}" "${destDir}" /E /I /Y`, (error, stdout, stderr) => {
+  exec(`powershell -Command "(New-Item -Path '${destDir}' -ItemType 'directory' -Force); (Copy-item -Path '${sourceDir}' -Destination '${destDir}' -Recurse -Force)"`, (error, stdout, stderr) => {
     if (error) {
       console.error(`Error: ${error.message}`);
       return;
@@ -25,7 +25,7 @@ if (platform === 'win32') {
   });
 } else {
   // Other operating systems (Linux, macOS, etc.)
-  exec(`mkdir -p "${destDir}" && cp -vr "${sourceDir}/." "${destDir}"`, (error, stdout, stderr) => {
+  exec(`mkdir -p "${destDir}" && cp -vr "${sourceDir}" "${destDir}"`, (error, stdout, stderr) => {
     if (error) {
       console.error(`Error: ${error.message}`);
       return;
