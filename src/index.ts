@@ -22,7 +22,6 @@ import {
 } from './constants/common.js';
 import questions from './constants/questions.js';
 import combineRun from './combine.js';
-import playwrightAxeGenerator from './playwrightAxeGenerator.js';
 import constants from './constants/constants.js';
 
 export type Answers = {
@@ -100,10 +99,9 @@ const runScan = async (answers: Answers) => {
   answers.fileTypes = 'html-only';
   answers.metadata = '{}';
 
-  let isNewCustomFlow = false;
-  if (answers.scanner === constants.scannerTypes.custom2) {
-    answers.scanner = constants.scannerTypes.custom;
-    isNewCustomFlow = true;
+  let isCustomFlow = false;
+  if (answers.scanner === constants.scannerTypes.custom) {
+    isCustomFlow = true;
   }
 
   const data = await prepareData(answers);
@@ -112,11 +110,9 @@ const runScan = async (answers: Answers) => {
   setHeadlessMode(data.browser, data.isHeadless);
   printMessage(['Scanning website...'], messageOptions);
 
-  if (answers.scanner === constants.scannerTypes.custom && !isNewCustomFlow) {
-    await playwrightAxeGenerator(data);
-  } else {
-    await combineRun(data, screenToScan);
-  }
+
+  await combineRun(data, screenToScan);
+  
 
   // Delete cloned directory
   deleteClonedProfiles(data.browser);

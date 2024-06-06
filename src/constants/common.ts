@@ -226,7 +226,6 @@ export const getUrlMessage = scanner => {
   switch (scanner) {
     case constants.scannerTypes.website:
     case constants.scannerTypes.custom:
-    case constants.scannerTypes.custom2:
       return 'Please enter URL of website: ';
     case constants.scannerTypes.sitemap:
       return 'Please enter URL or file path to sitemap, or drag and drop a sitemap file here: ';
@@ -262,7 +261,7 @@ export const sanitizeUrlInput = url => {
   return data;
 };
 
-const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
+const requestToUrl = async (url, isCustomFlow, extraHTTPHeaders) => {
   // User-Agent is modified to emulate a browser to handle cases where some sites ban non browser agents, resulting in a 403 error
   const res = {};
   const parsedUrl = new URL(url);
@@ -281,7 +280,8 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
       timeout: 5000,
     })
     .then(async response => {
-      const redirectUrl = response.request.res.responseUrl;
+      let redirectUrl = response.request.res.responseUrl;
+      redirectUrl = new URL(redirectUrl).href;
       res.status = constants.urlCheckStatuses.success.code;
       let data;
       if (typeof response.data === 'string' || response.data instanceof String) {
@@ -304,7 +304,7 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
 
       const hasMetaRefresh = metaRefreshMatch && metaRefreshMatch.length > 1;
 
-      if (redirectUrl != null && (hasMetaRefresh || !isNewCustomFlow)) {
+      if (redirectUrl != null && (hasMetaRefresh || !isCustomFlow)) {
         res.url = redirectUrl;
       } else {
         res.url = url;
@@ -356,12 +356,12 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
   return res;
 };
 
-const checkUrlConnectivity = async (url, isNewCustomFlow, extraHTTPHeaders) => {
+const checkUrlConnectivity = async (url, isCustomFlow, extraHTTPHeaders) => {
   const data = sanitizeUrlInput(url);
 
   if (data.isValid) {
     // Validate the connectivity of URL if the string format is url format
-    const res = await requestToUrl(data.url, isNewCustomFlow, extraHTTPHeaders);
+    const res = await requestToUrl(data.url, isCustomFlow, extraHTTPHeaders);
     return res;
   }
 
@@ -374,7 +374,7 @@ const checkUrlConnectivityWithBrowser = async (
   browserToRun,
   clonedDataDir,
   playwrightDeviceDetailsObject,
-  isNewCustomFlow,
+  isCustomFlow,
   extraHTTPHeaders,
 ) => {
   const res = {};
@@ -441,7 +441,7 @@ const checkUrlConnectivityWithBrowser = async (
       }
 
       // set redirect link or final url
-      if (isNewCustomFlow) {
+      if (isCustomFlow) {
         res.url = url;
       } else {
         res.url = page.url();
@@ -490,7 +490,7 @@ export const checkUrl = async (
   browser,
   clonedDataDir,
   playwrightDeviceDetailsObject,
-  isNewCustomFlow,
+  isCustomFlow,
   extraHTTPHeaders,
 ) => {
   let res;
@@ -500,11 +500,11 @@ export const checkUrl = async (
       browser,
       clonedDataDir,
       playwrightDeviceDetailsObject,
-      isNewCustomFlow,
+      isCustomFlow,
       extraHTTPHeaders,
     );
   } else {
-    res = await checkUrlConnectivity(url, isNewCustomFlow, extraHTTPHeaders);
+    res = await checkUrlConnectivity(url, isCustomFlow, extraHTTPHeaders);
     if (res.status === constants.urlCheckStatuses.axiosTimeout.code) {
       if (browser || constants.launcher === webkit) {
         res = await checkUrlConnectivityWithBrowser(
@@ -512,7 +512,7 @@ export const checkUrl = async (
           browser,
           clonedDataDir,
           playwrightDeviceDetailsObject,
-          isNewCustomFlow,
+          isCustomFlow,
           extraHTTPHeaders,
         );
       }
@@ -1711,3 +1711,11 @@ export const urlWithoutAuth = (url: string): URL => {
   parsedUrl.password = '';
   return parsedUrl;
 };
+
+export const waitForPageLoaded = async (page, timeout = 10000) => {
+  return Promise.race([
+      page.waitForLoadState('load'),
+      page.waitForLoadState('networkidle'),
+      new Promise((resolve) => setTimeout(resolve, timeout))
+  ]);
+}
