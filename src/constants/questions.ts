@@ -90,6 +90,8 @@ const startScanQuestions = [
         browserToRun,
         clonedBrowserDataDir,
         playwrightDeviceDetailsObject,
+        answers.scanner === ScannerTypes.CUSTOM,
+        answers.header,
       );
 
       deleteClonedProfiles(browserToRun);
