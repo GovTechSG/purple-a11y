@@ -252,7 +252,6 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
     fs.writeFileSync(htmlFilePath, htmlContent);
 
     console.log('HTML file updated successfully:', htmlFilePath);
-  });
 };
 
 

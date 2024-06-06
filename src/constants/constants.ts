@@ -307,20 +307,24 @@ const wcagLinks = {
   'WCAG 1.3.1': 'https://www.w3.org/TR/WCAG21/#info-and-relationships',
   // 'WCAG 1.3.4': 'https://www.w3.org/TR/WCAG21/#orientation', - TODO: review for veraPDF
   'WCAG 1.3.5': 'https://www.w3.org/TR/WCAG21/#use-of-color',
+  'WCAG 1.4.1': 'https://www.w3.org/TR/WCAG21/#use-of-color',
   'WCAG 1.4.2': 'https://www.w3.org/TR/WCAG21/#audio-control',
   'WCAG 1.4.3': 'https://www.w3.org/TR/WCAG21/#contrast-minimum',
   'WCAG 1.4.4': 'https://www.w3.org/TR/WCAG21/#resize-text',
   // 'WCAG 1.4.10': 'https://www.w3.org/TR/WCAG21/#reflow', - TODO: review for veraPDF
   'WCAG 1.4.12': 'https://www.w3.org/TR/WCAG21/#text-spacing',
   'WCAG 2.1.1': 'https://www.w3.org/TR/WCAG21/#pause-stop-hide',
+  'WCAG 2.2.1': 'https://www.w3.org/TR/WCAG21/#timing-adjustable',
+  'WCAG 2.2.2': 'https://www.w3.org/TR/WCAG21/#pause-stop-hide',
   'WCAG 2.4.1': 'https://www.w3.org/TR/WCAG21/#bypass-blocks',
   'WCAG 2.4.2': 'https://www.w3.org/TR/WCAG21/#page-titled',
   'WCAG 2.4.4': 'https://www.w3.org/TR/WCAG21/#link-purpose-in-context',
   'WCAG 3.1.1': 'https://www.w3.org/TR/WCAG21/#language-of-page',
   'WCAG 3.1.2': 'https://www.w3.org/TR/WCAG21/#labels-or-instructions',
   'WCAG 4.1.1': 'https://www.w3.org/TR/WCAG21/#parsing',
-  'WCAG 4.1.2': 'https://www.w3.org/TR/WCAG21/#name-role-value',
+  'WCAG 4.1.2': 'https://www.w3.org/TR/WCAG21/#name-role-value'
 };
+
 
 const urlCheckStatuses = {
   success: { code: 0 },
