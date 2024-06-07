@@ -195,6 +195,7 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
   // Spread the data
   const { items, ...rest } = allIssues;
 
+  console.log(rest);
   // Encode the data
   const encodedScanItems = base64Encode(items);
   const encodedScanData = base64Encode(rest);

@@ -85,6 +85,15 @@
         });
       }
 
+      // Scan DATA FUNCTION TO REPLACE NA
+      const scanDataWCAGCompliance = () => {
+        const wcagComplianceCard = document.querySelector("#wcag-compliance-card")
+        const passPecentage = wcagComplianceCard.querySelector('[aria-label="Pass percentage"]')
+        passPecentage.innerHTML = scanData.wcagPassPercentage+"%";
+        const wcagBarProgess = wcagComplianceCard.querySelector(".wcag-compliance-passes-bar-progress");
+        wcagBarProgess.style.width = `${scanData.wcagPassPercentage}%`; // Set this to your desired width
+      };
+
       const scanDataHTML = () => {
         document.getElementById('pagesScannedModalLabel').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
         document.getElementById('totalPagesScannedLabel').innerHTML = scanData.totalPagesScanned;
@@ -154,8 +163,14 @@
         var versionContent = 'Purple A11y Version ' + scanData.phAppVersion;
         phAppVersionElement.innerHTML = versionContent;
 
+        // For rest of the page that is not content
+        scanDataWCAGCompliance();
+
         var metadataSpan = document.getElementById('cypressScanAboutMetadata');
         metadataSpan.innerHTML = key[0].toUpperCase() + key.slice(1) + ': ' + scanData.cypressScanAboutMetadata[key];
+        
+
+
 
       };
 
