@@ -95,7 +95,7 @@
         const divs = nav.querySelectorAll(":scope > div");
 
         divs.forEach(div => {
-          let spanCategoryInformation = div.querySelector("span");
+          let spanCategoryInformation = div.querySelector(".category-information");
           let category = spanCategoryInformation.id.replace("ItemsInformation", "");
 
           let summary = generateCategorySummary(category,scanItems)
