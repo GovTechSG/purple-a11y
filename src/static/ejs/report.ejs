@@ -181,11 +181,16 @@
         scanDataTop5Card();
         scanDataCategorySelector();
 
-        var metadataSpan = document.getElementById('cypressScanAboutMetadata');
-        metadataSpan.innerHTML = key[0].toUpperCase() + key.slice(1) + ': ' + scanData.cypressScanAboutMetadata[key];
-        
-
-
+        const cypressScanAboutMetadata = scanData.cypressScanAboutMetadata;
+        if (cypressScanAboutMetadata) {
+          const metadataItems = Object.keys(cypressScanAboutMetadata);
+          metadataItems.forEach((key) => {
+            var metadataSpan = document.getElementById('cypressScanAboutMetadata');
+            if (metadataSpan) {
+              metadataSpan.innerHTML = key[0].toUpperCase() + key.slice(1) + ': ' + cypressScanAboutMetadata[key];
+            }
+          });
+        }
 
       };
 
