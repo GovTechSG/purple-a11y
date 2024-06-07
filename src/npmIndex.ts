@@ -75,7 +75,7 @@ export const init = async (
   const getScripts = () => {
     throwErrorIfTerminated();
     const axeScript = fs.readFileSync(
-      path.join(__dirname, 'node_modules/axe-core/axe.min.js'),
+      path.join(__dirname, '../node_modules/axe-core/axe.min.js'),
       'utf-8',
     );
     async function runA11yScan(elementsToScan = []) {
