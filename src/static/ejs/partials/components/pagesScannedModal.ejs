@@ -9,7 +9,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h4 class="modal-title fw-bold" id="pagesScannedModalLabel">
-          <%= isCustomFlow ? customFlowLabel + ' (' + totalPagesScanned + ' pages)' : scanType + ' crawl' + ' (' + totalPagesScanned + ' pages)'%>
+          NA
         </h4>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -28,7 +28,7 @@
               aria-selected="true"
             > 
               Scanned
-              <span class="badge" id="totalPagesScannedLabel"><%= totalPagesScanned %></span>
+              <span class="badge" id="totalPagesScannedLabel">NA</span>
             </button>
           </li>
           <li class="nav-item" role="presentation">
@@ -47,7 +47,7 @@
                 <path d="M10.8772 15.3751C10.8772 15.2274 10.9063 15.0811 10.9628 14.9446C11.0194 14.8081 11.1022 14.6841 11.2067 14.5796C11.3112 14.4752 11.4352 14.3923 11.5717 14.3357C11.7082 14.2792 11.8545 14.2501 12.0022 14.2501C12.1499 14.2501 12.2962 14.2792 12.4327 14.3357C12.5692 14.3923 12.6932 14.4752 12.7977 14.5796C12.9022 14.6841 12.985 14.8081 13.0416 14.9446C13.0981 15.0811 13.1272 15.2274 13.1272 15.3751C13.1272 15.6735 13.0087 15.9596 12.7977 16.1706C12.5867 16.3816 12.3006 16.5001 12.0022 16.5001C11.7038 16.5001 11.4177 16.3816 11.2067 16.1706C10.9957 15.9596 10.8772 15.6735 10.8772 15.3751ZM10.9874 8.61949C10.9725 8.47756 10.9875 8.33407 11.0315 8.19832C11.0756 8.06257 11.1477 7.9376 11.2432 7.83152C11.3387 7.72544 11.4554 7.64062 11.5857 7.58256C11.7161 7.52449 11.8572 7.49449 11.9999 7.49449C12.1427 7.49449 12.2838 7.52449 12.4142 7.58256C12.5445 7.64062 12.6612 7.72544 12.7567 7.83152C12.8522 7.9376 12.9243 8.06257 12.9683 8.19832C13.0124 8.33407 13.0274 8.47756 13.0124 8.61949L12.6187 12.5649C12.6055 12.7199 12.5346 12.8642 12.42 12.9695C12.3054 13.0747 12.1555 13.133 11.9999 13.133C11.8444 13.133 11.6945 13.0747 11.5799 12.9695C11.4653 12.8642 11.3944 12.7199 11.3812 12.5649L10.9874 8.61949Z" fill="#D7260F"/>
               </svg>
               Not scanned
-              <span class="badge" id="totalPagesNotScannedLabel"><%= totalPagesNotScanned %></span>
+              <span class="badge" id="totalPagesNotScannedLabel">NA</span>
             </button>
           </li>
         </ul>

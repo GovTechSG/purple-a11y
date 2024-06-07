@@ -86,22 +86,6 @@
       }
 
       const scanDataHTML = () => {
-        const formattedViewerLocalStartTime = formatAboutStartTime(scanData.startTime);
-        document.getElementById('aboutStartTime').innerHTML = formattedViewerLocalStartTime;
-        document.getElementById('urlScanned').innerHTML = scanData.urlScanned;
-        document.getElementById('viewport').innerHTML = scanData.viewport.startsWith("CustomWidth") ? `${scanData.viewport.split("_")[1]} width viewport` : scanData.viewport + ' viewport';
-        document.getElementById('pagesScannedModalToggle').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
-
-        var itemsElement = document.getElementById('items');
-        var failedItems = scanItems.mustFix.totalItems + scanItems.goodToFix.totalItems;
-        var passedItems = scanItems.passed.totalItems;
-        var itemsContent = `${failedItems} ${failedItems === 1 ? 'occurrence' : 'occurrences'} failed,<br>${passedItems} ${passedItems === 1 ? 'occurrence' : 'occurrences'} passed`;
-        itemsElement.innerHTML = itemsContent;
- 
-        var phAppVersionElement = document.getElementById('phAppVersion');
-        var versionContent = 'Purple A11y Version ' + scanData.phAppVersion;
-        phAppVersionElement.innerHTML = versionContent;
-
         document.getElementById('pagesScannedModalLabel').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
         document.getElementById('totalPagesScannedLabel').innerHTML = scanData.totalPagesScanned;
         document.getElementById('totalPagesNotScannedLabel').innerHTML = scanData.totalPagesNotScanned;
@@ -152,6 +136,26 @@
             pagesNotScannedList.appendChild(listItem);
           });
         }
+
+        const formattedViewerLocalStartTime = formatAboutStartTime(scanData.startTime);
+        document.getElementById('aboutStartTime').innerHTML = formattedViewerLocalStartTime;
+        document.getElementById('urlScanned').innerHTML = scanData.urlScanned;
+        document.getElementById('urlScanned').href = scanData.urlScanned;
+        document.getElementById('viewport').innerHTML = scanData.viewport.startsWith("CustomWidth") ? `${scanData.viewport.split("_")[1]} width viewport` : scanData.viewport + ' viewport';
+        document.getElementById('pagesScannedModalToggle').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
+
+        var itemsElement = document.getElementById('items');
+        var failedItems = scanItems.mustFix.totalItems + scanItems.goodToFix.totalItems;
+        var passedItems = scanItems.passed.totalItems;
+        var itemsContent = `${failedItems} ${failedItems === 1 ? 'occurrence' : 'occurrences'} failed,<br>${passedItems} ${passedItems === 1 ? 'occurrence' : 'occurrences'} passed`;
+        itemsElement.innerHTML = itemsContent;
+ 
+        var phAppVersionElement = document.getElementById('phAppVersion');
+        var versionContent = 'Purple A11y Version ' + scanData.phAppVersion;
+        phAppVersionElement.innerHTML = versionContent;
+
+        var metadataSpan = document.getElementById('cypressScanAboutMetadata');
+        metadataSpan.innerHTML = key[0].toUpperCase() + key.slice(1) + ': ' + scanData.cypressScanAboutMetadata[key];
 
       };
 
