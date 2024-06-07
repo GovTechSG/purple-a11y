@@ -250,7 +250,13 @@ const crawlDomain = async (
               skipNavigation: isUrlPdf(encodeURI(newPage.url())),
             });
           } else {
-            newPage.close();
+            try {
+              await newPage.close();
+            } catch(e) {
+              // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
+              // Handles browser page object been closed.
+       
+            }
           }
           return;
         } catch (e) {
@@ -288,7 +294,13 @@ const crawlDomain = async (
       try {
         //navigate back to initial page if clicking on a button previously caused it to navigate to a new url
         if (page.url() != initialPageUrl) {
-          await page.close();
+          try {
+            await page.close();
+          } catch(e) {
+            // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
+            // Handles browser page object been closed.
+     
+          }
           page = await browserController.browser.newPage();
           await page.goto(initialPageUrl, {
             waitUntil: 'domcontentloaded',
