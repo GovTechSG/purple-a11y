@@ -201,6 +201,7 @@ const scannerTypes = {
   website: 'Website',
   custom: 'Custom',
   intelligent: 'Intelligent',
+  localFile: 'LocalFile',
 };
 
 export const guiInfoStatusTypes = {

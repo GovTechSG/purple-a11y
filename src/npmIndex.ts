@@ -190,7 +190,8 @@ export const init = async (
         pagesNotScanned,
         testLabel,
         scanAboutMetadata,
-        scanDetails
+        scanDetails,
+        scanDetails.crawlType==constants.scannerTypes.localFile? true:false,
       );
 
       await submitForm(

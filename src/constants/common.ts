@@ -219,7 +219,9 @@ export const isFileSitemap = async filePath => {
 
   const file = fs.readFileSync(filePath, 'utf8');
   const isLocalSitemap = await isSitemapContent(file);
-  return isLocalSitemap ? filePath : null;
+  let isLocalFileOrSitemap = isLocalSitemap ? filePath : null;
+  let isLocalFiles = file ? filePath : null;
+  return (isLocalFileOrSitemap || isLocalFiles) ? filePath : null;
 };
 
 export const getUrlMessage = scanner => {
@@ -229,7 +231,8 @@ export const getUrlMessage = scanner => {
       return 'Please enter URL of website: ';
     case constants.scannerTypes.sitemap:
       return 'Please enter URL or file path to sitemap, or drag and drop a sitemap file here: ';
-
+    case constants.scannerTypes.localFile:
+        return 'Please enter file path: ';
     default:
       return 'Invalid option';
   }
@@ -520,8 +523,10 @@ export const checkUrl = async (
   }
 
   if (
-    res.status === constants.urlCheckStatuses.success.code &&
-    scanner === constants.scannerTypes.sitemap
+    (res.status === constants.urlCheckStatuses.success.code &&
+      scanner === constants.scannerTypes.sitemap) ||
+      (res.status === constants.urlCheckStatuses.success.code &&
+        scanner === constants.scannerTypes.localFile)
   ) {
     const isSitemap = await isSitemapContent(res.content);
 
@@ -565,7 +570,7 @@ export const prepareData = async (argv: Answers): Promise<Data> => {
 
   // construct filename for scan results
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
-  const domain = argv.isLocalSitemap ? 'custom' : new URL(argv.url).hostname;
+  const domain = argv.isLocalSitemap ? path.basename(argv.url) : new URL(argv.url).hostname;
   const sanitisedLabel = customFlowLabel ? `_${customFlowLabel.replaceAll(' ', '_')}` : '';
   let resultFilename: string;
   const randomThreeDigitNumber = randomThreeDigitNumberString();

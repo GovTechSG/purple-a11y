@@ -1,6 +1,7 @@
 import printMessage from 'print-message';
 import crawlSitemap from './crawlers/crawlSitemap.js';
 import crawlDomain from './crawlers/crawlDomain.js';
+import crawlLocalFile from './crawlers/crawlLocalFile.js';
 import crawlIntelligentSitemap from './crawlers/crawlIntelligentSitemap.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
@@ -8,7 +9,6 @@ import constants from './constants/constants.js';
 import { getBlackListedPatterns, submitForm, urlWithoutAuth } from './constants/common.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import runCustom from './crawlers/runCustom.js';
-
 
 const combineRun = async (details, deviceToScan) => {
   const envDetails = { ...details };
@@ -36,14 +36,13 @@ const combineRun = async (details, deviceToScan) => {
     metadata,
     customFlowLabel = 'Custom Flow',
     extraHTTPHeaders,
-    safeMode
+    safeMode,
   } = envDetails;
 
   process.env.CRAWLEE_LOG_LEVEL = 'ERROR';
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
-  const host = type === constants.scannerTypes.sitemap && isLocalSitemap ? '' : getHost(url);
-
+  const host = (type === constants.scannerTypes.sitemap && isLocalSitemap || type === constants.scannerTypes.localFile && isLocalSitemap) ? '' : getHost(url);
   let blacklistedPatterns = null;
   try {
     blacklistedPatterns = getBlackListedPatterns(blacklistedPatternsFilename);
@@ -53,8 +52,11 @@ const combineRun = async (details, deviceToScan) => {
     process.exit(1);
   }
 
+  let finalUrl = url;
   // remove basic-auth credentials from URL
-  let finalUrl = urlWithoutAuth(url);
+  if(!(type === constants.scannerTypes.sitemap && isLocalSitemap || type === constants.scannerTypes.localFile && isLocalSitemap)) {
+    finalUrl = urlWithoutAuth(url);
+  }
 
   const scanDetails = {
     startTime: new Date(),
@@ -94,12 +96,29 @@ const combineRun = async (details, deviceToScan) => {
         fileTypes,
         blacklistedPatterns,
         includeScreenshots,
-        extraHTTPHeaders
+        extraHTTPHeaders,
+      );
+      break;
+
+    case constants.scannerTypes.localFile:
+      urlsCrawled = await crawlLocalFile(
+        url,
+        randomToken,
+        host,
+        viewportSettings,
+        maxRequestsPerCrawl,
+        browser,
+        userDataDirectory,
+        specifiedMaxConcurrency,
+        fileTypes,
+        blacklistedPatterns,
+        includeScreenshots,
+        extraHTTPHeaders,
       );
       break;
 
     case constants.scannerTypes.intelligent:
-        urlsCrawled = await crawlIntelligentSitemap(
+      urlsCrawled = await crawlIntelligentSitemap(
         url,
         randomToken,
         host,
@@ -114,7 +133,7 @@ const combineRun = async (details, deviceToScan) => {
         includeScreenshots,
         followRobots,
         extraHTTPHeaders,
-        safeMode
+        safeMode,
       );
       break;
 
@@ -134,9 +153,9 @@ const combineRun = async (details, deviceToScan) => {
         includeScreenshots,
         followRobots,
         extraHTTPHeaders,
-        safeMode
+        safeMode,
       );
-    break;
+      break;
 
     default:
       consoleLogger.error(`type: ${type} not defined`);
@@ -147,40 +166,43 @@ const combineRun = async (details, deviceToScan) => {
   scanDetails.endTime = new Date();
   scanDetails.urlsCrawled = urlsCrawled;
   await createDetailsAndLogs(scanDetails, randomToken);
-  if (scanDetails.urlsCrawled.scanned.length > 0) {
-    await createAndUpdateResultsFolders(randomToken);
-    const pagesNotScanned = [
-      ...urlsCrawled.error, 
-      ...urlsCrawled.invalid, 
-      ...urlsCrawled.forbidden
-    ];
-    const basicFormHTMLSnippet = await generateArtifacts(
-      randomToken,
-      url,
-      type,
-      deviceToScan,
-      urlsCrawled.scanned,
-      pagesNotScanned,
-      customFlowLabel,
-      undefined,
-      scanDetails
-    );
-    const [name, email] = nameEmail.split(':');
-    
-    await submitForm(
-      browser,
-      userDataDirectory,
-      url,
-      finalUrl,
-      type,
-      email,
-      name,
-      JSON.stringify(basicFormHTMLSnippet),
-      urlsCrawled.scanned.length,
-      urlsCrawled.scannedRedirects.length, 
-      pagesNotScanned.length,
-      metadata,
-    );
+  if (scanDetails.urlsCrawled) {
+    if (scanDetails.urlsCrawled.scanned.length > 0) {
+      await createAndUpdateResultsFolders(randomToken);
+      const pagesNotScanned = [
+        ...urlsCrawled.error,
+        ...urlsCrawled.invalid,
+        ...urlsCrawled.forbidden,
+      ];
+      const basicFormHTMLSnippet = await generateArtifacts(
+        randomToken,
+        url,
+        type,
+        deviceToScan,
+        urlsCrawled.scanned,
+        pagesNotScanned,
+        customFlowLabel,
+        undefined,
+        scanDetails,
+        isLocalSitemap,
+      );
+      const [name, email] = nameEmail.split(':');
+
+      await submitForm(
+        browser,
+        userDataDirectory,
+        url,
+        finalUrl,
+        type,
+        email,
+        name,
+        JSON.stringify(basicFormHTMLSnippet),
+        urlsCrawled.scanned.length,
+        urlsCrawled.scannedRedirects.length,
+        pagesNotScanned.length,
+        metadata,
+      );
+    }
   } else {
     printMessage([`No pages were scanned.`], constants.alertMessageOptions);
   }

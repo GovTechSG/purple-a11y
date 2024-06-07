@@ -97,7 +97,7 @@ const startScanQuestions = [
         case statuses.systemError.code:
           return statuses.systemError.message;
         case statuses.invalidUrl.code:
-          if (answers.scanner !== constants.scannerTypes.sitemap) {
+          if (answers.scanner !== (constants.scannerTypes.sitemap || constants.scannerTypes.localFile)) {
             return statuses.invalidUrl.message;
           }
 

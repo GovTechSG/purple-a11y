@@ -317,7 +317,7 @@ const scanInit = async (argvs: Answers): Promise<void> => {
       printMessage([statuses.systemError.message], messageOptions);
       process.exit(res.status);
     case statuses.invalidUrl.code:
-      if (argvs.scanner !== constants.scannerTypes.sitemap) {
+      if (argvs.scanner !== (constants.scannerTypes.sitemap) && argvs.scanner !== (constants.scannerTypes.localFile)){
         printMessage([statuses.invalidUrl.message], messageOptions);
         process.exit(res.status);
       }
