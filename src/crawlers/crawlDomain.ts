@@ -250,7 +250,11 @@ const crawlDomain = async (
               skipNavigation: isUrlPdf(encodeURI(newPage.url())),
             });
           } else {
+            try{
             newPage.close();
+            } catch (e) {
+              console.log(e);
+            }
           }
           return;
         } catch (e) {
@@ -288,7 +292,11 @@ const crawlDomain = async (
       try {
         //navigate back to initial page if clicking on a button previously caused it to navigate to a new url
         if (page.url() != initialPageUrl) {
+          try{
           await page.close();
+          } catch (e) {
+            console.log(e);
+          }
           page = await browserController.browser.newPage();
           await page.goto(initialPageUrl, {
             waitUntil: 'domcontentloaded',
