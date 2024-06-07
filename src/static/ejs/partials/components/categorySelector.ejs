@@ -50,13 +50,7 @@
             </svg>
           </div>
           <span id="<%= category %>ItemsInformation" class="category-information">
-            <% if (category !== 'passed' && items[category].totalItems !== 0) { %> 
-              <%= items[category].rules.length %> <%= items[category].rules.length === 1 ? 'issue' : 'issues' %> / <%= items[category].totalItems %> <%= items[category].totalItems === 1 ? 'occurrence' : 'occurrences' %>
-            <% } else if (category !== 'passed' && items[category].totalItems === 0) { %>
-              0 issues
-            <% } else { %>
-              <%= items[category].totalItems %> <%= items[category].totalItems === 1 ? 'occurrence' : 'occurrences' %>
-            <% } %>
+            NA
           </span>
         </button>
       </div>

@@ -18,50 +18,6 @@
     />
     <%- include('partials/styles/bootstrap') %> <%- include('partials/styles/highlightjs') %> <%-
     include('partials/styles/styles') %>
-    <script>
-       let scanItems = <%- JSON.stringify(
-          {
-            ...items,
-            passed: {
-              rules: items.passed.rules.map(r => delete r.pagesAffected),
-              ...items.passed
-            },
-          }
-        ) %>;
-
-        let scanData = <%- JSON.stringify({
-          startTime,
-          urlScanned,
-          viewport,
-          scanType,
-          isCustomFlow,
-          totalPagesScanned,
-          totalPagesNotScanned,
-          pagesScanned,
-          pagesNotScanned,
-          items,
-          isCustomFlow,
-          customFlowLabel,
-          phAppVersion,
-          cypressScanAboutMetadata
-        }
-        ) %>;
-
-        // // Function to get query parameters
-        // const getQueryParams = (url) => {
-        //     const params = {};
-        //     const parser = new URL(url);
-        //     const queryString = parser.search.slice(1).split('&');
-
-        //     queryString.forEach(param => {
-        //         const [key, value] = param.split('=');
-        //         params[decodeURIComponent(key)] = decodeURIComponent(value);
-        //     });
-
-        //     return params;
-        // };
-        
-    </script>
   </head>
 
   <body class="d-flex flex-column">
@@ -93,6 +49,63 @@
         const wcagBarProgess = wcagComplianceCard.querySelector(".wcag-compliance-passes-bar-progress");
         wcagBarProgess.style.width = `${scanData.wcagPassPercentage}%`; // Set this to your desired width
       };
+
+      const scanDataTop5Card = () => {
+        const card = document.getElementById("top-five-card");
+        const list = card.querySelector(".unbulleted-list");
+
+        scanData.topFiveMostIssues.forEach((page, index) => {
+            if (page.totalIssues !== 0) {
+                const listItem = document.createElement('li');
+                listItem.className = "d-flex justify-content-between";
+
+                const link = document.createElement('a');
+                link.href = page.url;
+                link.target = "_blank";
+                link.textContent = page.pageTitle.length > 0 ? page.pageTitle : page.url;
+
+                const issueCount = document.createElement('span');
+                issueCount.className = "fw-bold ms-2";
+                issueCount.setAttribute('aria-label', `${page.totalIssues} issues`);
+                issueCount.textContent = page.totalIssues;
+
+                listItem.appendChild(link);
+                listItem.appendChild(issueCount);
+
+                list.appendChild(listItem);
+            }
+        });
+      };
+
+      const scanDataCategorySelector = () =>{
+        function generateCategorySummary(category, items) {
+          let summary = '';
+
+          if (category !== 'passed' && items[category].totalItems !== 0) {
+              summary = `${items[category].rules.length} ${items[category].rules.length === 1 ? 'issue' : 'issues'} / ${items[category].totalItems} ${items[category].totalItems === 1 ? 'occurrence' : 'occurrences'}`;
+          } else if (category !== 'passed' && items[category].totalItems === 0) {
+              summary = '0 issues';
+          } else {
+              summary = `${items[category].totalItems} ${items[category].totalItems === 1 ? 'occurrence' : 'occurrences'}`;
+          }
+
+          return summary;
+        }
+        const nav = document.querySelector("nav");
+        const divs = nav.querySelectorAll(":scope > div");
+
+        divs.forEach(div => {
+          let spanCategoryInformation = div.querySelector("span");
+          let category = spanCategoryInformation.id.replace("ItemsInformation", "");
+
+          let summary = generateCategorySummary(category,scanItems)
+          spanCategoryInformation.innerHTML = summary;
+
+      });
+
+        
+      }
+
 
       const scanDataHTML = () => {
         document.getElementById('pagesScannedModalLabel').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
@@ -165,6 +178,8 @@
 
         // For rest of the page that is not content
         scanDataWCAGCompliance();
+        scanDataTop5Card();
+        scanDataCategorySelector();
 
         var metadataSpan = document.getElementById('cypressScanAboutMetadata');
         metadataSpan.innerHTML = key[0].toUpperCase() + key.slice(1) + ': ' + scanData.cypressScanAboutMetadata[key];
