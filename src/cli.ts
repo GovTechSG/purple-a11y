@@ -360,7 +360,7 @@ const optionsAnswer: Answers = {
   safeMode: options['safeMode'],
   strategy: options['strategy'],
   fileTypes: options['fileTypes'],
-  nameEmail: options['newEmail'],
+  nameEmail: options['nameEmail'],
   additional: options['additional'],
   customDevice: options['customDevice'],
   deviceChosen: options['deviceChosen'],
