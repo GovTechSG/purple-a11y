@@ -22,15 +22,15 @@ import {
 } from './constants/common.js';
 import questions from './constants/questions.js';
 import combineRun from './combine.js';
-import constants from './constants/constants.js';
+import constants, { BrowserTypes, ScannerTypes } from './constants/constants.js';
 
 export type Answers = {
-  headless: string;
+  headless: boolean;
   deviceChosen: string;
   customDevice: string;
   viewportWidth: number;
-  browserToRun: string;
-  scanner: string;
+  browserToRun: BrowserTypes;
+  scanner: ScannerTypes;
   url: string;
   clonedBrowserDataDir: string;
   playwrightDeviceDetailsObject: Object;
@@ -45,13 +45,15 @@ export type Answers = {
   specifiedMaxConcurrency: number;
   blacklistedPatternsFilename: string;
   additional: string;
-  followRobots: string;
+  followRobots: boolean;
   header: string;
-  safeMode: string;
+  safeMode: boolean;
+  exportDirectory: string;
+  zip: string;
 };
 
 export type Data = {
-  type: string;
+  type: ScannerTypes;
   url: string;
   entryUrl: string;
   isHeadless: boolean;
@@ -88,7 +90,7 @@ const runScan = async (answers: Answers) => {
     answers.customDevice,
     answers.viewportWidth,
   );
-  let { browserToRun } = getBrowserToRun(constants.browserTypes.chrome);
+  let { browserToRun } = getBrowserToRun(BrowserTypes.CHROME);
   deleteClonedProfiles(browserToRun);
   answers.browserToRun = browserToRun;
 
@@ -99,21 +101,14 @@ const runScan = async (answers: Answers) => {
   answers.fileTypes = 'html-only';
   answers.metadata = '{}';
 
-  let isCustomFlow = false;
-  if (answers.scanner === constants.scannerTypes.custom) {
-    isCustomFlow = true;
-  }
-
   const data = await prepareData(answers);
   data.userDataDirectory = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
 
   setHeadlessMode(data.browser, data.isHeadless);
   printMessage(['Scanning website...'], messageOptions);
 
-
   await combineRun(data, screenToScan);
   
-
   // Delete cloned directory
   deleteClonedProfiles(data.browser);
 

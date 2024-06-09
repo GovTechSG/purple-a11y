@@ -1,5 +1,6 @@
 import { Options } from 'yargs';
-import constants from './constants.js';
+import { BrowserTypes, ScannerTypes } from './constants.js';
+import printMessage from 'print-message';
 
 export const messageOptions = {
   border: false,
@@ -15,9 +16,37 @@ export const alertMessageOptions = {
 export const cliOptions: { [key: string]: Options } = {
   c: {
     alias: 'scanner',
-    describe:
-      'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow, 5) intelligent',
-    choices: Object.keys(constants.scannerTypes),
+    describe: 'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow, 4) intelligent',
+    requiresArg: true,
+    coerce: option => {
+      const choices = ['sitemap', 'website', 'custom', 'intelligent'];
+      if (typeof option === 'number') {
+        // Will also allow integer choices
+        if (Number.isInteger(option) && option > 0 && option <= choices.length) {
+          option = choices[option - 1];
+        }
+      }
+
+      switch (option) {
+        case 'sitemap':
+          return ScannerTypes.SITEMAP;
+        case 'website':
+          return ScannerTypes.WEBSITE;
+        case 'custom':
+          return ScannerTypes.CUSTOM;
+        case 'intelligent':
+          return ScannerTypes.INTELLIGENT;
+        default:
+          printMessage(
+            [
+              `Invalid option: ${option}`,
+              `Please enter an integer (1 to ${choices.length}) or keywords (${choices.join(', ')}).`,
+            ],
+            messageOptions,
+          );
+          process.exit(1);
+      }
+    },
     demandOption: true,
   },
   u: {
@@ -54,28 +83,69 @@ export const cliOptions: { [key: string]: Options } = {
   f: {
     alias: 'safeMode',
     describe:
-      'Option to disable dynamically clicking of page buttons and links to find links, which resolve issues on some websites. Defaults to no.',
+      'Disable dynamically clicking of page buttons and links to find links, which resolve issues on some websites. [yes / no]',
     type: 'string',
-    choices: ['yes', 'no'],
     requiresArg: true,
     default: 'no',
     demandOption: false,
+    coerce: (value: string) => {
+      if (value.toLowerCase() === 'yes') {
+        return true;
+      } else if (value.toLowerCase() === 'no') {
+        return false;
+      } else {
+        throw new Error(`Invalid value "${value}" for -f, --safeMode. Use "yes" or "no".`);
+      }
+    },
   },
   h: {
     alias: 'headless',
-    describe: 'Whether to run the scan in headless mode. Defaults to yes.',
+    describe: 'Run the scan in headless mode. [yes / no]',
     type: 'string',
-    choices: ['yes', 'no'],
     requiresArg: true,
     default: 'yes',
     demandOption: false,
+    coerce: (value: string) => {
+      if (value.toLowerCase() === 'yes') {
+        return true;
+      } else if (value.toLowerCase() === 'no') {
+        return false;
+      } else {
+        throw new Error(`Invalid value "${value}" for -h, --headless. Use "yes" or "no".`);
+      }
+    },
   },
   b: {
     alias: 'browserToRun',
     describe: 'Browser to run the scan on: 1) Chromium, 2) Chrome, 3) Edge. Defaults to Chromium.',
-    choices: Object.keys(constants.browserTypes),
     requiresArg: true,
-    default: 'chrome',
+    coerce: option => {
+      const choices = ['chromium', 'chrome', 'edge'];
+      if (typeof option === 'number') {
+        // Will also allow integer choices
+        if (Number.isInteger(option) && option > 0 && option <= choices.length) {
+          option = choices[option - 1];
+        }
+      }
+
+      switch (option) {
+        case 'chromium':
+          return BrowserTypes.CHROMIUM;
+        case 'chrome':
+          return BrowserTypes.CHROME;
+        case 'edge':
+          return BrowserTypes.EDGE;
+        default:
+          printMessage(
+            [
+              `Invalid option: ${option}`,
+              `Please enter an integer (1 to ${choices.length}) or keywords (${choices.join(', ')}).`,
+            ],
+            messageOptions,
+          );
+          process.exit(1);
+      }
+    },
     demandOption: false,
   },
   s: {
@@ -150,12 +220,20 @@ export const cliOptions: { [key: string]: Options } = {
   },
   r: {
     alias: 'followRobots',
-    describe: 'Option for crawler to adhere to robots.txt rules if it exists',
+    describe: 'Crawler adheres to robots.txt rules if it exists. [yes / no]',
     type: 'string',
-    choices: ['yes', 'no'],
     requiresArg: true,
     default: 'no',
     demandOption: false,
+    coerce: (value: string) => {
+      if (value.toLowerCase() === 'yes') {
+        return true;
+      } else if (value.toLowerCase() === 'no') {
+        return false;
+      } else {
+        throw new Error(`Invalid value "${value}" for -r, --followRobots. Use "yes" or "no".`);
+      }
+    },
   },
   m: {
     alias: 'header',

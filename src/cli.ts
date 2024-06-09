@@ -1,7 +1,4 @@
 #!/usr/bin/env node
-/* eslint-disable no-fallthrough */
-/* eslint-disable no-undef */
-/* eslint-disable no-param-reassign */
 import fs from 'fs-extra';
 import _yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
@@ -11,7 +8,7 @@ import { cleanUp, zipResults, setHeadlessMode, getVersion, getStoragePath } from
 import {
   checkUrl,
   prepareData,
-  isFileSitemap,
+  getFileSitemap,
   validEmail,
   validName,
   getBrowserToRun,
@@ -23,10 +20,9 @@ import {
   validateFilePath,
   validateCustomFlowLabel,
 } from './constants/common.js';
-import constants from './constants/constants.js';
+import constants, { ScannerTypes } from './constants/constants.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
 import combineRun from './combine.js';
-import { silentLogger } from './logs.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import { Answers } from './index.js';
@@ -53,26 +49,6 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
       `To start a custom flow scan', 'npm run cli -- -c [ 3 | custom ] -u <url_link> [ -d <device> | -w <viewport_width> ]`,
     ],
   ])
-  .coerce('c', option => {
-    const { choices } = cliOptions.c;
-    if (typeof option === 'number') {
-      // Will also allow integer choices
-      if (Number.isInteger(option) && option > 0 && option <= choices.length) {
-        option = choices[option - 1];
-      } else {
-        printMessage(
-          [
-            'Invalid option',
-            `Please enter an integer (1 to ${choices.length}) or keywords (${choices.join(', ')}).`,
-          ],
-          messageOptions,
-        );
-        process.exit(1);
-      }
-    }
-
-    return option;
-  })
   .coerce('d', option => {
     const device = devices[option];
     if (!device && option !== 'Desktop' && option !== 'Mobile') {
@@ -105,25 +81,6 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
       );
       process.exit(1);
     }
-    return option;
-  })
-  .coerce('b', option => {
-    const { choices } = cliOptions.b;
-    if (typeof option === 'number') {
-      if (Number.isInteger(option) && option > 0 && option <= choices.length) {
-        option = choices[option - 1];
-      } else {
-        printMessage(
-          [
-            'Invalid option',
-            `Please enter an integer (1 to ${choices.length}) or keywords (${choices.join(', ')}).`,
-          ],
-          messageOptions,
-        );
-        process.exit(1);
-      }
-    }
-
     return option;
   })
   .coerce('t', option => {
@@ -172,7 +129,7 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   })
   .coerce('x', option => {
     const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename) + "/../"; // check in the parent of dist directory
+    const __dirname = path.dirname(__filename) + '/../'; // check in the parent of dist directory
 
     try {
       return validateFilePath(option, __dirname);
@@ -241,31 +198,25 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return allHeaders;
   })
   .check(argvs => {
-    if ((argvs.scanner === 'custom') && argvs.maxpages) {
+    if (argvs.scanner === ScannerTypes.CUSTOM && argvs.maxpages) {
       throw new Error('-p or --maxpages is only available in website and sitemap scans.');
     }
     return true;
   })
   .check(argvs => {
-    if (argvs.scanner !== 'website' && argvs.strategy) {
+    if (argvs.scanner !== ScannerTypes.WEBSITE && argvs.strategy) {
       throw new Error('-s or --strategy is only available in website scans.');
     }
     return true;
   })
   .conflicts('d', 'w')
-  .epilogue('').argv;
+  .parse();
 
-const scanInit = async (argvs: Answers): Promise<void> => {
+const scanInit = async (argvs: Answers): Promise<string> => {
   let isCustomFlow = false;
-  if (constants.scannerTypes[argvs.scanner] === constants.scannerTypes.custom) {
+  if (argvs.scanner === ScannerTypes.CUSTOM) {
     isCustomFlow = true;
-  } else {
-    argvs.headless = argvs.headless === 'yes';
-    argvs.followRobots = argvs.followRobots === 'yes';
-    argvs.safeMode = argvs.safeMode === 'yes';
   }
-  argvs.scanner = constants.scannerTypes[argvs.scanner];
-  argvs.browserToRun = constants.browserTypes[argvs.browserToRun];
 
   // let chromeDataDir = null;
   // let edgeDataDir = null;
@@ -317,14 +268,14 @@ const scanInit = async (argvs: Answers): Promise<void> => {
       printMessage([statuses.systemError.message], messageOptions);
       process.exit(res.status);
     case statuses.invalidUrl.code:
-      if (argvs.scanner !== constants.scannerTypes.sitemap) {
+      if (argvs.scanner !== ScannerTypes.SITEMAP) {
         printMessage([statuses.invalidUrl.message], messageOptions);
         process.exit(res.status);
       }
       /* if sitemap scan is selected, treat this URL as a filepath
           isFileSitemap will tell whether the filepath exists, and if it does, whether the
           file is a sitemap */
-      const finalFilePath = await isFileSitemap(argvs.url);
+      const finalFilePath = getFileSitemap(argvs.url);
       if (finalFilePath) {
         argvs.isLocalSitemap = true;
         argvs.finalUrl = finalFilePath;
@@ -347,7 +298,7 @@ const scanInit = async (argvs: Answers): Promise<void> => {
       break;
   }
 
-  if (argvs.scanner === constants.scannerTypes.website && !argvs.strategy) {
+  if (argvs.scanner === ScannerTypes.WEBSITE && !argvs.strategy) {
     argvs.strategy = 'same-domain';
   }
 
@@ -383,9 +334,7 @@ const scanInit = async (argvs: Answers): Promise<void> => {
 
   printMessage([`Purple A11y version: ${appVersion}`, 'Starting scan...'], messageOptions);
 
- 
   await combineRun(data, screenToScan);
-  
 
   // Delete cloned directory
   process.env.PURPLE_A11Y_VERBOSE
@@ -398,12 +347,40 @@ const scanInit = async (argvs: Answers): Promise<void> => {
   return getStoragePath(data.randomToken);
 };
 
-scanInit(options).then(async storagePath => {
-  // Take option if set
-  if (typeof options.zip === 'string') {
-    constants.cliZipFileName = options.zip;
+const optionsAnswer: Answers = {
+  scanner: options['scanner'],
+  header: options['header'],
+  browserToRun: options['browserToRun'],
+  zip: options['zip'],
+  url: options['url'],
+  finalUrl: options['finalUrl'],
+  headless: options['headless'],
+  maxpages: options['maxpages'],
+  metadata: options['metadata'],
+  safeMode: options['safeMode'],
+  strategy: options['strategy'],
+  fileTypes: options['fileTypes'],
+  nameEmail: options['nameEmail'],
+  additional: options['additional'],
+  customDevice: options['customDevice'],
+  deviceChosen: options['deviceChosen'],
+  followRobots: options['followRobots'],
+  customFlowLabel: options['customFlowLabel'],
+  viewportWidth: options['viewportWidth'],
+  isLocalSitemap: options['isLocalSitemap'],
+  exportDirectory: options['exportDirectory'],
+  clonedBrowserDataDir: options['clonedBrowserDataDir'],
+  specifiedMaxConcurrency: options['specifiedMaxConcurrency'],
+  blacklistedPatternsFilename: options['blacklistedPatternsFilename'],
+  playwrightDeviceDetailsObject: options['playwrightDeviceDetailsObject'],
+};
 
-    if (!options.zip.endsWith('.zip')) {
+scanInit(optionsAnswer).then(async (storagePath: string) => {
+  // Take option if set
+  if (typeof optionsAnswer.zip === 'string') {
+    constants.cliZipFileName = optionsAnswer.zip;
+
+    if (!optionsAnswer.zip.endsWith('.zip')) {
       constants.cliZipFileName += '.zip';
     }
   }
