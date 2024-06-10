@@ -16,6 +16,35 @@ import { createWriteStream } from 'fs';
 import { AsyncParser } from '@json2csv/node';
 import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
 
+type Rule = {
+  rule: string;
+  description: string;
+  axeImpact: 'critical' | 'serious' | 'moderate' | 'minor';
+  helpUrl: string;
+  conformance: string[];
+  totalItems: number;
+  pagesAffected: { [url: string]: PageInfo };
+};
+
+type PageInfo = {
+  pageTitle: string;
+  items: any[];
+};
+
+type Category = {
+  description: string;
+  totalItems: number;
+  rules: Rule[];
+};
+
+type AllIssues = {
+  items: {
+    mustFix: Category;
+    goodToFix: Category;
+    needsReview: Category;
+    passed: Category;
+  };
+};
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -80,10 +109,10 @@ const writeCsv = async (allIssues, storagePath) => {
 
   // transform allIssues into the form:
   // [['mustFix', rule1], ['mustFix', rule2], ['goodToFix', rule3], ...]
-  const getRulesByCategory = allIssues => {
+  const getRulesByCategory = (allIssues: AllIssues) => {
     return Object.entries(allIssues.items)
       .filter(([category]) => category !== 'passed')
-      .reduce((prev, [category, value]) => {
+      .reduce((prev: [string, Rule][], [category, value]) => {
         const rules = value.rules;
         for (let rule of rules) {
           prev.push([category, rule]);
