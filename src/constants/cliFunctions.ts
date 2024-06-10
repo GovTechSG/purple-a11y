@@ -16,7 +16,7 @@ export const alertMessageOptions = {
 export const cliOptions: { [key: string]: Options } = {
   c: {
     alias: 'scanner',
-    describe: 'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow, 4) intelligent 5)local file',
+    describe: 'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow, 4) intelligent 5) local file',
     requiresArg: true,
     coerce: option => {
       const choices = ['sitemap', 'website', 'custom', 'intelligent', 'localfile'];
