@@ -14,8 +14,8 @@ import safe from 'safe-regex';
 import * as https from 'https';
 import os from 'os';
 import { minimatch } from 'minimatch';
-import { Glob, globSync } from 'glob';
-import { BrowserContext, LaunchOptions, devices, webkit } from 'playwright';
+import { globSync } from 'glob';
+import { LaunchOptions, devices, webkit } from 'playwright';
 import printMessage from 'print-message';
 import constants, {
   getDefaultChromeDataDir,
@@ -23,6 +23,7 @@ import constants, {
   getDefaultChromiumDataDir,
   proxy,
   formDataFields,
+  ScannerTypes,
   BrowserTypes,
 } from './constants.js';
 import { silentLogger } from '../logs.js';
@@ -171,23 +172,21 @@ export const isSelectorValid = (selector: string): boolean => {
 // Refer to NPM validator's special characters under sanitizers for escape()
 const blackListCharacters = '\\<>&\'"';
 
-export const isValidXML = async content => {
-  // fs.writeFileSync('sitemapcontent.txt', content);
-  let status;
-  let parsedContent = '';
-  parseString(content, (err, result) => {
+export const validateXML = (content: string): { isValid: boolean; parsedContent: string } => {
+  let isValid: boolean;
+  let parsedContent: string;
+  parseString(content, (_err, result) => {
     if (result) {
-      status = true;
+      isValid = true;
       parsedContent = result;
-    }
-    if (err) {
-      status = false;
+    } else {
+      isValid = false;
     }
   });
-  return { status, parsedContent };
+  return { isValid, parsedContent };
 };
 
-export const isSkippedUrl = (pageUrl, whitelistedDomains) => {
+export const isSkippedUrl = (pageUrl: string, whitelistedDomains: string[]) => {
   const matched =
     whitelistedDomains.filter(p => {
       const pattern = p.replace(/[\n\r]+/g, '');
@@ -204,7 +203,7 @@ export const isSkippedUrl = (pageUrl, whitelistedDomains) => {
   return matched;
 };
 
-export const isFileSitemap = async filePath => {
+export const getFileSitemap = (filePath: string): string | null => {
   if (filePath.startsWith('file:///')) {
     if (os.platform() === 'win32') {
       filePath = filePath.match(/^file:\/\/\/([A-Z]:\/[^?#]+)/)?.[1];
@@ -218,17 +217,16 @@ export const isFileSitemap = async filePath => {
   }
 
   const file = fs.readFileSync(filePath, 'utf8');
-  const isLocalSitemap = await isSitemapContent(file);
+  const isLocalSitemap = isSitemapContent(file);
   return isLocalSitemap ? filePath : null;
 };
 
-export const getUrlMessage = scanner => {
+export const getUrlMessage = (scanner: ScannerTypes): string => {
   switch (scanner) {
-    case constants.scannerTypes.website:
-    case constants.scannerTypes.custom:
-    case constants.scannerTypes.custom2:
+    case ScannerTypes.WEBSITE:
+    case ScannerTypes.CUSTOM:
       return 'Please enter URL of website: ';
-    case constants.scannerTypes.sitemap:
+    case ScannerTypes.SITEMAP:
       return 'Please enter URL or file path to sitemap, or drag and drop a sitemap file here: ';
 
     default:
@@ -248,21 +246,17 @@ export const isInputValid = inputString => {
   return false;
 };
 
-export const sanitizeUrlInput = url => {
+export const sanitizeUrlInput = (url: string): { isValid: boolean; url: string } => {
   // Sanitize that there is no blacklist characters
   const sanitizeUrl = validator.blacklist(url, blackListCharacters);
-  const data = {};
   if (validator.isURL(sanitizeUrl, urlOptions)) {
-    data.isValid = true;
+    return { isValid: true, url: sanitizeUrl };
   } else {
-    data.isValid = false;
+    return { isValid: false, url: sanitizeUrl };
   }
-
-  data.url = sanitizeUrl;
-  return data;
 };
 
-const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
+const requestToUrl = async (url, isCustomFlow, extraHTTPHeaders) => {
   // User-Agent is modified to emulate a browser to handle cases where some sites ban non browser agents, resulting in a 403 error
   const res = {};
   const parsedUrl = new URL(url);
@@ -281,7 +275,8 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
       timeout: 5000,
     })
     .then(async response => {
-      const redirectUrl = response.request.res.responseUrl;
+      let redirectUrl = response.request.res.responseUrl;
+      redirectUrl = new URL(redirectUrl).href;
       res.status = constants.urlCheckStatuses.success.code;
       let data;
       if (typeof response.data === 'string' || response.data instanceof String) {
@@ -304,7 +299,7 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
 
       const hasMetaRefresh = metaRefreshMatch && metaRefreshMatch.length > 1;
 
-      if (redirectUrl != null && (hasMetaRefresh || !isNewCustomFlow)) {
+      if (redirectUrl != null && (hasMetaRefresh || !isCustomFlow)) {
         res.url = redirectUrl;
       } else {
         res.url = url;
@@ -356,12 +351,12 @@ const requestToUrl = async (url, isNewCustomFlow, extraHTTPHeaders) => {
   return res;
 };
 
-const checkUrlConnectivity = async (url, isNewCustomFlow, extraHTTPHeaders) => {
+const checkUrlConnectivity = async (url, isCustomFlow, extraHTTPHeaders) => {
   const data = sanitizeUrlInput(url);
 
   if (data.isValid) {
     // Validate the connectivity of URL if the string format is url format
-    const res = await requestToUrl(data.url, isNewCustomFlow, extraHTTPHeaders);
+    const res = await requestToUrl(data.url, isCustomFlow, extraHTTPHeaders);
     return res;
   }
 
@@ -374,7 +369,7 @@ const checkUrlConnectivityWithBrowser = async (
   browserToRun,
   clonedDataDir,
   playwrightDeviceDetailsObject,
-  isNewCustomFlow,
+  isCustomFlow,
   extraHTTPHeaders,
 ) => {
   const res = {};
@@ -441,7 +436,7 @@ const checkUrlConnectivityWithBrowser = async (
       }
 
       // set redirect link or final url
-      if (isNewCustomFlow) {
+      if (isCustomFlow) {
         res.url = url;
       } else {
         res.url = page.url();
@@ -462,8 +457,8 @@ const checkUrlConnectivityWithBrowser = async (
   return res;
 };
 
-export const isSitemapContent = async content => {
-  const { status: isValid } = await isValidXML(content);
+export const isSitemapContent = (content: string) => {
+  const { isValid } = validateXML(content);
   if (isValid) {
     return true;
   }
@@ -472,11 +467,11 @@ export const isSitemapContent = async content => {
   const regexForXmlSitemap = new RegExp('<(?:urlset|feed|rss)+?.*>', 'gmi');
   const regexForUrl = new RegExp('^.*(http|https):/{2}.*$', 'gmi');
 
-  if (String(content).match(regexForHtml) && String(content).match(regexForXmlSitemap)) {
+  if (content.match(regexForHtml) && content.match(regexForXmlSitemap)) {
     // is an XML sitemap wrapped in a HTML document
     return true;
   }
-  if (!String(content).match(regexForHtml) && String(content).match(regexForUrl)) {
+  if (!content.match(regexForHtml) && content.match(regexForUrl)) {
     // treat this as a txt sitemap where all URLs will be extracted for crawling
     return true;
   }
@@ -490,7 +485,7 @@ export const checkUrl = async (
   browser,
   clonedDataDir,
   playwrightDeviceDetailsObject,
-  isNewCustomFlow,
+  isCustomFlow,
   extraHTTPHeaders,
 ) => {
   let res;
@@ -500,11 +495,11 @@ export const checkUrl = async (
       browser,
       clonedDataDir,
       playwrightDeviceDetailsObject,
-      isNewCustomFlow,
+      isCustomFlow,
       extraHTTPHeaders,
     );
   } else {
-    res = await checkUrlConnectivity(url, isNewCustomFlow, extraHTTPHeaders);
+    res = await checkUrlConnectivity(url, isCustomFlow, extraHTTPHeaders);
     if (res.status === constants.urlCheckStatuses.axiosTimeout.code) {
       if (browser || constants.launcher === webkit) {
         res = await checkUrlConnectivityWithBrowser(
@@ -512,18 +507,15 @@ export const checkUrl = async (
           browser,
           clonedDataDir,
           playwrightDeviceDetailsObject,
-          isNewCustomFlow,
+          isCustomFlow,
           extraHTTPHeaders,
         );
       }
     }
   }
 
-  if (
-    res.status === constants.urlCheckStatuses.success.code &&
-    scanner === constants.scannerTypes.sitemap
-  ) {
-    const isSitemap = await isSitemapContent(res.content);
+  if (res.status === constants.urlCheckStatuses.success.code && scanner === ScannerTypes.SITEMAP) {
+    const isSitemap = isSitemapContent(res.content);
 
     if (!isSitemap) {
       res.status = constants.urlCheckStatuses.notASitemap.code;
@@ -540,7 +532,7 @@ export const prepareData = async (argv: Answers): Promise<Data> => {
   }
   const {
     scanner,
-    headless, 
+    headless,
     url,
     deviceChosen,
     customDevice,
@@ -584,7 +576,7 @@ export const prepareData = async (argv: Answers): Promise<Data> => {
     type: scanner,
     url: finalUrl,
     entryUrl: url,
-    isHeadless: headless, 
+    isHeadless: headless,
     deviceChosen,
     customDevice,
     viewportWidth,
@@ -750,7 +742,7 @@ export const getLinksFromSitemap = async (
       ? (url = addBasicAuthCredentials(url, username, password))
       : url;
 
-    const request = new Request({ url: encodeURI(url) });
+    const request = new Request({ url: url });
     if (isUrlPdf(url)) {
       request.skipNavigation = true;
     }
@@ -1016,11 +1008,11 @@ export const validName = name => {
  * @returns object consisting of browser to run and cloned data directory
  */
 export const getBrowserToRun = (
-  preferredBrowser: string,
+  preferredBrowser: BrowserTypes,
   isCli = false,
-): { browserToRun: string; clonedBrowserDataDir: string } => {
+): { browserToRun: BrowserTypes; clonedBrowserDataDir: string } => {
   const platform = os.platform();
-  if (preferredBrowser === constants.browserTypes.chrome) {
+  if (preferredBrowser === BrowserTypes.CHROME) {
     const chromeData = getChromeData();
     if (chromeData) return chromeData;
 
@@ -1045,7 +1037,7 @@ export const getBrowserToRun = (
       if (isCli)
         printMessage(['Unable to use Chrome, falling back to Chromium browser...'], messageOptions);
     }
-  } else if (preferredBrowser === constants.browserTypes.edge) {
+  } else if (preferredBrowser === BrowserTypes.EDGE) {
     const edgeData = getEdgeData();
     if (edgeData) return edgeData;
 
@@ -1080,7 +1072,7 @@ export const getBrowserToRun = (
 
   // defaults to chromium
   return {
-    browserToRun: constants.browserTypes.chromium,
+    browserToRun: BrowserTypes.CHROMIUM,
     clonedBrowserDataDir: cloneChromiumProfiles(),
   };
 };
@@ -1092,9 +1084,9 @@ export const getBrowserToRun = (
  * after checkingUrl and unable to utilise same cookie for scan
  * */
 export const getClonedProfilesWithRandomToken = (browser: string, randomToken: string): string => {
-  if (browser === constants.browserTypes.chrome) {
+  if (browser === BrowserTypes.CHROME) {
     return cloneChromeProfiles(randomToken);
-  } else if (browser === constants.browserTypes.edge) {
+  } else if (browser === BrowserTypes.EDGE) {
     return cloneEdgeProfiles(randomToken);
   } else {
     return cloneChromiumProfiles(randomToken);
@@ -1105,7 +1097,7 @@ export const getChromeData = () => {
   const browserDataDir = getDefaultChromeDataDir();
   const clonedBrowserDataDir = cloneChromeProfiles();
   if (browserDataDir && clonedBrowserDataDir) {
-    const browserToRun = constants.browserTypes.chrome;
+    const browserToRun = BrowserTypes.CHROME;
     return { browserToRun, clonedBrowserDataDir };
   } else {
     return null;
@@ -1116,7 +1108,7 @@ export const getEdgeData = () => {
   const browserDataDir = getDefaultEdgeDataDir();
   const clonedBrowserDataDir = cloneEdgeProfiles();
   if (browserDataDir && clonedBrowserDataDir) {
-    const browserToRun = constants.browserTypes.edge;
+    const browserToRun = BrowserTypes.EDGE;
     return { browserToRun, clonedBrowserDataDir };
   }
 };
@@ -1384,7 +1376,7 @@ export const cloneChromiumProfiles = (randomToken?: string): string => {
  * @param {string} randomToken - random token to append to the cloned directory
  * @returns {string} cloned data directory, null if any of the sub files failed to copy
  */
-export const cloneEdgeProfiles = randomToken => {
+export const cloneEdgeProfiles = (randomToken?: string): string => {
   const baseDir = getDefaultEdgeDataDir();
 
   if (!baseDir) {
@@ -1425,11 +1417,11 @@ export const cloneEdgeProfiles = randomToken => {
 };
 
 export const deleteClonedProfiles = (browser: string, randomToken?: string): void => {
-  if (browser === constants.browserTypes.chrome) {
+  if (browser === BrowserTypes.CHROME) {
     deleteClonedChromeProfiles(randomToken);
-  } else if (browser === constants.browserTypes.edge) {
+  } else if (browser === BrowserTypes.EDGE) {
     deleteClonedEdgeProfiles(randomToken);
-  } else if (browser === constants.browserTypes.chromium) {
+  } else if (browser === BrowserTypes.CHROMIUM) {
     deleteClonedChromiumProfiles(randomToken);
   }
 };
@@ -1563,7 +1555,7 @@ export const getPlaywrightDeviceDetailsObject = (
     playwrightDeviceDetailsObject = devices['Galaxy S9+'];
   } else if (viewportWidth) {
     playwrightDeviceDetailsObject = {
-      viewport: { width: Number(viewportWidth), height: 720 },
+      viewport: { width: viewportWidth, height: 720 },
     };
   } else if (customDevice) {
     playwrightDeviceDetailsObject = devices[customDevice.replace(/_/g, ' ')];
@@ -1594,9 +1586,9 @@ export const submitFormViaPlaywright = async (
 ) => {
   const dirName = `clone-${Date.now()}`;
   let clonedDir = null;
-  if (proxy && browserToRun === constants.browserTypes.edge) {
+  if (proxy && browserToRun === BrowserTypes.EDGE) {
     clonedDir = cloneEdgeProfiles(dirName);
-  } else if (proxy && browserToRun === constants.browserTypes.chrome) {
+  } else if (proxy && browserToRun === BrowserTypes.CHROME) {
     clonedDir = cloneChromeProfiles(dirName);
   }
   const browserContext = await constants.launcher.launchPersistentContext(
@@ -1623,16 +1615,16 @@ export const submitFormViaPlaywright = async (
     silentLogger.error(error);
   } finally {
     await browserContext.close();
-    if (proxy && browserToRun === constants.browserTypes.edge) {
+    if (proxy && browserToRun === BrowserTypes.EDGE) {
       !process.env.PURPLE_A11Y_VERBOSE ? deleteClonedEdgeProfiles() : undefined;
-    } else if (proxy && browserToRun === constants.browserTypes.chrome) {
+    } else if (proxy && browserToRun === BrowserTypes.CHROME) {
       !process.env.PURPLE_A11Y_VERBOSE ? deleteClonedChromeProfiles() : undefined;
     }
   }
 };
 
 export const submitForm = async (
-  browserToRun: string,
+  browserToRun: BrowserTypes,
   userDataDirectory: string,
   scannedUrl: string,
   entryUrl: string,
@@ -1698,7 +1690,7 @@ export const getPlaywrightLaunchOptions = (browser?: string): LaunchOptions => {
   if (proxy) {
     options.headless = false;
     options.slowMo = 1000; // To ensure server-side rendered proxy page is loaded
-  } else if (browser === constants.browserTypes.edge && os.platform() === 'win32') {
+  } else if (browser === BrowserTypes.EDGE && os.platform() === 'win32') {
     // edge should be in non-headless mode
     options.headless = false;
   }
@@ -1711,3 +1703,11 @@ export const urlWithoutAuth = (url: string): URL => {
   parsedUrl.password = '';
   return parsedUrl;
 };
+
+export const waitForPageLoaded = async (page, timeout = 10000) => {
+  return Promise.race([
+      page.waitForLoadState('load'),
+      page.waitForLoadState('networkidle'),
+      new Promise((resolve) => setTimeout(resolve, timeout))
+  ]);
+}

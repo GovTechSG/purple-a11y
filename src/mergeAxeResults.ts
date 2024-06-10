@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import printMessage from 'print-message';
 import path from 'path';
 import { fileURLToPath} from 'url';
-import constants from './constants/constants.js';
+import constants, { ScannerTypes } from './constants/constants.js';
 import { urlWithoutAuth } from './constants/common.js';
 import ejs from 'ejs';
 import { createScreenshotsFolder, getFormattedTime, getStoragePath, getVersion, getWcagPassPercentage, formatDateTimeForMassScanner, retryFunction } from './utils.js';
@@ -506,7 +506,7 @@ export const generateArtifacts = async (
     return htmlFormattedStartTime;
   };
 
-  const isCustomFlow = scanType === constants.scannerTypes.custom;
+  const isCustomFlow = scanType === ScannerTypes.CUSTOM;
   const allIssues = {
     storagePath,
     purpleAi: {

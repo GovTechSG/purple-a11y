@@ -7,7 +7,7 @@ import { devices } from 'playwright';
 import prettier from 'prettier';
 import { consoleLogger, silentLogger, guiInfoLog } from './logs.js';
 import { fileURLToPath } from 'url';
-import { proxy, guiInfoStatusTypes } from './constants/constants.js';
+import { proxy, guiInfoStatusTypes, ScannerTypes } from './constants/constants.js';
 
 // Do NOT remove. These import statements will be used when the custom flow scan is run from the GUI app
 import { chromium } from 'playwright';
@@ -435,7 +435,7 @@ const waitForCaptcha = async (page, captchaLocator) => {
             const basicFormHTMLSnippet = await generateArtifacts(
               ${formatScriptStringVar(randomToken)},
               ${formatScriptStringVar(data.url)},
-              ${formatScriptStringVar(constants.scannerTypes.custom)},
+              ${formatScriptStringVar(ScannerTypes.CUSTOM)},
               ${formatScriptStringVar(
                 viewportWidth
                   ? `CustomWidth_${viewportWidth}px`

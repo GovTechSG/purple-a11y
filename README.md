@@ -252,9 +252,9 @@ port> -u <url> OPTIONS
 Options:
       --help                         Show help                         [boolean]
   -c, --scanner                      Type of scan, 1) sitemap, 2) website crawl,
-                                      3) custom flow, 4) custom flow 2.0, 5) int
+                                      3) custom flow, 4) intelligent
                                      elligent
-  [required] [choices: "sitemap", "website", "custom", "custom2", "intelligent"]
+  [required] [choices: "sitemap", "website", "custom", "intelligent"]
   -u, --url                          Website URL you want to scan
                                                              [string] [required]
   -d, --customDevice                 Device you want to scan            [string]
@@ -264,14 +264,12 @@ Options:
   -p, --maxpages                     Maximum number of pages to scan (default: 1
                                      00). Only available in website and sitemap
                                      scans                              [number]
-  -f, --safeMode                     Option to disable dynamically clicking of p
-                                     age buttons and links to find links, which
-                                     resolve issues on some websites. Defaults t
-                                     o no.
-                                 [string] [choices: "yes", "no"] [default: "no"]
-  -h, --headless                     Whether to run the scan in headless mode. D
-                                     efaults to yes.
-                                [string] [choices: "yes", "no"] [default: "yes"]
+  -f, --safeMode                     Disable dynamically clicking of page button
+                                     s and links to find links, which resolve is
+                                     sues on some websites. [yes / no]
+                                                        [string] [default: "no"]
+  -h, --headless                     Run the scan in headless mode. [yes / no]
+                                                       [string] [default: "yes"]
   -b, --browserToRun                 Browser to run the scan on: 1) Chromium, 2)
                                       Chrome, 3) Edge. Defaults to Chromium.
                      [choices: "chromium", "chrome", "edge"] [default: "chrome"]
@@ -312,20 +310,19 @@ Options:
   -q, --metadata                     Json string that contains additional scan m
                                      etadata for telemetry purposes. Defaults to
                                       "{}"              [string] [default: "{}"]
-  -r, --followRobots                 Option for crawler to adhere to robots.txt
-                                     rules if it exists
-                                 [string] [choices: "yes", "no"] [default: "no"]
+  -r, --followRobots                 Crawler adheres to robots.txt rules if it e
+                                     xists. [yes / no]  [string] [default: "no"]
   -m, --header                       The HTTP authentication header keys and the
                                      ir respective values to enable crawler acce
                                      ss to restricted resources.        [string]
 
 Examples:
-  To scan sitemap of website:', 'npm run cli -- -c [ 1 | sitemap ] -u <url_link>
-  [ -d <device> | -w <viewport_width> ]
-  To scan a website', 'npm run cli -- -c [ 2 | website ] -u <url_link> [ -d <devi
-  ce> | -w <viewport_width> ]
-  To start a custom flow scan', 'npm run cli -- -c [ 3 | custom ] -u <url_link> [
-   -d <device> | -w <viewport_width> ]
+  To scan sitemap of website:', 'npm run cli -- -c [ 1 | sitemap ] -u <url_lin
+  k> [ -d <device> | -w <viewport_width> ]
+  To scan a website', 'npm run cli -- -c [ 2 | website ] -u <url_link> [ -d <d
+  evice> | -w <viewport_width> ]
+  To start a custom flow scan', 'npm run cli -- -c [ 3 | custom ] -u <url_link
+  > [ -d <device> | -w <viewport_width> ]
 
 ```
 
