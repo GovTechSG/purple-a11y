@@ -164,6 +164,8 @@
 
         // Only update if there are pages not scanned
         if (totalPagesNotScanned > 0) {
+          document.getElementById('totalPagesScannedLabel').innerHTML = scanData.totalPagesScanned;
+          document.getElementById('totalPagesNotScannedLabel').innerHTML = scanData.totalPagesNotScanned;
 
           pagesNotScanned.forEach((page, index) => {
             var listItem = document.createElement('li');
@@ -189,8 +191,7 @@
         }
 
         document.getElementById('pagesScannedModalLabel').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
-        document.getElementById('totalPagesScannedLabel').innerHTML = scanData.totalPagesScanned;
-        document.getElementById('totalPagesNotScannedLabel').innerHTML = scanData.totalPagesNotScanned;
+
 
       };
 
