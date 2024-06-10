@@ -51,14 +51,15 @@ type AllIssues = {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const extractFileNames = async directory =>
-  fs
-    .readdir(directory)
-    .then(allFiles => allFiles.filter(file => path.extname(file).toLowerCase() === '.json'))
-    .catch(readdirError => {
-      consoleLogger.info('An error has occurred when retrieving files, please try again.');
-      silentLogger.error(`(extractFileNames) - ${readdirError}`);
-    });
+const extractFileNames = async (directory: string): Promise<string[]> => {
+  try {
+    const allFiles = await fs.readdir(directory);
+    return allFiles.filter(file => path.extname(file).toLowerCase() === '.json');
+  } catch (readdirError) {
+    consoleLogger.info('An error has occurred when retrieving files, please try again.');
+    silentLogger.error(`(extractFileNames) - ${readdirError}`);
+  }
+};
 
 const parseContentToJson = async rPath =>
   fs
@@ -550,7 +551,6 @@ export const generateArtifacts = async (
   };
   
   const allFiles = await extractFileNames(directory);
-  
 
   const jsonArray = await Promise.all(
     allFiles.map(async file => parseContentToJson(`${directory}/${file}`)),
