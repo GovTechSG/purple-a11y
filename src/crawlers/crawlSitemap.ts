@@ -15,6 +15,7 @@ import {
   messageOptions,
   isSkippedUrl,
   urlWithoutAuth,
+  waitForPageLoaded,
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
@@ -113,7 +114,7 @@ const crawlSitemap = async (
 
 
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
-
+  
 
   finalLinks = [...finalLinks, ...linksFromSitemap];
 
@@ -148,8 +149,6 @@ const crawlSitemap = async (
     preNavigationHooks: isBasicAuth
       ? [
         async ({ page, request }) => {
-
-          request.url = encodeURI(request.url);
           await page.setExtraHTTPHeaders({
             Authorization: authHeader,
             ...extraHTTPHeaders,
@@ -158,12 +157,14 @@ const crawlSitemap = async (
       ]
       : [
         async ({ page, request }) => {
-        request.url = encodeURI(request.url);
         preNavigationHooks(extraHTTPHeaders)
         //insert other code here
         },
       ],
+    requestHandlerTimeoutSecs: 90,
     requestHandler: async ({ page, request, response, sendRequest }) => {
+
+      await waitForPageLoaded(page, 10000);
 
       // Set basic auth header if needed
       if (isBasicAuth) await page.setExtraHTTPHeaders({

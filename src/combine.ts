@@ -4,11 +4,10 @@ import crawlDomain from './crawlers/crawlDomain.js';
 import crawlIntelligentSitemap from './crawlers/crawlIntelligentSitemap.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
-import constants from './constants/constants.js';
+import constants, { ScannerTypes } from './constants/constants.js';
 import { getBlackListedPatterns, submitForm, urlWithoutAuth } from './constants/common.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import runCustom from './crawlers/runCustom.js';
-
 
 const combineRun = async (details, deviceToScan) => {
   const envDetails = { ...details };
@@ -36,13 +35,13 @@ const combineRun = async (details, deviceToScan) => {
     metadata,
     customFlowLabel = 'Custom Flow',
     extraHTTPHeaders,
-    safeMode
+    safeMode,
   } = envDetails;
 
   process.env.CRAWLEE_LOG_LEVEL = 'ERROR';
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
-  const host = type === constants.scannerTypes.sitemap && isLocalSitemap ? '' : getHost(url);
+  const host = type === ScannerTypes.SITEMAP && isLocalSitemap ? '' : getHost(url);
 
   let blacklistedPatterns = null;
   try {
@@ -71,7 +70,7 @@ const combineRun = async (details, deviceToScan) => {
 
   let urlsCrawled;
   switch (type) {
-    case constants.scannerTypes.custom:
+    case ScannerTypes.CUSTOM:
       urlsCrawled = await runCustom(
         url,
         randomToken,
@@ -81,7 +80,7 @@ const combineRun = async (details, deviceToScan) => {
       );
       break;
 
-    case constants.scannerTypes.sitemap:
+    case ScannerTypes.SITEMAP:
       urlsCrawled = await crawlSitemap(
         url,
         randomToken,
@@ -94,12 +93,12 @@ const combineRun = async (details, deviceToScan) => {
         fileTypes,
         blacklistedPatterns,
         includeScreenshots,
-        extraHTTPHeaders
+        extraHTTPHeaders,
       );
       break;
 
-    case constants.scannerTypes.intelligent:
-        urlsCrawled = await crawlIntelligentSitemap(
+    case ScannerTypes.INTELLIGENT:
+      urlsCrawled = await crawlIntelligentSitemap(
         url,
         randomToken,
         host,
@@ -114,11 +113,11 @@ const combineRun = async (details, deviceToScan) => {
         includeScreenshots,
         followRobots,
         extraHTTPHeaders,
-        safeMode
+        safeMode,
       );
       break;
 
-    case constants.scannerTypes.website:
+    case ScannerTypes.WEBSITE:
       urlsCrawled = await crawlDomain(
         url,
         randomToken,
@@ -134,9 +133,9 @@ const combineRun = async (details, deviceToScan) => {
         includeScreenshots,
         followRobots,
         extraHTTPHeaders,
-        safeMode
+        safeMode,
       );
-    break;
+      break;
 
     default:
       consoleLogger.error(`type: ${type} not defined`);
@@ -150,9 +149,9 @@ const combineRun = async (details, deviceToScan) => {
   if (scanDetails.urlsCrawled.scanned.length > 0) {
     await createAndUpdateResultsFolders(randomToken);
     const pagesNotScanned = [
-      ...urlsCrawled.error, 
-      ...urlsCrawled.invalid, 
-      ...urlsCrawled.forbidden
+      ...urlsCrawled.error,
+      ...urlsCrawled.invalid,
+      ...urlsCrawled.forbidden,
     ];
     const basicFormHTMLSnippet = await generateArtifacts(
       randomToken,
@@ -163,10 +162,10 @@ const combineRun = async (details, deviceToScan) => {
       pagesNotScanned,
       customFlowLabel,
       undefined,
-      scanDetails
+      scanDetails,
     );
     const [name, email] = nameEmail.split(':');
-    
+
     await submitForm(
       browser,
       userDataDirectory,
@@ -177,7 +176,7 @@ const combineRun = async (details, deviceToScan) => {
       name,
       JSON.stringify(basicFormHTMLSnippet),
       urlsCrawled.scanned.length,
-      urlsCrawled.scannedRedirects.length, 
+      urlsCrawled.scannedRedirects.length,
       pagesNotScanned.length,
       metadata,
     );

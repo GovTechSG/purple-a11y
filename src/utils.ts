@@ -1,7 +1,11 @@
 import { execSync, spawnSync } from 'child_process';
 import path from 'path';
 import os from 'os';
-import { destinationPath, getIntermediateScreenshotsPath } from './constants/constants.js';
+import {
+  BrowserTypes,
+  destinationPath,
+  getIntermediateScreenshotsPath,
+} from './constants/constants.js';
 import fs from 'fs-extra';
 import constants from './constants/constants.js';
 import { silentLogger } from './logs.js';
@@ -25,7 +29,7 @@ export const isWhitelistedContentType = contentType => {
   return whitelist.filter(type => contentType.trim().startsWith(type)).length === 1;
 };
 
-export const getStoragePath = randomToken => {
+export const getStoragePath = (randomToken: string): string => {
   if (process.env.PURPLE_A11Y_VERBOSE_STORAGE_PATH) {
     return `${process.env.PURPLE_A11Y_VERBOSE_STORAGE_PATH}/${randomToken}`;
   }
@@ -243,13 +247,12 @@ export const formatDateTimeForMassScanner = date => {
   return formattedDateTime;
 };
 
-export const setHeadlessMode = (browser, isHeadless) => {
-  const isWindowsOSAndEdgeBrowser =
-    browser === constants.browserTypes.edge && os.platform() === 'win32';
+export const setHeadlessMode = (browser: string, isHeadless: boolean): void => {
+  const isWindowsOSAndEdgeBrowser = browser === BrowserTypes.EDGE && os.platform() === 'win32';
   if (isHeadless || isWindowsOSAndEdgeBrowser) {
-    process.env.CRAWLEE_HEADLESS = 1;
+    process.env.CRAWLEE_HEADLESS = '1';
   } else {
-    process.env.CRAWLEE_HEADLESS = 0;
+    process.env.CRAWLEE_HEADLESS = '0';
   }
 };
 
