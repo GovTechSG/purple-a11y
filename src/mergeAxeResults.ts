@@ -15,8 +15,6 @@ import { chromium } from 'playwright';
 import { createWriteStream } from 'fs';
 import { AsyncParser } from '@json2csv/node';
 import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
-import { all } from 'axios';
-import zlib from 'zlib';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -181,6 +179,27 @@ const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary'
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
 };
 
+const writeJsonFile = async (allIssues, storagePath, htmlFilename = 'report.html') => {
+  // Spread the data
+  const { items, ...rest } = allIssues;
+  
+  // Encode the data
+  const scanItems = JSON.stringify(items);
+  const scanData = JSON.stringify(rest);
+
+  // Path to the file where the encoded data will be saved
+  const filePath = path.join(storagePath, 'reports', 'scanDetails.txt');
+
+  // Ensure directory existence
+  const directoryPath = path.dirname(filePath);
+  if (!fs.existsSync(directoryPath)) {
+      fs.mkdirSync(directoryPath, { recursive: true });
+  }
+
+  // Write the encoded scan data to the file
+  await fs.promises.writeFile(filePath, `scanData=${scanData}\nscanItems=${scanItems}`);
+};
+
 // Proper base64 encoding function using Buffer
 const base64Encode = (data) => {
   try {
@@ -195,7 +214,6 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
   // Spread the data
   const { items, ...rest } = allIssues;
 
-  console.log(rest);
   // Encode the data
   const encodedScanItems = base64Encode(items);
   const encodedScanData = base64Encode(rest);
@@ -643,6 +661,7 @@ export const generateArtifacts = async (
   await writeCsv(allIssues, storagePath);
   await writeHTML(allIssues, storagePath);
   await writeSummaryHTML(allIssues, storagePath);
+  await writeJsonFile(allIssues, storagePath);
   await writeQueryString(allIssues, storagePath);
   await retryFunction(() => writeSummaryPdf(storagePath), 1);
   return createRuleIdJson(allIssues);
