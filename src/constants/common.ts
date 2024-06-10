@@ -1011,7 +1011,15 @@ export const getBrowserToRun = (
   preferredBrowser: BrowserTypes,
   isCli = false,
 ): { browserToRun: BrowserTypes; clonedBrowserDataDir: string } => {
+  console.log(`Preferred browser ${preferredBrowser}`);
+
   const platform = os.platform();
+
+  // Prioritise Chrome on Windows and Mac platforms if user does not specify a browser
+  if (!preferredBrowser && (os.platform() === 'win32' || os.platform() === 'darwin')) {
+    preferredBrowser = BrowserTypes.CHROME;
+  }
+
   if (preferredBrowser === BrowserTypes.CHROME) {
     const chromeData = getChromeData();
     if (chromeData) return chromeData;
