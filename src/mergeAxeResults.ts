@@ -39,6 +39,7 @@ interface AllIssues {
   wcagViolations: Set<string>;
   items: {
     [category: string]: {
+      description: string;
       totalItems: number;
       rules: { [rule: string]: RuleInfo };
     };
@@ -515,13 +516,14 @@ export const generateArtifacts = async (
   };
 
   const isCustomFlow = scanType === ScannerTypes.CUSTOM;
-  const allIssues = {
+
+  const allIssues: AllIssues = {
     storagePath,
     purpleAi: {
       htmlETL: purpleAiHtmlETL,
       rules: purpleAiRules,
     },
-    startTime: scanDetails.startTime? scanDetails.startTime : new Date(),
+    startTime: scanDetails.startTime ? scanDetails.startTime : new Date(),
     urlScanned,
     scanType,
     formatAboutStartTime,
@@ -543,9 +545,11 @@ export const generateArtifacts = async (
       passed: { description: itemTypeDescription.passed, totalItems: 0, rules: {} },
     },
     cypressScanAboutMetadata,
-    wcagLinks: constants.wcagLinks
+    wcagLinks: constants.wcagLinks,
   };
+  
   const allFiles = await extractFileNames(directory);
+  
 
   const jsonArray = await Promise.all(
     allFiles.map(async file => parseContentToJson(`${directory}/${file}`)),
