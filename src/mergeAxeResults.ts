@@ -653,13 +653,14 @@ export const generateArtifacts = async (
     let scanSummaryMessage = {
       type: 'scanSummary',
       payload: [
-        `Must Fix: ${allIssues.items.mustFix.rules.length} ${allIssues.items.mustFix.rules.length === 1 ? 'issue' : 'issues'} / ${allIssues.items.mustFix.totalItems} ${allIssues.items.mustFix.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
-        `Good to Fix: ${allIssues.items.goodToFix.rules.length} ${allIssues.items.goodToFix.rules.length === 1 ? 'issue' : 'issues'} / ${allIssues.items.goodToFix.totalItems} ${allIssues.items.goodToFix.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
-        `Needs Review: ${allIssues.items.needsReview.rules.length} ${allIssues.items.needsReview.rules.length === 1 ? 'issue' : 'issues'} / ${allIssues.items.needsReview.totalItems} ${allIssues.items.needsReview.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
+        `Must Fix: ${Object.keys(allIssues.items.mustFix.rules).length} ${Object.keys(allIssues.items.mustFix.rules).length === 1 ? 'issue' : 'issues'} / ${allIssues.items.mustFix.totalItems} ${allIssues.items.mustFix.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
+        `Good to Fix: ${Object.keys(allIssues.items.goodToFix.rules).length} ${Object.keys(allIssues.items.goodToFix.rules).length === 1 ? 'issue' : 'issues'} / ${allIssues.items.goodToFix.totalItems} ${allIssues.items.goodToFix.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
+        `Needs Review: ${Object.keys(allIssues.items.needsReview.rules).length} ${Object.keys(allIssues.items.needsReview.rules).length === 1 ? 'issue' : 'issues'} / ${allIssues.items.needsReview.totalItems} ${allIssues.items.needsReview.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
         `Passed: ${allIssues.items.passed.totalItems} ${allIssues.items.passed.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
         `Results directory: ${storagePath}`,
       ]
-    }
+    };
+       
 
     if (process.send){
       process.send(JSON.stringify(scanDataMessage));
