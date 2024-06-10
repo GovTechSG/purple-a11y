@@ -16,6 +16,35 @@ import { createWriteStream } from 'fs';
 import { AsyncParser } from '@json2csv/node';
 import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
 
+interface PageInfo {
+  items: any[];
+  pageTitle: string;
+  [key: string]: any;
+}
+
+interface RuleInfo {
+  totalItems: number;
+  pagesAffected: { [key: string]: PageInfo };
+  rule: string;
+  description: string;
+  axeImpact: string;
+  conformance: string[];
+  helpUrl: string;
+  [key: string]: any;
+}
+
+interface AllIssues {
+  totalItems: number;
+  topFiveMostIssues: { totalIssues: number }[];
+  wcagViolations: Set<string>;
+  items: {
+    [category: string]: {
+      totalItems: number;
+      rules: { [rule: string]: RuleInfo };
+    };
+  };
+  [key: string]: any;
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -80,13 +109,13 @@ const writeCsv = async (allIssues, storagePath) => {
 
   // transform allIssues into the form:
   // [['mustFix', rule1], ['mustFix', rule2], ['goodToFix', rule3], ...]
-  const getRulesByCategory = allIssues => {
+  const getRulesByCategory = (allIssues: AllIssues) => {
     return Object.entries(allIssues.items)
       .filter(([category]) => category !== 'passed')
-      .reduce((prev, [category, value]) => {
-        const rules = value.rules;
-        for (let rule of rules) {
-          prev.push([category, rule]);
+      .reduce((prev: [string, RuleInfo][], [category, value]) => {
+        const rulesEntries = Object.entries(value.rules);
+        for (let [rule, ruleInfo] of rulesEntries) {
+          prev.push([category, ruleInfo]);
         }
         return prev;
       }, [])
