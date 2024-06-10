@@ -167,7 +167,7 @@ const writeHTML = async (allIssues, storagePath, htmlFilename = 'report') => {
     filename: path.join(__dirname, './static/ejs/report.ejs'),
   });
   const html = template(allIssues);
-  fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
+  fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`,html);
 };
 
 const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary') => {
@@ -178,6 +178,72 @@ const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary'
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
 };
+
+// Proper base64 encoding function using Buffer
+const base64Encode = (data) => {
+  try {
+    return Buffer.from(JSON.stringify(data)).toString('base64');
+  } catch (error) {
+    console.error('Error encoding data to base64:', error);
+    throw error;
+  }
+};
+
+const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.html') => {
+  // Spread the data
+  const { items, ...rest } = allIssues;
+
+  // Encode the data
+  const encodedScanItems = base64Encode(items);
+  const encodedScanData = base64Encode(rest);
+
+  // Path to the file where the encoded data will be saved
+  const filePath = path.join(storagePath, 'reports', 'reportScanData.csv');
+
+  // Ensure directory existence
+  const directoryPath = path.dirname(filePath);
+  if (!fs.existsSync(directoryPath)) {
+      fs.mkdirSync(directoryPath, { recursive: true });
+  }
+
+  // Write the encoded scan data to the file
+  await fs.promises.writeFile(filePath, `${encodedScanData}\n${encodedScanItems}`);
+
+  // Read the existing HTML file
+  const htmlFilePath = path.join(storagePath, 'reports', htmlFilename);
+  let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
+
+  // Find the position to insert the script tag in the head section
+  const headIndex = htmlContent.indexOf('</head>');
+  const injectScript = `
+  <script>
+    // Function to decode Base64
+    const base64Decode = (data) => {
+      const compressedBytes = Uint8Array.from(atob(data), c => c.charCodeAt(0));
+      const jsonString = new TextDecoder().decode(compressedBytes);
+      return JSON.parse(jsonString);
+    };
+
+    // Check if encodedScanData and encodedScanItems are defined
+    // Decode the encoded data
+    scanData = base64Decode('${encodedScanData}');
+    scanItems = base64Decode('${encodedScanItems}');
+
+  </script>
+  `;
+
+  if (headIndex !== -1) {
+    // If </head> tag is found, insert the script tag before it
+    htmlContent = htmlContent.slice(0, headIndex) + injectScript + htmlContent.slice(headIndex);
+  } else {
+    // If </head> tag is not found, append the script tag at the end of the file
+    htmlContent += injectScript;
+  }
+
+  // Write the updated HTML content back to the file
+  fs.writeFileSync(htmlFilePath, htmlContent);
+};
+
 
 let browserChannel = 'chrome';
 
@@ -574,6 +640,7 @@ export const generateArtifacts = async (
   await writeCsv(allIssues, storagePath);
   await writeHTML(allIssues, storagePath);
   await writeSummaryHTML(allIssues, storagePath);
+  await writeQueryString(allIssues, storagePath);
   await retryFunction(() => writeSummaryPdf(storagePath), 1);
   return createRuleIdJson(allIssues);
 };
