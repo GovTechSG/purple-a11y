@@ -16,37 +16,61 @@ import { createWriteStream } from 'fs';
 import { AsyncParser } from '@json2csv/node';
 import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
 
-type PageInfo = {
-  items: any[];
-  pageTitle: string;
-  [key: string]: any;
+type ItemsInfo = {
+  html: string;
+  message: string;
+ screenshotPath: string;
+ xpath: string;
 }
 
-type RuleInfo = {
+type PageInfo = {
+  items: ItemsInfo[];
+  pageTitle: string;
+  url?: string;
+  pageImagePath?: string;
+}
+
+interface RuleInfo {
   totalItems: number;
-  pagesAffected: { [key: string]: PageInfo };
+  pagesAffected: PageInfo[];
   rule: string;
   description: string;
   axeImpact: string;
   conformance: string[];
   helpUrl: string;
-  [key: string]: any;
 }
 
 type AllIssues = {
+  storagePath: string;
+  purpleAi: {
+    htmlETL: any;
+    rules: any[];
+  };
+  startTime: Date;
+  urlScanned: string;
+  scanType: string;
+  formatAboutStartTime: any; 
+  isCustomFlow: boolean;
+  viewport: any; 
+  pagesScanned: PageInfo[];
+  pagesNotScanned: PageInfo[];
+  totalPagesScanned: number;
+  totalPagesNotScanned: number;
   totalItems: number;
   topFiveMostIssues: { totalIssues: number }[];
   wcagViolations: Set<string>;
+  customFlowLabel: string;
+  phAppVersion: string;
   items: {
-    [category: string]: {
-      description: string;
-      totalItems: number;
-      rules: { [rule: string]: RuleInfo };
-    };
+    mustFix: { description: string; totalItems: number; rules: RuleInfo[] };
+    goodToFix: { description: string; totalItems: number; rules: RuleInfo[] };
+    needsReview: { description: string; totalItems: number; rules: RuleInfo[] };
+    passed: { description: string; totalItems: number; rules: RuleInfo[] };
   };
+  cypressScanAboutMetadata: string; 
+  wcagLinks: { [key: string]: string };
   [key: string]: any;
 }
-
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -541,10 +565,10 @@ export const generateArtifacts = async (
     customFlowLabel,
     phAppVersion,
     items: {
-      mustFix: { description: itemTypeDescription.mustFix, totalItems: 0, rules: {} },
-      goodToFix: { description: itemTypeDescription.goodToFix, totalItems: 0, rules: {} },
-      needsReview: { description: itemTypeDescription.needsReview, totalItems: 0, rules: {} },
-      passed: { description: itemTypeDescription.passed, totalItems: 0, rules: {} },
+      mustFix: { description: itemTypeDescription.mustFix, totalItems: 0, rules: [] },
+      goodToFix: { description: itemTypeDescription.goodToFix, totalItems: 0, rules: [] },
+      needsReview: { description: itemTypeDescription.needsReview, totalItems: 0, rules: [] },
+      passed: { description: itemTypeDescription.passed, totalItems: 0, rules: [] },
     },
     cypressScanAboutMetadata,
     wcagLinks: constants.wcagLinks,
