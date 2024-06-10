@@ -132,6 +132,9 @@ export const runAxeScript = async (
         branding: {
           application: 'purple-a11y',
         },
+        rules: [
+          { id: 'target-size', enabled: true },
+        ]
       });
 
       //removed needsReview condition
