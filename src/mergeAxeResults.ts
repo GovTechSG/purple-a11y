@@ -16,13 +16,13 @@ import { createWriteStream } from 'fs';
 import { AsyncParser } from '@json2csv/node';
 import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
 
-interface PageInfo {
+type PageInfo = {
   items: any[];
   pageTitle: string;
   [key: string]: any;
 }
 
-interface RuleInfo {
+type RuleInfo = {
   totalItems: number;
   pagesAffected: { [key: string]: PageInfo };
   rule: string;
@@ -33,7 +33,7 @@ interface RuleInfo {
   [key: string]: any;
 }
 
-interface AllIssues {
+type AllIssues = {
   totalItems: number;
   topFiveMostIssues: { totalIssues: number }[];
   wcagViolations: Set<string>;
@@ -46,6 +46,7 @@ interface AllIssues {
   };
   [key: string]: any;
 }
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -569,9 +570,9 @@ export const generateArtifacts = async (
   printMessage([
     'Scan Summary',
     '',
-    `Must Fix: ${allIssues.items.mustFix.rules.length} ${allIssues.items.mustFix.rules.length === 1 ? 'issue' : 'issues'} / ${allIssues.items.mustFix.totalItems} ${allIssues.items.mustFix.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
-    `Good to Fix: ${allIssues.items.goodToFix.rules.length} ${allIssues.items.goodToFix.rules.length === 1 ? 'issue' : 'issues'} / ${allIssues.items.goodToFix.totalItems} ${allIssues.items.goodToFix.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
-    `Needs Review: ${allIssues.items.needsReview.rules.length} ${allIssues.items.needsReview.rules.length === 1 ? 'issue' : 'issues'} / ${allIssues.items.needsReview.totalItems} ${allIssues.items.needsReview.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
+    `Must Fix: ${allIssues.items.mustFix.rules.length} ${Object.keys(allIssues.items.mustFix.rules).length === 1 ? 'issue' : 'issues'} / ${allIssues.items.mustFix.totalItems} ${allIssues.items.mustFix.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
+    `Good to Fix: ${allIssues.items.goodToFix.rules.length} ${Object.keys(allIssues.items.goodToFix.rules).length === 1 ? 'issue' : 'issues'} / ${allIssues.items.goodToFix.totalItems} ${allIssues.items.goodToFix.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
+    `Needs Review: ${allIssues.items.needsReview.rules.length} ${Object.keys(allIssues.items.needsReview.rules).length === 1 ? 'issue' : 'issues'} / ${allIssues.items.needsReview.totalItems} ${allIssues.items.needsReview.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
     `Passed: ${allIssues.items.passed.totalItems} ${allIssues.items.passed.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
   ]);
 
@@ -583,16 +584,16 @@ export const generateArtifacts = async (
 
   allIssues.wcagPassPercentage = getWcagPassPercentage(allIssues.wcagViolations);
  
-  const getAxeImpactCount = (data) => {
+  const getAxeImpactCount = (allIssues: AllIssues) => {
     const impactCount = {
       "critical": 0,
       "serious": 0,
       "moderate": 0,
       "minor": 0
     };
-    Object.values(data.items).forEach(category =>{
+    Object.values(allIssues.items).forEach(category =>{
     if (category.totalItems>0) {
-      category.rules.forEach(rule => {
+      Object.values(category.rules).forEach(rule => {
         if (rule.axeImpact === 'critical') {
           impactCount.critical += rule.totalItems;
         } else if (rule.axeImpact === 'serious') {
@@ -608,8 +609,6 @@ export const generateArtifacts = async (
   
     return impactCount;
   };
-
-
 
   if (process.env.PURPLE_A11Y_VERBOSE) {
 
