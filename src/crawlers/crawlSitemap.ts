@@ -16,6 +16,7 @@ import {
   isSkippedUrl,
   urlWithoutAuth,
   waitForPageLoaded,
+  isFilePath,
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
@@ -64,10 +65,14 @@ const crawlSitemap = async (
       fs.mkdirSync(randomToken);
     }
   }
-
-  const parsedUrl = new URL(sitemapUrl);
+  
+  let parsedUrl;
   let username = ""
   let password = "";
+  if (isFilePath(sitemapUrl)) {
+    parsedUrl = sitemapUrl;
+} else {
+  parsedUrl = new URL(sitemapUrl);
   if (parsedUrl.username !=="" && parsedUrl.password !=="") {
     isBasicAuth = true;
     username = decodeURIComponent(parsedUrl.username);
@@ -80,6 +85,7 @@ const crawlSitemap = async (
     parsedUrl.password = "";
 
   }
+}
 
   linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory, userUrlInputFromIntelligent, fromCrawlIntelligentSitemap, username, password)
   
@@ -117,7 +123,6 @@ const crawlSitemap = async (
   
 
   finalLinks = [...finalLinks, ...linksFromSitemap];
-
   const requestList = new crawlee.RequestList({
     sources: finalLinks,
   });

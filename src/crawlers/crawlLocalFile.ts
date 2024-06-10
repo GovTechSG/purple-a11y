@@ -22,6 +22,24 @@ import { guiInfoLog } from '../logs.js';
 import playwright from 'playwright';
 import path from 'path';
 
+    // if (pdf/html file){
+    //     scan as per normal
+    // }
+    // else if (sitemap file){
+    //     crawlsitemap()
+    //     getLinksFromSitemap(): if path() - crawlLocalFile() -> urlsCrawled -> append to the existing crawlSitemap.urlCrawled, which should return the updated urlsCrawled
+    // 
+   
+        
+
+    // }
+
+    // crawlsitemap():  
+    // http is done, file
+
+
+
+
 const crawlLocalFile = async (
   sitemapUrl: string,
   randomToken: string,
@@ -42,7 +60,7 @@ const crawlLocalFile = async (
 ) => {
   let dataset: any;
   let urlsCrawled: any;
-  let linksFromSitemap: Request[] = [];
+  let linksFromSitemap = [];
 
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth: boolean;
@@ -62,7 +80,17 @@ const crawlLocalFile = async (
   }
 
   if (fs.existsSync(sitemapUrl)) {
-    linksFromSitemap = [new Request({ url: sitemapUrl })];
+    if(sitemapUrl.endsWith('.xml')) {
+      const username = ''
+      const password = ''
+      console.log('Sitemap URL is an XML file')
+      linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory, userUrlInputFromIntelligent, fromCrawlIntelligentSitemap,username, password)
+      console.log(linksFromSitemap)
+    } else {
+      linksFromSitemap = [new Request({ url: sitemapUrl })];
+      console.log(linksFromSitemap);
+    }
+
   } else {
     // File not found
     throw new Error(`File not found: ${sitemapUrl}`);

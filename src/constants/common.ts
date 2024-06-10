@@ -839,9 +839,15 @@ export const getLinksFromSitemap = async (
     let sitemapType;
     let isBasicAuth = false;
 
-    const parsedUrl = new URL(url);
     let username = '';
     let password = '';
+    let parsedUrl;
+    // Check whether its a file path or a URL
+    if (isFilePath(url)) {
+      parsedUrl = url;
+    } else {
+    parsedUrl = new URL(url);
+    
 
     if (parsedUrl.username !== '' && parsedUrl.password !== '') {
       isBasicAuth = true;
@@ -850,7 +856,7 @@ export const getLinksFromSitemap = async (
       parsedUrl.username = '';
       parsedUrl.password = '';
     }
-
+    }
     const getDataUsingPlaywright = async () => {
       const browserContext = await constants.launcher.launchPersistentContext(
         finalUserDataDirectory,
@@ -1732,3 +1738,7 @@ export const waitForPageLoaded = async (page, timeout = 10000) => {
     new Promise(resolve => setTimeout(resolve, timeout)),
   ]);
 };
+
+export const isFilePath = (url: string): boolean => {
+  return path.isAbsolute(url) && fs.existsSync(url) && fs.lstatSync(url).isFile();
+}
