@@ -51,30 +51,34 @@
       };
 
       const scanDataTop5Card = () => {
-        const card = document.getElementById("top-five-card");
-        const list = card.querySelector(".unbulleted-list");
+          const card = document.getElementById("top-five-card");
+          const list = card.querySelector(".unbulleted-list");
 
-        scanData.topFiveMostIssues.forEach((page, index) => {
-            if (page.totalIssues !== 0) {
-                const listItem = document.createElement('li');
-                listItem.className = "d-flex justify-content-between";
+          // Sort the items based on totalIssues in descending order
+          const sortedTop5 = scanData.topFiveMostIssues.sort((a, b) => b.totalIssues - a.totalIssues);
+          let i = 0;
+          for (i < 5; i++;) {
+              const page = sortedTop5[i];
+              if (page.totalIssues !== 0) {
+                  const listItem = document.createElement('li');
+                  listItem.className = "d-flex justify-content-between";
 
-                const link = document.createElement('a');
-                link.href = page.url;
-                link.target = "_blank";
-                link.textContent = page.pageTitle.length > 0 ? page.pageTitle : page.url;
+                  const link = document.createElement('a');
+                  link.href = page.url;
+                  link.target = "_blank";
+                  link.textContent = page.pageTitle.length > 0 ? page.pageTitle : page.url;
 
-                const issueCount = document.createElement('span');
-                issueCount.className = "fw-bold ms-2";
-                issueCount.setAttribute('aria-label', `${page.totalIssues} issues`);
-                issueCount.textContent = page.totalIssues;
+                  const issueCount = document.createElement('span');
+                  issueCount.className = "fw-bold ms-2";
+                  issueCount.setAttribute('aria-label', `${page.totalIssues} issues`);
+                  issueCount.textContent = page.totalIssues;
 
-                listItem.appendChild(link);
-                listItem.appendChild(issueCount);
+                  listItem.appendChild(link);
+                  listItem.appendChild(issueCount);
 
-                list.appendChild(listItem);
-            }
-        });
+                  list.appendChild(listItem);
+              }
+          }
       };
 
       const scanDataCategorySelector = () =>{
