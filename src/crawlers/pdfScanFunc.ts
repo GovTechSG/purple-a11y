@@ -171,79 +171,88 @@ export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
   const intermediateResultPath = `${intermediateFolder}/${constants.pdfScanResultFileName}`;
 
   const rawdata = fs.readFileSync(intermediateResultPath);
-  const output = JSON.parse(rawdata);
+
+  let output;
+  try {
+    output = JSON.parse(rawdata);
+    
+  } catch (err) {
+    consoleLogger.log(err);
+  }
 
   const errorMeta = require('../constants/errorMeta.json');
 
   const resultsList = [];
 
   // jobs: files that are scanned
-  const {
-    report: { jobs },
-  } = output;
+  if (output) {
+    const {
+      report: { jobs },
+    } = output;
+    
+    // loop through all jobs
+    for (let jobIdx = 0; jobIdx < jobs.length; jobIdx++) {
+      const translated = {
+        // transformed result for current job
+        goodToFix: {
+          rules: {},
+          totalItems: 0,
+        },
+        mustFix: {
+          rules: {},
+          totalItems: 0,
+        },
+        needsReview: {
+          rules: {},
+          totalItems: 0,
+        },
+      };
 
-  // loop through all jobs
-  for (let jobIdx = 0; jobIdx < jobs.length; jobIdx++) {
-    const translated = {
-      // transformed result for current job
-      goodToFix: {
-        rules: {},
-        totalItems: 0,
-      },
-      mustFix: {
-        rules: {},
-        totalItems: 0,
-      },
-      needsReview: {
-        rules: {},
-        totalItems: 0,
-      },
-    };
+      const { itemDetails, validationResult } = jobs[jobIdx];
+      const { name: fileName } = itemDetails;
 
-    const { itemDetails, validationResult } = jobs[jobIdx];
-    const { name: fileName } = itemDetails;
+      const uuid = fileName
+        .split(os.platform() === 'win32' ? '\\' : '/')
+        .pop()
+        .split('.')[0];
+      const url = uuidToUrlMapping[uuid];
+      const pageTitle = decodeURI(url).split('/').pop();
+      const filePath = `${randomToken}/${uuid}.pdf`;
 
-    const uuid = fileName
-      .split(os.platform() === 'win32' ? '\\' : '/')
-      .pop()
-      .split('.')[0];
-    const url = uuidToUrlMapping[uuid];
-    const pageTitle = decodeURI(url).split('/').pop();
-    const filePath = `${randomToken}/${uuid}.pdf`;
+      translated.url = url;
+      translated.pageTitle = pageTitle;
+      translated.filePath = filePath;
 
-    translated.url = url;
-    translated.pageTitle = pageTitle;
-    translated.filePath = filePath;
+      if (!validationResult) {
+        // check for error in scan
+        consoleLogger.info(`Unable to scan ${pageTitle}, skipping`);
+        continue; // skip this job
+      }
 
-    if (!validationResult) {
-      // check for error in scan
-      consoleLogger.info(`Unable to scan ${pageTitle}, skipping`);
-      continue; // skip this job
+      // destructure validation result
+      const { passedChecks, failedChecks, ruleSummaries } = validationResult.details;
+      const totalChecks = passedChecks + failedChecks;
+
+      translated.totalItems = totalChecks;
+      
+      // loop through all failed rules
+      for (let ruleIdx = 0; ruleIdx < ruleSummaries.length; ruleIdx++) {
+        const rule = ruleSummaries[ruleIdx];
+        const { specification, testNumber, clause } = rule;
+        
+        if (isRuleExcluded(rule)) continue;
+        const [ruleId, transformedRule] = await transformRule(rule, filePath);
+        
+        // ignore if violation is not in the meta file
+        const meta = errorMeta[specification][clause][testNumber]?.STATUS ?? 'ignore';
+        const category = translated[metaToCategoryMap[meta]];
+
+        category.rules[ruleId] = transformedRule;
+        category.totalItems += transformedRule.totalItems;
+      }
+      
+      resultsList.push(translated);
     }
-
-    // destructure validation result
-    const { passedChecks, failedChecks, ruleSummaries } = validationResult.details;
-    const totalChecks = passedChecks + failedChecks;
-
-    translated.totalItems = totalChecks;
-
-    // loop through all failed rules
-    for (let ruleIdx = 0; ruleIdx < ruleSummaries.length; ruleIdx++) {
-      const rule = ruleSummaries[ruleIdx];
-      const { specification, testNumber, clause } = rule;
-
-      if (isRuleExcluded(rule)) continue;
-      const [ruleId, transformedRule] = await transformRule(rule, filePath);
-
-      // ignore if violation is not in the meta file
-      const meta = errorMeta[specification][clause][testNumber]?.STATUS ?? 'ignore';
-      const category = translated[metaToCategoryMap[meta]];
-
-      category.rules[ruleId] = transformedRule;
-      category.totalItems += transformedRule.totalItems;
-    }
-
-    resultsList.push(translated);
   }
   return resultsList;
 };
@@ -261,9 +270,9 @@ const transformRule = async (rule, filePath) => {
   } else {
     transformed.conformance = ['best-practice'];
   }
-
+  
   transformed.items = [];
-
+  
   for (let checkIdx = 0; checkIdx < checks.length; checkIdx++) {
     const { errorMessage, context } = checks[checkIdx];
     const page = await getPageFromContext(context, filePath);

@@ -215,10 +215,12 @@ export const getFileSitemap = (filePath: string): string | null => {
   if (!fs.existsSync(filePath)) {
     return null;
   }
-
+  
   const file = fs.readFileSync(filePath, 'utf8');
   const isLocalSitemap = isSitemapContent(file);
-  return isLocalSitemap ? filePath : null;
+  let isLocalFileOrSitemap = isLocalSitemap ? filePath : null;
+  let isLocalFiles = file ? filePath : null;
+  return isLocalFileOrSitemap || isLocalFiles ? filePath : null;
 };
 
 export const getUrlMessage = (scanner: ScannerTypes): string => {
@@ -228,7 +230,8 @@ export const getUrlMessage = (scanner: ScannerTypes): string => {
       return 'Please enter URL of website: ';
     case ScannerTypes.SITEMAP:
       return 'Please enter URL or file path to sitemap, or drag and drop a sitemap file here: ';
-
+    case ScannerTypes.LOCALFILE:
+        return 'Please enter file path: ';
     default:
       return 'Invalid option';
   }
@@ -514,7 +517,12 @@ export const checkUrl = async (
     }
   }
 
-  if (res.status === constants.urlCheckStatuses.success.code && scanner === ScannerTypes.SITEMAP) {
+  if (
+    (res.status === constants.urlCheckStatuses.success.code &&
+      scanner === ScannerTypes.SITEMAP) ||
+      (res.status === constants.urlCheckStatuses.success.code &&
+        scanner === ScannerTypes.LOCALFILE)
+  ){
     const isSitemap = isSitemapContent(res.content);
 
     if (!isSitemap) {
@@ -557,7 +565,7 @@ export const prepareData = async (argv: Answers): Promise<Data> => {
 
   // construct filename for scan results
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
-  const domain = argv.isLocalSitemap ? 'custom' : new URL(argv.url).hostname;
+  const domain = argv.isLocalSitemap ? path.basename(argv.url) : new URL(argv.url).hostname;
   const sanitisedLabel = customFlowLabel ? `_${customFlowLabel.replaceAll(' ', '_')}` : '';
   let resultFilename: string;
   const randomThreeDigitNumber = randomThreeDigitNumberString();
@@ -742,7 +750,12 @@ export const getLinksFromSitemap = async (
       ? (url = addBasicAuthCredentials(url, username, password))
       : url;
 
-    const request = new Request({ url: url });
+    let request;
+    try {
+      request = new Request({ url: url });
+    } catch (e) {
+      console.log("Error creating request", e)
+    }
     if (isUrlPdf(url)) {
       request.skipNavigation = true;
     }
@@ -1706,8 +1719,8 @@ export const urlWithoutAuth = (url: string): URL => {
 
 export const waitForPageLoaded = async (page, timeout = 10000) => {
   return Promise.race([
-      page.waitForLoadState('load'),
-      page.waitForLoadState('networkidle'),
-      new Promise((resolve) => setTimeout(resolve, timeout))
+    page.waitForLoadState('load'),
+    page.waitForLoadState('networkidle'),
+    new Promise(resolve => setTimeout(resolve, timeout)),
   ]);
-}
+};

@@ -383,14 +383,14 @@ export const generateArtifacts = async (
   pagesNotScanned,
   customFlowLabel,
   cypressScanAboutMetadata,
-  scanDetails
+  scanDetails,
 
 ) => {
   const phAppVersion = getVersion();
   const storagePath = getStoragePath(randomToken);
   const directory = `${storagePath}/${constants.allIssueFileName}`;
-
-  urlScanned = urlWithoutAuth(urlScanned);
+  
+  urlScanned = (scanType === ScannerTypes.SITEMAP || scanType === ScannerTypes.LOCALFILE) ? urlScanned : urlWithoutAuth(urlScanned);
 
   const formatAboutStartTime = dateString => {
     const utcStartTimeDate = new Date(dateString);

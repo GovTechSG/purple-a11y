@@ -16,10 +16,10 @@ export const alertMessageOptions = {
 export const cliOptions: { [key: string]: Options } = {
   c: {
     alias: 'scanner',
-    describe: 'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow, 4) intelligent',
+    describe: 'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow, 4) intelligent 5)local file',
     requiresArg: true,
     coerce: option => {
-      const choices = ['sitemap', 'website', 'custom', 'intelligent'];
+      const choices = ['sitemap', 'website', 'custom', 'intelligent', 'localfile'];
       if (typeof option === 'number') {
         // Will also allow integer choices
         if (Number.isInteger(option) && option > 0 && option <= choices.length) {
@@ -36,6 +36,8 @@ export const cliOptions: { [key: string]: Options } = {
           return ScannerTypes.CUSTOM;
         case 'intelligent':
           return ScannerTypes.INTELLIGENT;
+        case 'localfile':
+          return ScannerTypes.LOCALFILE;
         default:
           printMessage(
             [

@@ -1,6 +1,7 @@
 import printMessage from 'print-message';
 import crawlSitemap from './crawlers/crawlSitemap.js';
 import crawlDomain from './crawlers/crawlDomain.js';
+import crawlLocalFile from './crawlers/crawlLocalFile.js';
 import crawlIntelligentSitemap from './crawlers/crawlIntelligentSitemap.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
@@ -41,7 +42,11 @@ const combineRun = async (details, deviceToScan) => {
   process.env.CRAWLEE_LOG_LEVEL = 'ERROR';
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
-  const host = type === ScannerTypes.SITEMAP && isLocalSitemap ? '' : getHost(url);
+  const host =
+    (type === ScannerTypes.SITEMAP && isLocalSitemap) ||
+    (type === ScannerTypes.LOCALFILE && isLocalSitemap)
+      ? ''
+      : getHost(url);
 
   let blacklistedPatterns = null;
   try {
@@ -51,9 +56,12 @@ const combineRun = async (details, deviceToScan) => {
     silentLogger.error(error);
     process.exit(1);
   }
-
+  
   // remove basic-auth credentials from URL
-  let finalUrl = urlWithoutAuth(url);
+  let finalUrl = url;
+  if(!(type === ScannerTypes.SITEMAP && isLocalSitemap || type === ScannerTypes.LOCALFILE && isLocalSitemap)) {
+    finalUrl = urlWithoutAuth(url);
+  }
 
   const scanDetails = {
     startTime: new Date(),
@@ -69,6 +77,7 @@ const combineRun = async (details, deviceToScan) => {
   };
 
   let urlsCrawled;
+  
   switch (type) {
     case ScannerTypes.CUSTOM:
       urlsCrawled = await runCustom(
@@ -82,6 +91,23 @@ const combineRun = async (details, deviceToScan) => {
 
     case ScannerTypes.SITEMAP:
       urlsCrawled = await crawlSitemap(
+        url,
+        randomToken,
+        host,
+        viewportSettings,
+        maxRequestsPerCrawl,
+        browser,
+        userDataDirectory,
+        specifiedMaxConcurrency,
+        fileTypes,
+        blacklistedPatterns,
+        includeScreenshots,
+        extraHTTPHeaders,
+      );
+      break;
+
+    case ScannerTypes.LOCALFILE:
+      urlsCrawled = await crawlLocalFile(
         url,
         randomToken,
         host,
@@ -142,44 +168,46 @@ const combineRun = async (details, deviceToScan) => {
       silentLogger.error(`type: ${type} not defined`);
       process.exit(1);
   }
-
+  
   scanDetails.endTime = new Date();
   scanDetails.urlsCrawled = urlsCrawled;
   await createDetailsAndLogs(scanDetails, randomToken);
-  if (scanDetails.urlsCrawled.scanned.length > 0) {
-    await createAndUpdateResultsFolders(randomToken);
-    const pagesNotScanned = [
-      ...urlsCrawled.error,
-      ...urlsCrawled.invalid,
-      ...urlsCrawled.forbidden,
-    ];
-    const basicFormHTMLSnippet = await generateArtifacts(
-      randomToken,
-      url,
-      type,
-      deviceToScan,
-      urlsCrawled.scanned,
-      pagesNotScanned,
-      customFlowLabel,
-      undefined,
-      scanDetails,
-    );
-    const [name, email] = nameEmail.split(':');
+  if (scanDetails.urlsCrawled) {
+    if (scanDetails.urlsCrawled.scanned.length > 0) {
+      await createAndUpdateResultsFolders(randomToken);
+      const pagesNotScanned = [
+        ...urlsCrawled.error,
+        ...urlsCrawled.invalid,
+        ...urlsCrawled.forbidden,
+      ];
+      const basicFormHTMLSnippet = await generateArtifacts(
+        randomToken,
+        url,
+        type,
+        deviceToScan,
+        urlsCrawled.scanned,
+        pagesNotScanned,
+        customFlowLabel,
+        undefined,
+        scanDetails,
+      );
+      const [name, email] = nameEmail.split(':');
 
-    await submitForm(
-      browser,
-      userDataDirectory,
-      url,
-      finalUrl,
-      type,
-      email,
-      name,
-      JSON.stringify(basicFormHTMLSnippet),
-      urlsCrawled.scanned.length,
-      urlsCrawled.scannedRedirects.length,
-      pagesNotScanned.length,
-      metadata,
-    );
+      await submitForm(
+        browser,
+        userDataDirectory,
+        url,
+        finalUrl,
+        type,
+        email,
+        name,
+        JSON.stringify(basicFormHTMLSnippet),
+        urlsCrawled.scanned.length,
+        urlsCrawled.scannedRedirects.length,
+        pagesNotScanned.length,
+        metadata,
+      );
+    }
   } else {
     printMessage([`No pages were scanned.`], constants.alertMessageOptions);
   }
