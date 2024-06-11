@@ -30,7 +30,7 @@ type PageInfo = {
   pageImagePath?: string;
 }
 
-interface RuleInfo {
+type RuleInfo = {
   totalItems: number;
   pagesAffected: PageInfo[];
   rule: string;
