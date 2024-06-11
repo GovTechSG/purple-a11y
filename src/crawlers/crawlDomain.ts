@@ -239,67 +239,64 @@ const crawlDomain = async (
       const isNotFollowStrategy = !isFollowStrategy(newPageUrl, initialPageUrl, strategy);
       return isAlreadyScanned || isBlacklistedUrl || isNotFollowStrategy;
     };
-
     const setPageListeners = page => {
       // event listener to handle new page popups upon button click
-      page.on('popup', async newPage => {
+      page.on('popup', async (newPage) => {
         try {
           if (newPage.url() != initialPageUrl && !isExcluded(newPage.url())) {
             await requestQueue.addRequest({
               url: encodeURI(newPage.url()),
               skipNavigation: isUrlPdf(encodeURI(newPage.url())),
             });
-          } else {
+          }
+          else {
             try {
               await newPage.close();
-            } catch(e) {
+            }
+            catch (e) {
               // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
               // Handles browser page object been closed.
-       
             }
           }
           return;
-        } catch (e) {
+        }
+        catch (e) {
           // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
           // Handles browser page object been closed.
         }
       });
-
-      // event listener to handle navigation to new url within same page upon button click
-      page.on('framenavigated', async newFrame => {
+      // event listener to handle navigation to new url within same page upon element click
+      page.on('framenavigated', async (newFrame) => {
         try {
-          if (
-            newFrame.url() !== initialPageUrl &&
+          if (newFrame.url() !== initialPageUrl &&
             !isExcluded(newFrame.url()) &&
-            !(newFrame.url() == 'about:blank')
-          ) {
+            !(newFrame.url() == 'about:blank')) {
             await requestQueue.addRequest({
               url: encodeURI(newFrame.url()),
               skipNavigation: isUrlPdf(encodeURI(newFrame.url())),
             });
           }
           return;
-        } catch (e) {
+        }
+        catch (e) {
           // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
           // Handles browser page object been closed.
         }
       });
     };
-
     setPageListeners(page);
     let currentElementIndex = 0;
     let isAllElementsHandled = false;
-
     while (!isAllElementsHandled) {
       try {
-        //navigate back to initial page if clicking on a button previously caused it to navigate to a new url
+        //navigate back to initial page if clicking on a element previously caused it to navigate to a new url
         if (page.url() != initialPageUrl) {
           try {
             await page.close();
-          } catch(e) {
+          }
+          catch (e) {
             // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
             // Handles browser page object been closed.
-     
           }
           page = await browserController.browser.newPage();
           await page.goto(initialPageUrl, {
@@ -307,78 +304,83 @@ const crawlDomain = async (
           });
           setPageListeners(page);
         }
-
-        const selectedElements = await page.$$(':not(a):is([role="link"], button[onclick])');
-
-        // edge case where there might be buttons on page that appears intermittently
+        const selectedElements = await page.$$(':not(a):is([role="link"], button[onclick]), a:not([href])');
+        // edge case where there might be elements on page that appears intermittently
         if (currentElementIndex + 1 > selectedElements.length || !selectedElements) {
           break;
         }
-
         // handle the last element in selectedElements
         if (currentElementIndex + 1 == selectedElements.length) {
           isAllElementsHandled = true;
         }
-
         let element = selectedElements[currentElementIndex];
         currentElementIndex += 1;
-
-        let newUrlFoundInButton = null;
+        let newUrlFoundInElement = null;
         if (await element.isVisible()) {
-          // Find url in buttons without clicking them
+          // Find url in html elements without clicking them
           await page
             .evaluate(element => {
-              let onClickLink = null;
-              let onClickLinkAttr = element.getAttribute('onclick');
+              let onClickUrl = null;
+              let onClickUrlAttr = element.getAttribute('onclick');
 
-              if (onClickLinkAttr) {
-                urlRegexDetected = onClickLinkAttr.match(/window\.location\.href\s?=\s?'([^']+)'/);
-                onClickLink = urlRegexDetected ? urlRegexDetected[1] : undefined;
+              // find a href within onclick
+              if (onClickUrlAttr) {
+                urlRegexDetected = onClickUrlAttr.match(/window\.location\.href\s?=\s?'([^']+)'/);
+                onClickUrl = urlRegexDetected ? urlRegexDetected[1] : undefined;
               }
-              let hrefLink = element.getAttribute('href');
-              let urlFoundInButton = onClickLink || hrefLink || null;
-              return urlFoundInButton;
+
+              //find href attribute
+              let hrefUrl = element.getAttribute('href');
+
+              //find url in datapath
+              let dataPathUrl = element.getAttribute('data-path');
+              console.log('dataPathUrl :', dataPathUrl);
+
+              let urlFoundInElement = onClickUrl || hrefUrl || dataPathUrl;
+              return urlFoundInElement;
             }, element)
             .then(result => {
               if (result) {
-                newUrlFoundInButton = result;
+                newUrlFoundInElement = result;
                 const pageUrl = new URL(page.url());
                 const baseUrl = `${pageUrl.protocol}//${pageUrl.host}`;
                 let absoluteUrl;
                 // Construct absolute URL using base URL
                 try {
-                  // Check if newUrlFoundInButton is a valid absolute URL
-                  absoluteUrl = new URL(newUrlFoundInButton);
-                } catch (e) {
-                  // If it's not a valid URL, treat it as a relative URL
-                  absoluteUrl = new URL(newUrlFoundInButton, baseUrl);
+                  // Check if newUrlFoundInElement is a valid absolute URL
+                  absoluteUrl = new URL(newUrlFoundInElement);
                 }
-                newUrlFoundInButton = absoluteUrl.href;
+                catch (e) {
+                  // If it's not a valid URL, treat it as a relative URL
+                  absoluteUrl = new URL(newUrlFoundInElement, baseUrl);
+                }
+                newUrlFoundInElement = absoluteUrl.href;
               }
             });
-
-          if (newUrlFoundInButton && !isExcluded(newUrlFoundInButton)) {
+          if (newUrlFoundInElement && !isExcluded(newUrlFoundInElement)) {
             await requestQueue.addRequest({
-              url: encodeURI(newUrlFoundInButton),
-              skipNavigation: isUrlPdf(encodeURI(newUrlFoundInButton)),
+              url: encodeURI(newUrlFoundInElement),
+              skipNavigation: isUrlPdf(encodeURI(newUrlFoundInElement)),
             });
-          } else if (!newUrlFoundInButton) {
+          }
+          else if (!newUrlFoundInElement) {
             try {
-              // Find url in buttons by manually clicking them. New page navigation/popups will be handled by event listeners above
+              // Find url in html elements by manually clicking them. New page navigation/popups will be handled by event listeners above
               await element.click();
-              await page.waitForTimeout(1000); // Add a delay of 1 second between each button click
-            } catch (e) {
+              await page.waitForTimeout(1000); // Add a delay of 1 second between each Element click
+            }
+            catch (e) {
               // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
               // Handles browser page object been closed.
             }
           }
         }
-      } catch (e) {
+      }
+      catch (e) {
         // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
         // Handles browser page object been closed.
       }
     }
-
     return;
   };
 
