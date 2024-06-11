@@ -933,11 +933,17 @@ export const getLinksFromSitemap = async (
       case constants.xmlSitemapTypes.xmlIndex:
         silentLogger.info(`This is a XML format sitemap index.`);
         for (const childSitemapUrl of $('loc')) {
+          const childSitemapUrlText = $(childSitemapUrl).text();
           if (isLimitReached()) {
             break;
           }
 
-          await fetchUrls($(childSitemapUrl, false).text());
+          if (childSitemapUrlText.endsWith('.xml')) {
+            await fetchUrls(childSitemapUrlText); // Recursive call for nested sitemaps
+          } else {
+            addToUrlList(childSitemapUrlText); // Add regular URLs to the list
+          }
+          
         }
         break;
       case constants.xmlSitemapTypes.xml:
