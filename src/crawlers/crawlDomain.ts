@@ -26,6 +26,8 @@ import { areLinksEqual, isFollowStrategy } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
 import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
+import type { ElementHandle, Frame, Page } from 'playwright';
+import type { BrowserController } from '@crawlee/browser-pool';
 
 const crawlDomain = async (
   url,
@@ -230,18 +232,18 @@ const crawlDomain = async (
     }
   };
 
-  const customEnqueueLinksByClickingElements = async (page, browserController) => {
-    const initialPageUrl = page.url().toString();
+  const customEnqueueLinksByClickingElements = async (page: Page, browserController: BrowserController): Promise<void> => {
+    const initialPageUrl: string = page.url().toString();
 
-    const isExcluded = newPageUrl => {
-      const isAlreadyScanned = urlsCrawled.scanned.some(item => item.url === newPageUrl);
-      const isBlacklistedUrl = isBlacklisted(newPageUrl);
-      const isNotFollowStrategy = !isFollowStrategy(newPageUrl, initialPageUrl, strategy);
+    const isExcluded = (newPageUrl: string): boolean => {
+      const isAlreadyScanned: boolean = urlsCrawled.scanned.some(item => item.url === newPageUrl);
+      const isBlacklistedUrl: boolean = isBlacklisted(newPageUrl);
+      const isNotFollowStrategy: boolean = !isFollowStrategy(newPageUrl, initialPageUrl, strategy);
       return isAlreadyScanned || isBlacklistedUrl || isNotFollowStrategy;
     };
-    const setPageListeners = page => {
+    const setPageListeners = (page: Page) : void => {
       // event listener to handle new page popups upon button click
-      page.on('popup', async (newPage) => {
+      page.on('popup', async (newPage: Page) => {
         try {
           if (newPage.url() != initialPageUrl && !isExcluded(newPage.url())) {
             await requestQueue.addRequest({
@@ -266,7 +268,7 @@ const crawlDomain = async (
         }
       });
       // event listener to handle navigation to new url within same page upon element click
-      page.on('framenavigated', async (newFrame) => {
+      page.on('framenavigated', async (newFrame: Frame) => {
         try {
           if (newFrame.url() !== initialPageUrl &&
             !isExcluded(newFrame.url()) &&
@@ -285,8 +287,8 @@ const crawlDomain = async (
       });
     };
     setPageListeners(page);
-    let currentElementIndex = 0;
-    let isAllElementsHandled = false;
+    let currentElementIndex: number = 0;
+    let isAllElementsHandled: boolean = false;
     while (!isAllElementsHandled) {
       try {
         //navigate back to initial page if clicking on a element previously caused it to navigate to a new url
@@ -304,7 +306,7 @@ const crawlDomain = async (
           });
           setPageListeners(page);
         }
-        const selectedElements = await page.$$(':not(a):is([role="link"], button[onclick]), a:not([href])');
+        const selectedElements: ElementHandle<SVGElement | HTMLElement>[] = await page.$$(':not(a):is([role="link"], button[onclick]), a:not([href])');
         // edge case where there might be elements on page that appears intermittently
         if (currentElementIndex + 1 > selectedElements.length || !selectedElements) {
           break;
@@ -313,37 +315,36 @@ const crawlDomain = async (
         if (currentElementIndex + 1 == selectedElements.length) {
           isAllElementsHandled = true;
         }
-        let element = selectedElements[currentElementIndex];
+        let element: ElementHandle<SVGElement | HTMLElement> = selectedElements[currentElementIndex];
         currentElementIndex += 1;
-        let newUrlFoundInElement = null;
+        let newUrlFoundInElement: string = null;
         if (await element.isVisible()) {
           // Find url in html elements without clicking them
           await page
             .evaluate(element => {
-              let onClickUrl = null;
-              let onClickUrlAttr = element.getAttribute('onclick');
+              let onClickUrl: string = null;
+              let onClickUrlAttr: string = element.getAttribute('onclick');
 
               // find a href within onclick
               if (onClickUrlAttr) {
-                urlRegexDetected = onClickUrlAttr.match(/window\.location\.href\s?=\s?'([^']+)'/);
+                let urlRegexDetected: RegExpMatchArray = onClickUrlAttr.match(/window\.location\.href\s?=\s?'([^']+)'/);
                 onClickUrl = urlRegexDetected ? urlRegexDetected[1] : undefined;
               }
 
               //find href attribute
-              let hrefUrl = element.getAttribute('href');
+              let hrefUrl: string = element.getAttribute('href');
 
               //find url in datapath
-              let dataPathUrl = element.getAttribute('data-path');
+              let dataPathUrl: string = element.getAttribute('data-path');
 
-              let urlFoundInElement = onClickUrl || hrefUrl || dataPathUrl;
-              return urlFoundInElement;
+              return onClickUrl || hrefUrl || dataPathUrl;
             }, element)
             .then(result => {
               if (result) {
                 newUrlFoundInElement = result;
-                const pageUrl = new URL(page.url());
-                const baseUrl = `${pageUrl.protocol}//${pageUrl.host}`;
-                let absoluteUrl;
+                const pageUrl: URL = new URL(page.url());
+                const baseUrl: string = `${pageUrl.protocol}//${pageUrl.host}`;
+                let absoluteUrl: URL;
                 // Construct absolute URL using base URL
                 try {
                   // Check if newUrlFoundInElement is a valid absolute URL
