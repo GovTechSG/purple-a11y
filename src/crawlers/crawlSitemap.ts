@@ -237,9 +237,8 @@ const crawlSitemap = async (
       if (basicAuthPage < 0) {
         basicAuthPage++;
       } else {
-        if (true) {
+        if (isScanHtml && status === 200 && isWhitelistedContentType(contentType)) {
           const results = await runAxeScript(includeScreenshots, page, randomToken);
-          // console.log("helloo", results)
           guiInfoLog(guiInfoStatusTypes.SCANNED, {
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
@@ -314,9 +313,7 @@ const crawlSitemap = async (
     maxConcurrency: specifiedMaxConcurrency || maxConcurrency,
   });
 
-  console.log(urlsCrawled.invalid, 'urlsCrawled')
   await crawler.run();
-  console.log('hiiiiiii')
   await requestList.isFinished();
 
   if (pdfDownloads.length > 0) {

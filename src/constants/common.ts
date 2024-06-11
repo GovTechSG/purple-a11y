@@ -757,7 +757,6 @@ export const getLinksFromSitemap = async (
     let request;
     try {
       request = new Request({ url: url });
-      console.log("request1", request)
     } catch (e) {
       console.log("Error creating request", e)
     }
@@ -925,10 +924,12 @@ export const getLinksFromSitemap = async (
         }
       }
     } else {
+      if (url.startsWith('file://')) {
+        url = url.slice(7);
+      }
       data = fs.readFileSync(url, 'utf8');
     }
     const $ = cheerio.load(data, { xml: true });
-
     // This case is when the document is not an XML format document
     if ($(':root').length === 0) {
       processNonStandardSitemap(data);
@@ -937,7 +938,6 @@ export const getLinksFromSitemap = async (
 
     // Root element
     const root = $(':root')[0];
-
     const { xmlns } = root.attribs;
 
     const xmlFormatNamespace = '/schemas/sitemap';
@@ -955,14 +955,19 @@ export const getLinksFromSitemap = async (
 
     switch (sitemapType) {
       case constants.xmlSitemapTypes.xmlIndex:
-        console.log('hi1')
         silentLogger.info(`This is a XML format sitemap index.`);
         for (const childSitemapUrl of $('loc')) {
+          const childSitemapUrlText = $(childSitemapUrl).text();
+
           if (isLimitReached()) {
             break;
           }
-
-          await fetchUrls($(childSitemapUrl, false).text());
+          if (childSitemapUrlText.endsWith('.xml')) {
+            await fetchUrls(childSitemapUrlText); // Recursive call for nested sitemaps
+          } else {
+            addToUrlList(childSitemapUrlText); // Add regular URLs to the list
+          }
+          
         }
         break;
       case constants.xmlSitemapTypes.xml:

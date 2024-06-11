@@ -63,15 +63,22 @@ const crawlLocalFile = async (
     }
   }
 
+  if (sitemapUrl.startsWith('file://')) {
+        sitemapUrl= sitemapUrl.slice(7);
+      }
+
   if (fs.existsSync(sitemapUrl)) {
     if (sitemapUrl.endsWith('.pdf') || sitemapUrl.endsWith('.html')) {
       // PDF or HTML file
       linksFromSitemap = [new Request({ url: sitemapUrl })];
+      // Basically need to append to linksFromSitemap, instead of just creating request here
+      console.log("HERE",linksFromSitemap, "THERE",sitemapUrl)
     } else if (sitemapUrl.endsWith('.xml')) {
       // Sitemap file
       const username = '';
       const password = '';
       console.log('Sitemap URL is an XML file');
+      //maybe need change this method
       linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory, userUrlInputFromIntelligent, fromCrawlIntelligentSitemap, username, password);
 
       // Crawl the links from the sitemap
@@ -102,7 +109,6 @@ const crawlLocalFile = async (
             );
             console.log('Local sitemap file crawled',updatedUrlsCrawled)
             urlsCrawled = { ...urlsCrawled, ...updatedUrlsCrawled };
-            return urlsCrawled;
           } else {
             // Regular local file
             console.log(link.url,'Local file found')
