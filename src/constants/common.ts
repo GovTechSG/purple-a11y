@@ -50,6 +50,17 @@ export const validateDirPath = (dirPath: string): string => {
   }
 };
 
+export class RES {
+  status: number
+  url: string
+  content: string
+  constructor(res?: Partial<RES>) {
+    if (res) {
+      Object.assign(this, res);
+    }
+  }
+}
+
 export const validateCustomFlowLabel = (customFlowLabel: string) => {
   const containsReserveWithDot = constants.reserveFileNameKeywords.some(char =>
     customFlowLabel.toLowerCase().includes(`${char.toLowerCase()}.`),
@@ -258,10 +269,10 @@ export const sanitizeUrlInput = (url: string): { isValid: boolean; url: string }
 
 const requestToUrl = async (url, isCustomFlow, extraHTTPHeaders) => {
   // User-Agent is modified to emulate a browser to handle cases where some sites ban non browser agents, resulting in a 403 error
-  const res = {};
+  const res = new RES();
   const parsedUrl = new URL(url);
   await axios
-    .get(parsedUrl, {
+    .get(parsedUrl.href, {
       headers: {
         ...extraHTTPHeaders,
         'User-Agent': devices['Desktop Chrome HiDPI'].userAgent,
@@ -372,7 +383,7 @@ const checkUrlConnectivityWithBrowser = async (
   isCustomFlow,
   extraHTTPHeaders,
 ) => {
-  const res = {};
+  const res = new RES();
 
   let viewport = null;
   let userAgent = null;
@@ -606,7 +617,7 @@ export const getUrlsFromRobotsTxt = async (url: string, browserToRun: string): P
   if (constants.robotsTxtUrls[domain]) return;
   const robotsUrl = domain.concat('/robots.txt');
 
-  let robotsTxt: string;
+  let robotsTxt :string ;
   try {
     if (proxy) {
       robotsTxt = await getRobotsTxtViaPlaywright(robotsUrl, browserToRun);
@@ -616,7 +627,7 @@ export const getUrlsFromRobotsTxt = async (url: string, browserToRun: string): P
   } catch (e) {
     silentLogger.info(e);
   }
-
+  console.log("robotsTxt",robotsTxt)
   if (!robotsTxt) {
     constants.robotsTxtUrls[domain] = {};
     return;
@@ -671,7 +682,7 @@ export const getUrlsFromRobotsTxt = async (url: string, browserToRun: string): P
   constants.robotsTxtUrls[domain] = { disallowedUrls, allowedUrls };
 };
 
-const getRobotsTxtViaPlaywright = async (robotsUrl: string, browser: string): Promise<void> => {
+const getRobotsTxtViaPlaywright = async (robotsUrl: string, browser: string): Promise<string> => {
   const browserContext = await constants.launcher.launchPersistentContext('', {
     ...getPlaywrightLaunchOptions(browser),
   });
@@ -679,11 +690,11 @@ const getRobotsTxtViaPlaywright = async (robotsUrl: string, browser: string): Pr
   const page = await browserContext.newPage();
   await page.goto(robotsUrl, { waitUntil: 'networkidle', timeout: 30000 });
 
-  const robotsTxt = await page.evaluate(() => document.body.textContent);
+  const robotsTxt: string | null = await page.evaluate(() => document.body.textContent);
   return robotsTxt;
 };
 
-const getRobotsTxtViaAxios = async (robotsUrl: string): Promise<void> => {
+const getRobotsTxtViaAxios = async (robotsUrl: string): Promise<string> => {
   const instance = axios.create({
     httpsAgent: new https.Agent({
       rejectUnauthorized: false,
@@ -691,7 +702,7 @@ const getRobotsTxtViaAxios = async (robotsUrl: string): Promise<void> => {
     }),
   });
 
-  const robotsTxt = await (await instance.get(robotsUrl, { timeout: 2000 })).data;
+  const robotsTxt = await (await instance.get(robotsUrl, { timeout: 2000 })).data as string;
   return robotsTxt;
 };
 
@@ -821,7 +832,7 @@ export const getLinksFromSitemap = async (
     finalUserDataDirectory = '';
   }
 
-  const fetchUrls = async url => {
+  const fetchUrls = async (url: string) => {
     let data;
     let sitemapType;
     let isBasicAuth = false;
@@ -937,7 +948,7 @@ export const getLinksFromSitemap = async (
             break;
           }
 
-          await fetchUrls($(childSitemapUrl, false).text());
+          await fetchUrls($(childSitemapUrl).text());
         }
         break;
       case constants.xmlSitemapTypes.xml:
@@ -1280,10 +1291,14 @@ const cloneLocalStateFile = (options, destDir) => {
     ...options,
     maxDepth: 1,
   });
+  const profileNamesRegex = /([^/\\]+)[/\\]Local State$/;
+
 
   if (localState.length > 0) {
     let success = true;
+    
     localState.forEach(dir => {
+      const profileName = dir.match(profileNamesRegex)[1];
       try {
         fs.copyFileSync(dir, path.join(destDir, 'Local State'));
       } catch (err) {
