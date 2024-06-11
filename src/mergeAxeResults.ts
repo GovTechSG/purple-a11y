@@ -13,7 +13,7 @@ import { consoleLogger, silentLogger } from './logs.js';
 import itemTypeDescription from './constants/itemTypeDescription.js';
 import { chromium } from 'playwright';
 import { createWriteStream } from 'fs';
-import { AsyncParser } from '@json2csv/node';
+import { AsyncParser, Transform, ParserOptions } from '@json2csv/node';
 import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
 
 type ItemsInfo = {
@@ -198,7 +198,7 @@ const writeCsv = async (allIssues, storagePath) => {
     if (results.length === 0) return {};
     return results;
   };
-  const opts = {
+  const opts: ParserOptions<any, any> = {
     transforms: [getRulesByCategory, flattenRule],
     fields: [
       'severity',
