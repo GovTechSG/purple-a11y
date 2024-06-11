@@ -387,11 +387,15 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
         };
       }
 
-      if (category !== 'passed' && category!== 'needsReview') {
+      if (category !== 'passed' && category !== 'needsReview') {
         conformance
-          .filter(c => /wcag[0-9]{3,4}/.test(c))
-          .forEach(c => allIssues.wcagViolations.push(c));
-      }
+              .filter(c => /wcag[0-9]{3,4}/.test(c))
+              .forEach(c => {
+                  if (!allIssues.wcagViolations.includes(c)) {
+                      allIssues.wcagViolations.push(c);
+                  }
+              });
+      }    
 
       const currRuleFromAllIssues = currCategoryFromAllIssues.rules[rule];
 
@@ -605,6 +609,7 @@ export const generateArtifacts = async (
     createScreenshotsFolder(randomToken);
   }
   console.log(allIssues.wcagViolations)
+  console.log(allIssues.wcagPassPercentage)
   allIssues.wcagPassPercentage = getWcagPassPercentage(allIssues.wcagViolations);
  
   const getAxeImpactCount = (allIssues: AllIssues) => {
