@@ -569,17 +569,17 @@ export const generateArtifacts = async (
       console.log('Scan Summary: ',scanData);
     }
     if (process.env.RUNNING_FROM_PH_GUI || process.env.PURPLE_A11Y_VERBOSE) {
-      let sendscanData = {
-        type: 'scanData',
+      let sendScanData = {
+        type: 'sendScanData',
         payload: scanData,
       };
-      let sendscanItems = {
-        type: 'scanItems',
+      let sendScanItems = {
+        type: 'sendScanItems',
         payload: allIssues.items,
       };
       if (process.send) {
-        process.send(JSON.stringify(sendscanData));
-        process.send(JSON.stringify(sendscanItems));
+        process.send(JSON.stringify(sendScanData));
+        process.send(JSON.stringify(sendScanItems));
       }
     }
   }
