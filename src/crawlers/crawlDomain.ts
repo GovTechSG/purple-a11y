@@ -26,8 +26,7 @@ import { areLinksEqual, isFollowStrategy } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
 import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
-import type { ElementHandle, Frame, Page } from 'playwright';
-import type { BrowserController } from '@crawlee/browser-pool';
+import type { BrowserContext, ElementHandle, Frame, Page } from 'playwright';
 
 const crawlDomain = async (
   url,
@@ -108,7 +107,7 @@ const crawlDomain = async (
     });
   }
 
-  const enqueueProcess = async (page, enqueueLinks, browserController) => {
+  const enqueueProcess = async (page, enqueueLinks, browserContext) => {
     try {
       await enqueueLinks({
         // set selector matches anchor elements with href but not contains # or starting with mailto:
@@ -221,7 +220,7 @@ const crawlDomain = async (
       if (!safeMode) {
         // Try catch is necessary as clicking links is best effort, it may result in new pages that cause browser load or navigation errors that PlaywrightCrawler does not handle
         try {
-          await customEnqueueLinksByClickingElements(page, browserController);
+          await customEnqueueLinksByClickingElements(page, browserContext);
         } catch (e) {
           silentLogger.info(e);
         }
@@ -232,7 +231,7 @@ const crawlDomain = async (
     }
   };
 
-  const customEnqueueLinksByClickingElements = async (page: Page, browserController: BrowserController): Promise<void> => {
+  const customEnqueueLinksByClickingElements = async (page: Page, browserContext: BrowserContext): Promise<void> => {
     const initialPageUrl: string = page.url().toString();
 
     const isExcluded = (newPageUrl: string): boolean => {
@@ -300,7 +299,7 @@ const crawlDomain = async (
             // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
             // Handles browser page object been closed.
           }
-          page = await browserController.browser.newPage();
+          page = await browserContext.newPage()
           await page.goto(initialPageUrl, {
             waitUntil: 'domcontentloaded',
           });
@@ -446,7 +445,6 @@ const crawlDomain = async (
         ],
     requestHandlerTimeoutSecs: 90, // Alow each page to be processed by up from default 60 seconds
     requestHandler: async ({
-      browserController,
       page,
       request,
       response,
@@ -454,6 +452,7 @@ const crawlDomain = async (
       sendRequest,
       enqueueLinks,
     }) => {
+      const browserContext = page.context();
       try {
         // Set basic auth header if needed
         if (isBasicAuth)
@@ -484,12 +483,12 @@ const crawlDomain = async (
 
         // if URL has already been scanned
         if (urlsCrawled.scanned.some(item => item.url === request.url)) {
-          await enqueueProcess(page, enqueueLinks, browserController);
+          await enqueueProcess(page, enqueueLinks, browserContext);
           return;
         }
 
         if (isDisallowedInRobotsTxt(request.url)) {
-          await enqueueProcess(page, enqueueLinks, browserController);
+          await enqueueProcess(page, enqueueLinks, browserContext);
           return;
         }
 
@@ -539,7 +538,7 @@ const crawlDomain = async (
 
         if (blacklistedPatterns && isSkippedUrl(actualUrl, blacklistedPatterns)) {
           urlsCrawled.userExcluded.push(request.url);
-          await enqueueProcess(page, enqueueLinks, browserController);
+          await enqueueProcess(page, enqueueLinks, browserContext);
           return;
         }
 
@@ -639,7 +638,7 @@ const crawlDomain = async (
         }
 
         if (followRobots) await getUrlsFromRobotsTxt(request.url, browser);
-        await enqueueProcess(page, enqueueLinks, browserController);
+        await enqueueProcess(page, enqueueLinks, browserContext);
       } catch (e) {
         try {
           if (!e.message.includes('page.evaluate')) {
@@ -649,8 +648,7 @@ const crawlDomain = async (
               urlScanned: request.url,
             });
 
-            const browser = browserController.browser;
-            page = await browser.newPage();
+            page = await browserContext.newPage();
             await page.goto(request.url);
 
             await page.route('**/*', async route => {
