@@ -18,20 +18,6 @@
     />
     <%- include('partials/styles/bootstrap') %> <%- include('partials/styles/highlightjs') %> <%-
     include('partials/styles/styles') %>
-
-    <script>
-      const scanItems = <%- JSON.stringify(
-          {
-            ...items,
-            passed: {
-              rules: items.passed.rules.map(r => delete r.pagesAffected),
-              ...items.passed
-            },
-          }
-        ) %>;
-
-      const startTime = <%- JSON.stringify(startTime) %>
-    </script>
   </head>
 
   <body class="d-flex flex-column">
@@ -55,9 +41,162 @@
         });
       }
 
-      const initAboutStartTime = () => {
-        const formattedViewerLocalStartTime = formatAboutStartTime(startTime);
+      // Scan DATA FUNCTION TO REPLACE NA
+      const scanDataWCAGCompliance = () => {
+        const wcagComplianceCard = document.querySelector("#wcag-compliance-card")
+        const passPecentage = wcagComplianceCard.querySelector('[aria-label="Pass percentage"]')
+        passPecentage.innerHTML = scanData.wcagPassPercentage+"%";
+        const wcagBarProgess = wcagComplianceCard.querySelector(".wcag-compliance-passes-bar-progress");
+        wcagBarProgess.style.width = `${scanData.wcagPassPercentage}%`; // Set this to your desired width
+      };
+
+      const scanDataTop5Card = () => {
+          const card = document.getElementById("top-five-card");
+          const list = card.querySelector(".unbulleted-list");
+
+          // Sort the items based on totalIssues in descending order
+          const sortedTop5 = scanData.topFiveMostIssues.sort((a, b) => b.totalIssues - a.totalIssues);
+          let i = 0;
+          for (i < 5; i++;) {
+              const page = sortedTop5[i];
+              if (page.totalIssues !== 0) {
+                  const listItem = document.createElement('li');
+                  listItem.className = "d-flex justify-content-between";
+
+                  const link = document.createElement('a');
+                  link.href = page.url;
+                  link.target = "_blank";
+                  link.textContent = page.pageTitle.length > 0 ? page.pageTitle : page.url;
+
+                  const issueCount = document.createElement('span');
+                  issueCount.className = "fw-bold ms-2";
+                  issueCount.setAttribute('aria-label', `${page.totalIssues} issues`);
+                  issueCount.textContent = page.totalIssues;
+
+                  listItem.appendChild(link);
+                  listItem.appendChild(issueCount);
+
+                  list.appendChild(listItem);
+              }
+          }
+      };
+
+      const scanDataCategorySelector = () =>{
+        function generateCategorySummary(category, items) {
+          let summary = '';
+
+          if (category !== 'passed' && items[category].totalItems !== 0) {
+              summary = `${items[category].rules.length} ${items[category].rules.length === 1 ? 'issue' : 'issues'} / ${items[category].totalItems} ${items[category].totalItems === 1 ? 'occurrence' : 'occurrences'}`;
+          } else if (category !== 'passed' && items[category].totalItems === 0) {
+              summary = '0 issues';
+          } else {
+              summary = `${items[category].totalItems} ${items[category].totalItems === 1 ? 'occurrence' : 'occurrences'}`;
+          }
+
+          return summary;
+        }
+        const nav = document.querySelector("nav");
+        const divs = nav.querySelectorAll(":scope > div");
+
+        divs.forEach(div => {
+          let spanCategoryInformation = div.querySelector(".category-information");
+          let category = spanCategoryInformation.id.replace("ItemsInformation", "");
+
+          let summary = generateCategorySummary(category,scanItems)
+          spanCategoryInformation.innerHTML = summary;
+
+      });
+
+        
+      }
+
+
+      const scanDataHTML = () => {
+        const formattedViewerLocalStartTime = formatAboutStartTime(scanData.startTime);
         document.getElementById('aboutStartTime').innerHTML = formattedViewerLocalStartTime;
+        document.getElementById('urlScanned').innerHTML = scanData.urlScanned;
+        document.getElementById('urlScanned').href = scanData.urlScanned;
+        document.getElementById('viewport').innerHTML = scanData.viewport.startsWith("CustomWidth") ? `${scanData.viewport.split("_")[1]} width viewport` : scanData.viewport + ' viewport';
+        document.getElementById('pagesScannedModalToggle').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
+
+        var itemsElement = document.getElementById('items');
+        var failedItems = scanItems.mustFix.totalItems + scanItems.goodToFix.totalItems;
+        var passedItems = scanItems.passed.totalItems;
+        var itemsContent = `${failedItems} ${failedItems === 1 ? 'occurrence' : 'occurrences'} failed,<br>${passedItems} ${passedItems === 1 ? 'occurrence' : 'occurrences'} passed`;
+        itemsElement.innerHTML = itemsContent;
+ 
+        var phAppVersionElement = document.getElementById('phAppVersion');
+        var versionContent = 'Purple A11y Version ' + scanData.phAppVersion;
+        phAppVersionElement.innerHTML = versionContent;
+
+        var isCustomFlow = scanData.isCustomFlow; 
+        var pagesScanned = scanData.pagesScanned;
+        var pagesScannedList = document.getElementById('pagesScannedList');
+
+        pagesScanned.forEach((page, index) => {
+          var listItem = document.createElement('li');
+
+          if (isCustomFlow) {
+            listItem.innerHTML = `
+              <div class="custom-flow-screenshot-container">
+                <img 
+                  src="${page.pageImagePath}" 
+                  alt="Screenshot of ${page.url}"
+                  class="custom-flow-screenshot"
+                  onerror="this.onerror = null; this.remove();"
+                >
+                <div class="display-url-container">
+                  <a href="${page.url}" target="_blank">${page.pageTitle.length > 0 ? page.pageTitle : page.url}</a>
+                  <p>${page.url}</p>
+                </div>
+              </div>
+            `;
+          } else {
+            listItem.innerHTML = `
+              <a href="${page.url}" target="_blank">${page.pageTitle.length > 0 ? page.pageTitle : page.url}</a>
+              <p>${page.url}</p>
+            `;
+          }
+
+          pagesScannedList.appendChild(listItem);
+        });
+
+        var totalPagesNotScanned = scanData.totalPagesNotScanned; 
+        var pagesNotScanned = scanData.pagesNotScanned;
+
+        var pagesNotScannedList = document.getElementById('pagesNotScannedList');
+
+        // Only update if there are pages not scanned
+        if (totalPagesNotScanned > 0) {
+          document.getElementById('totalPagesScannedLabel').innerHTML = scanData.totalPagesScanned;
+          document.getElementById('totalPagesNotScannedLabel').innerHTML = scanData.totalPagesNotScanned;
+
+          pagesNotScanned.forEach((page, index) => {
+            var listItem = document.createElement('li');
+            listItem.innerHTML = `<a class="not-scanned-url" href="${page.url}" target="_blank">${page.url}</a>`;
+            pagesNotScannedList.appendChild(listItem);
+          });
+        }
+
+        // For rest of the page that is not content
+        scanDataWCAGCompliance();
+        scanDataTop5Card();
+        scanDataCategorySelector();
+
+        const cypressScanAboutMetadata = scanData.cypressScanAboutMetadata;
+        if (cypressScanAboutMetadata) {
+          const metadataItems = Object.keys(cypressScanAboutMetadata);
+          metadataItems.forEach((key) => {
+            var metadataSpan = document.getElementById('cypressScanAboutMetadata');
+            if (metadataSpan) {
+              metadataSpan.innerHTML = key[0].toUpperCase() + key.slice(1) + ': ' + cypressScanAboutMetadata[key];
+            }
+          });
+        }
+
+        document.getElementById('pagesScannedModalLabel').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
+
+
       };
 
       const formatAboutStartTime = dateString => {
@@ -89,7 +228,7 @@
 
       document.addEventListener('DOMContentLoaded', () => {
         initTooltips();
-        initAboutStartTime();
+        scanDataHTML();
       });
     </script>
     <!-- Checks if js runs -->
