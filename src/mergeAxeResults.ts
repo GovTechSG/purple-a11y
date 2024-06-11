@@ -568,6 +568,20 @@ export const generateArtifacts = async (
     } else {
       console.log('Scan Summary: ',scanData);
     }
+    if (process.env.RUNNING_FROM_PH_GUI || process.env.PURPLE_A11Y_VERBOSE) {
+      let sendscanData = {
+        type: 'scanData',
+        payload: scanData,
+      };
+      let sendscanItems = {
+        type: 'scanItems',
+        payload: allIssues.items,
+      };
+      if (process.send) {
+        process.send(JSON.stringify(sendscanData));
+        process.send(JSON.stringify(sendscanItems));
+      }
+    }
   }
 
   await writeResults(allIssues, storagePath);
