@@ -4,7 +4,7 @@ import crawlDomain from './crawlers/crawlDomain.js';
 import crawlIntelligentSitemap from './crawlers/crawlIntelligentSitemap.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
-import urlsCrawledObj, { ScannerTypes } from './constants/constants.js';
+import urlsCrawledObj,{ ScannerTypes,UrlsCrawled} from './constants/constants.js';
 import { getBlackListedPatterns, submitForm, urlWithoutAuth } from './constants/common.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import runCustom from './crawlers/runCustom.js';
@@ -58,8 +58,11 @@ const combineRun = async (details, deviceToScan) => {
 
   const scanDetails = {
     startTime: new Date(),
+    endTime: new Date(),
     crawlType: type,
     requestUrl: finalUrl,
+    urlsCrawled: new UrlsCrawled(),
+
   };
 
   const viewportSettings = {
