@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-param-reassign */
 import crawlee from 'crawlee';
-import axe from 'axe-core';
+import axe, { resultGroups } from 'axe-core';
 import { axeScript, guiInfoStatusTypes, saflyIconSelector } from '../constants/constants.js';
 import { guiInfoLog } from '../logs.js';
 import { takeScreenshotForHTMLElements } from '../screenshotFunc/htmlScreenshotFunc.js';
@@ -138,7 +138,7 @@ export const runAxeScript = async (
       });
 
       //removed needsReview condition
-      defaultResultTypes = ['violations', 'passes', 'incomplete']
+      let defaultResultTypes:resultGroups[]= ['violations', 'passes', 'incomplete']
         
 
       return axe.run(selectors, {
@@ -175,7 +175,7 @@ export const preNavigationHooks = (extraHTTPHeaders) => {
 
 export const postNavigationHooks = [
   async _crawlingContext => {
-    guiInfoLog(guiInfoStatusTypes.COMPLETED);
+    guiInfoLog(guiInfoStatusTypes.COMPLETED,{});
   },
 ];
 
