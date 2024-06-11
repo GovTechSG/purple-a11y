@@ -21,6 +21,18 @@ export default [
     },
     rules: {
       'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
+      "import/extensions": ["error", "ignorePackages", {
+        "js": "always",
+        "jsx": "always",
+        "ts": "never",
+        "tsx": "never"
+      }],
+      "import/no-unresolved": ["error", "ignorePackages", {
+        "js": "always",
+        "jsx": "always",
+        "ts": "never",
+        "tsx": "never"
+      }]
     },
   },
 ];
