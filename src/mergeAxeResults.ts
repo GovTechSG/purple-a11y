@@ -442,22 +442,22 @@ const flattenAndSortResults = (allIssues: AllIssues, isCustomFlow: boolean)  => 
   ['mustFix', 'goodToFix', 'needsReview', 'passed'].forEach(category => {
     allIssues.totalItems += allIssues.items[category].totalItems;
     allIssues.items[category].rules = Object.entries(allIssues.items[category].rules)
-      .map(ruleEntry => {
-        const [rule, ruleInfo] = ruleEntry;
-        ruleInfo.pagesAffected = Object.entries(ruleInfo.pagesAffected)
-          .map(pageEntry => {
-            if (isCustomFlow) {
-              const [pageIndex, pageInfo] = pageEntry;
-              return { pageIndex, ...pageInfo };
-            } else {
-              const [url, pageInfo] = pageEntry;
-              return { url, ...pageInfo };
-            }
-          })
-          .sort((page1, page2) => page2.items.length - page1.items.length);
-        return { rule, ...ruleInfo };
-      })
-      .sort((rule1, rule2) => rule2.totalItems - rule1.totalItems);
+    .map(ruleEntry => {
+      const [rule, ruleInfo] = ruleEntry as [string, RuleInfo];
+      ruleInfo.pagesAffected = Object.entries(ruleInfo.pagesAffected)
+        .map(pageEntry => {
+          if (isCustomFlow) {
+            const [pageIndex, pageInfo] = pageEntry as unknown as [number, PageInfo];
+            return { pageIndex, ...pageInfo };
+          } else {
+            const [url, pageInfo] = pageEntry as unknown as [string, PageInfo];
+            return { url, ...pageInfo };
+          }
+        })
+        .sort((page1, page2) => page2.items.length - page1.items.length);
+      return { rule, ...ruleInfo };
+    })
+    .sort((rule1, rule2) => rule2.totalItems - rule1.totalItems);
   });
   allIssues.topFiveMostIssues.sort((page1, page2) => page2.totalIssues - page1.totalIssues);
   allIssues.topFiveMostIssues = allIssues.topFiveMostIssues.slice(0, 5);
@@ -608,8 +608,7 @@ export const generateArtifacts = async (
   if (isCustomFlow) {
     createScreenshotsFolder(randomToken);
   }
-  console.log(allIssues.wcagViolations)
-  console.log(allIssues.wcagPassPercentage)
+  
   allIssues.wcagPassPercentage = getWcagPassPercentage(allIssues.wcagViolations);
  
   const getAxeImpactCount = (allIssues: AllIssues) => {
