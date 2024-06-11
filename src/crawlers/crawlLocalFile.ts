@@ -76,7 +76,8 @@ const crawlLocalFile = async (
 
       // Crawl the links from the sitemap
       for (const link of linksFromSitemap) {
-        if (link.url.startsWith("file:///") ) {
+        console.log('link',link)
+        if (link.url.startsWith("file:///") || link.url.startsWith("http://") || link.url.startsWith("https://") ){
           if (link.url.endsWith('.xml')) {
             console.log(link.url,'Local sitemap file found')
             // Recursive call for local sitemap file
@@ -101,6 +102,7 @@ const crawlLocalFile = async (
             );
             console.log('Local sitemap file crawled',updatedUrlsCrawled)
             urlsCrawled = { ...urlsCrawled, ...updatedUrlsCrawled };
+            return urlsCrawled;
           } else {
             // Regular local file
             console.log(link.url,'Local file found')

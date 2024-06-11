@@ -238,8 +238,8 @@ const crawlSitemap = async (
         basicAuthPage++;
       } else {
         if (true) {
-          console.log("helloo")
           const results = await runAxeScript(includeScreenshots, page, randomToken);
+          // console.log("helloo", results)
           guiInfoLog(guiInfoStatusTypes.SCANNED, {
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
@@ -343,7 +343,7 @@ const crawlSitemap = async (
   if (!fromCrawlIntelligentSitemap) {
     guiInfoLog(guiInfoStatusTypes.COMPLETED);
   }
-
+  console.log("urlsCrawled", urlsCrawled)
   return urlsCrawled;
 };
 
