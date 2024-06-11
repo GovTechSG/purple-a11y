@@ -4,10 +4,11 @@ import crawlDomain from './crawlers/crawlDomain.js';
 import crawlIntelligentSitemap from './crawlers/crawlIntelligentSitemap.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
-import constants, { ScannerTypes } from './constants/constants.js';
+import urlsCrawledObj, { ScannerTypes } from './constants/constants.js';
 import { getBlackListedPatterns, submitForm, urlWithoutAuth } from './constants/common.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import runCustom from './crawlers/runCustom.js';
+import { alertMessageOptions } from './constants/cliFunctions.js';
 
 const combineRun = async (details, deviceToScan) => {
   const envDetails = { ...details };
@@ -68,10 +69,10 @@ const combineRun = async (details, deviceToScan) => {
     playwrightDeviceDetailsObject,
   };
 
-  let urlsCrawled;
+  let urlsCrawledObj;
   switch (type) {
     case ScannerTypes.CUSTOM:
-      urlsCrawled = await runCustom(
+      urlsCrawledObj = await runCustom(
         url,
         randomToken,
         viewportSettings,
@@ -81,7 +82,7 @@ const combineRun = async (details, deviceToScan) => {
       break;
 
     case ScannerTypes.SITEMAP:
-      urlsCrawled = await crawlSitemap(
+      urlsCrawledObj = await crawlSitemap(
         url,
         randomToken,
         host,
@@ -98,7 +99,7 @@ const combineRun = async (details, deviceToScan) => {
       break;
 
     case ScannerTypes.INTELLIGENT:
-      urlsCrawled = await crawlIntelligentSitemap(
+      urlsCrawledObj = await crawlIntelligentSitemap(
         url,
         randomToken,
         host,
@@ -118,7 +119,7 @@ const combineRun = async (details, deviceToScan) => {
       break;
 
     case ScannerTypes.WEBSITE:
-      urlsCrawled = await crawlDomain(
+      urlsCrawledObj = await crawlDomain(
         url,
         randomToken,
         host,
@@ -144,21 +145,21 @@ const combineRun = async (details, deviceToScan) => {
   }
 
   scanDetails.endTime = new Date();
-  scanDetails.urlsCrawled = urlsCrawled;
+  scanDetails.urlsCrawled = urlsCrawledObj;
   await createDetailsAndLogs(scanDetails, randomToken);
   if (scanDetails.urlsCrawled.scanned.length > 0) {
     await createAndUpdateResultsFolders(randomToken);
     const pagesNotScanned = [
-      ...urlsCrawled.error,
-      ...urlsCrawled.invalid,
-      ...urlsCrawled.forbidden,
+      ...urlsCrawledObj.error,
+      ...urlsCrawledObj.invalid,
+      ...urlsCrawledObj.forbidden,
     ];
     const basicFormHTMLSnippet = await generateArtifacts(
       randomToken,
       url,
       type,
       deviceToScan,
-      urlsCrawled.scanned,
+      urlsCrawledObj.scanned,
       pagesNotScanned,
       customFlowLabel,
       undefined,
@@ -166,22 +167,24 @@ const combineRun = async (details, deviceToScan) => {
     );
     const [name, email] = nameEmail.split(':');
 
+    console.log("urlsCrawled",urlsCrawledObj);
+
     await submitForm(
       browser,
       userDataDirectory,
-      url,
-      finalUrl,
+      url, // scannedUrl
+      finalUrl.href, //entryUrl
       type,
       email,
       name,
       JSON.stringify(basicFormHTMLSnippet),
-      urlsCrawled.scanned.length,
-      urlsCrawled.scannedRedirects.length,
+      urlsCrawledObj.scanned.length,
+      urlsCrawledObj.scannedRedirects.length,
       pagesNotScanned.length,
       metadata,
     );
   } else {
-    printMessage([`No pages were scanned.`], constants.alertMessageOptions);
+    printMessage([`No pages were scanned.`], alertMessageOptions);
   }
 };
 

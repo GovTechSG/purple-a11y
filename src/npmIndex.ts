@@ -15,6 +15,7 @@ import { createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js'
 import { generateArtifacts } from './mergeAxeResults.js';
 import { takeScreenshotForHTMLElements } from './screenshotFunc/htmlScreenshotFunc.js';
 import { silentLogger } from './logs.js';
+import { alertMessageOptions } from './constants/cliFunctions.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -179,7 +180,7 @@ export const init = async (
     scanDetails.urlsCrawled = urlsCrawled;
 
     if (urlsCrawled.scanned.length === 0) {
-      printMessage([`No pages were scanned.`], constants.alertMessageOptions);
+      printMessage([`No pages were scanned.`], alertMessageOptions);
     } else {
       await createDetailsAndLogs(scanDetails, randomToken);
       await createAndUpdateResultsFolders(randomToken);
