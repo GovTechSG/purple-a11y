@@ -170,8 +170,6 @@ const combineRun = async (details, deviceToScan) => {
     );
     const [name, email] = nameEmail.split(':');
 
-    console.log("urlsCrawled",urlsCrawledObj);
-
     await submitForm(
       browser,
       userDataDirectory,
