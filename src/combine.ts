@@ -8,7 +8,8 @@ import constants, { ScannerTypes } from './constants/constants.js';
 import { getBlackListedPatterns, submitForm, urlWithoutAuth } from './constants/common.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import runCustom from './crawlers/runCustom.js';
-
+import {alertMessageOptions} from './constants/cliFunctions.js'
+ 
 const combineRun = async (details, deviceToScan) => {
   const envDetails = { ...details };
 
@@ -181,7 +182,7 @@ const combineRun = async (details, deviceToScan) => {
       metadata,
     );
   } else {
-    printMessage([`No pages were scanned.`], constants.alertMessageOptions);
+    printMessage([`No pages were scanned.`], alertMessageOptions);
   }
 };
 
