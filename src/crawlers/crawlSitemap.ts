@@ -27,7 +27,7 @@ const crawlSitemap = async (
   randomToken,
   host,
   viewportSettings,
-  maxRequestsPerCrawl, 
+  maxRequestsPerCrawl,
   browser,
   userDataDirectory,
   specifiedMaxConcurrency,
@@ -39,50 +39,61 @@ const crawlSitemap = async (
   userUrlInputFromIntelligent = null, //optional
   datasetFromIntelligent = null, //optional
   urlsCrawledFromIntelligent = null, //optional
-  
 ) => {
   let dataset;
   let urlsCrawled;
-  let linksFromSitemap
+  let linksFromSitemap;
 
-  
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth;
   let basicAuthPage = 0;
-  let finalLinks = []; 
-  let authHeader = "";
-  
-  if (fromCrawlIntelligentSitemap){
-    dataset=datasetFromIntelligent;
+  let finalLinks = [];
+  let authHeader = '';
+
+  if (fromCrawlIntelligentSitemap) {
+    dataset = datasetFromIntelligent;
     urlsCrawled = urlsCrawledFromIntelligent;
-    
   } else {
     ({ dataset } = await createCrawleeSubFolders(randomToken));
     urlsCrawled = { ...constants.urlsCrawledObj };
-    
+
     if (!fs.existsSync(randomToken)) {
       fs.mkdirSync(randomToken);
     }
   }
 
-  const parsedUrl = new URL(sitemapUrl);
-  let username = ""
-  let password = "";
-  if (parsedUrl.username !=="" && parsedUrl.password !=="") {
-    isBasicAuth = true;
-    username = decodeURIComponent(parsedUrl.username);
-    password = decodeURIComponent(parsedUrl.password);
+  let parsedUrl;
+  let username = '';
+  let password = '';
+  if (sitemapUrl.startsWith('file:///') || sitemapUrl.startsWith('/')) {
+    parsedUrl = sitemapUrl;
+    console.log(parsedUrl, 'it was here');
+  } else {
+    parsedUrl = new URL(sitemapUrl);
+    if (parsedUrl.username !== '' && parsedUrl.password !== '') {
+      isBasicAuth = true;
+      username = decodeURIComponent(parsedUrl.username);
+      password = decodeURIComponent(parsedUrl.password);
 
-    // Create auth header
-    authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
+      // Create auth header
+      authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
 
-    parsedUrl.username = "";
-    parsedUrl.password = "";
-
+      parsedUrl.username = '';
+      parsedUrl.password = '';
+    }
   }
 
-  linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory, userUrlInputFromIntelligent, fromCrawlIntelligentSitemap, username, password)
-  
+  linksFromSitemap = await getLinksFromSitemap(
+    sitemapUrl,
+    maxRequestsPerCrawl,
+    browser,
+    userDataDirectory,
+    userUrlInputFromIntelligent,
+    fromCrawlIntelligentSitemap,
+    username,
+    password,
+  );
+  //console.log(linksFromSitemap, 'linksFromSitemap1');
   /**
    * Regex to match http://username:password@hostname.com
    * utilised in scan strategy to ensure subsequent URLs within the same domain are scanned.
@@ -97,7 +108,7 @@ const crawlSitemap = async (
     // request to basic auth URL to authenticate for browser session
     finalLinks.push(new Request({ url: sitemapUrl, uniqueKey: `auth:${sitemapUrl}` }));
     const finalUrl = `${sitemapUrl.split('://')[0]}://${sitemapUrl.split('@')[1]}`;
-    
+
     // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
     finalLinks.push(new Request({ url: finalUrl }));
     basicAuthPage = -2;
@@ -111,10 +122,7 @@ const crawlSitemap = async (
   const { playwrightDeviceDetailsObject } = viewportSettings;
   const { maxConcurrency } = constants;
 
-
-
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
-  
 
   finalLinks = [...finalLinks, ...linksFromSitemap];
 
@@ -229,7 +237,8 @@ const crawlSitemap = async (
       if (basicAuthPage < 0) {
         basicAuthPage++;
       } else {
-        if (isScanHtml && status === 200 && isWhitelistedContentType(contentType)) {
+        if (true) {
+          console.log("helloo")
           const results = await runAxeScript(includeScreenshots, page, randomToken);
           guiInfoLog(guiInfoStatusTypes.SCANNED, {
             numScanned: urlsCrawled.scanned.length,
@@ -264,16 +273,22 @@ const crawlSitemap = async (
             results.url = request.url;
             results.actualUrl = request.loadedUrl;
           } else {
-            urlsCrawled.scanned.push({ url: urlWithoutAuth(request.url), pageTitle: results.pageTitle });
+            urlsCrawled.scanned.push({
+              url: urlWithoutAuth(request.url),
+              pageTitle: results.pageTitle,
+            });
           }
           await dataset.pushData(results);
         } else {
+          // Problem is here
           guiInfoLog(guiInfoStatusTypes.SKIPPED, {
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
   
           isScanHtml && urlsCrawled.invalid.push(actualUrl);
+          return;
+          
         }
       }
     },
@@ -299,12 +314,10 @@ const crawlSitemap = async (
     maxConcurrency: specifiedMaxConcurrency || maxConcurrency,
   });
 
+  console.log(urlsCrawled.invalid, 'urlsCrawled')
   await crawler.run();
-
+  console.log('hiiiiiii')
   await requestList.isFinished();
-
-
-  
 
   if (pdfDownloads.length > 0) {
     // wait for pdf downloads to complete
@@ -327,13 +340,11 @@ const crawlSitemap = async (
     await Promise.all(pdfResults.map(result => dataset.pushData(result)));
   }
 
-  
-  if (!fromCrawlIntelligentSitemap){
+  if (!fromCrawlIntelligentSitemap) {
     guiInfoLog(guiInfoStatusTypes.COMPLETED);
   }
 
   return urlsCrawled;
-  
 };
 
 export default crawlSitemap;

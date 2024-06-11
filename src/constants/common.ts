@@ -15,7 +15,7 @@ import * as https from 'https';
 import os from 'os';
 import { minimatch } from 'minimatch';
 import { globSync } from 'glob';
-import { LaunchOptions, devices, webkit } from 'playwright';
+import { LaunchOptions, devices, request, webkit } from 'playwright';
 import printMessage from 'print-message';
 import constants, {
   getDefaultChromeDataDir,
@@ -750,15 +750,21 @@ export const getLinksFromSitemap = async (
       ? (url = addBasicAuthCredentials(url, username, password))
       : url;
 
+    if (url.startsWith('/')) {
+      url = 'file://' + url;
+    }
+
     let request;
     try {
       request = new Request({ url: url });
+      console.log("request1", request)
     } catch (e) {
       console.log("Error creating request", e)
     }
     if (isUrlPdf(url)) {
       request.skipNavigation = true;
     }
+    console.log("Adding URL to list:", url);
     urls[url] = request;
   };
 
@@ -839,9 +845,14 @@ export const getLinksFromSitemap = async (
     let sitemapType;
     let isBasicAuth = false;
 
-    const parsedUrl = new URL(url);
     let username = '';
     let password = '';
+    let parsedUrl;
+    // Check whether its a file path or a URL
+    if (url.startsWith('file:///') || url.startsWith('/')) {
+      parsedUrl = url;
+    } else {
+    parsedUrl = new URL(url);
 
     if (parsedUrl.username !== '' && parsedUrl.password !== '') {
       isBasicAuth = true;
@@ -850,7 +861,7 @@ export const getLinksFromSitemap = async (
       parsedUrl.username = '';
       parsedUrl.password = '';
     }
-
+  }
     const getDataUsingPlaywright = async () => {
       const browserContext = await constants.launcher.launchPersistentContext(
         finalUserDataDirectory,
@@ -886,7 +897,6 @@ export const getLinksFromSitemap = async (
 
       await browserContext.close();
     };
-
     if (validator.isURL(url, urlOptions)) {
       if (isUrlPdf(url)) {
         addToUrlList(url);
@@ -909,6 +919,7 @@ export const getLinksFromSitemap = async (
           data = await (await instance.get(url, { timeout: 80000 })).data;
         } catch (error) {
           if (error.code === 'ECONNABORTED') {
+            console.log("here")
             await getDataUsingPlaywright();
           }
         }
@@ -944,6 +955,7 @@ export const getLinksFromSitemap = async (
 
     switch (sitemapType) {
       case constants.xmlSitemapTypes.xmlIndex:
+        console.log('hi1')
         silentLogger.info(`This is a XML format sitemap index.`);
         for (const childSitemapUrl of $('loc')) {
           if (isLimitReached()) {
@@ -954,18 +966,23 @@ export const getLinksFromSitemap = async (
         }
         break;
       case constants.xmlSitemapTypes.xml:
+        console.log("hi2")
         silentLogger.info(`This is a XML format sitemap.`);
         await processXmlSitemap($, sitemapType, 'loc', 'lastmod', 'url');
+        console.log("hi2.1")
         break;
       case constants.xmlSitemapTypes.rss:
+        console.log("hi3")
         silentLogger.info(`This is a RSS format sitemap.`);
         await processXmlSitemap($, sitemapType, 'link', 'pubDate', 'item');
         break;
       case constants.xmlSitemapTypes.atom:
+        console.log("hi4")
         silentLogger.info(`This is a Atom format sitemap.`);
         await processXmlSitemap($, sitemapType, 'link', 'published', 'entry');
         break;
       default:
+        console.log("hi5")
         silentLogger.info(`This is an unrecognised XML sitemap format.`);
         processNonStandardSitemap(data);
     }
@@ -977,8 +994,9 @@ export const getLinksFromSitemap = async (
     silentLogger.error(e);
   }
 
+  console.log('urls123', urls)
   const requestList = Object.values(urls);
-
+  console.log("requestList urls", requestList)
   return requestList;
 };
 
@@ -1732,3 +1750,7 @@ export const waitForPageLoaded = async (page, timeout = 10000) => {
     new Promise(resolve => setTimeout(resolve, timeout)),
   ]);
 };
+
+export const isFilePath = (url: string): boolean => {
+  return path.isAbsolute(url) && fs.existsSync(url) && fs.lstatSync(url).isFile();
+}

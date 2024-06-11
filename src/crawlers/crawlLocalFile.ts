@@ -14,6 +14,7 @@ import {
   getPlaywrightLaunchOptions,
   messageOptions,
   isSkippedUrl,
+  isFilePath,
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
@@ -21,6 +22,7 @@ import fs from 'fs';
 import { guiInfoLog } from '../logs.js';
 import playwright from 'playwright';
 import path from 'path';
+import crawlSitemap from './crawlSitemap.js';
 
 const crawlLocalFile = async (
   sitemapUrl: string,
@@ -42,7 +44,7 @@ const crawlLocalFile = async (
 ) => {
   let dataset: any;
   let urlsCrawled: any;
-  let linksFromSitemap: Request[] = [];
+  let linksFromSitemap = [];
 
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth: boolean;
@@ -62,7 +64,73 @@ const crawlLocalFile = async (
   }
 
   if (fs.existsSync(sitemapUrl)) {
-    linksFromSitemap = [new Request({ url: sitemapUrl })];
+    if (sitemapUrl.endsWith('.pdf') || sitemapUrl.endsWith('.html')) {
+      // PDF or HTML file
+      linksFromSitemap = [new Request({ url: sitemapUrl })];
+    } else if (sitemapUrl.endsWith('.xml')) {
+      // Sitemap file
+      const username = '';
+      const password = '';
+      console.log('Sitemap URL is an XML file');
+      linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory, userUrlInputFromIntelligent, fromCrawlIntelligentSitemap, username, password);
+
+      // Crawl the links from the sitemap
+      for (const link of linksFromSitemap) {
+        if (link.url.startsWith("file:///") ) {
+          if (link.url.endsWith('.xml')) {
+            console.log(link.url,'Local sitemap file found')
+            // Recursive call for local sitemap file
+            const updatedUrlsCrawled = await crawlSitemap(
+              link.url,
+              randomToken,
+              host,
+              viewportSettings,
+              maxRequestsPerCrawl, 
+              browser,
+              userDataDirectory,
+              specifiedMaxConcurrency,
+              fileTypes,
+              blacklistedPatterns,
+              includeScreenshots,
+              extraHTTPHeaders,
+              fromCrawlIntelligentSitemap = false, //optional
+              userUrlInputFromIntelligent = null, //optional
+              datasetFromIntelligent = null, //optional
+              urlsCrawledFromIntelligent = null, //optional
+              
+            );
+            console.log('Local sitemap file crawled',updatedUrlsCrawled)
+            urlsCrawled = { ...urlsCrawled, ...updatedUrlsCrawled };
+          } else {
+            // Regular local file
+            console.log(link.url,'Local file found')
+            const updatedUrlsCrawled = await crawlLocalFile(
+              link.url,
+              randomToken,
+              host,
+              viewportSettings,
+              maxRequestsPerCrawl,
+              browser,
+              userDataDirectory,
+              specifiedMaxConcurrency,
+              fileTypes,
+              blacklistedPatterns,
+              includeScreenshots,
+              extraHTTPHeaders,
+              true,
+              userUrlInputFromIntelligent,
+              dataset,
+              urlsCrawled
+            );
+            console.log("localFile",updatedUrlsCrawled)
+            urlsCrawled = { ...urlsCrawled, ...updatedUrlsCrawled };
+          }
+        }
+      }
+    } else {
+      // Unsupported file type
+      throw new Error(`Unsupported file type: ${sitemapUrl}`);
+    }
   } else {
     // File not found
     throw new Error(`File not found: ${sitemapUrl}`);
