@@ -334,7 +334,6 @@ const crawlDomain = async (
 
               //find url in datapath
               let dataPathUrl = element.getAttribute('data-path');
-              console.log('dataPathUrl :', dataPathUrl);
 
               let urlFoundInElement = onClickUrl || hrefUrl || dataPathUrl;
               return urlFoundInElement;
