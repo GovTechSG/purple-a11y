@@ -28,6 +28,7 @@ type PageInfo = {
   pageTitle: string;
   url?: string;
   pageImagePath?: string;
+  pageIndex?: number;
 }
 
 type RuleInfo = {
@@ -57,8 +58,8 @@ type AllIssues = {
   totalPagesScanned: number;
   totalPagesNotScanned: number;
   totalItems: number;
-  topFiveMostIssues: { totalIssues: number }[];
-  wcagViolations: Set<string>;
+  topFiveMostIssues: Array<any>;
+  wcagViolations: string[];
   customFlowLabel: string;
   phAppVersion: string;
   items: {
@@ -389,7 +390,7 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
       if (category !== 'passed' && category!== 'needsReview') {
         conformance
           .filter(c => /wcag[0-9]{3,4}/.test(c))
-          .forEach(c => allIssues.wcagViolations.add(c));
+          .forEach(c => allIssues.wcagViolations.push(c));
       }
 
       const currRuleFromAllIssues = currCategoryFromAllIssues.rules[rule];
@@ -433,7 +434,7 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
   });
 };
 
-const flattenAndSortResults = (allIssues, isCustomFlow) => {
+const flattenAndSortResults = (allIssues: AllIssues, isCustomFlow: boolean)  => {
   ['mustFix', 'goodToFix', 'needsReview', 'passed'].forEach(category => {
     allIssues.totalItems += allIssues.items[category].totalItems;
     allIssues.items[category].rules = Object.entries(allIssues.items[category].rules)
@@ -456,8 +457,6 @@ const flattenAndSortResults = (allIssues, isCustomFlow) => {
   });
   allIssues.topFiveMostIssues.sort((page1, page2) => page2.totalIssues - page1.totalIssues);
   allIssues.topFiveMostIssues = allIssues.topFiveMostIssues.slice(0, 5);
-  // convert the set to an array
-  allIssues.wcagViolations = Array.from(allIssues.wcagViolations);
 };
 
 const createRuleIdJson = allIssues => {
@@ -561,7 +560,7 @@ export const generateArtifacts = async (
     totalPagesNotScanned: pagesNotScanned.length,
     totalItems: 0,
     topFiveMostIssues: [],
-    wcagViolations: new Set(),
+    wcagViolations: [],
     customFlowLabel,
     phAppVersion,
     items: {
@@ -605,7 +604,7 @@ export const generateArtifacts = async (
   if (isCustomFlow) {
     createScreenshotsFolder(randomToken);
   }
-
+  console.log(allIssues.wcagViolations)
   allIssues.wcagPassPercentage = getWcagPassPercentage(allIssues.wcagViolations);
  
   const getAxeImpactCount = (allIssues: AllIssues) => {
