@@ -39,6 +39,7 @@ const crawlSitemap = async (
   userUrlInputFromIntelligent = null, //optional
   datasetFromIntelligent = null, //optional
   urlsCrawledFromIntelligent = null, //optional
+  crawledFromLocalFile
 ) => {
   let dataset;
   let urlsCrawled;
@@ -65,9 +66,14 @@ const crawlSitemap = async (
   let parsedUrl;
   let username = '';
   let password = '';
-  if (sitemapUrl.startsWith('file:///') || sitemapUrl.startsWith('/')) {
+
+  if(!(crawledFromLocalFile) && (sitemapUrl.startsWith('file:///') || sitemapUrl.startsWith('/'))){
+    console.log("Local file crawling not supported for sitemap. Please provide a valid URL.")
+    return;
+  }
+  
+  if ((sitemapUrl.startsWith('file:///') || sitemapUrl.startsWith('/'))) {
     parsedUrl = sitemapUrl;
-    console.log(parsedUrl, 'it was here');
   } else {
     parsedUrl = new URL(sitemapUrl);
     if (parsedUrl.username !== '' && parsedUrl.password !== '') {
@@ -340,7 +346,7 @@ const crawlSitemap = async (
   if (!fromCrawlIntelligentSitemap) {
     guiInfoLog(guiInfoStatusTypes.COMPLETED);
   }
-  console.log("urlsCrawled", urlsCrawled)
+
   return urlsCrawled;
 };
 

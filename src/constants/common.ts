@@ -763,7 +763,7 @@ export const getLinksFromSitemap = async (
     if (isUrlPdf(url)) {
       request.skipNavigation = true;
     }
-    console.log("Adding URL to list:", url);
+
     urls[url] = request;
   };
 
@@ -971,23 +971,18 @@ export const getLinksFromSitemap = async (
         }
         break;
       case constants.xmlSitemapTypes.xml:
-        console.log("hi2")
         silentLogger.info(`This is a XML format sitemap.`);
         await processXmlSitemap($, sitemapType, 'loc', 'lastmod', 'url');
-        console.log("hi2.1")
         break;
       case constants.xmlSitemapTypes.rss:
-        console.log("hi3")
         silentLogger.info(`This is a RSS format sitemap.`);
         await processXmlSitemap($, sitemapType, 'link', 'pubDate', 'item');
         break;
       case constants.xmlSitemapTypes.atom:
-        console.log("hi4")
         silentLogger.info(`This is a Atom format sitemap.`);
         await processXmlSitemap($, sitemapType, 'link', 'published', 'entry');
         break;
       default:
-        console.log("hi5")
         silentLogger.info(`This is an unrecognised XML sitemap format.`);
         processNonStandardSitemap(data);
     }
@@ -999,9 +994,9 @@ export const getLinksFromSitemap = async (
     silentLogger.error(e);
   }
 
-  console.log('urls123', urls)
+
   const requestList = Object.values(urls);
-  console.log("requestList urls", requestList)
+
   return requestList;
 };
 

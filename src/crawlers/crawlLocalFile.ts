@@ -63,85 +63,49 @@ const crawlLocalFile = async (
     }
   }
 
+  if (
+    !(sitemapUrl.startsWith('file:///') || sitemapUrl.startsWith('/')) ||
+    !fs.existsSync(sitemapUrl)
+  ) {
+    return;
+  }
+
   if (sitemapUrl.startsWith('file://')) {
-        sitemapUrl= sitemapUrl.slice(7);
-      }
+    sitemapUrl = sitemapUrl.slice(7);
+  }
 
-  if (fs.existsSync(sitemapUrl)) {
-    if (sitemapUrl.endsWith('.pdf') || sitemapUrl.endsWith('.html')) {
-      // PDF or HTML file
-      linksFromSitemap = [new Request({ url: sitemapUrl })];
-      // Basically need to append to linksFromSitemap, instead of just creating request here
-      console.log("HERE",linksFromSitemap, "THERE",sitemapUrl)
-    } else if (sitemapUrl.endsWith('.xml')) {
-      // Sitemap file
-      const username = '';
-      const password = '';
-      console.log('Sitemap URL is an XML file');
-      //maybe need change this method
-      linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory, userUrlInputFromIntelligent, fromCrawlIntelligentSitemap, username, password);
+  if (!sitemapUrl.endsWith('.xml')) {
+    // Non XMLPDF or HTML file
+    linksFromSitemap = [new Request({ url: sitemapUrl })];
+  } else if (sitemapUrl.endsWith('.xml')) {
+    // Sitemap file
+    const username = '';
+    const password = '';
+    //console.log('Sitemap URL is an XML file', sitemapUrl);
 
-      // Crawl the links from the sitemap
-      for (const link of linksFromSitemap) {
-        console.log('link',link)
-        if (link.url.startsWith("file:///") || link.url.startsWith("http://") || link.url.startsWith("https://") ){
-          if (link.url.endsWith('.xml')) {
-            console.log(link.url,'Local sitemap file found')
-            // Recursive call for local sitemap file
-            const updatedUrlsCrawled = await crawlSitemap(
-              link.url,
-              randomToken,
-              host,
-              viewportSettings,
-              maxRequestsPerCrawl, 
-              browser,
-              userDataDirectory,
-              specifiedMaxConcurrency,
-              fileTypes,
-              blacklistedPatterns,
-              includeScreenshots,
-              extraHTTPHeaders,
-              fromCrawlIntelligentSitemap = false, //optional
-              userUrlInputFromIntelligent = null, //optional
-              datasetFromIntelligent = null, //optional
-              urlsCrawledFromIntelligent = null, //optional
-              
-            );
-            console.log('Local sitemap file crawled',updatedUrlsCrawled)
-            urlsCrawled = { ...urlsCrawled, ...updatedUrlsCrawled };
-          } else {
-            // Regular local file
-            console.log(link.url,'Local file found')
-            const updatedUrlsCrawled = await crawlLocalFile(
-              link.url,
-              randomToken,
-              host,
-              viewportSettings,
-              maxRequestsPerCrawl,
-              browser,
-              userDataDirectory,
-              specifiedMaxConcurrency,
-              fileTypes,
-              blacklistedPatterns,
-              includeScreenshots,
-              extraHTTPHeaders,
-              true,
-              userUrlInputFromIntelligent,
-              dataset,
-              urlsCrawled
-            );
-            console.log("localFile",updatedUrlsCrawled)
-            urlsCrawled = { ...urlsCrawled, ...updatedUrlsCrawled };
-          }
-        }
-      }
-    } else {
-      // Unsupported file type
-      throw new Error(`Unsupported file type: ${sitemapUrl}`);
-    }
-  } else {
-    // File not found
-    throw new Error(`File not found: ${sitemapUrl}`);
+    // Put it to crawlSitemap function to handle xml files
+    const updatedUrlsCrawled = await crawlSitemap(
+      sitemapUrl,
+      randomToken,
+      host,
+      viewportSettings,
+      maxRequestsPerCrawl,
+      browser,
+      userDataDirectory,
+      specifiedMaxConcurrency,
+      fileTypes,
+      blacklistedPatterns,
+      includeScreenshots,
+      extraHTTPHeaders,
+      (fromCrawlIntelligentSitemap = false), //optional
+      (userUrlInputFromIntelligent = null), //optional
+      (datasetFromIntelligent = null), //optional
+      (urlsCrawledFromIntelligent = null), //optional
+      true,
+    );
+    //console.log('Local sitemap file crawled', updatedUrlsCrawled);
+    urlsCrawled = { ...urlsCrawled, ...updatedUrlsCrawled };
+    return urlsCrawled;
   }
 
   try {
