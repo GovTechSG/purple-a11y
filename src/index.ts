@@ -101,7 +101,7 @@ const runScan = async (answers: Answers) => {
   answers.fileTypes = 'html-only';
   answers.metadata = '{}';
 
-  const data = await prepareData(answers);
+  const data:Data = await prepareData(answers);
   data.userDataDirectory = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
 
   setHeadlessMode(data.browser, data.isHeadless);

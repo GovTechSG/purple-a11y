@@ -16,7 +16,7 @@ export const log = str => {
 };
 
 
-export const screenshotFullPage = async (page, screenshotsDir, screenshotIdx) => {
+export const screenshotFullPage = async (page, screenshotsDir:string, screenshotIdx) => {
   const imgName = `PHScan-screenshot${screenshotIdx}.png`;
   const imgPath = path.join(screenshotsDir, imgName);
 

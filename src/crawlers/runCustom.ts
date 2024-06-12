@@ -8,30 +8,62 @@ import constants, {
 } from '../constants/constants.js';
 import { DEBUG, initNewPage, log } from './custom/utils.js';
 import { guiInfoLog } from '../logs.js';
+import {ViewportSettingsClass} from "../combine.js"
+import { UrlsCrawled } from '../constants/constants.js';
+
+// Export of classes
+
+export class ProcessPageParams{
+  scannedIdx:number;
+  blacklistedPatterns:string[] | null;
+  includeScreenshots:boolean;
+  dataset:any;
+  intermediateScreenshotsPath:string;
+  urlsCrawled:UrlsCrawled;
+  randomToken:string;
+  constructor(
+    scannedIdx: number,
+    blacklistedPatterns: string[] | null,
+    includeScreenshots: boolean,
+    dataset: any,
+    intermediateScreenshotsPath: string,
+    urlsCrawled: UrlsCrawled,
+    randomToken: string
+  ) {
+    this.scannedIdx = scannedIdx;
+    this.blacklistedPatterns = blacklistedPatterns;
+    this.includeScreenshots = includeScreenshots;
+    this.dataset = dataset;
+    this.intermediateScreenshotsPath = intermediateScreenshotsPath;
+    this.urlsCrawled = urlsCrawled;
+    this.randomToken = randomToken;
+  }
+}
+
 
 const runCustom = async (
-  url,
-  randomToken,
-  viewportSettings,
-  blacklistedPatterns,
-  includeScreenshots,
+  url:string,
+  randomToken:string,
+  viewportSettings:ViewportSettingsClass,
+  blacklistedPatterns:string[] | null,
+  includeScreenshots: boolean,
 ) => {
   // checks and delete datasets path if it already exists
   await cleanUp(randomToken);
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
-  const urlsCrawled = { ...constants.urlsCrawledObj };
+  const urlsCrawled:UrlsCrawled = { ...constants.urlsCrawledObj };
   const { dataset } = await createCrawleeSubFolders(randomToken);
   const intermediateScreenshotsPath = getIntermediateScreenshotsPath(randomToken);
-  const processPageParams = {
-    scannedIdx: 0,
+  const processPageParams = new ProcessPageParams(
+    0, // scannedIdx
     blacklistedPatterns,
     includeScreenshots,
     dataset,
     intermediateScreenshotsPath,
     urlsCrawled,
     randomToken,
-  };
+  );
 
   const pagesDict = {};
   const pageClosePromises = [];
@@ -75,11 +107,11 @@ const runCustom = async (
 
     await allPagesClosedPromise(pageClosePromises);
   } catch (error) {
-    log('PLAYWRIGHT EXECUTION ERROR', error);
+    log(`PLAYWRIGHT EXECUTION ERROR ${error}`);
     process.exit(1);
   }
 
-  guiInfoLog(guiInfoStatusTypes.COMPLETED);
+  guiInfoLog(guiInfoStatusTypes.COMPLETED,{});
   return urlsCrawled;
 };
 

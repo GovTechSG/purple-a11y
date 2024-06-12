@@ -9,8 +9,26 @@ import { getBlackListedPatterns, submitForm, urlWithoutAuth } from './constants/
 import { consoleLogger, silentLogger } from './logs.js';
 import runCustom from './crawlers/runCustom.js';
 import { alertMessageOptions } from './constants/cliFunctions.js';
+import { Data } from './index.js';
 
-const combineRun = async (details, deviceToScan) => {
+
+// Class exports
+export class ViewportSettingsClass {
+  deviceChosen: string;
+  customDevice: string;
+  viewportWidth: number;
+  playwrightDeviceDetailsObject: any; // You can replace 'any' with a more specific type if possible
+
+  constructor(deviceChosen: string, customDevice: string, viewportWidth: number, playwrightDeviceDetailsObject: any) {
+    this.deviceChosen = deviceChosen;
+    this.customDevice = customDevice;
+    this.viewportWidth = viewportWidth;
+    this.playwrightDeviceDetailsObject = playwrightDeviceDetailsObject;
+  }
+}
+
+
+const combineRun = async (details:Data, deviceToScan:string) => {
   const envDetails = { ...details };
 
   const {
@@ -44,7 +62,7 @@ const combineRun = async (details, deviceToScan) => {
 
   const host = type === ScannerTypes.SITEMAP && isLocalSitemap ? '' : getHost(url);
 
-  let blacklistedPatterns = null;
+  let blacklistedPatterns:string[] | null = null;
   try {
     blacklistedPatterns = getBlackListedPatterns(blacklistedPatternsFilename);
   } catch (error) {
@@ -65,12 +83,12 @@ const combineRun = async (details, deviceToScan) => {
 
   };
 
-  const viewportSettings = {
+  const viewportSettings:ViewportSettingsClass = new ViewportSettingsClass(
     deviceChosen,
     customDevice,
     viewportWidth,
     playwrightDeviceDetailsObject,
-  };
+  );
 
   let urlsCrawledObj;
   switch (type) {

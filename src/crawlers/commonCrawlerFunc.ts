@@ -158,7 +158,7 @@ export const runAxeScript = async (
 };
 
 export const createCrawleeSubFolders = async randomToken => {
-  const dataset = await crawlee.Dataset.open(randomToken);
+  const dataset= await crawlee.Dataset.open(randomToken);
   const requestQueue = await crawlee.RequestQueue.open(randomToken);
   return { dataset, requestQueue };
 };

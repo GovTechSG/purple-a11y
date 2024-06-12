@@ -118,7 +118,7 @@ export const validateFilePath = (filePath: string, cliDir: string) => {
   }
 };
 
-export const getBlackListedPatterns = (blacklistedPatternsFilename: string) => {
+export const getBlackListedPatterns = (blacklistedPatternsFilename: string): string[] | null=> {
   let exclusionsFile = null;
   if (blacklistedPatternsFilename) {
     exclusionsFile = blacklistedPatternsFilename;
@@ -1647,7 +1647,7 @@ export const submitFormViaPlaywright = async (
 };
 
 export const submitForm = async (
-  browserToRun: BrowserTypes,
+  browserToRun: string,
   userDataDirectory: string,
   scannedUrl: string,
   entryUrl: string,
