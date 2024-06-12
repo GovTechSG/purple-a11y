@@ -854,7 +854,6 @@ export const getLinksFromSitemap = async (
     }
 
     scannedSitemaps.add(url);
-    console.log(url);
 
     // Check whether its a file path or a URL
     if (isFilePath(url)) {
@@ -927,15 +926,12 @@ export const getLinksFromSitemap = async (
           data = await (await instance.get(url, { timeout: 80000 })).data;
         } catch (error) {
           if (error.code === 'ECONNABORTED') {
-            console.log('here');
             await getDataUsingPlaywright();
           }
         }
       }
     } else {
-      if (url.startsWith('file://')) {
-        url = url.slice(7);
-      }
+      url = convertLocalFileToPath(url);
       data = fs.readFileSync(url, 'utf8');
     }
     const $ = cheerio.load(data, { xml: true });
@@ -1764,7 +1760,7 @@ export const isFilePath = (url: string): boolean => {
 
 export function convertLocalFileToPath(url: string): string {
   if (url.startsWith('file://')) {
-    const filePath = fileURLToPath(url);
-    return filePath;
+    url = fileURLToPath(url);
   }
+  return url;
 }
