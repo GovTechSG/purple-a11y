@@ -4,11 +4,19 @@ import os from 'os';
 import fs from 'fs-extra';
 import printMessage from 'print-message';
 import path from 'path';
-import { fileURLToPath} from 'url';
+import { fileURLToPath } from 'url';
 import constants, { ScannerTypes } from './constants/constants.js';
 import { urlWithoutAuth } from './constants/common.js';
 import ejs from 'ejs';
-import { createScreenshotsFolder, getFormattedTime, getStoragePath, getVersion, getWcagPassPercentage, formatDateTimeForMassScanner, retryFunction } from './utils.js';
+import {
+  createScreenshotsFolder,
+  getFormattedTime,
+  getStoragePath,
+  getVersion,
+  getWcagPassPercentage,
+  formatDateTimeForMassScanner,
+  retryFunction,
+} from './utils.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import itemTypeDescription from './constants/itemTypeDescription.js';
 import { chromium } from 'playwright';
@@ -19,9 +27,9 @@ import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
 type ItemsInfo = {
   html: string;
   message: string;
- screenshotPath: string;
- xpath: string;
-}
+  screenshotPath: string;
+  xpath: string;
+};
 
 type PageInfo = {
   items: ItemsInfo[];
@@ -29,7 +37,7 @@ type PageInfo = {
   url?: string;
   pageImagePath?: string;
   pageIndex?: number;
-}
+};
 
 type RuleInfo = {
   totalItems: number;
@@ -39,20 +47,20 @@ type RuleInfo = {
   axeImpact: string;
   conformance: string[];
   helpUrl: string;
-}
+};
 
 type AllIssues = {
   storagePath: string;
   purpleAi: {
     htmlETL: any;
-    rules: any[];
+    rules: string[];
   };
   startTime: Date;
   urlScanned: string;
   scanType: string;
-  formatAboutStartTime: any; 
+  formatAboutStartTime: (dateString: any) => string;
   isCustomFlow: boolean;
-  viewport: any; 
+  viewport: string;
   pagesScanned: PageInfo[];
   pagesNotScanned: PageInfo[];
   totalPagesScanned: number;
@@ -68,23 +76,23 @@ type AllIssues = {
     needsReview: { description: string; totalItems: number; rules: RuleInfo[] };
     passed: { description: string; totalItems: number; rules: RuleInfo[] };
   };
-  cypressScanAboutMetadata: string; 
+  cypressScanAboutMetadata: string;
   wcagLinks: { [key: string]: string };
   [key: string]: any;
-}
+};
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const extractFileNames = async (directory: string): Promise<string[]> => {
-  try {
-    const allFiles = await fs.readdir(directory);
-    return allFiles.filter(file => path.extname(file).toLowerCase() === '.json');
-  } catch (readdirError) {
-    consoleLogger.info('An error has occurred when retrieving files, please try again.');
-    silentLogger.error(`(extractFileNames) - ${readdirError}`);
-  }
-};
+const extractFileNames = async (directory: string): Promise<string[]> =>
+  fs
+    .readdir(directory)
+    .then(allFiles => allFiles.filter(file => path.extname(file).toLowerCase() === '.json'))
+    .catch(readdirError => {
+      consoleLogger.info('An error has occurred when retrieving files, please try again.');
+      silentLogger.error(`(extractFileNames) - ${readdirError}`);
+      throw readdirError;
+    });
 
 const parseContentToJson = async rPath =>
   fs
@@ -109,7 +117,7 @@ const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResu
         url: p.url,
         totalOccurrencesInPage: p.items.length,
         occurrences: p.items,
-        metadata: p.metadata 
+        metadata: p.metadata,
       })),
     };
   });
@@ -153,7 +161,7 @@ const writeCsv = async (allIssues, storagePath) => {
         return compareCategory === 0 ? a[1].rule.localeCompare(b[1].rule) : compareCategory;
       });
   };
-  //seems to go into 
+  //seems to go into
   const flattenRule = catAndRule => {
     const [severity, rule] = catAndRule;
     const results = [];
@@ -175,7 +183,7 @@ const writeCsv = async (allIssues, storagePath) => {
     for (let page of pagesAffected) {
       const { url, items } = page;
       items.forEach(item => {
-        const {html, page, message, xpath } = item;
+        const { html, page, message, xpath } = item;
         const howToFix = message.replace(/(\r\n|\n|\r)/g, ' '); // remove newlines
         // page is a number, not string
         const violation = html ? html : formatPageViolation(page);
@@ -224,7 +232,7 @@ const writeHTML = async (allIssues, storagePath, htmlFilename = 'report') => {
     filename: path.join(__dirname, './static/ejs/report.ejs'),
   });
   const html = template(allIssues);
-  fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`,html);
+  fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
 };
 
 const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary') => {
@@ -237,7 +245,7 @@ const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary'
 };
 
 // Proper base64 encoding function using Buffer
-const base64Encode = (data) => {
+const base64Encode = data => {
   try {
     return Buffer.from(JSON.stringify(data)).toString('base64');
   } catch (error) {
@@ -260,7 +268,7 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
   // Ensure directory existence
   const directoryPath = path.dirname(filePath);
   if (!fs.existsSync(directoryPath)) {
-      fs.mkdirSync(directoryPath, { recursive: true });
+    fs.mkdirSync(directoryPath, { recursive: true });
   }
 
   // Write the encoded scan data to the file
@@ -300,7 +308,6 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
   // Write the updated HTML content back to the file
   fs.writeFileSync(htmlFilePath, htmlContent);
 };
-
 
 let browserChannel = 'chrome';
 
@@ -357,7 +364,6 @@ const writeSummaryPdf = async (storagePath, filename = 'summary') => {
 const pushResults = async (pageResults, allIssues, isCustomFlow) => {
   const { url, pageTitle, filePath } = pageResults;
 
-
   const totalIssuesInPage = new Set();
   Object.keys(pageResults.mustFix.rules).forEach(k => totalIssuesInPage.add(k));
   Object.keys(pageResults.goodToFix.rules).forEach(k => totalIssuesInPage.add(k));
@@ -370,13 +376,20 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
 
     const { totalItems, rules } = pageResults[category];
     const currCategoryFromAllIssues = allIssues.items[category];
-    
+
     currCategoryFromAllIssues.totalItems += totalItems;
 
     Object.keys(rules).forEach(rule => {
-      const { description, axeImpact, helpUrl, conformance, totalItems: count, items } = rules[rule];
+      const {
+        description,
+        axeImpact,
+        helpUrl,
+        conformance,
+        totalItems: count,
+        items,
+      } = rules[rule];
       if (!(rule in currCategoryFromAllIssues.rules)) {
-        currCategoryFromAllIssues.rules[rule] = { 
+        currCategoryFromAllIssues.rules[rule] = {
           description,
           axeImpact,
           helpUrl,
@@ -389,13 +402,13 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
 
       if (category !== 'passed' && category !== 'needsReview') {
         conformance
-              .filter(c => /wcag[0-9]{3,4}/.test(c))
-              .forEach(c => {
-                  if (!allIssues.wcagViolations.includes(c)) {
-                      allIssues.wcagViolations.push(c);
-                  }
-              });
-      }    
+          .filter(c => /wcag[0-9]{3,4}/.test(c))
+          .forEach(c => {
+            if (!allIssues.wcagViolations.includes(c)) {
+              allIssues.wcagViolations.push(c);
+            }
+          });
+      }
 
       const currRuleFromAllIssues = currCategoryFromAllIssues.rules[rule];
 
@@ -438,26 +451,26 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
   });
 };
 
-const flattenAndSortResults = (allIssues: AllIssues, isCustomFlow: boolean)  => {
+const flattenAndSortResults = (allIssues: AllIssues, isCustomFlow: boolean) => {
   ['mustFix', 'goodToFix', 'needsReview', 'passed'].forEach(category => {
     allIssues.totalItems += allIssues.items[category].totalItems;
     allIssues.items[category].rules = Object.entries(allIssues.items[category].rules)
-    .map(ruleEntry => {
-      const [rule, ruleInfo] = ruleEntry as [string, RuleInfo];
-      ruleInfo.pagesAffected = Object.entries(ruleInfo.pagesAffected)
-        .map(pageEntry => {
-          if (isCustomFlow) {
-            const [pageIndex, pageInfo] = pageEntry as unknown as [number, PageInfo];
-            return { pageIndex, ...pageInfo };
-          } else {
-            const [url, pageInfo] = pageEntry as unknown as [string, PageInfo];
-            return { url, ...pageInfo };
-          }
-        })
-        .sort((page1, page2) => page2.items.length - page1.items.length);
-      return { rule, ...ruleInfo };
-    })
-    .sort((rule1, rule2) => rule2.totalItems - rule1.totalItems);
+      .map(ruleEntry => {
+        const [rule, ruleInfo] = ruleEntry as [string, RuleInfo];
+        ruleInfo.pagesAffected = Object.entries(ruleInfo.pagesAffected)
+          .map(pageEntry => {
+            if (isCustomFlow) {
+              const [pageIndex, pageInfo] = pageEntry as unknown as [number, PageInfo];
+              return { pageIndex, ...pageInfo };
+            } else {
+              const [url, pageInfo] = pageEntry as unknown as [string, PageInfo];
+              return { url, ...pageInfo };
+            }
+          })
+          .sort((page1, page2) => page2.items.length - page1.items.length);
+        return { rule, ...ruleInfo };
+      })
+      .sort((rule1, rule2) => rule2.totalItems - rule1.totalItems);
   });
   allIssues.topFiveMostIssues.sort((page1, page2) => page2.totalIssues - page1.totalIssues);
   allIssues.topFiveMostIssues = allIssues.topFiveMostIssues.slice(0, 5);
@@ -508,8 +521,7 @@ export const generateArtifacts = async (
   pagesNotScanned,
   customFlowLabel,
   cypressScanAboutMetadata,
-  scanDetails
-
+  scanDetails,
 ) => {
   const phAppVersion = getVersion();
   const storagePath = getStoragePath(randomToken);
@@ -576,7 +588,7 @@ export const generateArtifacts = async (
     cypressScanAboutMetadata,
     wcagLinks: constants.wcagLinks,
   };
-  
+
   const allFiles = await extractFileNames(directory);
 
   const jsonArray = await Promise.all(
@@ -608,74 +620,73 @@ export const generateArtifacts = async (
   if (isCustomFlow) {
     createScreenshotsFolder(randomToken);
   }
-  
+
   allIssues.wcagPassPercentage = getWcagPassPercentage(allIssues.wcagViolations);
- 
+
   const getAxeImpactCount = (allIssues: AllIssues) => {
     const impactCount = {
-      "critical": 0,
-      "serious": 0,
-      "moderate": 0,
-      "minor": 0
+      critical: 0,
+      serious: 0,
+      moderate: 0,
+      minor: 0,
     };
-    Object.values(allIssues.items).forEach(category =>{
-    if (category.totalItems>0) {
-      Object.values(category.rules).forEach(rule => {
-        if (rule.axeImpact === 'critical') {
-          impactCount.critical += rule.totalItems;
-        } else if (rule.axeImpact === 'serious') {
-          impactCount.serious += rule.totalItems;
-        } else if (rule.axeImpact === 'moderate') {
-          impactCount.moderate += rule.totalItems;
-        } else if (rule.axeImpact === 'minor') {
-          impactCount.minor += rule.totalItems;
-        }
-      });
-    }
-  })
-  
+    Object.values(allIssues.items).forEach(category => {
+      if (category.totalItems > 0) {
+        Object.values(category.rules).forEach(rule => {
+          if (rule.axeImpact === 'critical') {
+            impactCount.critical += rule.totalItems;
+          } else if (rule.axeImpact === 'serious') {
+            impactCount.serious += rule.totalItems;
+          } else if (rule.axeImpact === 'moderate') {
+            impactCount.moderate += rule.totalItems;
+          } else if (rule.axeImpact === 'minor') {
+            impactCount.minor += rule.totalItems;
+          }
+        });
+      }
+    });
+
     return impactCount;
   };
 
   if (process.env.PURPLE_A11Y_VERBOSE) {
-
-    let axeImpactCount = getAxeImpactCount(allIssues)
+    let axeImpactCount = getAxeImpactCount(allIssues);
 
     let scanData = {
-      "url": allIssues.urlScanned,
-      "startTime": formatDateTimeForMassScanner(allIssues.startTime),
-      "endTime": formatDateTimeForMassScanner(scanDetails? scanDetails.endTime: new Date()),
-      "pagesScanned": allIssues.pagesScanned.length,
-      "wcagPassPercentage": allIssues.wcagPassPercentage,
-      "critical": axeImpactCount.critical,
-      "serious": axeImpactCount.serious,
-      "moderate": axeImpactCount.moderate,
-      "minor": axeImpactCount.minor,
-      "mustFix": {
-        "issues": allIssues.items.mustFix.rules.length,
-        "occurrence": allIssues.items.mustFix.totalItems,
-        "rules": allIssues.items.mustFix.rules,
+      url: allIssues.urlScanned,
+      startTime: formatDateTimeForMassScanner(allIssues.startTime),
+      endTime: formatDateTimeForMassScanner(scanDetails ? scanDetails.endTime : new Date()),
+      pagesScanned: allIssues.pagesScanned.length,
+      wcagPassPercentage: allIssues.wcagPassPercentage,
+      critical: axeImpactCount.critical,
+      serious: axeImpactCount.serious,
+      moderate: axeImpactCount.moderate,
+      minor: axeImpactCount.minor,
+      mustFix: {
+        issues: allIssues.items.mustFix.rules.length,
+        occurrence: allIssues.items.mustFix.totalItems,
+        rules: allIssues.items.mustFix.rules,
       },
-      "goodToFix": {
-        "issues": allIssues.items.goodToFix.rules.length,
-        "occurrence": allIssues.items.goodToFix.totalItems,
-        "rules": allIssues.items.goodToFix.rules,
+      goodToFix: {
+        issues: allIssues.items.goodToFix.rules.length,
+        occurrence: allIssues.items.goodToFix.totalItems,
+        rules: allIssues.items.goodToFix.rules,
       },
-      "needsReview": {
-        "issues": allIssues.items.needsReview.rules.length,
-        "occurrence": allIssues.items.needsReview.totalItems,
-        "rules": allIssues.items.needsReview.rules,
+      needsReview: {
+        issues: allIssues.items.needsReview.rules.length,
+        occurrence: allIssues.items.needsReview.totalItems,
+        rules: allIssues.items.needsReview.rules,
       },
-      "passed": {
-        "occurrence": allIssues.items.passed.totalItems
-      }
+      passed: {
+        occurrence: allIssues.items.passed.totalItems,
+      },
     };
 
     let scanDataMessage = {
       type: 'scanData',
-      payload: scanData
-    }
-    
+      payload: scanData,
+    };
+
     let scanSummaryMessage = {
       type: 'scanSummary',
       payload: [
@@ -684,15 +695,14 @@ export const generateArtifacts = async (
         `Needs Review: ${Object.keys(allIssues.items.needsReview.rules).length} ${Object.keys(allIssues.items.needsReview.rules).length === 1 ? 'issue' : 'issues'} / ${allIssues.items.needsReview.totalItems} ${allIssues.items.needsReview.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
         `Passed: ${allIssues.items.passed.totalItems} ${allIssues.items.passed.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
         `Results directory: ${storagePath}`,
-      ]
+      ],
     };
-       
 
-    if (process.send){
+    if (process.send) {
       process.send(JSON.stringify(scanDataMessage));
       process.send(JSON.stringify(scanSummaryMessage));
     } else {
-      console.log('Scan Summary: ',scanData);
+      console.log('Scan Summary: ', scanData);
     }
   }
 
@@ -704,5 +714,3 @@ export const generateArtifacts = async (
   await retryFunction(() => writeSummaryPdf(storagePath), 1);
   return createRuleIdJson(allIssues);
 };
-
- 
