@@ -452,8 +452,9 @@ const crawlDomain = async (
       sendRequest,
       enqueueLinks,
     }) => {
-      const browserContext = page.context();
+      let browserContext: BrowserContext;
       try {
+        browserContext = page.context();
         // Set basic auth header if needed
         if (isBasicAuth)
           await page.setExtraHTTPHeaders({
