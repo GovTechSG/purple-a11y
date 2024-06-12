@@ -266,6 +266,16 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
   // Write the encoded scan data to the file
   await fs.promises.writeFile(filePath, `${encodedScanData}\n${encodedScanItems}`);
 
+  if (process.env.RUNNING_FROM_PH_GUI || process.env.PURPLE_A11Y_VERBOSE) {
+    let sendScanDetails = {
+      type: 'sendScanDetails',
+      payload: `${encodedScanData}\n${encodedScanItems}`,
+    };
+    if (process.send) {
+      process.send(JSON.stringify(sendScanDetails));
+    }
+  }
+
   // Read the existing HTML file
   const htmlFilePath = path.join(storagePath, 'reports', htmlFilename);
   let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
