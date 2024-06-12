@@ -216,7 +216,7 @@ export const getFileSitemap = (filePath: string): string | null => {
   if (!fs.existsSync(filePath)) {
     return null;
   }
-  
+
   const file = fs.readFileSync(filePath, 'utf8');
   const isLocalSitemap = isSitemapContent(file);
   let isLocalFileOrSitemap = isLocalSitemap ? filePath : null;
@@ -232,7 +232,7 @@ export const getUrlMessage = (scanner: ScannerTypes): string => {
     case ScannerTypes.SITEMAP:
       return 'Please enter URL or file path to sitemap, or drag and drop a sitemap file here: ';
     case ScannerTypes.LOCALFILE:
-        return 'Please enter file path: ';
+      return 'Please enter file path: ';
     default:
       return 'Invalid option';
   }
@@ -519,11 +519,9 @@ export const checkUrl = async (
   }
 
   if (
-    (res.status === constants.urlCheckStatuses.success.code &&
-      scanner === ScannerTypes.SITEMAP) ||
-      (res.status === constants.urlCheckStatuses.success.code &&
-        scanner === ScannerTypes.LOCALFILE)
-  ){
+    (res.status === constants.urlCheckStatuses.success.code && scanner === ScannerTypes.SITEMAP) ||
+    (res.status === constants.urlCheckStatuses.success.code && scanner === ScannerTypes.LOCALFILE)
+  ) {
     const isSitemap = isSitemapContent(res.content);
 
     if (!isSitemap) {
@@ -738,6 +736,7 @@ export const getLinksFromSitemap = async (
   username: string,
   password: string,
 ) => {
+  const scannedSitemaps = new Set<string>();
   const urls = {}; // dictionary of requests to urls to be scanned
 
   const isLimitReached = () => Object.keys(urls).length >= maxLinksCount;
@@ -759,7 +758,7 @@ export const getLinksFromSitemap = async (
     try {
       request = new Request({ url: url });
     } catch (e) {
-      console.log("Error creating request", e)
+      console.log('Error creating request', e);
     }
     if (isUrlPdf(url)) {
       request.skipNavigation = true;
@@ -848,20 +847,29 @@ export const getLinksFromSitemap = async (
     let username = '';
     let password = '';
     let parsedUrl;
+
+    if (scannedSitemaps.has(url)) {
+      // Skip processing if the sitemap has already been scanned
+      return;
+    }
+
+    scannedSitemaps.add(url);
+    console.log(url);
+
     // Check whether its a file path or a URL
-    if (url.startsWith('file:///') || url.startsWith('/')) {
+    if (isFilePath(url)) {
       parsedUrl = url;
     } else {
-    parsedUrl = new URL(url);
+      parsedUrl = new URL(url);
 
-    if (parsedUrl.username !== '' && parsedUrl.password !== '') {
-      isBasicAuth = true;
-      username = decodeURIComponent(parsedUrl.username);
-      password = decodeURIComponent(parsedUrl.password);
-      parsedUrl.username = '';
-      parsedUrl.password = '';
+      if (parsedUrl.username !== '' && parsedUrl.password !== '') {
+        isBasicAuth = true;
+        username = decodeURIComponent(parsedUrl.username);
+        password = decodeURIComponent(parsedUrl.password);
+        parsedUrl.username = '';
+        parsedUrl.password = '';
+      }
     }
-  }
     const getDataUsingPlaywright = async () => {
       const browserContext = await constants.launcher.launchPersistentContext(
         finalUserDataDirectory,
@@ -919,7 +927,7 @@ export const getLinksFromSitemap = async (
           data = await (await instance.get(url, { timeout: 80000 })).data;
         } catch (error) {
           if (error.code === 'ECONNABORTED') {
-            console.log("here")
+            console.log('here');
             await getDataUsingPlaywright();
           }
         }
@@ -968,7 +976,6 @@ export const getLinksFromSitemap = async (
           } else {
             addToUrlList(childSitemapUrlText); // Add regular URLs to the list
           }
-          
         }
         break;
       case constants.xmlSitemapTypes.xml:
@@ -994,7 +1001,6 @@ export const getLinksFromSitemap = async (
   } catch (e) {
     silentLogger.error(e);
   }
-
 
   const requestList = Object.values(urls);
 
@@ -1754,7 +1760,7 @@ export const waitForPageLoaded = async (page, timeout = 10000) => {
 
 export const isFilePath = (url: string): boolean => {
   return url.startsWith('file://') || url.startsWith('/');
-}
+};
 
 export function convertLocalFileToPath(url: string): string {
   if (url.startsWith('file://')) {
