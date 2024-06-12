@@ -163,6 +163,7 @@ const crawlLocalFile = async (
     request.url = 'file://' + request.url;
     await page.goto(request.url);
     const results = await runAxeScript(includeScreenshots, page, randomToken);
+    
     guiInfoLog(guiInfoStatusTypes.SCANNED, {
       numScanned: urlsCrawled.scanned.length,
       urlScanned: request.url,

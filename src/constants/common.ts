@@ -30,7 +30,7 @@ import { silentLogger } from '../logs.js';
 import { isUrlPdf } from '../crawlers/commonCrawlerFunc.js';
 import { randomThreeDigitNumberString } from '../utils.js';
 import { Answers, Data } from '#root/index.js';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL  } from 'url';
 
 // validateDirPath validates a provided directory path
 // returns null if no error
@@ -750,9 +750,8 @@ export const getLinksFromSitemap = async (
       ? (url = addBasicAuthCredentials(url, username, password))
       : url;
 
-    if (url.startsWith('/')) {
-      url = 'file://' + url;
-    }
+    // Convert "/" to "file:///"
+    url = convertPathToLocalFile(url);
 
     let request;
     try {
@@ -1763,4 +1762,11 @@ export function convertLocalFileToPath(url: string): string {
     url = fileURLToPath(url);
   }
   return url;
+}
+
+export function convertPathToLocalFile(filePath: string): string {
+  if (filePath.startsWith("/")){
+    filePath = pathToFileURL(filePath).toString();
+  }
+  return filePath;
 }
