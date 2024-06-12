@@ -269,7 +269,7 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
   if (process.env.RUNNING_FROM_PH_GUI || process.env.PURPLE_A11Y_VERBOSE) {
     let sendScanDetails = {
       type: 'sendScanDetails',
-      payload: `${encodedScanData},${encodedScanItems}`,
+      payload: { scanData: encodedScanData, scanItems: encodedScanItems },
     };
     if (process.send) {
       process.send(JSON.stringify(sendScanDetails));
