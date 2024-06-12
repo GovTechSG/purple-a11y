@@ -27,7 +27,7 @@ const crawlSitemap = async (
   randomToken,
   host,
   viewportSettings,
-  maxRequestsPerCrawl, 
+  maxRequestsPerCrawl,
   browser,
   userDataDirectory,
   specifiedMaxConcurrency,
@@ -39,27 +39,27 @@ const crawlSitemap = async (
   userUrlInputFromIntelligent = null, //optional
   datasetFromIntelligent = null, //optional
   urlsCrawledFromIntelligent = null, //optional
-  
+
 ) => {
   let dataset;
   let urlsCrawled;
   let linksFromSitemap
 
-  
+
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth;
   let basicAuthPage = 0;
-  let finalLinks = []; 
+  let finalLinks = [];
   let authHeader = "";
-  
+
   if (fromCrawlIntelligentSitemap){
     dataset=datasetFromIntelligent;
     urlsCrawled = urlsCrawledFromIntelligent;
-    
+
   } else {
     ({ dataset } = await createCrawleeSubFolders(randomToken));
     urlsCrawled = { ...constants.urlsCrawledObj };
-    
+
     if (!fs.existsSync(randomToken)) {
       fs.mkdirSync(randomToken);
     }
@@ -82,7 +82,7 @@ const crawlSitemap = async (
   }
 
   linksFromSitemap = await getLinksFromSitemap(sitemapUrl, maxRequestsPerCrawl, browser, userDataDirectory, userUrlInputFromIntelligent, fromCrawlIntelligentSitemap, username, password)
-  
+
   /**
    * Regex to match http://username:password@hostname.com
    * utilised in scan strategy to ensure subsequent URLs within the same domain are scanned.
@@ -92,18 +92,18 @@ const crawlSitemap = async (
   */
 
   sitemapUrl = encodeURI(sitemapUrl)
-    
+
   if (isBasicAuth) {
     // request to basic auth URL to authenticate for browser session
     finalLinks.push(new Request({ url: sitemapUrl, uniqueKey: `auth:${sitemapUrl}` }));
     const finalUrl = `${sitemapUrl.split('://')[0]}://${sitemapUrl.split('@')[1]}`;
-    
+
     // obtain base URL without credentials so that subsequent URLs within the same domain can be scanned
     finalLinks.push(new Request({ url: finalUrl }));
     basicAuthPage = -2;
-  } 
-  
-  
+  }
+
+
   let pdfDownloads = [];
   let uuidToPdfMapping = {};
   const isScanHtml = ['all', 'html-only'].includes(fileTypes);
@@ -114,7 +114,7 @@ const crawlSitemap = async (
 
 
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
-  
+
 
   finalLinks = [...finalLinks, ...linksFromSitemap];
 
@@ -128,7 +128,7 @@ const crawlSitemap = async (
     launchContext: {
       launcher: constants.launcher,
       launchOptions: getPlaywrightLaunchOptions(browser),
-      // Bug in Chrome which causes brwoser pool crash when userDataDirectory is set in non-headless mode
+      // Bug in Chrome which causes browser pool crash when userDataDirectory is set in non-headless mode
       userDataDir: userDataDirectory ? (process.env.CRAWLEE_HEADLESS !== '0' ? userDataDirectory : '') : '',
     },
     retryOnBlocked: true,
@@ -170,7 +170,7 @@ const crawlSitemap = async (
       if (isBasicAuth) await page.setExtraHTTPHeaders({
         'Authorization': authHeader
       });
-      
+
       const actualUrl = request.loadedUrl || request.url;
 
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
@@ -235,13 +235,13 @@ const crawlSitemap = async (
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
-  
+
           const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
           if (isRedirected) {
             const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
               item => (item.actualUrl || item.url) === request.loadedUrl,
             );
-  
+
             if (isLoadedUrlInCrawledUrls) {
               urlsCrawled.notScannedRedirects.push({
                 fromUrl: request.url,
@@ -249,18 +249,18 @@ const crawlSitemap = async (
               });
               return;
             }
-  
+
             urlsCrawled.scanned.push({
               url: urlWithoutAuth(request.url),
               pageTitle: results.pageTitle,
               actualUrl: request.loadedUrl, // i.e. actualUrl
             });
-  
+
             urlsCrawled.scannedRedirects.push({
               fromUrl: urlWithoutAuth(request.url),
               toUrl: request.loadedUrl, // i.e. actualUrl
             });
-  
+
             results.url = request.url;
             results.actualUrl = request.loadedUrl;
           } else {
@@ -272,7 +272,7 @@ const crawlSitemap = async (
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
-  
+
           isScanHtml && urlsCrawled.invalid.push(actualUrl);
         }
       }
@@ -287,7 +287,7 @@ const crawlSitemap = async (
       if (urlsCrawled.scanned.length >= maxRequestsPerCrawl) {
         return;
       }
-      
+
       guiInfoLog(guiInfoStatusTypes.ERROR, {
         numScanned: urlsCrawled.scanned.length,
         urlScanned: request.url,
@@ -304,7 +304,7 @@ const crawlSitemap = async (
   await requestList.isFinished();
 
 
-  
+
 
   if (pdfDownloads.length > 0) {
     // wait for pdf downloads to complete
@@ -327,13 +327,13 @@ const crawlSitemap = async (
     await Promise.all(pdfResults.map(result => dataset.pushData(result)));
   }
 
-  
+
   if (!fromCrawlIntelligentSitemap){
     guiInfoLog(guiInfoStatusTypes.COMPLETED);
   }
 
   return urlsCrawled;
-  
+
 };
 
 export default crawlSitemap;

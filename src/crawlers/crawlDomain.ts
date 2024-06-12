@@ -255,7 +255,7 @@ const crawlDomain = async (
             } catch(e) {
               // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
               // Handles browser page object been closed.
-       
+
             }
           }
           return;
@@ -299,7 +299,7 @@ const crawlDomain = async (
           } catch(e) {
             // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
             // Handles browser page object been closed.
-     
+
           }
           page = await browserController.browser.newPage();
           await page.goto(initialPageUrl, {
@@ -404,7 +404,7 @@ const crawlDomain = async (
     launchContext: {
       launcher: constants.launcher,
       launchOptions: getPlaywrightLaunchOptions(browser),
-      // Bug in Chrome which causes brwoser pool crash when userDataDirectory is set in non-headless mode
+      // Bug in Chrome which causes browser pool crash when userDataDirectory is set in non-headless mode
       userDataDir: userDataDirectory
         ? process.env.CRAWLEE_HEADLESS !== '0'
           ? userDataDirectory
@@ -442,7 +442,7 @@ const crawlDomain = async (
             preNavigationHooks(extraHTTPHeaders);
           },
         ],
-    requestHandlerTimeoutSecs: 90, // Alow each page to be processed by up from default 60 seconds
+    requestHandlerTimeoutSecs: 90, // Allow each page to be processed by up from default 60 seconds
     requestHandler: async ({
       browserController,
       page,
