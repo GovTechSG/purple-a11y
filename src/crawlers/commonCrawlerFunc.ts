@@ -5,6 +5,7 @@ import axe from 'axe-core';
 import { axeScript, guiInfoStatusTypes, saflyIconSelector } from '../constants/constants.js';
 import { guiInfoLog } from '../logs.js';
 import { takeScreenshotForHTMLElements } from '../screenshotFunc/htmlScreenshotFunc.js';
+import { isFilePath } from '../constants/common.js';
 
 export const filterAxeResults = (results, pageTitle, customFlowDetails) => {
   const { violations, passes, incomplete, url } = results;
@@ -182,8 +183,12 @@ export const failedRequestHandler = async ({ request }) => {
 };
 
 export const isUrlPdf = url => {
-  const parsedUrl = new URL(url);
-  return /\.pdf($|\?|#)/i.test(parsedUrl.pathname) || /\.pdf($|\?|#)/i.test(parsedUrl.href);
+  if(isFilePath(url)) {
+    return /\.pdf$/i.test(url);
+  } else {
+    const parsedUrl = new URL(url);
+    return /\.pdf($|\?|#)/i.test(parsedUrl.pathname) || /\.pdf($|\?|#)/i.test(parsedUrl.href);
+  }
 };
 
 

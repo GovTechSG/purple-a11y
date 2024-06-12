@@ -16,6 +16,7 @@ import {
   isSkippedUrl,
   isFilePath,
   convertLocalFileToPath,
+  convertPathToLocalFile,
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
@@ -73,11 +74,11 @@ const crawlLocalFile = async (
   convertLocalFileToPath(sitemapUrl);
 
   // XML Files
-  if (!sitemapUrl.endsWith('.xml')) {
+  if (!sitemapUrl.match(/\.xml$/i)) {
     linksFromSitemap = [new Request({ url: sitemapUrl })];
     
   // Non XML file
-  } else if (sitemapUrl.endsWith('.xml')) {
+  } else {
     const username = '';
     const password = '';
 
@@ -142,7 +143,7 @@ const crawlLocalFile = async (
   fs.writeFileSync(destinationFilePath, data);
   uuidToPdfMapping[pdfFileName] = trimmedUrl;
 
-  if (!request.url.endsWith('.pdf')) {
+  if (!isUrlPdf(request.url)) {
     let browserUsed;
     // Playwright only supports chromium,firefox and webkit thus hardcoded to chromium
     if (browser === 'chromium') {
@@ -160,7 +161,7 @@ const crawlLocalFile = async (
     }
     const context = await browserUsed.newContext();
     const page = await context.newPage();
-    request.url = 'file://' + request.url;
+    request.url = convertPathToLocalFile(request.url);
     await page.goto(request.url);
     const results = await runAxeScript(includeScreenshots, page, randomToken);
     
