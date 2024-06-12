@@ -72,14 +72,14 @@ const crawlLocalFile = async (
   // Checks if its in the right file format, and change it before placing into linksFromSitemap
   convertLocalFileToPath(sitemapUrl);
 
+  // XML Files
   if (!sitemapUrl.endsWith('.xml')) {
-    // Non XMLPDF or HTML file
     linksFromSitemap = [new Request({ url: sitemapUrl })];
+    
+  // Non XML file
   } else if (sitemapUrl.endsWith('.xml')) {
-    // Sitemap file
     const username = '';
     const password = '';
-    //console.log('Sitemap URL is an XML file', sitemapUrl);
 
     // Put it to crawlSitemap function to handle xml files
     const updatedUrlsCrawled = await crawlSitemap(
@@ -101,7 +101,7 @@ const crawlLocalFile = async (
       (urlsCrawledFromIntelligent = null), //optional
       true,
     );
-    //console.log('Local sitemap file crawled', updatedUrlsCrawled);
+    
     urlsCrawled = { ...urlsCrawled, ...updatedUrlsCrawled };
     return urlsCrawled;
   }
