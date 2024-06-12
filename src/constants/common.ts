@@ -30,6 +30,7 @@ import { silentLogger } from '../logs.js';
 import { isUrlPdf } from '../crawlers/commonCrawlerFunc.js';
 import { randomThreeDigitNumberString } from '../utils.js';
 import { Answers, Data } from '#root/index.js';
+import { fileURLToPath } from 'url';
 
 // validateDirPath validates a provided directory path
 // returns null if no error
@@ -1752,5 +1753,12 @@ export const waitForPageLoaded = async (page, timeout = 10000) => {
 };
 
 export const isFilePath = (url: string): boolean => {
-  return path.isAbsolute(url) && fs.existsSync(url) && fs.lstatSync(url).isFile();
+  return url.startsWith('file://') || url.startsWith('/');
+}
+
+export function convertLocalFileToPath(url: string): string {
+  if (url.startsWith('file://')) {
+    const filePath = fileURLToPath(url);
+    return filePath;
+  }
 }

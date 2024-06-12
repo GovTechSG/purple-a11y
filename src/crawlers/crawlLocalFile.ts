@@ -15,6 +15,7 @@ import {
   messageOptions,
   isSkippedUrl,
   isFilePath,
+  convertLocalFileToPath,
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
@@ -63,16 +64,13 @@ const crawlLocalFile = async (
     }
   }
 
-  if (
-    !(sitemapUrl.startsWith('file:///') || sitemapUrl.startsWith('/')) ||
-    !fs.existsSync(sitemapUrl)
-  ) {
+  // Check if the sitemapUrl is a local file and if it exists
+  if (!(isFilePath(sitemapUrl)) || !fs.existsSync(sitemapUrl)) {
     return;
   }
 
-  if (sitemapUrl.startsWith('file://')) {
-    sitemapUrl = sitemapUrl.slice(7);
-  }
+  // Checks if its in the right file format, and change it before placing into linksFromSitemap
+  convertLocalFileToPath(sitemapUrl);
 
   if (!sitemapUrl.endsWith('.xml')) {
     // Non XMLPDF or HTML file

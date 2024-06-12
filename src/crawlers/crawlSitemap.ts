@@ -16,6 +16,7 @@ import {
   isSkippedUrl,
   urlWithoutAuth,
   waitForPageLoaded,
+  isFilePath,
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
@@ -67,12 +68,12 @@ const crawlSitemap = async (
   let username = '';
   let password = '';
 
-  if(!(crawledFromLocalFile) && (sitemapUrl.startsWith('file:///') || sitemapUrl.startsWith('/'))){
+  if(!(crawledFromLocalFile) && isFilePath(sitemapUrl)){
     console.log("Local file crawling not supported for sitemap. Please provide a valid URL.")
     return;
   }
-  
-  if ((sitemapUrl.startsWith('file:///') || sitemapUrl.startsWith('/'))) {
+
+  if (isFilePath(sitemapUrl)) {
     parsedUrl = sitemapUrl;
   } else {
     parsedUrl = new URL(sitemapUrl);
