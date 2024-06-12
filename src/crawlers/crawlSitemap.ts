@@ -286,14 +286,12 @@ const crawlSitemap = async (
           }
           await dataset.pushData(results);
         } else {
-          // Problem is here
           guiInfoLog(guiInfoStatusTypes.SKIPPED, {
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
   
           isScanHtml && urlsCrawled.invalid.push(actualUrl);
-          return;
           
         }
       }
