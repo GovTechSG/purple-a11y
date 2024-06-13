@@ -154,7 +154,7 @@ import {chromium} from 'playwright';
       )
     }
 
-    guiInfoLog(guiInfoStatusTypes.COMPLETED);
+    guiInfoLog(guiInfoStatusTypes.COMPLETED,{});
     return urlsCrawledFinal;
 
   };
