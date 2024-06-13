@@ -248,10 +248,10 @@ const base64Encode = (data) => {
 
 const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.html') => {
   
-  const { items, ...rest } = allIssues;
+  let { items, ...rest } = allIssues;
 
-  const encodedScanItems = base64Encode(items);
-  const encodedScanData = base64Encode(rest);
+  let encodedScanItems = base64Encode(items);
+  let encodedScanData = base64Encode(rest);
 
   const filePath = path.join(storagePath, 'reports', 'reportScanData.csv');
 
@@ -261,16 +261,6 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
   }
 
   await fs.promises.writeFile(filePath, `${encodedScanData}\n${encodedScanItems}`);
-
-  if (process.env.PURPLE_A11Y_VERBOSE) {
-    let scanDetailsMessage = {
-      type: 'scanDetailsMessage',
-      payload: { scanData: encodedScanData, scanItems: encodedScanItems },
-    };
-    if (process.send) {
-      process.send(JSON.stringify(scanDetailsMessage));
-    }
-  }
 
   const htmlFilePath = path.join(storagePath, 'reports', htmlFilename);
   let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
@@ -672,6 +662,11 @@ export const generateArtifacts = async (
       }
     };
 
+    let { items, ...rest } = allIssues;
+
+    let encodedScanItems = base64Encode(items);
+    let encodedScanData = base64Encode(rest);
+
     let scanDataMessage = {
       type: 'scanData',
       payload: scanData
@@ -687,11 +682,16 @@ export const generateArtifacts = async (
         `Results directory: ${storagePath}`,
       ]
     };
-       
 
+    let scanDetailsMessage = {
+      type: 'scanDetailsMessage',
+      payload: { scanData: encodedScanData, scanItems: encodedScanItems },
+    };
+       
     if (process.send){
       process.send(JSON.stringify(scanDataMessage));
       process.send(JSON.stringify(scanSummaryMessage));
+      process.send(JSON.stringify(scanDetailsMessage));
     } else {
       console.log('Scan Summary: ',scanData);
     }
