@@ -214,7 +214,7 @@ const crawlSitemap = async (
         uuidToPdfMapping[pdfFileName] = trimmedUrl;
         return;
       }
-
+      
       const contentType = response.headers()['content-type'];
       const status = response.status();
 

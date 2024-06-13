@@ -9,6 +9,7 @@ import os from 'os';
 import path from 'path';
 import { getPageFromContext } from '../screenshotFunc/pdfScreenshotFunc.js';
 import { ensureDirSync } from 'fs-extra';
+import { isFilePath } from '../constants/common.js';
 
 const require = createRequire(import.meta.url);
 
@@ -95,13 +96,23 @@ export const handlePdfDownload = (randomToken, pdfDownloads, request, sendReques
   const pdfFileName = randomUUID();
   const trimmedUrl = request.url.trim();
   const pageTitle = decodeURI(trimmedUrl).split('/').pop();
+  console.log(trimmedUrl)
 
   pdfDownloads.push(
     new Promise(async resolve => {
-      const pdfResponse = await sendRequest({ responseType: 'buffer', isStream: true });
-      pdfResponse.setEncoding('binary');
+      let bufs = [];
+      let pdfResponse;
 
-      const bufs = []; // to check for pdf validity
+      if (isFilePath(trimmedUrl)) {
+        // Read the file from the file system
+        const filePath = new URL(trimmedUrl).pathname;
+        pdfResponse = fs.createReadStream(filePath, { encoding: 'binary' });
+      } else {
+        // Send HTTP/HTTPS request
+        pdfResponse = await sendRequest({ responseType: 'buffer', isStream: true });
+        pdfResponse.setEncoding('binary');
+      }
+
       const downloadFile = fs.createWriteStream(`${randomToken}/${pdfFileName}.pdf`, {
         flags: 'a',
       });
