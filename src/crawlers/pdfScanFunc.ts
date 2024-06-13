@@ -96,7 +96,6 @@ export const handlePdfDownload = (randomToken, pdfDownloads, request, sendReques
   const pdfFileName = randomUUID();
   const trimmedUrl = request.url.trim();
   const pageTitle = decodeURI(trimmedUrl).split('/').pop();
-  console.log(trimmedUrl)
 
   pdfDownloads.push(
     new Promise(async resolve => {
