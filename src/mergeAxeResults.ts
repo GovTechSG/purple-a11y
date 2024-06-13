@@ -247,23 +247,19 @@ const base64Encode = (data) => {
 };
 
 const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.html') => {
-  // Spread the data
+  
   const { items, ...rest } = allIssues;
 
-  // Encode the data
   const encodedScanItems = base64Encode(items);
   const encodedScanData = base64Encode(rest);
 
-  // Path to the file where the encoded data will be saved
   const filePath = path.join(storagePath, 'reports', 'reportScanData.csv');
 
-  // Ensure directory existence
   const directoryPath = path.dirname(filePath);
   if (!fs.existsSync(directoryPath)) {
       fs.mkdirSync(directoryPath, { recursive: true });
   }
 
-  // Write the encoded scan data to the file
   await fs.promises.writeFile(filePath, `${encodedScanData}\n${encodedScanItems}`);
 
   if (process.env.RUNNING_FROM_PH_GUI || process.env.PURPLE_A11Y_VERBOSE) {
@@ -276,11 +272,9 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
     }
   }
 
-  // Read the existing HTML file
   const htmlFilePath = path.join(storagePath, 'reports', htmlFilename);
   let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
 
-  // Find the position to insert the script tag in the head section
   const headIndex = htmlContent.indexOf('</head>');
   const injectScript = `
   <script>
@@ -300,14 +294,11 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
   `;
 
   if (headIndex !== -1) {
-    // If </head> tag is found, insert the script tag before it
     htmlContent = htmlContent.slice(0, headIndex) + injectScript + htmlContent.slice(headIndex);
   } else {
-    // If </head> tag is not found, append the script tag at the end of the file
     htmlContent += injectScript;
   }
 
-  // Write the updated HTML content back to the file
   fs.writeFileSync(htmlFilePath, htmlContent);
 };
 
