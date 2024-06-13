@@ -42,7 +42,7 @@ const crawlDomain = async (
   includeScreenshots,
   followRobots,
   extraHTTPHeaders,
-  safeMode,
+  safeMode = false, // optional
   fromCrawlIntelligentSitemap = false, //optional
   datasetFromIntelligent = null, //optional
   urlsCrawledFromIntelligent = null, //optional
@@ -509,7 +509,7 @@ const crawlDomain = async (
             urlsCrawled.blacklisted.push(request.url);
             return;
           }
-          const { pdfFileName, trimmedUrl } = handlePdfDownload(
+          const { pdfFileName, url } = handlePdfDownload(
             randomToken,
             pdfDownloads,
             request,
@@ -517,7 +517,7 @@ const crawlDomain = async (
             urlsCrawled,
           );
 
-          uuidToPdfMapping[pdfFileName] = trimmedUrl;
+          uuidToPdfMapping[pdfFileName] = url;
           return;
         }
 
@@ -717,7 +717,7 @@ const crawlDomain = async (
   }
 
   if (!fromCrawlIntelligentSitemap) {
-    guiInfoLog(guiInfoStatusTypes.COMPLETED);
+    guiInfoLog(guiInfoStatusTypes.COMPLETED, {});
   }
 
   return urlsCrawled;
