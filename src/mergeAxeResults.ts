@@ -253,14 +253,14 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
   let encodedScanItems = base64Encode(items);
   let encodedScanData = base64Encode(rest);
 
-  const filePath = path.join(storagePath, 'reports', 'reportScanData.csv');
+  const filePath = path.join(storagePath, 'reports', 'scanDetails.csv');
 
   const directoryPath = path.dirname(filePath);
   if (!fs.existsSync(directoryPath)) {
       fs.mkdirSync(directoryPath, { recursive: true });
   }
 
-  await fs.promises.writeFile(filePath, `${encodedScanData}\n${encodedScanItems}`);
+  await fs.promises.writeFile(filePath, `scanData_base64,scanItems_base64\n${encodedScanData},${encodedScanItems}`);
 
   const htmlFilePath = path.join(storagePath, 'reports', htmlFilename);
   let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
