@@ -6,7 +6,43 @@ import { axeScript, guiInfoStatusTypes, saflyIconSelector } from '../constants/c
 import { guiInfoLog } from '../logs.js';
 import { takeScreenshotForHTMLElements } from '../screenshotFunc/htmlScreenshotFunc.js';
 
-export const filterAxeResults = (results, pageTitle, customFlowDetails) => {
+// types
+type RuleDetails = {
+  [key: string]: any[];
+};
+
+type ResultCategory = {
+  totalItems: number;
+  rules: RuleDetails;
+};
+
+type CustomFlowDetails = {
+  pageIndex?: any;
+  metadata?: any;
+  pageImagePath?: any;
+};
+
+type FilteredResults = {
+  url: string;
+  pageTitle: string;
+  pageIndex?: any;
+  metadata?: any;
+  pageImagePath?: any;
+  totalItems: number;
+  mustFix: ResultCategory;
+  goodToFix: ResultCategory;
+  needsReview: ResultCategory;
+  passed: ResultCategory;
+  actualUrl?: string;
+};
+
+export const filterAxeResults = (
+  results: any,
+  pageTitle: string,
+  customFlowDetails?: CustomFlowDetails,
+): FilteredResults => {
+
+
   const { violations, passes, incomplete, url } = results;
 
   let totalItems = 0;
