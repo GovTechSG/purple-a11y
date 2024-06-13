@@ -118,7 +118,9 @@ const crawlSitemap = async (
 
   finalLinks = [...finalLinks, ...linksFromSitemap];
 
-  const requestList = await RequestList.open('my-request-list', finalLinks)
+  const requestList = await RequestList.open({
+    sources: finalLinks,
+  });
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
 
   const crawler = new crawlee.PlaywrightCrawler({
@@ -192,7 +194,7 @@ const crawlSitemap = async (
           return;
         }
         // pushes download promise into pdfDownloads
-        const { pdfFileName, trimmedUrl } = handlePdfDownload(
+        const { pdfFileName, url } = handlePdfDownload(
           randomToken,
           pdfDownloads,
           request,
@@ -200,7 +202,7 @@ const crawlSitemap = async (
           urlsCrawled,
         );
 
-        uuidToPdfMapping[pdfFileName] = trimmedUrl;
+        uuidToPdfMapping[pdfFileName] = url;
         return;
       }
 
@@ -234,7 +236,7 @@ const crawlSitemap = async (
         basicAuthPage++;
       } else {
         if (isScanHtml && status === 200 && isWhitelistedContentType(contentType)) {
-          const results = await runAxeScript(includeScreenshots, page, randomToken);
+          const results = await runAxeScript(includeScreenshots, page, randomToken, null);
           guiInfoLog(guiInfoStatusTypes.SCANNED, {
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
@@ -333,7 +335,7 @@ const crawlSitemap = async (
 
   
   if (!fromCrawlIntelligentSitemap){
-    guiInfoLog(guiInfoStatusTypes.COMPLETED);
+    guiInfoLog(guiInfoStatusTypes.COMPLETED, {});
   }
 
   return urlsCrawled;
