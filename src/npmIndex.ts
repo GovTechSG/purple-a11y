@@ -181,7 +181,7 @@ export const init = async (
     if (urlsCrawled.scanned.length === 0) {
       printMessage([`No pages were scanned.`], constants.alertMessageOptions);
     } else {
-      await createDetailsAndLogs(scanDetails, randomToken);
+      await createDetailsAndLogs(randomToken);
       await createAndUpdateResultsFolders(randomToken);
       const pagesNotScanned = [
         ...scanDetails.urlsCrawled.error,

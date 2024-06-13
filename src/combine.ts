@@ -145,7 +145,7 @@ const combineRun = async (details, deviceToScan) => {
 
   scanDetails.endTime = new Date();
   scanDetails.urlsCrawled = urlsCrawled;
-  await createDetailsAndLogs(scanDetails, randomToken);
+  await createDetailsAndLogs(randomToken);
   if (scanDetails.urlsCrawled.scanned.length > 0) {
     await createAndUpdateResultsFolders(randomToken);
     const pagesNotScanned = [

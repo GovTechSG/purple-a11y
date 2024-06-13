@@ -43,12 +43,11 @@ export const getStoragePath = (randomToken: string): string => {
   }
 };
 
-export const createDetailsAndLogs = async (scanDetails, randomToken) => {
+export const createDetailsAndLogs = async (randomToken) => {
   const storagePath = getStoragePath(randomToken);
   const logPath = `logs/${randomToken}`;
   try {
     await fs.ensureDir(storagePath);
-    await fs.writeFile(`${storagePath}/details.json`, JSON.stringify(scanDetails, 0, 2));
 
     // update logs
     await fs.ensureDir(logPath);
