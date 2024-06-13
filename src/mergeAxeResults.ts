@@ -95,39 +95,6 @@ const parseContentToJson = async rPath =>
       silentLogger.error(`(parseContentToJson) - ${parseError}`);
     });
 
-const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResults') => {
-  const finalResultsInJson = JSON.stringify(allissues, null, 4);
-
-  const passedItemsJson = {};
-
-  allissues.items.passed.rules.forEach(r => {
-    passedItemsJson[r.description] = {
-      totalOccurrencesInScan: r.totalItems,
-      totalPages: r.pagesAffected.length,
-      pages: r.pagesAffected.map(p => ({
-        pageTitle: p.pageTitle,
-        url: p.url,
-        totalOccurrencesInPage: p.items.length,
-        occurrences: p.items,
-        metadata: p.metadata 
-      })),
-    };
-  });
-
-  try {
-    await fs.writeFile(`${storagePath}/reports/${jsonFilename}.json`, finalResultsInJson);
-    await fs.writeFile(
-      `${storagePath}/reports/passed_items.json.txt`,
-      JSON.stringify(passedItemsJson, null, 4),
-    );
-  } catch (writeResultsError) {
-    consoleLogger.info(
-      'An error has occurred when compiling the results into the report, please try again.',
-    );
-    silentLogger.error(`(writeResults) - ${writeResultsError}`);
-  }
-};
-
 const writeCsv = async (allIssues, storagePath) => {
   const csvOutput = createWriteStream(`${storagePath}/reports/report.csv`, { encoding: 'utf8' });
   const formatPageViolation = pageNum => {
@@ -697,7 +664,6 @@ export const generateArtifacts = async (
     }
   }
 
-  await writeResults(allIssues, storagePath);
   await writeCsv(allIssues, storagePath);
   await writeHTML(allIssues, storagePath);
   await writeSummaryHTML(allIssues, storagePath);
