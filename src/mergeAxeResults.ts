@@ -13,7 +13,7 @@ import { consoleLogger, silentLogger } from './logs.js';
 import itemTypeDescription from './constants/itemTypeDescription.js';
 import { chromium } from 'playwright';
 import { createWriteStream } from 'fs';
-import { AsyncParser, Transform, ParserOptions } from '@json2csv/node';
+import { AsyncParser,  ParserOptions } from '@json2csv/node';
 import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
 
 type ItemsInfo = {
@@ -469,9 +469,9 @@ export const generateArtifacts = async (
   scanDetails
 
 ) => {
+  const intermediateDatasetsPath = `${randomToken}/datasets/${randomToken}`;
   const phAppVersion = getVersion();
   const storagePath = getStoragePath(randomToken);
-  const directory = `${storagePath}/${constants.allIssueFileName}`;
 
   urlScanned = urlWithoutAuth(urlScanned);
 
@@ -534,11 +534,9 @@ export const generateArtifacts = async (
     cypressScanAboutMetadata,
     wcagLinks: constants.wcagLinks,
   };
-  
-  const allFiles = await extractFileNames(directory);
-
+  const allFiles = await extractFileNames(intermediateDatasetsPath);
   const jsonArray = await Promise.all(
-    allFiles.map(async file => parseContentToJson(`${directory}/${file}`)),
+    allFiles.map(async file => parseContentToJson(`${intermediateDatasetsPath}/${file}`)),
   );
 
   await Promise.all(
