@@ -8,11 +8,58 @@ import { createRequire } from 'module';
 import os from 'os';
 import path from 'path';
 import { getPageFromContext } from '../screenshotFunc/pdfScreenshotFunc.js';
-import { ensureDirSync } from 'fs-extra';
 
 const require = createRequire(import.meta.url);
 
 // CONSTANTS
+
+// Classes
+class TranslatedObject {
+  goodToFix: {
+    rules: any; // You can specify the type for rules if known
+    totalItems: number;
+  };
+  mustFix: {
+    rules: any; // You can specify the type for rules if known
+    totalItems: number;
+  };
+  needsReview: {
+    rules: any; // You can specify the type for rules if known
+    totalItems: number;
+  };
+  url: string = '';
+  pageTitle: string = '';
+  filePath: string = '';
+  totalItems: number = 0;
+
+  constructor() {
+    this.goodToFix = {
+      rules: {},
+      totalItems: 0
+    };
+    this.mustFix = {
+      rules: {},
+      totalItems: 0
+    };
+    this.needsReview = {
+      rules: {},
+      totalItems: 0
+    };
+  }
+}
+class TransformedRuleObject {
+  description: string;
+  totalItems: number;
+  conformance: string[];
+  items: { message: string; page: string; context: any; }[];
+
+  constructor() {
+    this.description = '';
+    this.totalItems = 0;
+    this.conformance = [];
+    this.items = [];
+  }
+}
 
 // AAA: 1.4.8, 2.4.9
 // AA: 1.3.4, 1.4.3, 1.4.4, 1.4.10
@@ -183,21 +230,7 @@ export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
 
   // loop through all jobs
   for (let jobIdx = 0; jobIdx < jobs.length; jobIdx++) {
-    const translated = {
-      // transformed result for current job
-      goodToFix: {
-        rules: {},
-        totalItems: 0,
-      },
-      mustFix: {
-        rules: {},
-        totalItems: 0,
-      },
-      needsReview: {
-        rules: {},
-        totalItems: 0,
-      },
-    };
+    const translated = new TranslatedObject();
 
     const { itemDetails, validationResult } = jobs[jobIdx];
     const { name: fileName } = itemDetails;
@@ -247,9 +280,9 @@ export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
   return resultsList;
 };
 
-const transformRule = async (rule, filePath) => {
+const transformRule = async (rule, filePath): Promise<[string, TransformedRuleObject]> => {
   // get specific rule
-  const transformed = {};
+  const transformed = new TransformedRuleObject;
   const { specification, description, clause, testNumber, checks } = rule;
 
   transformed.description = description;
