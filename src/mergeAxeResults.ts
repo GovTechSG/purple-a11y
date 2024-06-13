@@ -262,13 +262,13 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
 
   await fs.promises.writeFile(filePath, `${encodedScanData}\n${encodedScanItems}`);
 
-  if (process.env.RUNNING_FROM_PH_GUI || process.env.PURPLE_A11Y_VERBOSE) {
-    let sendScanDetails = {
-      type: 'sendScanDetails',
+  if (process.env.PURPLE_A11Y_VERBOSE) {
+    let scanDetailsMessage = {
+      type: 'scanDetailsMessage',
       payload: { scanData: encodedScanData, scanItems: encodedScanItems },
     };
     if (process.send) {
-      process.send(JSON.stringify(sendScanDetails));
+      process.send(JSON.stringify(scanDetailsMessage));
     }
   }
 
