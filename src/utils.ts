@@ -11,7 +11,7 @@ import constants from './constants/constants.js';
 import { silentLogger } from './logs.js';
 
 export const getVersion = () => {
-  const loadJSON = path => JSON.parse(fs.readFileSync(new URL(path, import.meta.url)));
+  const loadJSON = path => JSON.parse(fs.readFileSync(new URL(path, import.meta.url)).toString());
   const versionNum = loadJSON('../package.json').version;
 
   return versionNum;
@@ -48,7 +48,7 @@ export const createDetailsAndLogs = async (scanDetails, randomToken) => {
   const logPath = `logs/${randomToken}`;
   try {
     await fs.ensureDir(storagePath);
-    await fs.writeFile(`${storagePath}/details.json`, JSON.stringify(scanDetails, 0, 2));
+    await fs.writeFile(`${storagePath}/details.json`, JSON.stringify(scanDetails,null, 2));
 
     // update logs
     await fs.ensureDir(logPath);
@@ -111,13 +111,13 @@ export const writeToUserDataTxt = async (key, value) => {
   if (fs.existsSync(textFilePath)) {
     const userData = JSON.parse(fs.readFileSync(textFilePath, 'utf8'));
     userData[key] = value;
-    fs.writeFileSync(textFilePath, JSON.stringify(userData, 0, 2));
+    fs.writeFileSync(textFilePath, JSON.stringify(userData,null, 2));
   } else {
     const textFilePathDir = path.dirname(textFilePath);
     if (!fs.existsSync(textFilePathDir)) {
       fs.mkdirSync(textFilePathDir, { recursive: true });
     }
-    fs.appendFileSync(textFilePath, JSON.stringify({ [key]: value }, 0, 2));
+    fs.appendFileSync(textFilePath, JSON.stringify({ [key]: value },null, 2));
   }
 };
 
@@ -163,11 +163,11 @@ export const createScreenshotsFolder = randomToken => {
       }
 
       if (!fs.existsSync(destinationPath(storagePath))) {
-        fs.mkdirSync(destinationPath(storagePath), err => {
-          if (err) {
-            console.log('Screenshots folder was not created successfully: ' + err.message);
-          }
-        });
+        try {
+          fs.mkdirSync(destinationPath(storagePath), { recursive: true });
+        } catch (err) {
+          console.error('Screenshots folder was not created successfully:', err);
+        }
       }
 
       files.forEach(file => {
@@ -202,13 +202,14 @@ export const cleanUp = async pathToDelete => {
 //     timeZoneName: "longGeneric",
 //   });
 
-export const getWcagPassPercentage = wcagViolations => {
-  return parseFloat(
-    ((Object.keys(constants.wcagLinks).length - wcagViolations.length) /
-      Object.keys(constants.wcagLinks).length) *
-      100,
-  ).toFixed(2);
+export const getWcagPassPercentage = (wcagViolations: any[]): string => {
+  const totalChecks = Object.keys(constants.wcagLinks).length;
+  const passedChecks = totalChecks - wcagViolations.length;
+  const passPercentage = (passedChecks / totalChecks) * 100;
+  
+  return passPercentage.toFixed(2);  // toFixed returns a string, which is correct here
 };
+
 
 export const getFormattedTime = inputDate => {
   if (inputDate) {
@@ -313,7 +314,7 @@ export const areLinksEqual = (link1, link2) => {
 
     return areHostEqual && arePathEqual;
   } catch (error) {
-    return l1 === l2;
+    return link1 === link2;
   }
 };
 

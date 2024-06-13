@@ -1,4 +1,4 @@
-import crawlee, { Request } from 'crawlee';
+import crawlee, { Request,RequestList } from 'crawlee';
 import printMessage from 'print-message';
 import {
   createCrawleeSubFolders,
@@ -118,10 +118,7 @@ const crawlSitemap = async (
 
   finalLinks = [...finalLinks, ...linksFromSitemap];
 
-  const requestList = new crawlee.RequestList({
-    sources: finalLinks,
-  });
-  await requestList.initialize();
+  const requestList = await RequestList.open('my-request-list', finalLinks)
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
 
   const crawler = new crawlee.PlaywrightCrawler({
@@ -167,9 +164,16 @@ const crawlSitemap = async (
       await waitForPageLoaded(page, 10000);
 
       // Set basic auth header if needed
-      if (isBasicAuth) await page.setExtraHTTPHeaders({
-        'Authorization': authHeader
-      });
+      if (isBasicAuth) {
+        await page.setExtraHTTPHeaders({
+          'Authorization': authHeader
+        });
+        const currentUrl = new URL(request.url);
+        currentUrl.username = username;
+        currentUrl.password = password;
+        request.url = currentUrl.href;
+      }
+      
       
       const actualUrl = request.loadedUrl || request.url;
 

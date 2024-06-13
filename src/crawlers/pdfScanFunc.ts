@@ -71,7 +71,6 @@ const getVeraExecutable = () => {
 const getVeraProfile = () => {
   const veraPdfProfile = globSync('**/verapdf/**/WCAG-21.xml', {
     absolute: true,
-    recursive: true,
     nodir: true,
   });
 
@@ -93,11 +92,11 @@ const isPDF = buffer => {
 
 export const handlePdfDownload = (randomToken, pdfDownloads, request, sendRequest, urlsCrawled) => {
   const pdfFileName = randomUUID();
-  const trimmedUrl = request.url.trim();
-  const pageTitle = decodeURI(trimmedUrl).split('/').pop();
+  const url:string = request.url
+  const pageTitle = decodeURI(request.url).split('/').pop();
 
   pdfDownloads.push(
-    new Promise(async resolve => {
+    new Promise<void>(async resolve => {
       const pdfResponse = await sendRequest({ responseType: 'buffer', isStream: true });
       pdfResponse.setEncoding('binary');
 
@@ -119,20 +118,20 @@ export const handlePdfDownload = (randomToken, pdfDownloads, request, sendReques
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
-          urlsCrawled.scanned.push({ url: trimmedUrl, pageTitle });
+          urlsCrawled.scanned.push({ url: url, pageTitle });
         } else {
           guiInfoLog(guiInfoStatusTypes.SKIPPED, {
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
-          urlsCrawled.invalid.push(trimmedUrl);
+          urlsCrawled.invalid.push(url);
         }
         resolve();
       });
     }),
   );
 
-  return { pdfFileName, trimmedUrl };
+  return { pdfFileName, url };
 };
 
 export const runPdfScan = async randomToken => {
@@ -171,7 +170,7 @@ export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
   const intermediateResultPath = `${intermediateFolder}/${constants.pdfScanResultFileName}`;
 
   const rawdata = fs.readFileSync(intermediateResultPath);
-  const output = JSON.parse(rawdata);
+  const output = JSON.parse(rawdata.toString());
 
   const errorMeta = require('../constants/errorMeta.json');
 

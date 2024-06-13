@@ -77,11 +77,13 @@ const crawlDomain = async (
   let authHeader = '';
 
   // Test basic auth and add auth header if auth exist
-  const parsedUrl = new URL(url);
+  const parsedUrl = new URL(url); 
+  let username:string;
+  let password:string;
   if (parsedUrl.username !== '' && parsedUrl.password !== '') {
     isBasicAuth = true;
-    const username = decodeURIComponent(parsedUrl.username);
-    const password = decodeURIComponent(parsedUrl.password);
+    username= decodeURIComponent(parsedUrl.username);
+    password = decodeURIComponent(parsedUrl.password);
 
     // Create auth header
     authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
@@ -455,9 +457,15 @@ const crawlDomain = async (
       try {
         // Set basic auth header if needed
         if (isBasicAuth)
+        {
           await page.setExtraHTTPHeaders({
             Authorization: authHeader,
           });
+          const currentUrl = new URL(request.url);
+          currentUrl.username = username;
+          currentUrl.password = password;
+          request.url = currentUrl.href;          
+        }
 
         await waitForPageLoaded(page, 10000);
         let actualUrl = request.url;
