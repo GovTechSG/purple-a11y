@@ -260,6 +260,7 @@ const requestToUrl = async (url, isCustomFlow, extraHTTPHeaders) => {
   // User-Agent is modified to emulate a browser to handle cases where some sites ban non browser agents, resulting in a 403 error
   const res = {};
   const parsedUrl = new URL(url);
+  console.log('hi', devices['Desktop Chrome HiDPI']);
   await axios
     .get(parsedUrl, {
       headers: {
@@ -1691,8 +1692,16 @@ export const getPlaywrightLaunchOptions = (browser?: string): LaunchOptions => {
   const options: LaunchOptions = {
     // Drop the --use-mock-keychain flag to allow MacOS devices
     // to use the cloned cookies.
+    //edit here
     ignoreDefaultArgs: ['--use-mock-keychain'],
-    args: constants.launchOptionsArgs,
+    
+    args: [
+
+      ...constants.launchOptionsArgs,
+      //change your user agent here, or implement rotating user agents
+      '--user-agent= Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36',
+
+    ],
     ...(channel && { channel }), // Having no channel is equivalent to "chromium"
   };
   if (proxy) {
