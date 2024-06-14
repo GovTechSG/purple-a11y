@@ -4,12 +4,31 @@ import crawlDomain from './crawlers/crawlDomain.js';
 import crawlIntelligentSitemap from './crawlers/crawlIntelligentSitemap.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
-import constants, { ScannerTypes } from './constants/constants.js';
+import { ScannerTypes,UrlsCrawled} from './constants/constants.js';
 import { getBlackListedPatterns, submitForm, urlWithoutAuth } from './constants/common.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import runCustom from './crawlers/runCustom.js';
+import { alertMessageOptions } from './constants/cliFunctions.js';
+import { Data } from './index.js';
 
-const combineRun = async (details, deviceToScan) => {
+
+// Class exports
+export class ViewportSettingsClass {
+  deviceChosen: string;
+  customDevice: string;
+  viewportWidth: number;
+  playwrightDeviceDetailsObject: any; // You can replace 'any' with a more specific type if possible
+
+  constructor(deviceChosen: string, customDevice: string, viewportWidth: number, playwrightDeviceDetailsObject: any) {
+    this.deviceChosen = deviceChosen;
+    this.customDevice = customDevice;
+    this.viewportWidth = viewportWidth;
+    this.playwrightDeviceDetailsObject = playwrightDeviceDetailsObject;
+  }
+}
+
+
+const combineRun = async (details:Data, deviceToScan:string) => {
   const envDetails = { ...details };
 
   const {
@@ -43,7 +62,7 @@ const combineRun = async (details, deviceToScan) => {
 
   const host = type === ScannerTypes.SITEMAP && isLocalSitemap ? '' : getHost(url);
 
-  let blacklistedPatterns = null;
+  let blacklistedPatterns:string[] | null = null;
   try {
     blacklistedPatterns = getBlackListedPatterns(blacklistedPatternsFilename);
   } catch (error) {
@@ -57,21 +76,24 @@ const combineRun = async (details, deviceToScan) => {
 
   const scanDetails = {
     startTime: new Date(),
+    endTime: new Date(),
     crawlType: type,
     requestUrl: finalUrl,
+    urlsCrawled: new UrlsCrawled(),
+
   };
 
-  const viewportSettings = {
+  const viewportSettings:ViewportSettingsClass = new ViewportSettingsClass(
     deviceChosen,
     customDevice,
     viewportWidth,
     playwrightDeviceDetailsObject,
-  };
+  );
 
-  let urlsCrawled;
+  let urlsCrawledObj;
   switch (type) {
     case ScannerTypes.CUSTOM:
-      urlsCrawled = await runCustom(
+      urlsCrawledObj = await runCustom(
         url,
         randomToken,
         viewportSettings,
@@ -81,7 +103,7 @@ const combineRun = async (details, deviceToScan) => {
       break;
 
     case ScannerTypes.SITEMAP:
-      urlsCrawled = await crawlSitemap(
+      urlsCrawledObj = await crawlSitemap(
         url,
         randomToken,
         host,
@@ -98,7 +120,7 @@ const combineRun = async (details, deviceToScan) => {
       break;
 
     case ScannerTypes.INTELLIGENT:
-      urlsCrawled = await crawlIntelligentSitemap(
+      urlsCrawledObj = await crawlIntelligentSitemap(
         url,
         randomToken,
         host,
@@ -118,7 +140,7 @@ const combineRun = async (details, deviceToScan) => {
       break;
 
     case ScannerTypes.WEBSITE:
-      urlsCrawled = await crawlDomain(
+      urlsCrawledObj = await crawlDomain(
         url,
         randomToken,
         host,
@@ -144,21 +166,21 @@ const combineRun = async (details, deviceToScan) => {
   }
 
   scanDetails.endTime = new Date();
-  scanDetails.urlsCrawled = urlsCrawled;
-  await createDetailsAndLogs(scanDetails, randomToken);
+  scanDetails.urlsCrawled = urlsCrawledObj;
+  await createDetailsAndLogs(randomToken);
   if (scanDetails.urlsCrawled.scanned.length > 0) {
     await createAndUpdateResultsFolders(randomToken);
     const pagesNotScanned = [
-      ...urlsCrawled.error,
-      ...urlsCrawled.invalid,
-      ...urlsCrawled.forbidden,
+      ...urlsCrawledObj.error,
+      ...urlsCrawledObj.invalid,
+      ...urlsCrawledObj.forbidden,
     ];
     const basicFormHTMLSnippet = await generateArtifacts(
       randomToken,
       url,
       type,
       deviceToScan,
-      urlsCrawled.scanned,
+      urlsCrawledObj.scanned,
       pagesNotScanned,
       customFlowLabel,
       undefined,
@@ -169,19 +191,19 @@ const combineRun = async (details, deviceToScan) => {
     await submitForm(
       browser,
       userDataDirectory,
-      url,
-      finalUrl,
+      url, // scannedUrl
+      finalUrl.href, //entryUrl
       type,
       email,
       name,
       JSON.stringify(basicFormHTMLSnippet),
-      urlsCrawled.scanned.length,
-      urlsCrawled.scannedRedirects.length,
+      urlsCrawledObj.scanned.length,
+      urlsCrawledObj.scannedRedirects.length,
       pagesNotScanned.length,
       metadata,
     );
   } else {
-    printMessage([`No pages were scanned.`], constants.alertMessageOptions);
+    printMessage([`No pages were scanned.`], alertMessageOptions);
   }
 };
 

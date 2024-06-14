@@ -1,4 +1,4 @@
-import crawlee, { Request } from 'crawlee';
+import crawlee, { Request,RequestList } from 'crawlee';
 import printMessage from 'print-message';
 import {
   createCrawleeSubFolders,
@@ -118,10 +118,9 @@ const crawlSitemap = async (
 
   finalLinks = [...finalLinks, ...linksFromSitemap];
 
-  const requestList = new crawlee.RequestList({
+  const requestList = await RequestList.open({
     sources: finalLinks,
   });
-  await requestList.initialize();
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
 
   const crawler = new crawlee.PlaywrightCrawler({
@@ -167,9 +166,16 @@ const crawlSitemap = async (
       await waitForPageLoaded(page, 10000);
 
       // Set basic auth header if needed
-      if (isBasicAuth) await page.setExtraHTTPHeaders({
-        'Authorization': authHeader
-      });
+      if (isBasicAuth) {
+        await page.setExtraHTTPHeaders({
+          'Authorization': authHeader
+        });
+        const currentUrl = new URL(request.url);
+        currentUrl.username = username;
+        currentUrl.password = password;
+        request.url = currentUrl.href;
+      }
+      
       
       const actualUrl = request.loadedUrl || request.url;
 
@@ -188,7 +194,7 @@ const crawlSitemap = async (
           return;
         }
         // pushes download promise into pdfDownloads
-        const { pdfFileName, trimmedUrl } = handlePdfDownload(
+        const { pdfFileName, url } = handlePdfDownload(
           randomToken,
           pdfDownloads,
           request,
@@ -196,7 +202,7 @@ const crawlSitemap = async (
           urlsCrawled,
         );
 
-        uuidToPdfMapping[pdfFileName] = trimmedUrl;
+        uuidToPdfMapping[pdfFileName] = url;
         return;
       }
 
@@ -230,7 +236,7 @@ const crawlSitemap = async (
         basicAuthPage++;
       } else {
         if (isScanHtml && status === 200 && isWhitelistedContentType(contentType)) {
-          const results = await runAxeScript(includeScreenshots, page, randomToken);
+          const results = await runAxeScript(includeScreenshots, page, randomToken, null);
           guiInfoLog(guiInfoStatusTypes.SCANNED, {
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
@@ -329,7 +335,7 @@ const crawlSitemap = async (
 
   
   if (!fromCrawlIntelligentSitemap){
-    guiInfoLog(guiInfoStatusTypes.COMPLETED);
+    guiInfoLog(guiInfoStatusTypes.COMPLETED, {});
   }
 
   return urlsCrawled;

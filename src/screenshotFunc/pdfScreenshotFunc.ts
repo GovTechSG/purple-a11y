@@ -13,6 +13,18 @@ const __dirname = path.dirname(__filename);
 // CONSTANTS
 const BBOX_PADDING = 50;
 
+// Interfaces
+interface pathObject
+  {
+    pageIndex?: number;
+    contentStream?: number;
+    content?: number;
+    contentItems?: number[];
+    mcid?: number;
+    annot?: number;
+  }
+
+
 // function NodeCanvasFactory() {}
 // NodeCanvasFactory.prototype = {
 //   create: function NodeCanvasFactory_create(width, height) {
@@ -430,19 +442,33 @@ const getTagsFromErrorPlace = (context, structure) => {
   if (_.isEmpty(selectedTag)) {
     return defaultValue;
   }
+  // Type guard function
+  function isPathObject(value: any): value is pathObject {
+    return (
+      value !== null &&
+      typeof value === 'object' &&
+      (value.hasOwnProperty('mcid') ||
+        value.hasOwnProperty('pageIndex') ||
+        value.hasOwnProperty('annot') ||
+        value.hasOwnProperty('contentItems'))
+    );
+  }
 
-  if (selectedTag.hasOwnProperty('mcid') && selectedTag.hasOwnProperty('pageIndex')) {
-    return [[[selectedTag.mcid], selectedTag.pageIndex]];
-  } else if (selectedTag.hasOwnProperty('annot') && selectedTag.hasOwnProperty('pageIndex')) {
-    return [[{ annot: selectedTag.annot }, selectedTag.pageIndex]];
-  } else if (selectedTag.hasOwnProperty('contentItems')) {
-    return [
-      [
-        undefined,
-        selectedTag.pageIndex,
-        [selectedTag.contentStream, selectedTag.content, ...selectedTag.contentItems],
-      ],
-    ];
+  if (isPathObject(selectedTag))
+  {
+    if (selectedTag.hasOwnProperty('mcid') && selectedTag.hasOwnProperty('pageIndex')) {
+      return [[[selectedTag.mcid], selectedTag.pageIndex]];
+    } else if (selectedTag.hasOwnProperty('annot') && selectedTag.hasOwnProperty('pageIndex')) {
+      return [[{ annot: selectedTag.annot }, selectedTag.pageIndex]];
+    } else if (selectedTag.hasOwnProperty('contentItems')) {
+      return [
+        [
+          undefined,
+          selectedTag.pageIndex,
+          [selectedTag.contentStream, selectedTag.content, ...selectedTag.contentItems],
+        ],
+      ];
+    }
   } else if (selectedTag instanceof Array) {
     let objectOfErrors = { ...structure };
     selectedTag.forEach((node, index) => {
@@ -481,8 +507,11 @@ const getTagsFromErrorPlace = (context, structure) => {
  *
  *  @return arrayOfNodes {array} of nodes from Document to error Tag
  */
-const convertContextToPath = (errorContext = '') => {
-  let arrayOfNodes = [];
+type Node = [number, string];
+type ConvertContextToPathReturn = pathObject | Node[];
+
+const convertContextToPath = (errorContext = '') : ConvertContextToPathReturn=> {
+  let arrayOfNodes:Node[] = [];
   if (!errorContext) {
     return arrayOfNodes;
   }
@@ -496,7 +525,7 @@ const convertContextToPath = (errorContext = '') => {
       );
       if (result) {
         try {
-          let path = {};
+          let path:pathObject;
           path.pageIndex = parseInt(result.groups.pages, 10);
           path.contentStream = parseInt(result.groups.contentStream, 10);
           path.content = parseInt(result.groups.content, 10);
@@ -515,7 +544,7 @@ const convertContextToPath = (errorContext = '') => {
     }
 
     if (contextString.includes('contentItem')) {
-      let path = {};
+      let path:pathObject;
       contextString.split('/').forEach(nodeString => {
         if (nodeString.includes('page')) {
           path.pageIndex = parseInt(nodeString.split(/[[\]]/)[1], 10);
@@ -525,7 +554,7 @@ const convertContextToPath = (errorContext = '') => {
       });
       return path;
     } else if (contextString.includes('annots')) {
-      let path = {};
+      let path:pathObject;
       contextString.split('/').forEach(nodeString => {
         if (nodeString.includes('page')) {
           path.pageIndex = parseInt(nodeString.split(/[[\]]/)[1], 10);
@@ -536,10 +565,10 @@ const convertContextToPath = (errorContext = '') => {
       return path;
     }
 
-    contextString = contextString.split('PDStructTreeRoot)/')[1].split('/'); // cut path before start of Document
-    contextString.forEach(nodeString => {
+    let contextStringArray:string[] = contextString.split('PDStructTreeRoot)/')[1].split('/'); // cut path before start of Document
+    contextStringArray.forEach(nodeString => {
       const nextIndex = parseInt(nodeString.split('](')[0].split('K[')[1], 10);
-      let nextTag = nodeString.split('(')[1].split(')')[0].split(' ');
+      let nextTag:string|string[] = nodeString.split('(')[1].split(')')[0].split(' ');
       nextTag = nextTag[nextTag.length - 1];
 
       arrayOfNodes = [...arrayOfNodes, [nextIndex, nextTag]];
@@ -603,7 +632,13 @@ export const getBboxForGlyph = (
 };
 
 export const parseMcidToBbox = (listOfMcid, pageMap, annotations, viewport, rotateAngle) => {
-  let coords = {};
+  type coordsObject = {
+    x:number
+    y:number
+    width:number
+    height:number
+  }
+  let coords:coordsObject;
 
   if (listOfMcid instanceof Array) {
     listOfMcid.forEach(mcid => {

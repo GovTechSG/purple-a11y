@@ -15,7 +15,8 @@ export const log = str => {
   }
 };
 
-export const screenshotFullPage = async (page, screenshotsDir, screenshotIdx) => {
+
+export const screenshotFullPage = async (page, screenshotsDir:string, screenshotIdx) => {
   const imgName = `PHScan-screenshot${screenshotIdx}.png`;
   const imgPath = path.join(screenshotsDir, imgName);
 
@@ -76,17 +77,25 @@ export const screenshotFullPage = async (page, screenshotsDir, screenshotIdx) =>
   consoleLogger.info(`Screenshot page at: ${urlWithoutAuth(page.url())}`);
   silentLogger.info(`Screenshot page at: ${urlWithoutAuth(page.url())}`);
 
-  await page.screenshot({
-    path: imgPath,
-    clip: {
-      x: 0,
-      y: 0,
-      width: fullPageSize.width,
-      height: 5400,
-    },
-    fullPage: true,
-    scale: 'css',
-  });
+  try {
+    await page.screenshot({
+      timeout: 10000,
+      path: imgPath,
+      clip: {
+        x: 0,
+        y: 0,
+        width: fullPageSize.width,
+        height: 5400,
+      },
+      fullPage: true,
+      scale: 'css',
+    });
+  
+    if (originalSize) await page.setViewportSize(originalSize);
+  
+  } catch (e) {
+    consoleLogger.error('Unable to take screenshot');
+  }
 
   if (originalSize) await page.setViewportSize(originalSize);
 
@@ -204,7 +213,7 @@ export const updateMenu = async (page, urlsCrawled) => {
       if (shadowHost) {
         const p = shadowHost.shadowRoot.querySelector('#purple-a11y-p-pages-scanned');
         if (p) {
-          p.innerText = `Pages Scanned: ${vars.urlsCrawled.scanned.length || 0}`;
+          p.textContent = `Pages Scanned: ${vars.urlsCrawled.scanned.length || 0}`;
         }
       }
     },
@@ -216,6 +225,10 @@ export const updateMenu = async (page, urlsCrawled) => {
 export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
   await page.waitForLoadState('domcontentloaded');
   log(`Overlay menu: adding to ${menuPos}...`);
+  interface CustomWindow extends Window {
+    updateMenuPos: (newPos: any) => void;
+    handleOnScanClick: () => void;
+  }
 
   // Add the overlay menu with initial styling
   return page
@@ -233,7 +246,10 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
         let offsetY;
 
         menu.addEventListener('mousedown', e => {
-          if (e.target.tagName.toLowerCase() !== 'button') {
+          // The EvenTarget Object is the grandfather interface for Element
+          // In order to get the tagName of the item you would need polymorph it into Element
+          const targetElement:Element = e.target as Element;
+          if (targetElement.tagName.toLowerCase() !== 'button') {
             e.preventDefault();
             isDragging = true;
             initialY = e.clientY - menu.getBoundingClientRect().top;
@@ -247,20 +263,22 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
             menu.style.top = `${offsetY}px`;
           }
         });
+        const customWindow = window as unknown as CustomWindow;
 
         document.addEventListener('mouseup', () => {
+          // need to tell typeScript to defer first because down int he script updateMenuPos is defined
           if (isDragging) {
             // Snap the menu when it is below half the screen
-            const halfScreenHeight = window.innerHeight / 2;
-            const isTopHalf = offsetY < halfScreenHeight;
+            const halfScreenHeight:number = window.innerHeight / 2;
+            const isTopHalf:boolean = offsetY < halfScreenHeight;
             if (isTopHalf) {
               menu.style.removeProperty('bottom');
               menu.style.top = '0';
-              window.updateMenuPos(vars.MENU_POSITION.top);
+              (customWindow).updateMenuPos(vars.MENU_POSITION.top);
             } else {
               menu.style.removeProperty('top');
               menu.style.bottom = '0';
-              window.updateMenuPos(vars.MENU_POSITION.bottom);
+              (customWindow).updateMenuPos(vars.MENU_POSITION.top);
             }
 
             isDragging = false;
@@ -274,7 +292,7 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
         const button = document.createElement('button');
         button.innerText = 'Scan this page';
         button.addEventListener('click', async () => {
-          await window.handleOnScanClick();
+          customWindow.handleOnScanClick();
         });
 
         menu.appendChild(p);
@@ -333,7 +351,7 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
         } else if (document.head) {
           // The <head> element exists
           // Append the variable below the head
-          head.insertAdjacentElement('afterend', shadowHost);
+          document.head.insertAdjacentElement('afterend', shadowHost);
         } else {
           // Neither <body> nor <head> nor <html> exists
           // Append the variable to the document
@@ -406,8 +424,10 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
     }
   });
 
+  type handleOnScanClickFunction = () => void;
+
   // Window functions exposed in browser
-  const handleOnScanClick = async () => {
+  const handleOnScanClick: handleOnScanClickFunction = async () => {
     log('Scan: click detected');
     try {
       await removeOverlayMenu(page);
@@ -421,17 +441,20 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
           updateMenu(pagesDict[k].page, processPageParams.urlsCrawled);
         });
     } catch (error) {
-      log('Scan: failed', error);
+      log(`Scan failed ${error}`);
     }
   };
   await page.exposeFunction('handleOnScanClick', handleOnScanClick);
+  
+  type UpdateMenuPosFunction = (newPos: any) => void;
 
-  const updateMenuPos = newPos => {
-    const prevPos = menuPos;
-    if (prevPos !== newPos) {
-      log(`Overlay menu: position updated from ${prevPos} to ${newPos}`);
-      menuPos = newPos;
-    }
+  // Define the updateMenuPos function
+  const updateMenuPos: UpdateMenuPosFunction = (newPos) => {
+      const prevPos = menuPos;
+      if (prevPos !== newPos) {
+          console.log(`Overlay menu: position updated from ${prevPos} to ${newPos}`);
+          menuPos = newPos;
+      }
   };
   await page.exposeFunction('updateMenuPos', updateMenuPos);
 

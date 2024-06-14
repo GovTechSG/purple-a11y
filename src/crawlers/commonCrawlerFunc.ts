@@ -1,12 +1,48 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-param-reassign */
 import crawlee from 'crawlee';
-import axe from 'axe-core';
+import axe, { resultGroups } from 'axe-core';
 import { axeScript, guiInfoStatusTypes, saflyIconSelector } from '../constants/constants.js';
 import { guiInfoLog } from '../logs.js';
 import { takeScreenshotForHTMLElements } from '../screenshotFunc/htmlScreenshotFunc.js';
 
-export const filterAxeResults = (results, pageTitle, customFlowDetails) => {
+// types
+type RuleDetails = {
+  [key: string]: any[];
+};
+
+type ResultCategory = {
+  totalItems: number;
+  rules: RuleDetails;
+};
+
+type CustomFlowDetails = {
+  pageIndex?: any;
+  metadata?: any;
+  pageImagePath?: any;
+};
+
+type FilteredResults = {
+  url: string;
+  pageTitle: string;
+  pageIndex?: any;
+  metadata?: any;
+  pageImagePath?: any;
+  totalItems: number;
+  mustFix: ResultCategory;
+  goodToFix: ResultCategory;
+  needsReview: ResultCategory;
+  passed: ResultCategory;
+  actualUrl?: string;
+};
+
+export const filterAxeResults = (
+  results: any,
+  pageTitle: string,
+  customFlowDetails?: CustomFlowDetails,
+): FilteredResults => {
+
+
   const { violations, passes, incomplete, url } = results;
 
   let totalItems = 0;
@@ -132,10 +168,13 @@ export const runAxeScript = async (
         branding: {
           application: 'purple-a11y',
         },
+        rules: [
+          { id: 'target-size', enabled: true },
+        ]
       });
 
       //removed needsReview condition
-      defaultResultTypes = ['violations', 'passes', 'incomplete']
+      let defaultResultTypes:resultGroups[]= ['violations', 'passes', 'incomplete']
         
 
       return axe.run(selectors, {
@@ -155,7 +194,7 @@ export const runAxeScript = async (
 };
 
 export const createCrawleeSubFolders = async randomToken => {
-  const dataset = await crawlee.Dataset.open(randomToken);
+  const dataset= await crawlee.Dataset.open(randomToken);
   const requestQueue = await crawlee.RequestQueue.open(randomToken);
   return { dataset, requestQueue };
 };
@@ -172,7 +211,7 @@ export const preNavigationHooks = (extraHTTPHeaders) => {
 
 export const postNavigationHooks = [
   async _crawlingContext => {
-    guiInfoLog(guiInfoStatusTypes.COMPLETED);
+    guiInfoLog(guiInfoStatusTypes.COMPLETED,{});
   },
 ];
 

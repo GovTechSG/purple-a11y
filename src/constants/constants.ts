@@ -182,21 +182,28 @@ export const basicAuthRegex = /^.*\/\/.*:.*@.*$/i;
 
 // for crawlers
 export const axeScript = path.join(__dirname, '../../node_modules/axe-core/axe.min.js');
+export class UrlsCrawled {
+  toScan: string[] = [];
+  scanned: string[] = [];
+  invalid: string[] = [];
+  scannedRedirects: string[] = [];
+  notScannedRedirects: string[] = [];
+  outOfDomain: string[] = [];
+  blacklisted: string[] = [];
+  error: string[] = [];
+  exceededRequests: string[] = [];
+  forbidden: string[] = [];
+  userExcluded: string[] = [];
+  everything: string[] = [];
+  
+  constructor(urlsCrawled?: Partial<UrlsCrawled>) {
+    if (urlsCrawled) {
+      Object.assign(this, urlsCrawled);
+    }
+  }
+}
 
-const urlsCrawledObj = {
-  toScan: [],
-  scanned: [],
-  invalid: [],
-  scannedRedirects: [],
-  notScannedRedirects: [],
-  outOfDomain: [],
-  blacklisted: [],
-  error: [],
-  exceededRequests: [],
-  forbidden: [],
-  userExcluded: [],
-  everything: [],
-};
+const urlsCrawledObj = new UrlsCrawled();
 
 export enum ScannerTypes {
   SITEMAP = 'Sitemap',
@@ -395,7 +402,6 @@ const reserveFileNameKeywords = [
 ];
 
 export default {
-  allIssueFileName: 'all_issues',
   cliZipFileName: 'a11y-scan-results.zip',
   exportDirectory: `${process.cwd()}`,
   maxRequestsPerCrawl,
