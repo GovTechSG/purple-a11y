@@ -1022,7 +1022,6 @@ export const getBrowserToRun = (
   preferredBrowser: BrowserTypes,
   isCli = false,
 ): { browserToRun: BrowserTypes; clonedBrowserDataDir: string } => {
-  console.log(`Preferred browser ${preferredBrowser}`);
 
   const platform = os.platform();
 
@@ -1030,6 +1029,8 @@ export const getBrowserToRun = (
   if (!preferredBrowser && (os.platform() === 'win32' || os.platform() === 'darwin')) {
     preferredBrowser = BrowserTypes.CHROME;
   }
+
+  printMessage([`Preferred browser ${preferredBrowser}`], messageOptions);
 
   if (preferredBrowser === BrowserTypes.CHROME) {
     const chromeData = getChromeData();
