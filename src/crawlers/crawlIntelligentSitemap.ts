@@ -132,7 +132,6 @@ import {chromium} from 'playwright';
 
     if (urlsCrawled.scanned.length < maxRequestsPerCrawl){ 
       // run crawl domain starting from root website, only on pages not scanned before
-      console.log("HEY urlsCrawled.scanned.length< maxRequestsPerCrawl", urlsCrawled.scanned.length)
       let urlsCrawledFromIntelligent = urlsCrawled;
       urlsCrawledFinal = await crawlDomain(
         url,
