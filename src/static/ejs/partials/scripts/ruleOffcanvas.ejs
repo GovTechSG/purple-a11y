@@ -9,28 +9,29 @@ category summary is clicked %>
 
     function generateWcagConformanceLinks(conformanceList) {
       const wcagConformanceUrls = {
-        wcag111: 'https://www.w3.org/TR/WCAG21/#non-text-content',
-        wcag122: 'https://www.w3.org/TR/WCAG21/#captions-prerecorded',
-        wcag131: 'https://www.w3.org/TR/WCAG21/#info-and-relationships',
-        wcag134: 'https://www.w3.org/TR/WCAG21/#orientation',
-        wcag135: 'https://www.w3.org/TR/WCAG21/#identify-input-purpose',
-        wcag141: 'https://www.w3.org/TR/WCAG21/#use-of-color',
-        wcag142: 'https://www.w3.org/TR/WCAG21/#audio-control',
-        wcag143: 'https://www.w3.org/TR/WCAG21/#contrast-minimum',
-        wcag144: 'https://www.w3.org/TR/WCAG21/#resize-text',
-        wcag1410: 'https://www.w3.org/TR/WCAG21/#reflow',
-        wcag1412: 'https://www.w3.org/TR/WCAG21/#text-spacing',
-        wcag211: 'https://www.w3.org/TR/WCAG21/#keyboard',
-        wcag221: 'https://www.w3.org/TR/WCAG21/#timing-adjustable',
-        wcag222: 'https://www.w3.org/TR/WCAG21/#pause-stop-hide',
-        wcag241: 'https://www.w3.org/TR/WCAG21/#bypass-blocks',
-        wcag242: 'https://www.w3.org/TR/WCAG21/#page-titled',
-        wcag244: 'https://www.w3.org/TR/WCAG21/#link-purpose-in-context',
-        wcag311: 'https://www.w3.org/TR/WCAG21/#language-of-page',
-        wcag312: 'https://www.w3.org/TR/WCAG21/#language-of-parts',
-        wcag332: 'https://www.w3.org/TR/WCAG21/#labels-or-instructions',
-        wcag411: 'https://www.w3.org/TR/WCAG21/#parsing',
-        wcag412: 'https://www.w3.org/TR/WCAG21/#name-role-value',
+        wcag111: 'https://www.w3.org/TR/WCAG22/#non-text-content',
+        wcag122: 'https://www.w3.org/TR/WCAG22/#captions-prerecorded',
+        wcag131: 'https://www.w3.org/TR/WCAG22/#info-and-relationships',
+        wcag134: 'https://www.w3.org/TR/WCAG22/#orientation',
+        wcag135: 'https://www.w3.org/TR/WCAG22/#identify-input-purpose',
+        wcag141: 'https://www.w3.org/TR/WCAG22/#use-of-color',
+        wcag142: 'https://www.w3.org/TR/WCAG22/#audio-control',
+        wcag143: 'https://www.w3.org/TR/WCAG22/#contrast-minimum',
+        wcag144: 'https://www.w3.org/TR/WCAG22/#resize-text',
+        wcag1410: 'https://www.w3.org/TR/WCAG22/#reflow',
+        wcag1412: 'https://www.w3.org/TR/WCAG22/#text-spacing',
+        wcag211: 'https://www.w3.org/TR/WCAG22/#keyboard',
+        wcag221: 'https://www.w3.org/TR/WCAG22/#timing-adjustable',
+        wcag222: 'https://www.w3.org/TR/WCAG22/#pause-stop-hide',
+        wcag241: 'https://www.w3.org/TR/WCAG22/#bypass-blocks',
+        wcag242: 'https://www.w3.org/TR/WCAG22/#page-titled',
+        wcag244: 'https://www.w3.org/TR/WCAG22/#link-purpose-in-context',
+        wcag258: 'https://www.w3.org/TR/WCAG22/#target-size-minimum',
+        wcag311: 'https://www.w3.org/TR/WCAG22/#language-of-page',
+        wcag312: 'https://www.w3.org/TR/WCAG22/#language-of-parts',
+        wcag332: 'https://www.w3.org/TR/WCAG22/#labels-or-instructions',
+        wcag411: 'https://www.w3.org/TR/WCAG22/#parsing',
+        wcag412: 'https://www.w3.org/TR/WCAG22/#name-role-value',
       };
 
       const links = [];
@@ -51,6 +52,7 @@ category summary is clicked %>
         wcag2a: 'A',
         wcag2aa: 'AA',
         wcag21aa: 'AA',
+        wcag22aa: 'AA',
       };
 
       document.getElementById('expandedRuleName').innerHTML = htmlEscapeString(
@@ -783,6 +785,7 @@ category summary is clicked %>
       'aria-braille-equivalent': '<p class="rule-desc-text">\nARIA braille attributes were introduced to allow adjusting how labels and role descriptions are rendered on a braille display. They cannot be the only attribute providing a label, or a role description. When used without a corresponding label or role description ARIA says to ignore these attributes, although this may not happen consistently in screen readers and other assistive technologies.\n</p>',
       'aria-conditional-attr': '<p class="rule-desc-text">\nUsing ARIA attributes on elements where they are not expected can result in unpredictable behavior for assistive technologies. This can lead to a poor user experience for people with disabilities who rely on these technologies. It is important to follow the ARIA specification to ensure that assistive technologies can properly interpret and communicate the intended meaning of the content.\n</p>',
       'aria-deprecated-role': '<p class="rule-desc-text">\nUsing deprecated WAI-ARIA roles is bad for accessibility. They will not be recognized or correctly processed by screen readers and other assistive technologies. Using these means not everyone will be able to access essential information.\n</p>',
-      'aria-prohibited-attr': '<p class="rule-desc-text">\nUsing ARIA attributes in roles where they are prohibited can mean that important information is not communicated to users of assistive technologies. assistive technologies may also attempt to compensate for the issue, resulting in inconsistent and confusing behavior of these tools.\n</p>'
+      'aria-prohibited-attr': '<p class="rule-desc-text">\nUsing ARIA attributes in roles where they are prohibited can mean that important information is not communicated to users of assistive technologies. assistive technologies may also attempt to compensate for the issue, resulting in inconsistent and confusing behavior of these tools.\n</p>',
+      'target-size' : '<p>\n Touch targets must have sufficient size and spacing in order to "be easily activated without accidentally activating an adjacent target." When touch targets are too small or too close together, it becomes difficult for users to activate them.\n</p>',
     };
 </script>

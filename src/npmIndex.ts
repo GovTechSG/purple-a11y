@@ -76,6 +76,9 @@ export const init = async (
         branding: {
           application: 'purple-a11y',
         },
+        rules: [
+          { id: 'target-size', enabled: true },
+        ]
       });
       const axeScanResults = await axe.run(elementsToScan, {
         resultTypes: ['violations', 'passes', 'incomplete'],
