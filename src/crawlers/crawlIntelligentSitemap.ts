@@ -128,6 +128,7 @@ import {chromium} from 'playwright';
         url, 
         dataset,  //for crawlSitemap to add on to
         urlsCrawled,  //for crawlSitemap to add on to
+        false,
       )
 
     if (urlsCrawled.scanned.length < maxRequestsPerCrawl){ 

@@ -217,7 +217,7 @@ const combineRun = async (details:Data, deviceToScan:string) => {
       browser,
       userDataDirectory,
       url, // scannedUrl
-      finalUrl.href, //entryUrl
+      new URL(finalUrl).href, //entryUrl
       type,
       email,
       name,

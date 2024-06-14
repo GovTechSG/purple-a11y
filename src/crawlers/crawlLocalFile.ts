@@ -134,7 +134,6 @@ const crawlLocalFile = async (
     sources: finalLinks,
   });
 
-  await requestList.initialize();
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
 
   const request = linksFromSitemap[0];
@@ -165,7 +164,7 @@ const crawlLocalFile = async (
     const page = await context.newPage();
     request.url = convertPathToLocalFile(request.url);
     await page.goto(request.url);
-    const results = await runAxeScript(includeScreenshots, page, randomToken);
+    const results = await runAxeScript(includeScreenshots, page, randomToken, null);
     
     guiInfoLog(guiInfoStatusTypes.SCANNED, {
       numScanned: urlsCrawled.scanned.length,
