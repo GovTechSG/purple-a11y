@@ -473,7 +473,7 @@ A report will be downloaded into the current working directory.
 
 ## Accessibility Scan Results
 
-Each Issue has its own severity "Must Fix" / "Good to Fix" based on the [WCAG Conformance](https://www.w3.org/TR/WCAG21/). 
+Each Issue has its own severity "Must Fix" / "Good to Fix" based on the [WCAG 2.2 Conformance](https://www.w3.org/TR/WCAG22/). 
 
 For details on which accessibility scan results triggers a  "Must Fix" / "Good to Fix" findings, you may refer to [Scan Issue Details](./DETAILS.md).
 
