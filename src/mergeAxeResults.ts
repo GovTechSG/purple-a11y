@@ -490,7 +490,7 @@ export const generateArtifacts = async (
   const storagePath = getStoragePath(randomToken);
 
 
-  urlScanned = urlWithoutAuth(urlScanned);
+  urlScanned = (scanType === ScannerTypes.SITEMAP || scanType === ScannerTypes.LOCALFILE) ? urlScanned : urlWithoutAuth(urlScanned);
 
   const formatAboutStartTime = dateString => {
     const utcStartTimeDate = new Date(dateString);

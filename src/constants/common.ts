@@ -15,7 +15,7 @@ import * as https from 'https';
 import os from 'os';
 import { minimatch } from 'minimatch';
 import { globSync } from 'glob';
-import { LaunchOptions, devices, webkit } from 'playwright';
+import { LaunchOptions, devices, request, webkit } from 'playwright';
 import printMessage from 'print-message';
 import constants, {
   getDefaultChromeDataDir,
@@ -30,6 +30,7 @@ import { silentLogger } from '../logs.js';
 import { isUrlPdf } from '../crawlers/commonCrawlerFunc.js';
 import { randomThreeDigitNumberString } from '../utils.js';
 import { Answers, Data } from '#root/index.js';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 // validateDirPath validates a provided directory path
 // returns null if no error
@@ -229,7 +230,9 @@ export const getFileSitemap = (filePath: string): string | null => {
 
   const file = fs.readFileSync(filePath, 'utf8');
   const isLocalSitemap = isSitemapContent(file);
-  return isLocalSitemap ? filePath : null;
+  let isLocalFileOrSitemap = isLocalSitemap ? filePath : null;
+  let isLocalFiles = file ? filePath : null;
+  return isLocalFileOrSitemap || isLocalFiles ? filePath : null;
 };
 
 export const getUrlMessage = (scanner: ScannerTypes): string => {
@@ -239,7 +242,8 @@ export const getUrlMessage = (scanner: ScannerTypes): string => {
       return 'Please enter URL of website: ';
     case ScannerTypes.SITEMAP:
       return 'Please enter URL or file path to sitemap, or drag and drop a sitemap file here: ';
-
+    case ScannerTypes.LOCALFILE:
+      return 'Please enter file path: ';
     default:
       return 'Invalid option';
   }
@@ -525,7 +529,10 @@ export const checkUrl = async (
     }
   }
 
-  if (res.status === constants.urlCheckStatuses.success.code && scanner === ScannerTypes.SITEMAP) {
+  if (
+    (res.status === constants.urlCheckStatuses.success.code && scanner === ScannerTypes.SITEMAP) ||
+    (res.status === constants.urlCheckStatuses.success.code && scanner === ScannerTypes.LOCALFILE)
+  ) {
     const isSitemap = isSitemapContent(res.content);
 
     if (!isSitemap) {
@@ -568,7 +575,7 @@ export const prepareData = async (argv: Answers): Promise<Data> => {
 
   // construct filename for scan results
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
-  const domain = argv.isLocalSitemap ? 'custom' : new URL(argv.url).hostname;
+  const domain = argv.isLocalSitemap ? path.basename(argv.url) : new URL(argv.url).hostname;
   const sanitisedLabel = customFlowLabel ? `_${customFlowLabel.replaceAll(' ', '_')}` : '';
   let resultFilename: string;
   const randomThreeDigitNumber = randomThreeDigitNumberString();
@@ -740,6 +747,7 @@ export const getLinksFromSitemap = async (
   username: string,
   password: string,
 ) => {
+  const scannedSitemaps = new Set<string>();
   const urls = {}; // dictionary of requests to urls to be scanned
 
   const isLimitReached = () => Object.keys(urls).length >= maxLinksCount;
@@ -753,7 +761,14 @@ export const getLinksFromSitemap = async (
       ? (url = addBasicAuthCredentials(url, username, password))
       : url;
 
-    const request = new Request({ url: url });
+      url = convertPathToLocalFile(url);
+
+      let request;
+      try {
+        request = new Request({ url: url });
+      } catch (e) {
+        console.log('Error creating request', e);
+      }
     if (isUrlPdf(url)) {
       request.skipNavigation = true;
     }
@@ -837,17 +852,32 @@ export const getLinksFromSitemap = async (
     let sitemapType;
     let isBasicAuth = false;
 
-    const parsedUrl = new URL(url);
     let username = '';
     let password = '';
 
-    if (parsedUrl.username !== '' && parsedUrl.password !== '') {
-      isBasicAuth = true;
-      username = decodeURIComponent(parsedUrl.username);
-      password = decodeURIComponent(parsedUrl.password);
-      parsedUrl.username = '';
-      parsedUrl.password = '';
-    }
+    let parsedUrl;
+
+     if (scannedSitemaps.has(url)) {
+       // Skip processing if the sitemap has already been scanned
+       return;
+     }
+
+     scannedSitemaps.add(url);
+
+     // Check whether its a file path or a URL
+     if (isFilePath(url)) {
+       parsedUrl = url;
+     } else {
+       parsedUrl = new URL(url);
+
+       if (parsedUrl.username !== '' && parsedUrl.password !== '') {
+         isBasicAuth = true;
+         username = decodeURIComponent(parsedUrl.username);
+         password = decodeURIComponent(parsedUrl.password);
+         parsedUrl.username = '';
+         parsedUrl.password = '';
+       }
+     }
 
     const getDataUsingPlaywright = async () => {
       const browserContext = await constants.launcher.launchPersistentContext(
@@ -912,6 +942,7 @@ export const getLinksFromSitemap = async (
         }
       }
     } else {
+      url = convertLocalFileToPath(url);
       data = fs.readFileSync(url, 'utf8');
     }
     const $ = cheerio.load(data, { xml: true });
@@ -944,11 +975,15 @@ export const getLinksFromSitemap = async (
       case constants.xmlSitemapTypes.xmlIndex:
         silentLogger.info(`This is a XML format sitemap index.`);
         for (const childSitemapUrl of $('loc')) {
+          const childSitemapUrlText = $(childSitemapUrl).text();
           if (isLimitReached()) {
             break;
           }
-
-          await fetchUrls($(childSitemapUrl).text());
+          if (childSitemapUrlText.endsWith('.xml')) {
+            await fetchUrls(childSitemapUrlText); // Recursive call for nested sitemaps
+          } else {
+            addToUrlList(childSitemapUrlText); // Add regular URLs to the list
+          }
         }
         break;
       case constants.xmlSitemapTypes.xml:
@@ -1735,3 +1770,21 @@ export const waitForPageLoaded = async (page, timeout = 10000) => {
       new Promise((resolve) => setTimeout(resolve, timeout))
   ]);
 }
+
+export const isFilePath = (url: string): boolean => {
+  return url.startsWith('file://') || url.startsWith('/');
+};
+
+export function convertLocalFileToPath(url: string): string {
+  if (url.startsWith('file://')) {
+    url = fileURLToPath(url);
+  }
+  return url;
+}
+
+export function convertPathToLocalFile(filePath: string): string {
+  if (filePath.startsWith("/")){
+    filePath = pathToFileURL(filePath).toString();
+  }
+  return filePath;
+} 

@@ -210,6 +210,7 @@ export enum ScannerTypes {
   WEBSITE = 'Website',
   CUSTOM = 'Custom',
   INTELLIGENT = 'Intelligent',
+  LOCALFILE = 'LocalFile',
 }
 
 export const guiInfoStatusTypes = {

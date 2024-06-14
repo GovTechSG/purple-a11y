@@ -1,6 +1,7 @@
 import printMessage from 'print-message';
 import crawlSitemap from './crawlers/crawlSitemap.js';
 import crawlDomain from './crawlers/crawlDomain.js';
+import crawlLocalFile from './crawlers/crawlLocalFile.js';
 import crawlIntelligentSitemap from './crawlers/crawlIntelligentSitemap.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
@@ -60,7 +61,11 @@ const combineRun = async (details:Data, deviceToScan:string) => {
   process.env.CRAWLEE_LOG_LEVEL = 'ERROR';
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
-  const host = type === ScannerTypes.SITEMAP && isLocalSitemap ? '' : getHost(url);
+  const host =
+     (type === ScannerTypes.SITEMAP && isLocalSitemap) ||
+     (type === ScannerTypes.LOCALFILE && isLocalSitemap)
+       ? ''
+       : getHost(url);
 
   let blacklistedPatterns:string[] | null = null;
   try {
@@ -72,7 +77,10 @@ const combineRun = async (details:Data, deviceToScan:string) => {
   }
 
   // remove basic-auth credentials from URL
-  let finalUrl = urlWithoutAuth(url);
+  let finalUrl = url;
+  if (!(type === ScannerTypes.SITEMAP && isLocalSitemap || type === ScannerTypes.LOCALFILE && isLocalSitemap)) {
+    finalUrl = urlWithoutAuth(finalUrl).toString();
+  }
 
   const scanDetails = {
     startTime: new Date(),
@@ -80,7 +88,6 @@ const combineRun = async (details:Data, deviceToScan:string) => {
     crawlType: type,
     requestUrl: finalUrl,
     urlsCrawled: new UrlsCrawled(),
-
   };
 
   const viewportSettings:ViewportSettingsClass = new ViewportSettingsClass(
@@ -118,6 +125,23 @@ const combineRun = async (details:Data, deviceToScan:string) => {
         extraHTTPHeaders,
       );
       break;
+
+      case ScannerTypes.LOCALFILE:
+        urlsCrawledObj = await crawlLocalFile(
+          url,
+          randomToken,
+          host,
+          viewportSettings,
+          maxRequestsPerCrawl,
+          browser,
+          userDataDirectory,
+          specifiedMaxConcurrency,
+          fileTypes,
+          blacklistedPatterns,
+          includeScreenshots,
+          extraHTTPHeaders,
+        );
+        break;
 
     case ScannerTypes.INTELLIGENT:
       urlsCrawledObj = await crawlIntelligentSitemap(
@@ -168,6 +192,7 @@ const combineRun = async (details:Data, deviceToScan:string) => {
   scanDetails.endTime = new Date();
   scanDetails.urlsCrawled = urlsCrawledObj;
   await createDetailsAndLogs(randomToken);
+  if (scanDetails.urlsCrawled) {
   if (scanDetails.urlsCrawled.scanned.length > 0) {
     await createAndUpdateResultsFolders(randomToken);
     const pagesNotScanned = [
@@ -202,7 +227,8 @@ const combineRun = async (details:Data, deviceToScan:string) => {
       pagesNotScanned.length,
       metadata,
     );
-  } else {
+  } 
+}else {
     printMessage([`No pages were scanned.`], alertMessageOptions);
   }
 };
