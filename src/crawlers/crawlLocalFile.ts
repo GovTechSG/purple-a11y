@@ -1,4 +1,4 @@
-import crawlee, { Request } from 'crawlee';
+import crawlee, { Request, RequestList } from 'crawlee';
 import printMessage from 'print-message';
 import {
   createCrawleeSubFolders,
@@ -129,9 +129,11 @@ const crawlLocalFile = async (
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
 
   finalLinks = [...finalLinks, ...linksFromSitemap];
-  const requestList = new crawlee.RequestList({
+
+  const requestList = await RequestList.open({
     sources: finalLinks,
   });
+
   await requestList.initialize();
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
 
