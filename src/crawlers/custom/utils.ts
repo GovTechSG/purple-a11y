@@ -77,17 +77,25 @@ export const screenshotFullPage = async (page, screenshotsDir:string, screenshot
   consoleLogger.info(`Screenshot page at: ${urlWithoutAuth(page.url())}`);
   silentLogger.info(`Screenshot page at: ${urlWithoutAuth(page.url())}`);
 
-  await page.screenshot({
-    path: imgPath,
-    clip: {
-      x: 0,
-      y: 0,
-      width: fullPageSize.width,
-      height: 5400,
-    },
-    fullPage: true,
-    scale: 'css',
-  });
+  try {
+    await page.screenshot({
+      timeout: 10000,
+      path: imgPath,
+      clip: {
+        x: 0,
+        y: 0,
+        width: fullPageSize.width,
+        height: 5400,
+      },
+      fullPage: true,
+      scale: 'css',
+    });
+  
+    if (originalSize) await page.setViewportSize(originalSize);
+  
+  } catch (e) {
+    consoleLogger.error('Unable to take screenshot');
+  }
 
   if (originalSize) await page.setViewportSize(originalSize);
 
