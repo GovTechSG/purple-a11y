@@ -118,7 +118,7 @@ export const validateFilePath = (filePath: string, cliDir: string) => {
   }
 };
 
-export const getBlackListedPatterns = (blacklistedPatternsFilename: string): string[] | null=> {
+export const getBlackListedPatterns = (blacklistedPatternsFilename: string|null): string[] | null=> {
   let exclusionsFile = null;
   if (blacklistedPatternsFilename) {
     exclusionsFile = blacklistedPatternsFilename;

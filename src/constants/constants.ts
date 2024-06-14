@@ -402,7 +402,6 @@ const reserveFileNameKeywords = [
 ];
 
 export default {
-  allIssueFileName: 'all_issues',
   cliZipFileName: 'a11y-scan-results.zip',
   exportDirectory: `${process.cwd()}`,
   maxRequestsPerCrawl,

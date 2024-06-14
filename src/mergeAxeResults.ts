@@ -10,7 +10,6 @@ import { urlWithoutAuth } from './constants/common.js';
 import ejs from 'ejs';
 import {
   createScreenshotsFolder,
-  getFormattedTime,
   getStoragePath,
   getVersion,
   getWcagPassPercentage,
@@ -21,7 +20,7 @@ import { consoleLogger, silentLogger } from './logs.js';
 import itemTypeDescription from './constants/itemTypeDescription.js';
 import { chromium } from 'playwright';
 import { createWriteStream } from 'fs';
-import { AsyncParser, Transform, ParserOptions } from '@json2csv/node';
+import { AsyncParser, ParserOptions } from '@json2csv/node';
 import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
 
 type ItemsInfo = {
@@ -103,38 +102,6 @@ const parseContentToJson = async rPath =>
       silentLogger.error(`(parseContentToJson) - ${parseError}`);
     });
 
-const writeResults = async (allissues, storagePath, jsonFilename = 'compiledResults') => {
-  const finalResultsInJson = JSON.stringify(allissues, null, 4);
-
-  const passedItemsJson = {};
-
-  allissues.items.passed.rules.forEach(r => {
-    passedItemsJson[r.description] = {
-      totalOccurrencesInScan: r.totalItems,
-      totalPages: r.pagesAffected.length,
-      pages: r.pagesAffected.map(p => ({
-        pageTitle: p.pageTitle,
-        url: p.url,
-        totalOccurrencesInPage: p.items.length,
-        occurrences: p.items,
-        metadata: p.metadata,
-      })),
-    };
-  });
-
-  try {
-    await fs.writeFile(`${storagePath}/reports/${jsonFilename}.json`, finalResultsInJson);
-    await fs.writeFile(
-      `${storagePath}/reports/passed_items.json.txt`,
-      JSON.stringify(passedItemsJson, null, 4),
-    );
-  } catch (writeResultsError) {
-    consoleLogger.info(
-      'An error has occurred when compiling the results into the report, please try again.',
-    );
-    silentLogger.error(`(writeResults) - ${writeResultsError}`);
-  }
-};
 
 const writeCsv = async (allIssues, storagePath) => {
   const csvOutput = createWriteStream(`${storagePath}/reports/report.csv`, { encoding: 'utf8' });
@@ -272,7 +239,7 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
   }
 
   // Write the encoded scan data to the file
-  await fs.promises.writeFile(filePath, `${encodedScanData}\n${encodedScanItems}`);
+  await fs.promises.writeFile(filePath, `scanData_base64,scanItems_base64\n${encodedScanData},${encodedScanItems}`);
 
   // Read the existing HTML file
   const htmlFilePath = path.join(storagePath, 'reports', htmlFilename);
@@ -523,9 +490,10 @@ export const generateArtifacts = async (
   cypressScanAboutMetadata,
   scanDetails,
 ) => {
+  const intermediateDatasetsPath = `${randomToken}/datasets/${randomToken}`;
   const phAppVersion = getVersion();
   const storagePath = getStoragePath(randomToken);
-  const directory = `${storagePath}/${constants.allIssueFileName}`;
+
 
   urlScanned = urlWithoutAuth(urlScanned);
 
@@ -589,10 +557,10 @@ export const generateArtifacts = async (
     wcagLinks: constants.wcagLinks,
   };
 
-  const allFiles = await extractFileNames(directory);
+  const allFiles = await extractFileNames(intermediateDatasetsPath);
 
   const jsonArray = await Promise.all(
-    allFiles.map(async file => parseContentToJson(`${directory}/${file}`)),
+    allFiles.map(async file => parseContentToJson(`${intermediateDatasetsPath}/${file}`)),
   );
 
   await Promise.all(
@@ -652,6 +620,12 @@ export const generateArtifacts = async (
   if (process.env.PURPLE_A11Y_VERBOSE) {
     let axeImpactCount = getAxeImpactCount(allIssues);
 
+    let { items, ...rest } = allIssues;
+
+    let encodedScanItems = base64Encode(items);
+    let encodedScanData = base64Encode(rest);
+
+
     let scanData = {
       url: allIssues.urlScanned,
       startTime: formatDateTimeForMassScanner(allIssues.startTime),
@@ -698,15 +672,21 @@ export const generateArtifacts = async (
       ],
     };
 
-    if (process.send) {
+    let scanDetailsMessage = {
+      type: 'scanDetailsMessage',
+      payload: { scanData: encodedScanData, scanItems: encodedScanItems },
+    };
+
+    if (process.send){
       process.send(JSON.stringify(scanDataMessage));
       process.send(JSON.stringify(scanSummaryMessage));
+      process.send(JSON.stringify(scanDetailsMessage));
     } else {
-      console.log('Scan Summary: ', scanData);
+      console.log('Scan Summary: ',scanData);
     }
+
   }
 
-  await writeResults(allIssues, storagePath);
   await writeCsv(allIssues, storagePath);
   await writeHTML(allIssues, storagePath);
   await writeSummaryHTML(allIssues, storagePath);

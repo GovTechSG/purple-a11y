@@ -146,8 +146,14 @@ const crawlDomain = async (
 
       await page.evaluate(() => {
         // Override window.open
-        window.open = url => {
-          window.handleOnWindowOpen(url);
+        window.open = (url?: string | URL, target?: string, features?: string): Window => {
+          // Call the exposed handleOnWindowOpen function
+          handleOnWindowOpen(url as string);
+      
+          // Create a dummy window object to return (can be an actual opened window if needed)
+          const newWindow = document.createElement('a');
+          newWindow.href = typeof url === 'string' ? url : url.toString();
+          return newWindow as unknown as Window;
         };
       });
 
@@ -186,7 +192,7 @@ const crawlDomain = async (
       await page.exposeFunction('handleOnClickEvent', handleOnClickEvent);
 
       await page.evaluate(() => {
-        document.addEventListener('click', event => handleOnClickEvent(event));
+        document.addEventListener('click', event => handleOnClickEvent());
       });
 
       page.on('request', async request => {
@@ -334,7 +340,7 @@ const crawlDomain = async (
               let onClickLinkAttr = element.getAttribute('onclick');
 
               if (onClickLinkAttr) {
-                urlRegexDetected = onClickLinkAttr.match(/window\.location\.href\s?=\s?'([^']+)'/);
+                let urlRegexDetected = onClickLinkAttr.match(/window\.location\.href\s?=\s?'([^']+)'/);
                 onClickLink = urlRegexDetected ? urlRegexDetected[1] : undefined;
               }
               let hrefLink = element.getAttribute('href');
@@ -385,7 +391,7 @@ const crawlDomain = async (
   };
 
   const isBlacklisted = url => {
-    const blacklistedPatterns = getBlackListedPatterns();
+    const blacklistedPatterns = getBlackListedPatterns(null);
     if (!blacklistedPatterns) {
       return false;
     }
@@ -585,7 +591,7 @@ const crawlDomain = async (
             return;
           }
 
-          const results = await runAxeScript(includeScreenshots, page, randomToken);
+          const results = await runAxeScript(includeScreenshots, page, randomToken,null);
 
           if (isRedirected) {
             const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(

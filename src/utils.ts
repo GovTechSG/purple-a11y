@@ -43,12 +43,11 @@ export const getStoragePath = (randomToken: string): string => {
   }
 };
 
-export const createDetailsAndLogs = async (scanDetails, randomToken) => {
+export const createDetailsAndLogs = async (randomToken) => {
   const storagePath = getStoragePath(randomToken);
   const logPath = `logs/${randomToken}`;
   try {
     await fs.ensureDir(storagePath);
-    await fs.writeFile(`${storagePath}/details.json`, JSON.stringify(scanDetails,null, 2));
 
     // update logs
     await fs.ensureDir(logPath);
@@ -125,7 +124,6 @@ export const createAndUpdateResultsFolders = async randomToken => {
   const storagePath = getStoragePath(randomToken);
   await fs.ensureDir(`${storagePath}/reports`);
 
-  const intermediateDatasetsPath = `${randomToken}/datasets/${randomToken}`;
   const intermediatePdfResultsPath = `${randomToken}/${constants.pdfScanResultFileName}`;
 
   const transferResults = async (intermPath, resultFile) => {
@@ -148,7 +146,6 @@ export const createAndUpdateResultsFolders = async randomToken => {
   };
 
   await Promise.all([
-    transferResults(intermediateDatasetsPath, constants.allIssueFileName),
     transferResults(intermediatePdfResultsPath, constants.pdfScanResultFileName),
   ]);
 };

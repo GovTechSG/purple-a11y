@@ -21,11 +21,6 @@ export const createAlertMessage = jest.fn(warnlevel => [
   { border: true, borderColor: 'red' },
 ]);
 
-export const createFilenames = jest.fn(() => {
-  const allFiles = actualFs.readdirSync(actualPath.resolve('./__mocks__/mock_all_issues'));
-  return allFiles;
-});
-
 export const createFinalResultsInJson = jest.fn((allissues, dateTimeStamp) => {
   const finalResultsInJson = JSON.stringify(
     { startTime: dateTimeStamp, count: allissues.length, allissues },

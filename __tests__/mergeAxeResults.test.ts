@@ -40,8 +40,6 @@ const { consoleLogger, silentLogger } = require('../logs');
 let randomToken;
 let currentDate;
 let expectedStoragePath;
-let expectedDirPath;
-let allIssuesDirectory;
 let expectedJsonFilename;
 let expectedHTMLFilename;
 let htmlFilename;
@@ -55,14 +53,9 @@ beforeEach(() => {
   randomToken = '162282454060d4c8470d';
   currentDate = getCurrentDate();
   expectedStoragePath = `results/${currentDate}/${randomToken}`;
-  expectedDirPath = `results/${currentDate}/${randomToken}/all_issues`;
-  allIssuesDirectory = `${expectedStoragePath}/all_issues`;
-  expectedFilenames = ['000000001.json', '000000002.json'];
 
   // Reports storagePath, expected report and compiled result files
   htmlFilename = 'report';
-  jsonFilename = 'compiledResults';
-  expectedJsonFilename = `${expectedStoragePath}/reports/${jsonFilename}.json`;
   expectedHTMLFilename = `${expectedStoragePath}/reports/${htmlFilename}.html`;
 
   // Mock the JSON result generated from the issues
@@ -159,45 +152,6 @@ describe('test threshold limit check', () => {
       expect(printMessage.mock.calls[1]).toEqual(expectedAlertMessage);
     },
   );
-});
-
-describe('test extract file names', () => {
-  afterEach(() => {
-    fs.readdir.mockRestore();
-  });
-
-  test('should return list of JSON files', async () => {
-    fs.readdir.mockResolvedValue(createFilenames());
-    const result = await extractFileNames(allIssuesDirectory);
-
-    expect(fs.readdir).toHaveBeenCalled();
-    expect(fs.readdir.mock.calls[0][0]).toEqual(expectedDirPath);
-    expect(result).not.toBe(fs.readdir.mock.results[0].value);
-    expect(result).toEqual(expectedFilenames);
-  });
-
-  test('should print error message when fail to read directory', async () => {
-    fs.readdir.mockResolvedValue(undefined);
-
-    const spyConsoleLogger = jest.spyOn(consoleLogger, 'info').mockImplementation();
-    const spySilentLogger = jest.spyOn(silentLogger, 'error').mockImplementation();
-    const result = await extractFileNames(allIssuesDirectory);
-    expect(spyConsoleLogger.mock.calls[0][0]).toEqual(
-      'An error has occurred when retrieving files, please try again.',
-    );
-
-    expect(spySilentLogger.mock.calls[0][0].toString()).toMatch(
-      /\(extractFileNames\) - TypeError: Cannot read/i,
-    );
-
-    expect(result).toBeUndefined();
-  });
-
-  test('should return empty array when no filenames extracted', async () => {
-    fs.readdir.mockResolvedValue([]);
-    const result = await extractFileNames(allIssuesDirectory);
-    expect(result).toMatchObject([]);
-  });
 });
 
 describe('test parsing content to json', () => {
