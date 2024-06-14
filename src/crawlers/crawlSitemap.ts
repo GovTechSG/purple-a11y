@@ -40,7 +40,7 @@ const crawlSitemap = async (
   userUrlInputFromIntelligent = null, //optional
   datasetFromIntelligent = null, //optional
   urlsCrawledFromIntelligent = null, //optional
-  crawledFromLocalFile,
+  crawledFromLocalFile = false, //optional
 ) => {
   let dataset;
   let urlsCrawled;
