@@ -321,14 +321,6 @@ const crawlDomain = async (
           // Find url in html elements without clicking them
           await page
             .evaluate(element => {
-              let onClickUrl: string = null;
-              let onClickUrlAttr: string = element.getAttribute('onclick');
-
-              // find a href within onclick
-              if (onClickUrlAttr) {
-                let urlRegexDetected: RegExpMatchArray = onClickUrlAttr.match(/window\.location\.href\s?=\s?'([^']+)'/);
-                onClickUrl = urlRegexDetected ? urlRegexDetected[1] : undefined;
-              }
 
               //find href attribute
               let hrefUrl: string = element.getAttribute('href');
@@ -336,7 +328,7 @@ const crawlDomain = async (
               //find url in datapath
               let dataPathUrl: string = element.getAttribute('data-path');
 
-              return onClickUrl || hrefUrl || dataPathUrl;
+              return hrefUrl || dataPathUrl;
             }, element)
             .then(result => {
               if (result) {
