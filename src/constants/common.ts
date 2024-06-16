@@ -867,7 +867,7 @@ export const getLinksFromSitemap = async (
      // Check whether its a file path or a URL
      if (isFilePath(url)) {
        parsedUrl = url;
-     } else {
+     } else if(isValidHttpUrl(url)){
        parsedUrl = new URL(url);
 
        if (parsedUrl.username !== '' && parsedUrl.password !== '') {
@@ -877,6 +877,9 @@ export const getLinksFromSitemap = async (
          parsedUrl.username = '';
          parsedUrl.password = '';
        }
+     } else{
+      printMessage([`Invalid Url/Filepath: ${url}`], messageOptions);
+      return;
      }
 
     const getDataUsingPlaywright = async () => {
@@ -889,9 +892,7 @@ export const getLinksFromSitemap = async (
       );
 
       const page = await browserContext.newPage();
-
       await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
-
       if (constants.launcher === webkit) {
         data = await page.locator('body').innerText();
       } else {
@@ -934,7 +935,11 @@ export const getLinksFromSitemap = async (
               password: password,
             },
           });
+          try{
           data = await (await instance.get(url, { timeout: 80000 })).data;
+          } catch(error){
+            return; //to skip the error
+          }
         } catch (error) {
           if (error.code === 'ECONNABORTED') {
             await getDataUsingPlaywright();
@@ -1769,6 +1774,11 @@ export const waitForPageLoaded = async (page, timeout = 10000) => {
       page.waitForLoadState('networkidle'),
       new Promise((resolve) => setTimeout(resolve, timeout))
   ]);
+}
+
+function isValidHttpUrl(urlString) {
+  const pattern = /^(http|https):\/\/[^ "]+$/;
+  return pattern.test(urlString);
 }
 
 export const isFilePath = (url: string): boolean => {
