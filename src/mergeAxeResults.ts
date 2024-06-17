@@ -101,6 +101,8 @@ const createPassedItemsFile = async (allissues, storagePath) => {
     };
   });
 
+  consoleLogger.info('passed')
+
   try {
     await fs.writeFile(
       `${storagePath}/reports/passed_items.json.txt`,
@@ -113,6 +115,14 @@ const createPassedItemsFile = async (allissues, storagePath) => {
     );
     silentLogger.error(`(writeResults) - ${writeResultsError}`);
   }
+};
+
+const initializeEventListeners = (allIssues, storagePath) => {
+  document.getElementById('createPassedItemsFile').addEventListener('click', async (e) => {
+    e.preventDefault();
+    await createPassedItemsFile(allIssues, storagePath);
+    consoleLogger.info('click');
+  });
 };
 
 const extractFileNames = async (directory: string): Promise<string[]> =>
@@ -724,9 +734,7 @@ export const generateArtifacts = async (
   await writeSummaryHTML(allIssues, storagePath);
   await writeQueryString(allIssues, storagePath);
   await retryFunction(() => writeSummaryPdf(storagePath), 1);
-  document.getElementById('createPassedItemsFile').addEventListener('click', async (e) => {
-      e.preventDefault();
-      await createPassedItemsFile(allIssues, storagePath);
-  });
+  await initializeEventListeners(allIssues, storagePath);
   return createRuleIdJson(allIssues);
 };
+
