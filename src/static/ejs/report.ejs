@@ -196,13 +196,6 @@
         }
 
         document.getElementById('pagesScannedModalLabel').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
-
-        // const { createPassedItemsFile } = require('./createPassedItemsFile');
-        // document.getElementById('createPassedItemsFile').addEventListener('click', async (e) => {
-        //     e.preventDefault();
-        //     await createPassedItemsFile(allissues, storagePath);
-        // });
-
       };
 
       const formatAboutStartTime = dateString => {
