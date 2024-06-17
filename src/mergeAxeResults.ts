@@ -83,6 +83,39 @@ type AllIssues = {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const createPassedItemsFile = async (allissues, storagePath) => {
+
+  const passedItemsJson = {};
+
+  allissues.items.passed.rules.forEach(r => {
+    passedItemsJson[r.description] = {
+      totalOccurrencesInScan: r.totalItems,
+      totalPages: r.pagesAffected.length,
+      pages: r.pagesAffected.map(p => ({
+        pageTitle: p.pageTitle,
+        url: p.url,
+        totalOccurrencesInPage: p.items.length,
+        occurrences: p.items,
+        metadata: p.metadata 
+      })),
+    };
+  });
+
+  try {
+    await fs.writeFile(
+      `${storagePath}/reports/passed_items.json.txt`,
+      JSON.stringify(passedItemsJson, null, 4),
+    );
+    consoleLogger.info('Passed items file has been created successfully.');
+  } catch (writeResultsError) {
+    consoleLogger.info(
+      'An error has occurred when compiling the results into the report, please try again.',
+    );
+    silentLogger.error(`(writeResults) - ${writeResultsError}`);
+  }
+};
+
+
 const extractFileNames = async (directory: string): Promise<string[]> =>
   fs
     .readdir(directory)
