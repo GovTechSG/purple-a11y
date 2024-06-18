@@ -184,7 +184,7 @@ export const basicAuthRegex = /^.*\/\/.*:.*@.*$/i;
 export const axeScript = path.join(__dirname, '../../node_modules/axe-core/axe.min.js');
 export class UrlsCrawled {
   toScan: string[] = [];
-  scanned: string[] = [];
+  scanned: { url: string; pageTitle: string }[] = [];
   invalid: string[] = [];
   scannedRedirects: string[] = [];
   notScannedRedirects: string[] = [];
@@ -195,7 +195,7 @@ export class UrlsCrawled {
   forbidden: string[] = [];
   userExcluded: string[] = [];
   everything: string[] = [];
-  
+
   constructor(urlsCrawled?: Partial<UrlsCrawled>) {
     if (urlsCrawled) {
       Object.assign(this, urlsCrawled);
