@@ -219,12 +219,19 @@
           const blob = new Blob([jsonString], { type: "application/json" });
 
           const link = document.createElement("a");
+
           link.href = URL.createObjectURL(blob);
-          link.download = "passed_items.json.txt";
+
+          storagePath = scanData.storagePath;
+          
+          link.download = `${storagePath}/reports/passed_items.json.txt`;
+
           document.body.appendChild(link);
 
           link.click();
+
           document.body.removeChild(link);
+
         };
 
         document.getElementById('createPassedItemsFile').addEventListener('click', async (e) => {
