@@ -360,7 +360,6 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
           // numberOfPagesAffectedAfterRedirects: 0,
           pagesAffected: {},
         };
-        console.log(category)
       }
 
       if (category !== 'passed' && category !== 'needsReview') {
