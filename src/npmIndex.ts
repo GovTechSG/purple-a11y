@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import printMessage from 'print-message';
+import axe from 'axe-core';
 import { fileURLToPath } from 'url';
 import constants, { BrowserTypes } from './constants/constants.js';
 import {
@@ -27,7 +28,7 @@ export const init = async (
   email = 'email@domain.com',
   includeScreenshots = false,
   viewportSettings = { width: 1000, height: 660 }, // cypress' default viewport settings
-  thresholds = {},
+  thresholds = { mustFix: undefined, goodToFix: undefined },
   scanAboutMetadata = undefined,
 ) => {
   console.log('Starting Purple A11y');
@@ -44,6 +45,7 @@ export const init = async (
 
   const scanDetails = {
     startTime: new Date(),
+    endTime: new Date(),
     crawlType: 'Custom',
     requestUrl: entryUrl,
     urlsCrawled: { ...constants.urlsCrawledObj },
@@ -76,9 +78,7 @@ export const init = async (
         branding: {
           application: 'purple-a11y',
         },
-        rules: [
-          { id: 'target-size', enabled: true },
-        ]
+        rules: [{ id: 'target-size', enabled: true }],
       });
       const axeScanResults = await axe.run(elementsToScan, {
         resultTypes: ['violations', 'passes', 'incomplete'],
@@ -136,7 +136,7 @@ export const init = async (
       metadata,
     });
     urlsCrawled.scanned.push({
-      url: urlWithoutAuth(res.pageUrl),
+      url: urlWithoutAuth(res.pageUrl).toString(),
       pageTitle: `${pageIndex}: ${res.pageTitle}`,
     });
 
@@ -208,15 +208,17 @@ export const init = async (
       );
 
       await submitForm(
-        BrowserTypes.CHROMIUM,
-        '',
-        scanDetails.requestUrl,
-        null,
-        scanDetails.crawlType,
-        email,
-        name,
-        JSON.stringify(basicFormHTMLSnippet),
-        urlsCrawled.scanned.length,
+        BrowserTypes.CHROMIUM, // browserToRun
+        '', // userDataDirectory
+        scanDetails.requestUrl, // scannedUrl
+        null, // entryUrl
+        scanDetails.crawlType, // scanType
+        email, // email
+        name, // name
+        JSON.stringify(basicFormHTMLSnippet), // scanResultsKson
+        urlsCrawled.scanned.length, // numberOfPagesScanned
+        0,
+        0,
         '{}',
       );
     }
