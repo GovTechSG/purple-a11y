@@ -211,7 +211,7 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
         },
     });
 
-Create a sub-folder and file <code>cypress/support/e2e.js</code> with the following contents::
+Create a sub-folder and file <code>cypress/support/e2e.js</code> with the following contents:
 
     Cypress.Commands.add("injectPurpleA11yScripts", () => {
         cy.task("getPurpleA11yScripts").then((s) => {
@@ -278,7 +278,7 @@ Create a <code>package.json</code> by running <code>npm init</code> . Accept the
 
 Change the type of npm package to module by running <code>npm pkg set type="module"</code>
 
-Install the following node dependencies by running <code>npm install cypress @govtechsg/purple-hats typescript --save-dev </code>
+Install the following node dependencies by running <code>npm install cypress @types/cypress @govtechsg/purple-hats typescript --save-dev </code>
 
 Create a <code>tsconfig.json</code> in the root directory and add the following:
 ```
@@ -289,7 +289,8 @@ Create a <code>tsconfig.json</code> in the root directory and add the following:
     "target": "es2021",
     "module": "nodenext",
     "rootDir": "./src",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["cypress"]
     },
     "include": ["./src/**/*"]
     }
@@ -355,10 +356,10 @@ Create <code>cypress.config.ts</code> with the following contents, and change yo
         },
     });
 
-Create a sub-folder and file <code>src/cypress/support/e2e.ts</code> with the following contents::
+Create a sub-folder and file <code>src/cypress/support/e2e.ts</code> with the following contents:
 
     Cypress.Commands.add("injectPurpleA11yScripts", () => {
-        cy.task("getPurpleA11yScripts").then((s) => {
+        cy.task("getPurpleA11yScripts").then((s: string) => {
             cy.window().then((win) => {
                 win.eval(s);
             });
@@ -400,6 +401,7 @@ Create <code>src/cypress/e2e/spec.cy.ts</code> with the following contents:
         });
     });
 
+Run your test with <code>npx tsc</code> .
 Run your test with <code>npx cypress run</code> .
 
 You will see Purple A11y results generated in <code>results</code> folder.
