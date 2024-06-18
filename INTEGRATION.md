@@ -135,7 +135,134 @@ With reference to an instance of Purple A11y as `purpleA11y`:
 #### Cypress
 
 <details>
-<summary>Click here to see an example usage in an E2E Cypress test</summary>
+<summary>Click here to see an example usage in an E2E Cypress test (javascript)</summary>
+
+We will be creating the following files in a demo Cypress project:
+
+    ├── cypress
+    │   ├── e2e
+    │   │   └── spec.cy.js
+    │   └── support
+    │       └── e2e.js
+    ├── cypress.config.js
+    └── package.json
+
+Create a <code>package.json</code> by running <code>npm init</code> . Accept the default options or customise it as needed.
+
+Change the type of npm package to module by running <code>npm pkg set type="module"</code>
+
+Install the following node dependencies by running <code>npm install cypress @govtechsg/purple-hats --save-dev </code>
+
+Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> and <code>npm run build</code> within the folder to install remaining Purple A11y dependencies:
+
+    cd node_modules/@govtechsg/purple-hats
+    npm install
+    npm run build
+    cd ../../..
+
+Create <code>cypress.config.js</code> with the following contents, and change your Name, E-mail address, and boolean value for whether rule items requiring manual review in the report should be displayed below:
+
+    import { defineConfig } from "cypress";
+    import purpleA11yInit from "@govtechsg/purple-hats";
+
+    // viewport used in tests to optimise screenshots
+    const viewportSettings = { width: 1920, height: 1040 };
+    // specifies the number of occurrences before error is thrown for test failure
+    const thresholds = { mustFix: 4, goodToFix: 5 };
+    // additional information to include in the "Scan About" section of the report
+    const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
+
+    const purpleA11y = await purpleA11yInit(
+        "https://govtechsg.github.io", // initial url to start scan
+        "Demo Cypress Scan", // label for test
+        "Your Name",
+        "email@domain.com",
+        true, // include screenshots of affected elements in the report
+        viewportSettings,
+        thresholds,
+        scanAboutMetadata,
+    );
+
+    export default defineConfig({
+        taskTimeout: 120000, // need to extend as screenshot function requires some time
+        viewportHeight: viewportSettings.height,
+        viewportWidth: viewportSettings.width,
+        e2e: {
+            setupNodeEvents(on, _config) {
+                on("task", {
+                    getPurpleA11yScripts() {
+                        return purpleA11y.getScripts();
+                    },
+                    async pushPurpleA11yScanResults({res, metadata, elementsToClick}) {
+                        return await purpleA11y.pushScanResults(res, metadata, elementsToClick);
+                    },
+                    returnResultsDir() {
+                        return `results/${purpleA11y.randomToken}_${purpleA11y.scanDetails.urlsCrawled.scanned.length}pages/reports/report.html`;
+                    },
+                    finishPurpleA11yTestCase() {
+                        purpleA11y.testThresholds();
+                        return null;
+                    },
+                    async terminatePurpleA11y() {
+                        return await purpleA11y.terminate();
+                    },
+                });
+            },
+        },
+    });
+
+Create a sub-folder and file <code>cypress/support/e2e.js</code> with the following contents::
+
+    Cypress.Commands.add("injectPurpleA11yScripts", () => {
+        cy.task("getPurpleA11yScripts").then((s) => {
+            cy.window().then((win) => {
+                win.eval(s);
+            });
+        });
+    });
+
+    Cypress.Commands.add("runPurpleA11yScan", (items={}) => {
+        cy.window().then(async (win) => {
+            const { elementsToScan, elementsToClick, metadata } = items;
+            const res = await win.runA11yScan(elementsToScan);
+            cy.task("pushPurpleA11yScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
+            cy.task("pushPurpleA11yScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
+            cy.task("finishPurpleA11yTestCase"); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate purpleA11y instance.
+        });
+    });
+
+    Cypress.Commands.add("terminatePurpleA11y", () => {
+        cy.task("terminatePurpleA11y");
+    });
+
+Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
+
+    describe("template spec", () => {
+        it("should run purple A11y", () => {
+            cy.visit(
+                "https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm"
+            );
+            cy.injectPurpleA11yScripts();
+            cy.runPurpleA11yScan();
+             cy.get("button[onclick=\"toggleSecondSection()\"]").click();
+            // Run a scan on <input> and <button> elements
+            cy.runPurpleA11yScan({
+                elementsToScan: ["input", "button"],
+                elementsToClick: ["button[onclick=\"toggleSecondSection()\"]"],
+                metadata: "Clicked button"
+            });
+
+            cy.terminatePurpleA11y();
+        });
+    });
+
+Run your test with <code>npx cypress run</code> .
+
+You will see Purple A11y results generated in <code>results</code> folder.
+
+</details>
+<details>
+<summary>Click here to see an example usage in an E2E Cypress test (typescript)</summary>
 
 We will be creating the following files in a demo Cypress project:
 
