@@ -866,6 +866,9 @@ export const getLinksFromSitemap = async (
 
      // Check whether its a file path or a URL
      if (isFilePath(url)) {
+        if (!fs.existsSync(url)) {
+          return;
+        }
        parsedUrl = url;
      } else if(isValidHttpUrl(url)){
        parsedUrl = new URL(url);
