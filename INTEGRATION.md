@@ -268,17 +268,32 @@ We will be creating the following files in a demo Cypress project:
 
     ├── cypress
     │   ├── e2e
-    │   │   └── spec.cy.js
+    │   │   └── spec.cy.ts
     │   └── support
-    │       └── e2e.js
-    ├── cypress.config.js
+    │       └── e2e.ts
+    ├── cypress.config.ts
     └── package.json
 
 Create a <code>package.json</code> by running <code>npm init</code> . Accept the default options or customise it as needed.
 
 Change the type of npm package to module by running <code>npm pkg set type="module"</code>
 
-Install the following node dependencies by running <code>npm install cypress @govtechsg/purple-hats --save-dev </code>
+Install the following node dependencies by running <code>npm install cypress @govtechsg/purple-hats typescript --save-dev </code>
+
+Create a <code>tsconfig.json</code> in the root directory and add the following:
+```
+    {
+    "compilerOptions": {
+    "outDir": "./dist",
+    "allowJs": true,
+    "target": "es2021",
+    "module": "nodenext",
+    "rootDir": "./src",
+    "skipLibCheck": true
+    },
+    "include": ["./src/**/*"]
+    }
+```
 
 Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> and <code>npm run build</code> within the folder to install remaining Purple A11y dependencies:
 
@@ -287,7 +302,7 @@ Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm i
     npm run build
     cd ../../..
 
-Create <code>cypress.config.js</code> with the following contents, and change your Name, E-mail address, and boolean value for whether rule items requiring manual review in the report should be displayed below:
+Create <code>cypress.config.ts</code> with the following contents, and change your Name, E-mail address, and boolean value for whether rule items requiring manual review in the report should be displayed below:
 
     import { defineConfig } from "cypress";
     import purpleA11yInit from "@govtechsg/purple-hats";
@@ -335,10 +350,12 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
                     },
                 });
             },
+            supportFile: 'dist/cypress/support/e2e.js',
+            specPattern: 'dist/cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
         },
     });
 
-Create a sub-folder and file <code>cypress/support/e2e.js</code> with the following contents::
+Create a sub-folder and file <code>src/cypress/support/e2e.ts</code> with the following contents::
 
     Cypress.Commands.add("injectPurpleA11yScripts", () => {
         cy.task("getPurpleA11yScripts").then((s) => {
@@ -362,7 +379,7 @@ Create a sub-folder and file <code>cypress/support/e2e.js</code> with the follow
         cy.task("terminatePurpleA11y");
     });
 
-Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
+Create <code>src/cypress/e2e/spec.cy.ts</code> with the following contents:
 
     describe("template spec", () => {
         it("should run purple A11y", () => {
