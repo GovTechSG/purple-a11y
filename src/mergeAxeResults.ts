@@ -83,48 +83,6 @@ type AllIssues = {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const createPassedItemsFile = async (allissues, storagePath) => {
-
-  const passedItemsJson = {};
-
-  allissues.items.passed.rules.forEach(r => {
-    passedItemsJson[r.description] = {
-      totalOccurrencesInScan: r.totalItems,
-      totalPages: r.pagesAffected.length,
-      pages: r.pagesAffected.map(p => ({
-        pageTitle: p.pageTitle,
-        url: p.url,
-        totalOccurrencesInPage: p.items.length,
-        occurrences: p.items,
-        metadata: p.metadata 
-      })),
-    };
-  });
-
-  consoleLogger.info('passed')
-
-  try {
-    await fs.writeFile(
-      `${storagePath}/reports/passed_items.json.txt`,
-      JSON.stringify(passedItemsJson, null, 4),
-    );
-    consoleLogger.info('Passed items file has been created successfully.');
-  } catch (writeResultsError) {
-    consoleLogger.info(
-      'An error has occurred when compiling the results into the report, please try again.',
-    );
-    silentLogger.error(`(writeResults) - ${writeResultsError}`);
-  }
-};
-
-const initializeEventListeners = (allIssues, storagePath) => {
-  document.getElementById('createPassedItemsFile').addEventListener('click', async (e) => {
-    e.preventDefault();
-    await createPassedItemsFile(allIssues, storagePath);
-    consoleLogger.info('click');
-  });
-};
-
 const extractFileNames = async (directory: string): Promise<string[]> =>
   fs
     .readdir(directory)
@@ -263,7 +221,7 @@ const base64Encode = data => {
   }
 };
 
-const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.html') => {
+const writeBase64 = async (allIssues, storagePath, htmlFilename = 'report.html') => {
   // Spread the data
   const { items, ...rest } = allIssues;
 
@@ -302,7 +260,6 @@ const writeQueryString = async (allIssues, storagePath, htmlFilename = 'report.h
     // Decode the encoded data
     scanData = base64Decode('${encodedScanData}');
     scanItems = base64Decode('${encodedScanItems}');
-
   </script>
   `;
 
@@ -732,9 +689,8 @@ export const generateArtifacts = async (
   await writeCsv(allIssues, storagePath);
   await writeHTML(allIssues, storagePath);
   await writeSummaryHTML(allIssues, storagePath);
-  await writeQueryString(allIssues, storagePath);
+  await writeBase64(allIssues, storagePath);
   await retryFunction(() => writeSummaryPdf(storagePath), 1);
-  await initializeEventListeners(allIssues, storagePath);
   return createRuleIdJson(allIssues);
 };
 
