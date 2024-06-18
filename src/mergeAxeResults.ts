@@ -36,6 +36,7 @@ type PageInfo = {
   url?: string;
   pageImagePath?: string;
   pageIndex?: number;
+  metadata: string;
 };
 
 type RuleInfo = {
@@ -82,6 +83,7 @@ type AllIssues = {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+let allIssues;
 
 const extractFileNames = async (directory: string): Promise<string[]> =>
   fs
@@ -222,30 +224,27 @@ const base64Encode = data => {
 };
 
 const writeBase64 = async (allIssues, storagePath, htmlFilename = 'report.html') => {
-  // Spread the data
+
+  console.log(allIssues.items.passed)
   const { items, ...rest } = allIssues;
 
-  // Encode the data
   const encodedScanItems = base64Encode(items);
   const encodedScanData = base64Encode(rest);
 
-  // Path to the file where the encoded data will be saved
-  const filePath = path.join(storagePath, 'reports', 'reportScanData.csv');
+  const filePath = path.join(storagePath, 'reports', 'scanDetails.csv');
 
-  // Ensure directory existence
   const directoryPath = path.dirname(filePath);
   if (!fs.existsSync(directoryPath)) {
     fs.mkdirSync(directoryPath, { recursive: true });
   }
 
-  // Write the encoded scan data to the file
   await fs.promises.writeFile(filePath, `scanData_base64,scanItems_base64\n${encodedScanData},${encodedScanItems}`);
 
-  // Read the existing HTML file
   const htmlFilePath = path.join(storagePath, 'reports', htmlFilename);
   let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
 
-  // Find the position to insert the script tag in the head section
+  const allIssuesJson = JSON.stringify(allIssues);
+
   const headIndex = htmlContent.indexOf('</head>');
   const injectScript = `
   <script>
@@ -260,18 +259,16 @@ const writeBase64 = async (allIssues, storagePath, htmlFilename = 'report.html')
     // Decode the encoded data
     scanData = base64Decode('${encodedScanData}');
     scanItems = base64Decode('${encodedScanItems}');
+    allIssues = ${allIssuesJson};
   </script>
   `;
 
   if (headIndex !== -1) {
-    // If </head> tag is found, insert the script tag before it
     htmlContent = htmlContent.slice(0, headIndex) + injectScript + htmlContent.slice(headIndex);
   } else {
-    // If </head> tag is not found, append the script tag at the end of the file
     htmlContent += injectScript;
   }
 
-  // Write the updated HTML content back to the file
   fs.writeFileSync(htmlFilePath, htmlContent);
 };
 
@@ -364,6 +361,7 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
           // numberOfPagesAffectedAfterRedirects: 0,
           pagesAffected: {},
         };
+        console.log(category)
       }
 
       if (category !== 'passed' && category !== 'needsReview') {
@@ -652,6 +650,7 @@ export const generateArtifacts = async (
       },
       passed: {
         occurrence: allIssues.items.passed.totalItems,
+        rules: allIssues.items.passed.rules,
       },
     };
 

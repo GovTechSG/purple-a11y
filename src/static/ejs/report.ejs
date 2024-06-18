@@ -197,50 +197,41 @@
 
         document.getElementById('pagesScannedModalLabel').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
 
-const createPassedItemsFile = async () => {
-  const passedItemsJson = {};
+        const createPassedItemsFile = async () => {
+          const passedItemsJson = {};
 
-  // Assuming scanItems and scanData are accessible here
-  scanItems.passed.rules.forEach(r => {
-    passedItemsJson[r.description] = {
-      totalOccurrencesInScan: r.totalItems,
-      totalPages: r.pagesAffected.length,
-      pages: r.pagesAffected.map(p => ({
-        pageTitle: p.pageTitle,
-        url: p.url,
-        totalOccurrencesInPage: p.items.length,
-        occurrences: p.items,
-        metadata: p.metadata 
-      })),
-    };
-  });
+          scanItems.passed.rules.forEach(r => {
+            passedItemsJson[r.description] = {
+              totalOccurrencesInScan: r.totalItems,
+              totalPages: r.pagesAffected.length,
+              pages: r.pagesAffected.map(p => ({
+                pageTitle: p.pageTitle,
+                url: p.url,
+                totalOccurrencesInPage: p.items.length,
+                occurrences: p.items,
+                metadata: p.metadata 
+              })),
+            };
+          });
 
-  console.log('passed');
+          const jsonString = JSON.stringify(passedItemsJson, null, 4);
 
-  // Convert JSON to string
-  const jsonString = JSON.stringify(passedItemsJson, null, 4);
+          const blob = new Blob([jsonString], { type: "application/json" });
 
-// Create a blob containing the JSON data
-const blob = new Blob([jsonString], { type: "application/json" });
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = "passed_items.json.txt";
+          document.body.appendChild(link);
 
-// Create a link element to trigger the download
-const link = document.createElement("a");
-link.href = URL.createObjectURL(blob);
-link.download = "passed_items.json.txt";
-document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        };
 
-// Trigger the download
-link.click();
-
-// Cleanup
-document.body.removeChild(link);
-};
-
-document.getElementById('createPassedItemsFile').addEventListener('click', async (e) => {
-  e.preventDefault();
-  await createPassedItemsFile();
-  console.log('click');
-});
+        document.getElementById('createPassedItemsFile').addEventListener('click', async (e) => {
+          e.preventDefault();
+          await createPassedItemsFile();
+          console.log('click');
+        });
 
       };
 
