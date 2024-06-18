@@ -225,7 +225,6 @@ const base64Encode = data => {
 
 const writeBase64 = async (allIssues, storagePath, htmlFilename = 'report.html') => {
 
-  console.log(allIssues.items.passed)
   const { items, ...rest } = allIssues;
 
   const encodedScanItems = base64Encode(items);
@@ -650,7 +649,6 @@ export const generateArtifacts = async (
       },
       passed: {
         occurrence: allIssues.items.passed.totalItems,
-        rules: allIssues.items.passed.rules,
       },
     };
 
@@ -687,8 +685,8 @@ export const generateArtifacts = async (
 
   await writeCsv(allIssues, storagePath);
   await writeHTML(allIssues, storagePath);
-  await writeSummaryHTML(allIssues, storagePath);
   await writeBase64(allIssues, storagePath);
+  await writeSummaryHTML(allIssues, storagePath);
   await retryFunction(() => writeSummaryPdf(storagePath), 1);
   return createRuleIdJson(allIssues);
 };
