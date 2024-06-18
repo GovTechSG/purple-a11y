@@ -117,14 +117,15 @@
         document.getElementById('urlScanned').innerHTML = scanData.urlScanned;
         document.getElementById('urlScanned').href = scanData.urlScanned;
         document.getElementById('viewport').innerHTML = scanData.viewport.startsWith("CustomWidth") ? `${scanData.viewport.split("_")[1]} width viewport` : scanData.viewport + ' viewport';
-        document.getElementById('pagesScannedModalToggle').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
+        document.getElementById('pagesScannedModalToggletxt').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
 
         var itemsElement = document.getElementById('items');
         var failedItems = scanItems.mustFix.totalItems + scanItems.goodToFix.totalItems;
         var passedItems = scanItems.passed.totalItems;
-        var itemsContent = `${failedItems} ${failedItems === 1 ? 'occurrence' : 'occurrences'} failed,<br>${passedItems} ${passedItems === 1 ? 'occurrence' : 'occurrences'} passed`;
+        var itemsContent = `${failedItems} ${failedItems === 1 ? 'occurrence' : 'occurrences'} failed,<br>
+        <a href="#" id="createPassedItemsFile">${passedItems} ${passedItems === 1 ? 'occurrence' : 'occurrences'} passed</a>`;
         itemsElement.innerHTML = itemsContent;
- 
+
         var phAppVersionElement = document.getElementById('phAppVersion');
         var versionContent = 'Purple A11y Version ' + scanData.phAppVersion;
         phAppVersionElement.innerHTML = versionContent;
@@ -196,6 +197,48 @@
 
         document.getElementById('pagesScannedModalLabel').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
 
+        const createPassedItemsFile = async () => {
+          const passedItemsJson = {};
+
+          scanItems.passed.rules.forEach(r => {
+            passedItemsJson[r.description] = {
+              totalOccurrencesInScan: r.totalItems,
+              totalPages: r.pagesAffected.length,
+              pages: r.pagesAffected.map(p => ({
+                pageTitle: p.pageTitle,
+                url: p.url,
+                totalOccurrencesInPage: p.items.length,
+                occurrences: p.items,
+                metadata: p.metadata 
+              })),
+            };
+          });
+
+          const jsonString = JSON.stringify(passedItemsJson, null, 4);
+
+          const blob = new Blob([jsonString], { type: "application/json" });
+
+          const link = document.createElement("a");
+
+          link.href = URL.createObjectURL(blob);
+
+          storagePath = scanData.storagePath;
+
+          link.download = `passed_items.json.txt`;
+
+          document.body.appendChild(link);
+
+          link.click();
+
+          document.body.removeChild(link);
+
+        };
+
+        document.getElementById('createPassedItemsFile').addEventListener('click', async (e) => {
+          e.preventDefault();
+          await createPassedItemsFile();
+          console.log('click');
+        });
 
       };
 
