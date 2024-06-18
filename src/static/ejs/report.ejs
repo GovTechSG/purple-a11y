@@ -214,20 +214,23 @@
             };
           });
 
-          const fs = require('fs');
-
           const jsonString = JSON.stringify(passedItemsJson, null, 4);
 
-          const storagePath = scanData.storagePath;
-          const filePath = `${storagePath}/reports/passed_items.json.txt`;
+          const blob = new Blob([jsonString], { type: "application/json" });
 
-          fs.writeFile(filePath, jsonString, (err) => {
-              if (err) {
-                  console.error('Error writing file:', err);
-                  return;
-              }
-              console.log('File saved successfully.');
-          });
+          const link = document.createElement("a");
+
+          link.href = URL.createObjectURL(blob);
+
+          storagePath = scanData.storagePath;
+
+          link.download = `passed_items.json.txt`;
+
+          document.body.appendChild(link);
+
+          link.click();
+
+          document.body.removeChild(link);
 
         };
 
