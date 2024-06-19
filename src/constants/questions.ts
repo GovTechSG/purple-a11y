@@ -114,7 +114,7 @@ const startScanQuestions = [
               file is a sitemap */
           const finalFilePath = getFileSitemap(url);
           if (finalFilePath) {
-            answers.isLocalSitemap = true;
+            answers.isLocalFileScan = true;
             answers.finalUrl = finalFilePath;
             return true;
           } else {

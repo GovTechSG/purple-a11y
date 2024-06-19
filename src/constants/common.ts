@@ -229,8 +229,8 @@ export const getFileSitemap = (filePath: string): string | null => {
   }
 
   const file = fs.readFileSync(filePath, 'utf8');
-  const isLocalSitemap = isSitemapContent(file);
-  return isLocalSitemap || (file != undefined) ? filePath : null;
+  const isLocalFileScan = isSitemapContent(file);
+  return isLocalFileScan || (file != undefined) ? filePath : null;
 };
 
 export const getUrlMessage = (scanner: ScannerTypes): string => {
@@ -556,7 +556,7 @@ export const prepareData = async (argv: Answers): Promise<Data> => {
     playwrightDeviceDetailsObject,
     maxpages,
     strategy,
-    isLocalSitemap,
+    isLocalFileScan,
     finalUrl,
     browserToRun,
     nameEmail,
@@ -573,7 +573,7 @@ export const prepareData = async (argv: Answers): Promise<Data> => {
 
   // construct filename for scan results
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
-  const domain = argv.isLocalSitemap ? path.basename(argv.url) : new URL(argv.url).hostname;
+  const domain = argv.isLocalFileScan ? path.basename(argv.url) : new URL(argv.url).hostname;
   const sanitisedLabel = customFlowLabel ? `_${customFlowLabel.replaceAll(' ', '_')}` : '';
   let resultFilename: string;
   const randomThreeDigitNumber = randomThreeDigitNumberString();
@@ -599,7 +599,7 @@ export const prepareData = async (argv: Answers): Promise<Data> => {
     playwrightDeviceDetailsObject,
     maxRequestsPerCrawl: maxpages || constants.maxRequestsPerCrawl,
     strategy,
-    isLocalSitemap,
+    isLocalFileScan,
     browser: browserToRun,
     nameEmail,
     customFlowLabel,
