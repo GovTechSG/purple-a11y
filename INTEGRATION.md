@@ -168,7 +168,7 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
     // viewport used in tests to optimise screenshots
     const viewportSettings = { width: 1920, height: 1040 };
     // specifies the number of occurrences before error is thrown for test failure
-    const thresholds = { mustFix: 4, goodToFix: 5 };
+    const thresholds = { mustFix: 20, goodToFix: 25 };
     // additional information to include in the "Scan About" section of the report
     const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
 
@@ -292,7 +292,7 @@ Create a <code>tsconfig.json</code> in the root directory and add the following:
     "skipLibCheck": true,
     "types": ["cypress"]
     },
-    "include": ["./src/**/*"]
+    "include": ["./src/**/*", "cypress.d.ts"]
     }
 ```
 
@@ -311,7 +311,7 @@ Create <code>cypress.config.ts</code> with the following contents, and change yo
     // viewport used in tests to optimise screenshots
     const viewportSettings = { width: 1920, height: 1040 };
     // specifies the number of occurrences before error is thrown for test failure
-    const thresholds = { mustFix: 4, goodToFix: 5 };
+    const thresholds = { mustFix: 20, goodToFix: 25 };
     // additional information to include in the "Scan About" section of the report
     const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
 
@@ -401,6 +401,27 @@ Create <code>src/cypress/e2e/spec.cy.ts</code> with the following contents:
         });
     });
 
+Create <code>cypress.d.ts</code> in the root directory with the following contents:
+```
+declare namespace Cypress {
+  interface Chainable<Subject> {
+    injectPurpleA11yScripts(): Chainable<void>;
+    runPurpleA11yScan(options?: PurpleA11yScanOptions): Chainable<void>;
+    terminatePurpleA11y(): Chainable<void>;
+  }
+
+  interface PurpleA11yScanOptions {
+    elementsToScan?: string[];
+    elementsToClick?: string[];
+    metadata?: string;
+  }
+}
+
+interface Window {
+  runA11yScan: (elementsToScan?: string[]) => Promise<any>;
+}
+```
+
 Run your test with <code>npx tsc</code> .
 Run your test with <code>npx cypress run</code> .
 
@@ -434,7 +455,7 @@ On your project's root folder, create a Playwright test file <code>purpleA11y-pl
     // viewport used in tests to optimise screenshots
     const viewportSettings = { width: 1920, height: 1040 };
     // specifies the number of occurrences before error is thrown for test failure
-    const thresholds = { mustFix: 4, goodToFix: 5 };
+    const thresholds = { mustFix: 20, goodToFix: 25 };
     // additional information to include in the "Scan About" section of the report
     const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
 
