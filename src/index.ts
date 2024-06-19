@@ -39,7 +39,7 @@ export type Answers = {
   metadata: string;
   maxpages: number;
   strategy: string;
-  isLocalSitemap: boolean;
+  isLocalFileScan: boolean;
   finalUrl: string;
   customFlowLabel: string;
   specifiedMaxConcurrency: number;
@@ -63,7 +63,7 @@ export type Data = {
   playwrightDeviceDetailsObject: Object;
   maxRequestsPerCrawl: number;
   strategy: string;
-  isLocalSitemap: boolean;
+  isLocalFileScan: boolean;
   browser: string;
   nameEmail: string;
   customFlowLabel: string;

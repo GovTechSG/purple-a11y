@@ -156,7 +156,7 @@ const saveImageBufferToFile = (buffer, fileName) => {
 
 
 // export const takeScreenshotForHTMLElements = async (screenshotData, storagePath, browserToRun) => {
-//     const screenshotDir = `${storagePath}/reports/screenshots`;
+//     const screenshotDir = `${storagePath}/screenshots`;
 //     let screenshotItems = [];
 //     let randomToken = `cloned-${Date.now()}`; 
 //     const clonedDir = getClonedProfilesWithRandomToken(browserToRun, randomToken);

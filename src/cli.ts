@@ -268,7 +268,7 @@ const scanInit = async (argvs: Answers): Promise<string> => {
       printMessage([statuses.systemError.message], messageOptions);
       process.exit(res.status);
     case statuses.invalidUrl.code:
-      if (argvs.scanner !== ScannerTypes.SITEMAP) {
+      if (argvs.scanner !== ScannerTypes.SITEMAP && argvs.scanner !== ScannerTypes.LOCALFILE) {
         printMessage([statuses.invalidUrl.message], messageOptions);
         process.exit(res.status);
       }
@@ -277,7 +277,7 @@ const scanInit = async (argvs: Answers): Promise<string> => {
           file is a sitemap */
       const finalFilePath = getFileSitemap(argvs.url);
       if (finalFilePath) {
-        argvs.isLocalSitemap = true;
+        argvs.isLocalFileScan = true;
         argvs.finalUrl = finalFilePath;
         if (process.env.VALIDATE_URL_PH_GUI) {
           console.log('Url is valid');
@@ -367,7 +367,7 @@ const optionsAnswer: Answers = {
   followRobots: options['followRobots'],
   customFlowLabel: options['customFlowLabel'],
   viewportWidth: options['viewportWidth'],
-  isLocalSitemap: options['isLocalSitemap'],
+  isLocalFileScan: options['isLocalFileScan'],
   exportDirectory: options['exportDirectory'],
   clonedBrowserDataDir: options['clonedBrowserDataDir'],
   specifiedMaxConcurrency: options['specifiedMaxConcurrency'],

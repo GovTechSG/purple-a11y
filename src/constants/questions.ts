@@ -29,6 +29,7 @@ const startScanQuestions = [
       { name: 'Website', value: ScannerTypes.WEBSITE },
       { name: 'Custom', value: ScannerTypes.CUSTOM },
       { name: 'Intelligent', value: ScannerTypes.INTELLIGENT },
+      { name: 'Localfile', value: ScannerTypes.LOCALFILE},
     ],
   },
   {
@@ -104,7 +105,7 @@ const startScanQuestions = [
         case statuses.systemError.code:
           return statuses.systemError.message;
         case statuses.invalidUrl.code:
-          if (answers.scanner !== ScannerTypes.SITEMAP) {
+          if (answers.scanner !== (ScannerTypes.SITEMAP || ScannerTypes.LOCALFILE)) {
             return statuses.invalidUrl.message;
           }
 
@@ -113,7 +114,7 @@ const startScanQuestions = [
               file is a sitemap */
           const finalFilePath = getFileSitemap(url);
           if (finalFilePath) {
-            answers.isLocalSitemap = true;
+            answers.isLocalFileScan = true;
             answers.finalUrl = finalFilePath;
             return true;
           } else {

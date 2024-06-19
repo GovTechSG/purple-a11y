@@ -56,7 +56,7 @@ beforeEach(() => {
 
   // Reports storagePath, expected report and compiled result files
   htmlFilename = 'report';
-  expectedHTMLFilename = `${expectedStoragePath}/reports/${htmlFilename}.html`;
+  expectedHTMLFilename = `${expectedStoragePath}/${htmlFilename}.html`;
 
   // Mock the JSON result generated from the issues
   dateTimeStamp = getFormattedTime();

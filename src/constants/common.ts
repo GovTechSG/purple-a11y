@@ -15,7 +15,7 @@ import * as https from 'https';
 import os from 'os';
 import { minimatch } from 'minimatch';
 import { globSync } from 'glob';
-import { LaunchOptions, devices, webkit } from 'playwright';
+import { LaunchOptions, devices, request, webkit } from 'playwright';
 import printMessage from 'print-message';
 import constants, {
   getDefaultChromeDataDir,
@@ -30,6 +30,7 @@ import { silentLogger } from '../logs.js';
 import { isUrlPdf } from '../crawlers/commonCrawlerFunc.js';
 import { randomThreeDigitNumberString } from '../utils.js';
 import { Answers, Data } from '#root/index.js';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 // validateDirPath validates a provided directory path
 // returns null if no error
@@ -228,8 +229,8 @@ export const getFileSitemap = (filePath: string): string | null => {
   }
 
   const file = fs.readFileSync(filePath, 'utf8');
-  const isLocalSitemap = isSitemapContent(file);
-  return isLocalSitemap ? filePath : null;
+  const isLocalFileScan = isSitemapContent(file);
+  return isLocalFileScan || (file != undefined) ? filePath : null;
 };
 
 export const getUrlMessage = (scanner: ScannerTypes): string => {
@@ -239,7 +240,8 @@ export const getUrlMessage = (scanner: ScannerTypes): string => {
       return 'Please enter URL of website: ';
     case ScannerTypes.SITEMAP:
       return 'Please enter URL or file path to sitemap, or drag and drop a sitemap file here: ';
-
+    case ScannerTypes.LOCALFILE:
+      return 'Please enter file path: ';
     default:
       return 'Invalid option';
   }
@@ -525,7 +527,10 @@ export const checkUrl = async (
     }
   }
 
-  if (res.status === constants.urlCheckStatuses.success.code && scanner === ScannerTypes.SITEMAP) {
+  if (
+    (res.status === constants.urlCheckStatuses.success.code && scanner === ScannerTypes.SITEMAP) ||
+    (res.status === constants.urlCheckStatuses.success.code && scanner === ScannerTypes.LOCALFILE)
+  ) {
     const isSitemap = isSitemapContent(res.content);
 
     if (!isSitemap) {
@@ -551,7 +556,7 @@ export const prepareData = async (argv: Answers): Promise<Data> => {
     playwrightDeviceDetailsObject,
     maxpages,
     strategy,
-    isLocalSitemap,
+    isLocalFileScan,
     finalUrl,
     browserToRun,
     nameEmail,
@@ -568,7 +573,7 @@ export const prepareData = async (argv: Answers): Promise<Data> => {
 
   // construct filename for scan results
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
-  const domain = argv.isLocalSitemap ? 'custom' : new URL(argv.url).hostname;
+  const domain = argv.isLocalFileScan ? path.basename(argv.url) : new URL(argv.url).hostname;
   const sanitisedLabel = customFlowLabel ? `_${customFlowLabel.replaceAll(' ', '_')}` : '';
   let resultFilename: string;
   const randomThreeDigitNumber = randomThreeDigitNumberString();
@@ -594,7 +599,7 @@ export const prepareData = async (argv: Answers): Promise<Data> => {
     playwrightDeviceDetailsObject,
     maxRequestsPerCrawl: maxpages || constants.maxRequestsPerCrawl,
     strategy,
-    isLocalSitemap,
+    isLocalFileScan,
     browser: browserToRun,
     nameEmail,
     customFlowLabel,
@@ -740,6 +745,7 @@ export const getLinksFromSitemap = async (
   username: string,
   password: string,
 ) => {
+  const scannedSitemaps = new Set<string>();
   const urls = {}; // dictionary of requests to urls to be scanned
 
   const isLimitReached = () => Object.keys(urls).length >= maxLinksCount;
@@ -753,7 +759,14 @@ export const getLinksFromSitemap = async (
       ? (url = addBasicAuthCredentials(url, username, password))
       : url;
 
-    const request = new Request({ url: url });
+      url = convertPathToLocalFile(url);
+
+      let request;
+      try {
+        request = new Request({ url: url });
+      } catch (e) {
+        console.log('Error creating request', e);
+      }
     if (isUrlPdf(url)) {
       request.skipNavigation = true;
     }
@@ -837,17 +850,41 @@ export const getLinksFromSitemap = async (
     let sitemapType;
     let isBasicAuth = false;
 
-    const parsedUrl = new URL(url);
     let username = '';
     let password = '';
 
-    if (parsedUrl.username !== '' && parsedUrl.password !== '') {
-      isBasicAuth = true;
-      username = decodeURIComponent(parsedUrl.username);
-      password = decodeURIComponent(parsedUrl.password);
-      parsedUrl.username = '';
-      parsedUrl.password = '';
-    }
+    let parsedUrl;
+
+     if (scannedSitemaps.has(url)) {
+       // Skip processing if the sitemap has already been scanned
+       return;
+     }
+
+     scannedSitemaps.add(url);
+
+     // Convert file if its not local file path
+     url = convertLocalFileToPath(url)
+
+     // Check whether its a file path or a URL
+     if (isFilePath(url)) {
+        if (!fs.existsSync(url)) {
+          return;
+        }
+       parsedUrl = url;
+     } else if(isValidHttpUrl(url)){
+       parsedUrl = new URL(url);
+
+       if (parsedUrl.username !== '' && parsedUrl.password !== '') {
+         isBasicAuth = true;
+         username = decodeURIComponent(parsedUrl.username);
+         password = decodeURIComponent(parsedUrl.password);
+         parsedUrl.username = '';
+         parsedUrl.password = '';
+       }
+     } else{
+      printMessage([`Invalid Url/Filepath: ${url}`], messageOptions);
+      return;
+     }
 
     const getDataUsingPlaywright = async () => {
       const browserContext = await constants.launcher.launchPersistentContext(
@@ -859,9 +896,7 @@ export const getLinksFromSitemap = async (
       );
 
       const page = await browserContext.newPage();
-
       await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
-
       if (constants.launcher === webkit) {
         data = await page.locator('body').innerText();
       } else {
@@ -904,7 +939,11 @@ export const getLinksFromSitemap = async (
               password: password,
             },
           });
+          try{
           data = await (await instance.get(url, { timeout: 80000 })).data;
+          } catch(error){
+            return; //to skip the error
+          }
         } catch (error) {
           if (error.code === 'ECONNABORTED') {
             await getDataUsingPlaywright();
@@ -912,6 +951,7 @@ export const getLinksFromSitemap = async (
         }
       }
     } else {
+      url = convertLocalFileToPath(url);
       data = fs.readFileSync(url, 'utf8');
     }
     const $ = cheerio.load(data, { xml: true });
@@ -944,11 +984,15 @@ export const getLinksFromSitemap = async (
       case constants.xmlSitemapTypes.xmlIndex:
         silentLogger.info(`This is a XML format sitemap index.`);
         for (const childSitemapUrl of $('loc')) {
+          const childSitemapUrlText = $(childSitemapUrl).text();
           if (isLimitReached()) {
             break;
           }
-
-          await fetchUrls($(childSitemapUrl).text());
+          if (childSitemapUrlText.endsWith('.xml')) {
+            await fetchUrls(childSitemapUrlText); // Recursive call for nested sitemaps
+          } else {
+            addToUrlList(childSitemapUrlText); // Add regular URLs to the list
+          }
         }
         break;
       case constants.xmlSitemapTypes.xml:
@@ -1735,3 +1779,26 @@ export const waitForPageLoaded = async (page, timeout = 10000) => {
       new Promise((resolve) => setTimeout(resolve, timeout))
   ]);
 }
+
+function isValidHttpUrl(urlString) {
+  const pattern = /^(http|https):\/\/[^ "]+$/;
+  return pattern.test(urlString);
+}
+
+export const isFilePath = (url: string): boolean => {
+  return url.startsWith('file://') || url.startsWith('/');
+};
+
+export function convertLocalFileToPath(url: string): string {
+  if (url.startsWith('file://')) {
+    url = fileURLToPath(url);
+  }
+  return url;
+}
+
+export function convertPathToLocalFile(filePath: string): string {
+  if (filePath.startsWith("/")){
+    filePath = pathToFileURL(filePath).toString();
+  }
+  return filePath;
+} 

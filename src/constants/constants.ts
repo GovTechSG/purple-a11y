@@ -34,7 +34,7 @@ export const blackListedFileExtensions = [
 export const getIntermediateScreenshotsPath = (datasetsPath: string): string =>
   `${datasetsPath}/screenshots`;
 export const destinationPath = (storagePath: string): string =>
-  `${storagePath}/reports/screenshots`;
+  `${storagePath}/screenshots`;
 
 /**  Get the path to Default Profile in the Chrome Data Directory
  * as per https://chromium.googlesource.com/chromium/src/+/master/docs/user_data_dir.md
@@ -210,6 +210,7 @@ export enum ScannerTypes {
   WEBSITE = 'Website',
   CUSTOM = 'Custom',
   INTELLIGENT = 'Intelligent',
+  LOCALFILE = 'LocalFile',
 }
 
 export const guiInfoStatusTypes = {

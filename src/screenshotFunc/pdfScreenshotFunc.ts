@@ -337,6 +337,7 @@ export const getSelectedPageByLocation = bboxLocation => {
 };
 
 export const getPageFromContext = async (context, pdfFilePath) => {
+  try{
   const loadingTask = pdfjs.getDocument({
     url: pdfFilePath,
     // canvasFactory,
@@ -348,6 +349,9 @@ export const getPageFromContext = async (context, pdfFilePath) => {
   const structureTree = await pdf._pdfInfo.structureTree;
   const page = getBboxPage({ location: context }, structureTree);
   return page;
+} catch (error){
+  // Error handling
+}
 };
 
 export const getBboxPages = (bboxes, structure) => {

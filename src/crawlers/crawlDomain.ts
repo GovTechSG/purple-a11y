@@ -318,7 +318,7 @@ const crawlDomain = async (
     launchContext: {
       launcher: constants.launcher,
       launchOptions: getPlaywrightLaunchOptions(browser),
-      // Bug in Chrome which causes brwoser pool crash when userDataDirectory is set in non-headless mode
+      // Bug in Chrome which causes browser pool crash when userDataDirectory is set in non-headless mode
       userDataDir: userDataDirectory
         ? process.env.CRAWLEE_HEADLESS !== '0'
           ? userDataDirectory
@@ -356,7 +356,7 @@ const crawlDomain = async (
             preNavigationHooks(extraHTTPHeaders);
           },
         ],
-    requestHandlerTimeoutSecs: 90, // Alow each page to be processed by up from default 60 seconds
+    requestHandlerTimeoutSecs: 90, // Allow each page to be processed by up from default 60 seconds
     requestHandler: async ({
       page,
       request,

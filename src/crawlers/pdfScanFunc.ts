@@ -8,6 +8,7 @@ import { createRequire } from 'module';
 import os from 'os';
 import path from 'path';
 import { getPageFromContext } from '../screenshotFunc/pdfScreenshotFunc.js';
+import { isFilePath } from '../constants/common.js';
 
 const require = createRequire(import.meta.url);
 
@@ -144,10 +145,18 @@ export const handlePdfDownload = (randomToken, pdfDownloads, request, sendReques
 
   pdfDownloads.push(
     new Promise<void>(async resolve => {
-      const pdfResponse = await sendRequest({ responseType: 'buffer', isStream: true });
-      pdfResponse.setEncoding('binary');
+      let bufs = [];
+      let pdfResponse;
 
-      const bufs = []; // to check for pdf validity
+      if (isFilePath(url)) {
+        // Read the file from the file system
+        const filePath = new URL(url).pathname;
+        pdfResponse = fs.createReadStream(filePath, { encoding: 'binary' });
+      } else {
+        // Send HTTP/HTTPS request
+        pdfResponse = await sendRequest({ responseType: 'buffer', isStream: true });
+        pdfResponse.setEncoding('binary');
+      }
       const downloadFile = fs.createWriteStream(`${randomToken}/${pdfFileName}.pdf`, {
         flags: 'a',
       });
@@ -216,17 +225,24 @@ export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
   const intermediateFolder = randomToken;
   const intermediateResultPath = `${intermediateFolder}/${constants.pdfScanResultFileName}`;
 
-  const rawdata = fs.readFileSync(intermediateResultPath);
-  const output = JSON.parse(rawdata.toString());
+  const rawdata = fs.readFileSync(intermediateResultPath, 'utf-8');
+
+  let parsedJsonData;
+  try {
+    parsedJsonData = JSON.parse(rawdata);
+  } catch (err) {
+    consoleLogger.log(err);
+  }
 
   const errorMeta = require('../constants/errorMeta.json');
 
   const resultsList = [];
 
+  if (parsedJsonData) {
   // jobs: files that are scanned
   const {
     report: { jobs },
-  } = output;
+  } = parsedJsonData;
 
   // loop through all jobs
   for (let jobIdx = 0; jobIdx < jobs.length; jobIdx++) {
@@ -277,6 +293,7 @@ export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
 
     resultsList.push(translated);
   }
+}
   return resultsList;
 };
 
