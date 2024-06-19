@@ -1,15 +1,7 @@
 <div id="top-five-card" class="card h-100">
   <div class="card-body">
     <h2>Top 5 affected pages with the most issues</h2>
-    <ul class="unbulleted-list">
-      <% topFiveMostIssues.forEach((page, index) => { %>
-        <% if (page.totalIssues !== 0) { %> 
-          <li class="d-flex justify-content-between">
-            <a href="NA" target="_blank">NA</a>
-            <span aria-label="NA" class="fw-bold ms-2">NA</span>
-          </li>
-        <% } %>
-      <% }) %>
+    <ul class="unbulleted-list" id="top-issues-list">
   </ul>
   </div>
 </div>

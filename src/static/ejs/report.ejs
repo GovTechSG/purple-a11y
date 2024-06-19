@@ -65,7 +65,7 @@
       const scanDataTop5Card = () => {
         const topIssuesList = document.getElementById("top-issues-list");
 
-        topFiveMostIssues.forEach((page) => {
+        scanData.topFiveMostIssues.forEach((page) => {
           if (page.totalIssues !== 0) {
             const listItem = document.createElement("li");
             listItem.className = "d-flex justify-content-between";
