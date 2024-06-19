@@ -79,6 +79,9 @@ const combineRun = async (details:Data, deviceToScan:string) => {
 
   // remove basic-auth credentials from URL
   let finalUrl = (!(type === ScannerTypes.SITEMAP && isLocalFileScan || type === ScannerTypes.LOCALFILE && isLocalFileScan)) ? urlWithoutAuth(url) : new URL(pathToFileURL(url));
+  
+  //Use the string version of finalUrl to reduce logic at submitForm
+  let finalUrlString = finalUrl.toString();
 
   const scanDetails = {
     startTime: new Date(),
@@ -215,7 +218,7 @@ const combineRun = async (details:Data, deviceToScan:string) => {
       browser,
       userDataDirectory,
       url, // scannedUrl
-      ScannerTypes.LOCALFILE? new URL(pathToFileURL(finalUrl.toString())).href :new URL(finalUrl).href, //entryUrl
+      new URL(finalUrlString).href, //entryUrl
       type,
       email,
       name,
