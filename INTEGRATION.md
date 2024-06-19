@@ -439,7 +439,7 @@ interface Window {
 }
 ```
 
-Run your test with <code>npx tsc</code> .
+Compile your typescript code with <code>npx tsc</code> .
 Run your test with <code>npx cypress run</code> .
 
 You will see Purple A11y results generated in <code>results</code> folder.
@@ -449,11 +449,11 @@ You will see Purple A11y results generated in <code>results</code> folder.
 #### Playwright
 
 <details>
-    <summary>Click here to see an example usage in Playwright</summary>
+    <summary>Click here to see an example usage in Playwright (javascript)</summary>
 
 Create a <code>package.json</code> by running <code>npm init</code> . Accept the default options or customise it as needed.
 
-Change the type of npm package to module by running <code>npm pkg set type="module"</code>;
+Change the type of npm package to module by running <code>npm pkg set type="module"</code>
 
 Install the following node dependencies by running <code>npm install playwright @govtechsg/purple-hats --save-dev</code> and <code>npx playwright install</code>
 
@@ -519,6 +519,97 @@ On your project's root folder, create a Playwright test file <code>purpleA11y-pl
     })();
 
 Run your test with <code>node purpleA11y-playwright-demo.js</code> .
+
+You will see Purple A11y results generated in <code>results</code> folder.
+
+</details>
+<details>
+    <summary>Click here to see an example usage in Playwright (typescript)</summary>
+
+Create a <code>package.json</code> by running <code>npm init</code> . Accept the default options or customise it as needed.
+
+Change the type of npm package to module by running <code>npm pkg set type="module"</code>
+
+Install the following node dependencies by running <code>npm install playwright @govtechsg/purple-hats typescript --save-dev</code> and <code>npx playwright install</code>
+
+Create a <code>tsconfig.json</code> in the root directory and add the following:
+```
+    {
+    "compilerOptions": {
+    "outDir": "./dist",
+    "allowJs": true,
+    "target": "es2021",
+    "module": "nodenext",
+    "rootDir": "./src",
+    "skipLibCheck": true
+    },
+    "include": ["./src/**/*"]
+    }
+```
+
+Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> and <code>npm run build</code> within the folder to install remaining Purple A11y dependencies:
+
+    cd node_modules/@govtechsg/purple-hats
+    npm install
+    npm run build
+    cd ../../..
+
+Create a sub-folder and Playwright test file <code>src/purpleA11y-playwright-demo.ts</code> with the following contents:
+
+    import { chromium } from "playwright";
+    import purpleA11yInit from "@govtechsg/purple-hats";
+
+    // viewport used in tests to optimise screenshots
+    const viewportSettings = { width: 1920, height: 1040 };
+    // specifies the number of occurrences before error is thrown for test failure
+    const thresholds = { mustFix: 20, goodToFix: 25 };
+    // additional information to include in the "Scan About" section of the report
+    const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
+
+    const purpleA11y = await purpleA11yInit(
+        "https://govtechsg.github.io", // initial url to start scan
+        "Demo Playwright Scan", // label for test
+        "Your Name",
+        "email@domain.com",
+        true, // include screenshots of affected elements in the report
+        viewportSettings,
+        thresholds,
+        scanAboutMetadata,
+    );
+
+    (async () => {
+        const browser = await chromium.launch({
+            headless: false,
+        });
+        const context = await browser.newContext();
+        const page = await context.newPage();
+
+        const runPurpleA11yScan = async (elementsToScan) => {
+            const scanRes = await page.evaluate(
+                async elementsToScan => await runA11yScan(elementsToScan),
+                elementsToScan,
+            );
+            await purpleA11y.pushScanResults(scanRes);
+            purpleA11y.testThresholds(); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate purpleA11y instance.
+        };
+
+        await page.goto('https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm');
+        await page.evaluate(purpleA11y.getScripts());
+        await runPurpleA11yScan();
+
+        await page.getByRole('button', { name: 'Click Me' }).click();
+        // Run a scan on <input> and <button> elements
+        await runPurpleA11yScan(['input', 'button'])
+
+
+        // ---------------------
+        await context.close();
+        await browser.close();
+        await purpleA11y.terminate();
+    })();
+
+Compile your typescript code with <code>npx tsc</code> .
+Run your test with <code>node dist/purpleA11y-playwright-demo.js</code> .
 
 You will see Purple A11y results generated in <code>results</code> folder.
 
