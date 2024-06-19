@@ -106,7 +106,7 @@ const parseContentToJson = async rPath =>
 
 
 const writeCsv = async (allIssues, storagePath) => {
-  const csvOutput = createWriteStream(`${storagePath}/reports/report.csv`, { encoding: 'utf8' });
+  const csvOutput = createWriteStream(`${storagePath}/report.csv`, { encoding: 'utf8' });
   const formatPageViolation = pageNum => {
     if (pageNum < 0) return 'Document';
     return `Page ${pageNum}`;
@@ -201,7 +201,7 @@ const writeHTML = async (allIssues, storagePath, htmlFilename = 'report') => {
     filename: path.join(__dirname, './static/ejs/report.ejs'),
   });
   const html = template(allIssues);
-  fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
+  fs.writeFileSync(`${storagePath}/${htmlFilename}.html`, html);
 };
 
 const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary') => {
@@ -210,7 +210,7 @@ const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary'
     filename: path.join(__dirname, './static/ejs/summary.ejs'),
   });
   const html = template(allIssues);
-  fs.writeFileSync(`${storagePath}/reports/${htmlFilename}.html`, html);
+  fs.writeFileSync(`${storagePath}/${htmlFilename}.html`, html);
 };
 
 // Proper base64 encoding function using Buffer
@@ -230,7 +230,7 @@ const writeBase64 = async (allIssues, storagePath, htmlFilename = 'report.html')
   const encodedScanItems = base64Encode(items);
   const encodedScanData = base64Encode(rest);
 
-  const filePath = path.join(storagePath, 'reports', 'scanDetails.csv');
+  const filePath = path.join(storagePath, 'scanDetails.csv');
 
   const directoryPath = path.dirname(filePath);
   if (!fs.existsSync(directoryPath)) {
@@ -239,7 +239,7 @@ const writeBase64 = async (allIssues, storagePath, htmlFilename = 'report.html')
 
   await fs.promises.writeFile(filePath, `scanData_base64,scanItems_base64\n${encodedScanData},${encodedScanItems}`);
 
-  const htmlFilePath = path.join(storagePath, 'reports', htmlFilename);
+  const htmlFilePath = path.join(storagePath, htmlFilename);
   let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
 
   const allIssuesJson = JSON.stringify(allIssues);
@@ -282,8 +282,8 @@ if (os.platform() === 'linux') {
 }
 
 const writeSummaryPdf = async (storagePath, filename = 'summary') => {
-  const htmlFilePath = `${storagePath}/reports/${filename}.html`;
-  const fileDestinationPath = `${storagePath}/reports/${filename}.pdf`;
+  const htmlFilePath = `${storagePath}/${filename}.html`;
+  const fileDestinationPath = `${storagePath}/${filename}.pdf`;
   const browser = await chromium.launch({
     headless: true,
     channel: browserChannel,
@@ -468,7 +468,7 @@ const createRuleIdJson = allIssues => {
 
 const moveElemScreenshots = (randomToken, storagePath) => {
   const currentScreenshotsPath = `${randomToken}/elemScreenshots`;
-  const resultsScreenshotsPath = `${storagePath}/reports/elemScreenshots`;
+  const resultsScreenshotsPath = `${storagePath}/elemScreenshots`;
   if (fs.existsSync(currentScreenshotsPath)) {
     fs.moveSync(currentScreenshotsPath, resultsScreenshotsPath);
   }

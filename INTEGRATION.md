@@ -197,7 +197,7 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
                         return await purpleA11y.pushScanResults(res, metadata, elementsToClick);
                     },
                     returnResultsDir() {
-                        return `results/${purpleA11y.randomToken}_${purpleA11y.scanDetails.urlsCrawled.scanned.length}pages/reports/report.html`;
+                        return `results/${purpleA11y.randomToken}_${purpleA11y.scanDetails.urlsCrawled.scanned.length}pages/report.html`;
                     },
                     finishPurpleA11yTestCase() {
                         purpleA11y.testThresholds();

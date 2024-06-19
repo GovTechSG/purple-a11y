@@ -42,13 +42,13 @@ a11y-scan:
   artifacts:
     paths:
       # Stores the report CSV, HTML, summary PDF only to save storage space
-      - artifacts/reports/report.csv
-      - artifacts/reports/report.html
-      - artifacts/reports/scanDetails.csv
-      - artifacts/reports/summary.pdf
+      - artifacts/report.csv
+      - artifacts/report.html
+      - artifacts/scanDetails.csv
+      - artifacts/summary.pdf
       # Include screenhots folder
-      # - artifacts/reports/elemScreenshots/
+      # - artifacts/elemScreenshots/
       # Stores the reports folder so it can be accessed through Browse
-      # - artifacts/reports
+      # - artifacts/
       # Uploads the results as zipped file
       # - $A11Y_SCAN_ARTIFACT_NAME
