@@ -205,33 +205,6 @@ const crawlDomain = async (
         }
       });
       
-      // event listener to intercept requests to handle cases where request was issued before the frame is created
-      page.on('request', async request => {
-        try {
-          await page.context().route(request.url(), async route => {
-            const isTopFrameNavigationRequest = () => {
-              return (
-                route.request().isNavigationRequest() &&
-                route.request().frame() === page.mainFrame()
-              );
-            };
-
-            if (route.request().resourceType() === 'document') {
-              if (isTopFrameNavigationRequest()) {
-                const url = route.request().url();
-                if (!isDisallowedInRobotsTxt(url)) {
-                  await requestQueue.addRequest({
-                    url: encodeURI(url),
-                    skipNavigation: isUrlPdf(encodeURI(url)),
-                  });
-                }
-              }
-            }
-          });
-        } catch (e) {
-          silentLogger.info(e);
-        }
-      });
     };
     setPageListeners(page);
     let currentElementIndex: number = 0;
