@@ -1,10 +1,3 @@
-<% const formattedCategoryTitles = { 
-  mustFix: "Must Fix",
-  goodToFix: "Good to Fix",
-  needsReview: "Needs Review",
-  passed: "Passed"
-} %>
-
 <nav class="d-none d-md-flex row m-0 pt-3 px-2" aria-label="Issue category">
   <% Object.keys(items).forEach((category) => { %>
     <% if (category !== 'passed') { %>
@@ -21,7 +14,6 @@
         >
           <div class="d-flex align-items-center mb-3">
             <span id="<%= category %>Title" class="d-flex align-items-center category-name fw-bold d-inline mb-0">
-              <%= formattedCategoryTitles[category] %>
             </span>
             <svg
               tabindex="-1"
@@ -50,13 +42,6 @@
             </svg>
           </div>
           <span id="<%= category %>ItemsInformation" class="category-information">
-            <% if (category !== 'passed' && items[category].totalItems !== 0) { %> 
-              <%= items[category].rules.length %> <%= items[category].rules.length === 1 ? 'issue' : 'issues' %> / <%= items[category].totalItems %> <%= items[category].totalItems === 1 ? 'occurrence' : 'occurrences' %>
-            <% } else if (category !== 'passed' && items[category].totalItems === 0) { %>
-              0 issues
-            <% } else { %>
-              <%= items[category].totalItems %> <%= items[category].totalItems === 1 ? 'occurrence' : 'occurrences' %>
-            <% } %>
           </span>
         </button>
       </div>

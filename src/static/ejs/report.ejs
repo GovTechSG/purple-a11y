@@ -113,7 +113,47 @@
 
       });
 
-        
+      const categoryList = document.getElementById("issueTypeListbox");
+
+      const formattedCategoryTitles = { 
+        mustFix: "Must Fix",
+        goodToFix: "Good to Fix",
+        needsReview: "Needs Review",
+        passed: "Passed"
+      } 
+
+      Object.keys(scanItems).forEach((category) => {
+          if (category !== 'passed') {
+            const categoryData = scanItems[category];
+            const rulesLength = categoryData.rules ? categoryData.rules.length : 0;
+
+            const listItem = document.createElement("li");
+            listItem.tabIndex = -1;
+            listItem.id = `${category}DropdownSelector`;
+            listItem.className = `${category} category-selector d-flex flex-row align-items-center gap-2 position-relative`;
+            listItem.role = "option";
+
+            const spanTitle = document.createElement("span");
+            spanTitle.id = `${category}Title`;
+            spanTitle.className = "d-flex align-items-center category-name fw-bold d-inline mb-0";
+            spanTitle.textContent = formattedCategoryTitles[category];
+            console.log("spanTitle.textContent:", spanTitle.textContent);
+
+            const spanInfo = document.createElement("span");
+            spanInfo.id = `${category}ItemsInformation`;
+            spanInfo.className = "category-information";
+
+            if (categoryData.totalItems !== 0) {
+              spanInfo.textContent = `(${rulesLength} ${rulesLength === 1 ? 'issue' : 'issues'})`;
+            } else {
+              spanInfo.textContent = `(0 issues)`;
+            }
+
+            listItem.appendChild(spanTitle);
+            listItem.appendChild(spanInfo);
+            categoryList.appendChild(listItem);
+          }
+       });
       }
 
 
