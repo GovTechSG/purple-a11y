@@ -258,7 +258,6 @@ const writeBase64 = async (allIssues, storagePath, htmlFilename = 'report.html')
     // Decode the encoded data
     scanData = base64Decode('${encodedScanData}');
     scanItems = base64Decode('${encodedScanItems}');
-    allIssues = ${allIssuesJson};
   </script>
   `;
 
