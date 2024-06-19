@@ -135,95 +135,6 @@ const crawlDomain = async (
         },
       });
 
-      const handleOnWindowOpen = async url => {
-        if (!isDisallowedInRobotsTxt(url)) {
-          await requestQueue.addRequest({
-            url: encodeURI(url),
-            skipNavigation: isUrlPdf(encodeURI(url)),
-          });
-        }
-      };
-      await page.exposeFunction('handleOnWindowOpen', handleOnWindowOpen);
-
-      await page.evaluate(() => {
-        // Override window.open
-        window.open = (url?: string | URL, target?: string, features?: string): Window => {
-          // Call the exposed handleOnWindowOpen function
-          handleOnWindowOpen(url as string);
-      
-          // Create a dummy window object to return (can be an actual opened window if needed)
-          const newWindow = document.createElement('a');
-          newWindow.href = typeof url === 'string' ? url : url.toString();
-          return newWindow as unknown as Window;
-        };
-      });
-
-      const handleOnClickEvent = async () => {
-        // Intercepting click events to handle cases where request was issued before the frame is created
-        // when a new tab/window is opened
-        await page.context().route('**/*', async route => {
-          if (route.request().resourceType() === 'document') {
-            try {
-              const isTopFrameNavigationRequest = () => {
-                return (
-                  route.request().isNavigationRequest() &&
-                  route.request().frame() === page.mainFrame()
-                );
-              };
-
-              if (isTopFrameNavigationRequest()) {
-                const url = route.request().url();
-                if (!isDisallowedInRobotsTxt(url)) {
-                  await requestQueue.addRequest({
-                    url: encodeURI(url),
-                    skipNavigation: isUrlPdf(encodeURI(url)),
-                  });
-                }
-                await route.abort('aborted');
-              } else {
-                route.continue();
-              }
-            } catch (e) {
-              silentLogger.info(e);
-              route.continue();
-            }
-          }
-        });
-      };
-      await page.exposeFunction('handleOnClickEvent', handleOnClickEvent);
-
-      await page.evaluate(() => {
-        document.addEventListener('click', event => handleOnClickEvent());
-      });
-
-      page.on('request', async request => {
-        try {
-          // Intercepting requests to handle cases where request was issued before the frame is created
-          await page.context().route(request.url(), async route => {
-            const isTopFrameNavigationRequest = () => {
-              return (
-                route.request().isNavigationRequest() &&
-                route.request().frame() === page.mainFrame()
-              );
-            };
-
-            if (route.request().resourceType() === 'document') {
-              if (isTopFrameNavigationRequest()) {
-                const url = route.request().url();
-                if (!isDisallowedInRobotsTxt(url)) {
-                  await requestQueue.addRequest({
-                    url: encodeURI(url),
-                    skipNavigation: isUrlPdf(encodeURI(url)),
-                  });
-                }
-              }
-            }
-          });
-        } catch (e) {
-          silentLogger.info(e);
-        }
-      });
-
       // If safeMode flag is enabled, skip enqueueLinksByClickingElements
       if (!safeMode) {
         // Try catch is necessary as clicking links is best effort, it may result in new pages that cause browser load or navigation errors that PlaywrightCrawler does not handle
@@ -274,6 +185,7 @@ const crawlDomain = async (
           // Handles browser page object been closed.
         }
       });
+
       // event listener to handle navigation to new url within same page upon element click
       page.on('framenavigated', async (newFrame: Frame) => {
         try {
@@ -292,6 +204,7 @@ const crawlDomain = async (
           // Handles browser page object been closed.
         }
       });
+      
     };
     setPageListeners(page);
     let currentElementIndex: number = 0;
@@ -313,7 +226,7 @@ const crawlDomain = async (
           });
           setPageListeners(page);
         }
-        const selectedElements: ElementHandle<SVGElement | HTMLElement>[] = await page.$$(':not(a):is([role="link"], button[onclick]))');
+        const selectedElements: ElementHandle<SVGElement | HTMLElement>[] = await page.$$(':not(a):is([role="link"], button[onclick]), a:not([href])');
         // edge case where there might be elements on page that appears intermittently
         if (currentElementIndex + 1 > selectedElements.length || !selectedElements) {
           break;
