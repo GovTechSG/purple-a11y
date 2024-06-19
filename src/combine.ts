@@ -78,8 +78,7 @@ const combineRun = async (details:Data, deviceToScan:string) => {
   }
 
   // remove basic-auth credentials from URL
-  let finalUrl = (!(type === ScannerTypes.SITEMAP && isLocalSitemap || type === ScannerTypes.LOCALFILE && isLocalSitemap)) ? urlWithoutAuth(url) : new URL(url);
-
+  let finalUrl = (!(type === ScannerTypes.SITEMAP && isLocalSitemap || type === ScannerTypes.LOCALFILE && isLocalSitemap)) ? urlWithoutAuth(url) : new URL(pathToFileURL(url));
 
   const scanDetails = {
     startTime: new Date(),

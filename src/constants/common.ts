@@ -230,9 +230,7 @@ export const getFileSitemap = (filePath: string): string | null => {
 
   const file = fs.readFileSync(filePath, 'utf8');
   const isLocalSitemap = isSitemapContent(file);
-  let isLocalFileOrSitemap = isLocalSitemap ? filePath : null;
-  let isLocalFiles = file ? filePath : null;
-  return isLocalFileOrSitemap || isLocalFiles ? filePath : null;
+  return isLocalSitemap || (file != undefined) ? filePath : null;
 };
 
 export const getUrlMessage = (scanner: ScannerTypes): string => {
