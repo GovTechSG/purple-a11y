@@ -117,7 +117,7 @@
         document.getElementById('urlScanned').innerHTML = scanData.urlScanned;
         document.getElementById('urlScanned').href = scanData.urlScanned;
         document.getElementById('viewport').innerHTML = scanData.viewport.startsWith("CustomWidth") ? `${scanData.viewport.split("_")[1]} width viewport` : scanData.viewport + ' viewport';
-        document.getElementById('pagesScannedModalToggle').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
+        document.getElementById('pagesScannedModalToggleTxt').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
 
         var itemsElement = document.getElementById('items');
         var failedItems = scanItems.mustFix.totalItems + scanItems.goodToFix.totalItems;
