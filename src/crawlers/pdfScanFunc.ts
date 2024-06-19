@@ -227,9 +227,9 @@ export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
 
   const rawdata = fs.readFileSync(intermediateResultPath, 'utf-8');
 
-  let output;
+  let parsedJsonData;
   try {
-    output = JSON.parse(rawdata);
+    parsedJsonData = JSON.parse(rawdata);
   } catch (err) {
     consoleLogger.log(err);
   }
@@ -238,11 +238,11 @@ export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
 
   const resultsList = [];
 
-  if (output) {
+  if (parsedJsonData) {
   // jobs: files that are scanned
   const {
     report: { jobs },
-  } = output;
+  } = parsedJsonData;
 
   // loop through all jobs
   for (let jobIdx = 0; jobIdx < jobs.length; jobIdx++) {
