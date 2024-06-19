@@ -864,6 +864,9 @@ export const getLinksFromSitemap = async (
 
      scannedSitemaps.add(url);
 
+     // Convert file if its not local file path
+     url = convertLocalFileToPath(url)
+
      // Check whether its a file path or a URL
      if (isFilePath(url)) {
         if (!fs.existsSync(url)) {
