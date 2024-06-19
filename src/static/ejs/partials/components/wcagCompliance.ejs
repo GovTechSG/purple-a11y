@@ -33,12 +33,13 @@
   <h2>WCAG Compliance</h2>
   <div class="d-flex align-items-center">
     <span class="flex-grow-1"><span class="d-none d-md-inline">Automated: </span>WCAG (A & AA) Passes</span>
-    <span aria-label="Pass percentage" class="ms-2"><%= wcagPassPercentage %>%</span>
+    <span aria-label="Pass percentage" class="ms-2" id="passPercentage"></span>
   </div>
   <div class="wcag-compliance-passes-bar">
     <div
       class="wcag-compliance-passes-bar-progress"
-      style="width: <%= wcagPassPercentage %>%"
+      id="wcag-compliance-passes-bar-progress"
+      style="width: 0%"
     >
     </div>
   </div>

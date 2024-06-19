@@ -25,13 +25,12 @@
           </svg>
         </button>
       </div>
-          <span id="passPercentage" aria-label="Pass percentage" class="ms-2">NA</span>
+          <span aria-label="Pass percentage" class="ms-2"><%= wcagPassPercentage %>%</span>
     </div>
     <div class="wcag-compliance-passes-bar">
       <div
         class="wcag-compliance-passes-bar-progress"
-        id="wcag-compliance-passes-bar"
-        style="width: 0%"
+        style="width: <%= wcagPassPercentage %>%"
       ></div>
     </div>
   </div>
@@ -86,6 +85,11 @@
             >
               <div class="accordion-body">
                 <ul id="wcagLinksList">
+                  <% Object.entries(wcagLinks).forEach(link => { %>
+                  <li>
+                    <a href="<%= link[1] %>" target="_blank"><%= link[0] %></a>
+                  </li>
+                  <% }) %>
                 </ul>
               </div>
             </div>
