@@ -11,6 +11,7 @@ import { consoleLogger, silentLogger } from './logs.js';
 import runCustom from './crawlers/runCustom.js';
 import { alertMessageOptions } from './constants/cliFunctions.js';
 import { Data } from './index.js';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 
 // Class exports
@@ -77,10 +78,8 @@ const combineRun = async (details:Data, deviceToScan:string) => {
   }
 
   // remove basic-auth credentials from URL
-  let finalUrl = url;
-  if (!(type === ScannerTypes.SITEMAP && isLocalSitemap || type === ScannerTypes.LOCALFILE && isLocalSitemap)) {
-    finalUrl = urlWithoutAuth(finalUrl).toString();
-  }
+  let finalUrl = (!(type === ScannerTypes.SITEMAP && isLocalSitemap || type === ScannerTypes.LOCALFILE && isLocalSitemap)) ? urlWithoutAuth(url) : new URL(url);
+
 
   const scanDetails = {
     startTime: new Date(),
@@ -217,7 +216,7 @@ const combineRun = async (details:Data, deviceToScan:string) => {
       browser,
       userDataDirectory,
       url, // scannedUrl
-      ScannerTypes.LOCALFILE? new URL(`file://${finalUrl}`).href :new URL(finalUrl).href, //entryUrl
+      ScannerTypes.LOCALFILE? new URL(pathToFileURL(finalUrl.toString())).href :new URL(finalUrl).href, //entryUrl
       type,
       email,
       name,
