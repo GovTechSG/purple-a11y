@@ -41,10 +41,10 @@ a11y-scan:
     - if [ -n "$results_directory" ]; then mv "$results_directory" "$CI_PROJECT_DIR/artifacts"; fi # Move the directory to ./artifacts
   artifacts:
     paths:
-      # Stores the passed_items JSON, report CSV, HTML, summary PDF only to save storage space
-      - artifacts/reports/passed_items.json.txt
+      # Stores the report CSV, HTML, summary PDF only to save storage space
       - artifacts/reports/report.csv
       - artifacts/reports/report.html
+      - artifacts/reports/scanDetails.csv
       - artifacts/reports/summary.pdf
       # Include screenhots folder
       # - artifacts/reports/elemScreenshots/
