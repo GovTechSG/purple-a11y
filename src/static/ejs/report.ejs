@@ -48,37 +48,44 @@
         passPecentage.innerHTML = scanData.wcagPassPercentage+"%";
         const wcagBarProgess = wcagComplianceCard.querySelector(".wcag-compliance-passes-bar-progress");
         wcagBarProgess.style.width = `${scanData.wcagPassPercentage}%`; // Set this to your desired width
+
+        const wcagLinksList = document.getElementById("wcagLinksList");
+
+        Object.entries(scanData.wcagLinks).forEach(([key, value]) => {
+          const listItem = document.createElement("li");
+          const link = document.createElement("a");
+          link.href = value;
+          link.target = "_blank";
+          link.textContent = key;
+          listItem.appendChild(link);
+          wcagLinksList.appendChild(listItem);
+        });
       };
 
       const scanDataTop5Card = () => {
-          const card = document.getElementById("top-five-card");
-          const list = card.querySelector(".unbulleted-list");
+        const topIssuesList = document.getElementById("top-issues-list");
 
-          // Sort the items based on totalIssues in descending order
-          const sortedTop5 = scanData.topFiveMostIssues.sort((a, b) => b.totalIssues - a.totalIssues);
-          let i = 0;
-          for (i < 5; i++;) {
-              const page = sortedTop5[i];
-              if (page.totalIssues !== 0) {
-                  const listItem = document.createElement('li');
-                  listItem.className = "d-flex justify-content-between";
+        topFiveMostIssues.forEach((page) => {
+          if (page.totalIssues !== 0) {
+            const listItem = document.createElement("li");
+            listItem.className = "d-flex justify-content-between";
+            
+            const link = document.createElement("a");
+            link.href = page.url;
+            link.target = "_blank";
+            link.textContent = page.pageTitle.length > 0 ? page.pageTitle : page.url;
 
-                  const link = document.createElement('a');
-                  link.href = page.url;
-                  link.target = "_blank";
-                  link.textContent = page.pageTitle.length > 0 ? page.pageTitle : page.url;
+            const issuesSpan = document.createElement("span");
+            issuesSpan.setAttribute("aria-label", `${page.totalIssues} issues`);
+            issuesSpan.className = "fw-bold ms-2";
+            issuesSpan.ariaLabel = page.totalIssues + "issues";
+            issuesSpan.textContent = page.totalIssues;
 
-                  const issueCount = document.createElement('span');
-                  issueCount.className = "fw-bold ms-2";
-                  issueCount.setAttribute('aria-label', `${page.totalIssues} issues`);
-                  issueCount.textContent = page.totalIssues;
-
-                  listItem.appendChild(link);
-                  listItem.appendChild(issueCount);
-
-                  list.appendChild(listItem);
-              }
+            listItem.appendChild(link);
+            listItem.appendChild(issuesSpan);
+            topIssuesList.appendChild(listItem);
           }
+        });
       };
 
       const scanDataCategorySelector = () =>{
@@ -179,11 +186,6 @@
           });
         }
 
-        // For rest of the page that is not content
-        scanDataWCAGCompliance();
-        scanDataTop5Card();
-        scanDataCategorySelector();
-
         const cypressScanAboutMetadata = scanData.cypressScanAboutMetadata;
         if (cypressScanAboutMetadata) {
           const metadataItems = Object.keys(cypressScanAboutMetadata);
@@ -196,6 +198,10 @@
         }
 
         document.getElementById('pagesScannedModalLabel').innerHTML = scanData.isCustomFlow ? scanData.customFlowLabel + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')' : scanData.scanType + ' crawl' + ' (' + scanData.totalPagesScanned + ' ' + (scanData.totalPagesScanned === 1 ? 'page' : 'pages') + ')';
+
+        scanDataWCAGCompliance();
+        scanDataTop5Card();
+        scanDataCategorySelector();
 
         const createPassedItemsFile = async () => {
           const passedItemsJson = {};
