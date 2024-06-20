@@ -57,7 +57,7 @@
   "scripts": {
     "build": "npm run copyfiles && tsc",
     "build:watch": "npm run build -- --watch",
-    "copyfiles": "node ./scripts/copyFiles.js src/static/ejs dist/static && node ./scripts/copyFiles.js src/constants/errorMeta.json dist/constants",
+    "copyfiles": "node ./scripts/copyFiles.js src/static/ejs dist/static && node ./scripts/copyFiles.js src/constants/errorMeta.json dist/constants && node ./scripts/copyFiles.js exclusions.txt dist",
     "start": "node dist/index.js",
     "cli": "node dist/cli.js",
     "test": "node --experimental-vm-modules ./node_modules/.bin/jest",
