@@ -259,8 +259,7 @@ Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
         });
     });
 
-Run your test with <code>npx cypress run</code> .
-
+Run your test with <code>npx cypress run</code>.  
 You will see Purple A11y results generated in <code>results</code> folder.
 
 </details>
@@ -285,18 +284,18 @@ Install the following node dependencies by running <code>npm install cypress @ty
 
 Create a <code>tsconfig.json</code> in the root directory and add the following:
 ```
-    {
-    "compilerOptions": {
-    "outDir": "./dist",
-    "allowJs": true,
-    "target": "es2021",
-    "module": "nodenext",
-    "rootDir": "./src",
-    "skipLibCheck": true,
-    "types": ["cypress"]
-    },
-    "include": ["./src/**/*", "cypress.d.ts"]
-    }
+{
+"compilerOptions": {
+"outDir": "./dist",
+"allowJs": true,
+"target": "es2021",
+"module": "nodenext",
+"rootDir": "./src",
+"skipLibCheck": true,
+"types": ["cypress"]
+},
+"include": ["./src/**/*", "cypress.d.ts"]
+}
 ```
 
 Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> and <code>npm run build</code> within the folder to install remaining Purple A11y dependencies:
@@ -439,8 +438,8 @@ interface Window {
 }
 ```
 
-Compile your typescript code with <code>npx tsc</code> .
-Run your test with <code>npx cypress run</code> .
+Compile your typescript code with <code>npx tsc</code>.  
+Run your test with <code>npx cypress run</code>.
 
 You will see Purple A11y results generated in <code>results</code> folder.
 
@@ -534,17 +533,17 @@ Install the following node dependencies by running <code>npm install playwright 
 
 Create a <code>tsconfig.json</code> in the root directory and add the following:
 ```
-    {
-    "compilerOptions": {
-    "outDir": "./dist",
-    "allowJs": true,
-    "target": "es2021",
-    "module": "nodenext",
-    "rootDir": "./src",
-    "skipLibCheck": true
-    },
-    "include": ["./src/**/*"]
-    }
+{
+"compilerOptions": {
+"outDir": "./dist",
+"allowJs": true,
+"target": "es2021",
+"module": "nodenext",
+"rootDir": "./src",
+"skipLibCheck": true
+},
+"include": ["./src/**/*"]
+}
 ```
 
 Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> and <code>npm run build</code> within the folder to install remaining Purple A11y dependencies:
@@ -556,15 +555,31 @@ Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm i
 
 Create a sub-folder and Playwright test file <code>src/purpleA11y-playwright-demo.ts</code> with the following contents:
 
-    import { chromium } from "playwright";
+    import { Browser, BrowserContext, Page, chromium } from "playwright";
     import purpleA11yInit from "@govtechsg/purple-hats";
 
+    declare const runA11yScan: (elementsToScan?: string[]) => Promise<any>;
+
+    interface ViewportSettings {
+        width: number;
+        height: number;
+    }
+
+    interface Thresholds {
+        mustFix: number;
+        goodToFix: number;
+    }
+
+    interface ScanAboutMetadata {
+        browser: string;
+    }
+
     // viewport used in tests to optimise screenshots
-    const viewportSettings = { width: 1920, height: 1040 };
+    const viewportSettings: ViewportSettings = { width: 1920, height: 1040 };
     // specifies the number of occurrences before error is thrown for test failure
-    const thresholds = { mustFix: 20, goodToFix: 25 };
+    const thresholds: Thresholds = { mustFix: 20, goodToFix: 25 };
     // additional information to include in the "Scan About" section of the report
-    const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
+    const scanAboutMetadata: ScanAboutMetadata = { browser: 'Chrome (Desktop)' };
 
     const purpleA11y = await purpleA11yInit(
         "https://govtechsg.github.io", // initial url to start scan
@@ -578,13 +593,13 @@ Create a sub-folder and Playwright test file <code>src/purpleA11y-playwright-dem
     );
 
     (async () => {
-        const browser = await chromium.launch({
+        const browser: Browser = await chromium.launch({
             headless: false,
         });
-        const context = await browser.newContext();
-        const page = await context.newPage();
+        const context: BrowserContext = await browser.newContext();
+        const page: Page = await context.newPage();
 
-        const runPurpleA11yScan = async (elementsToScan) => {
+        const runPurpleA11yScan = async (elementsToScan?: string[]) => {
             const scanRes = await page.evaluate(
                 async elementsToScan => await runA11yScan(elementsToScan),
                 elementsToScan,
@@ -608,8 +623,8 @@ Create a sub-folder and Playwright test file <code>src/purpleA11y-playwright-dem
         await purpleA11y.terminate();
     })();
 
-Compile your typescript code with <code>npx tsc</code> .
-Run your test with <code>node dist/purpleA11y-playwright-demo.js</code> .
+Compile your typescript code with <code>npx tsc</code>.  
+Run your test with <code>node dist/purpleA11y-playwright-demo.js</code>.
 
 You will see Purple A11y results generated in <code>results</code> folder.
 
@@ -618,7 +633,7 @@ You will see Purple A11y results generated in <code>results</code> folder.
 #### Automating Web Crawler Login
 
 <details>
-    <summary>Click here to see an example automated web crawler login</summary>
+    <summary>Click here to see an example automated web crawler login (javascript)</summary>
 <code>automated-web-crawler-login.js</code>:
    
     import { chromium } from 'playwright';
@@ -644,12 +659,12 @@ You will see Purple A11y results generated in <code>results</code> folder.
 
         // Retrieve cookies after login
         let cookies = await page.context().cookies();
-        cookies = formatCookies(cookies);
+        const formattedCookies = formatCookies(cookies);
 
         // Close browser
         await browser.close();
 
-        return cookies;
+        return formattedCookies;
     };
 
     const runPurpleA11yScan = command => {
@@ -686,5 +701,76 @@ You will see Purple A11y results generated in <code>results</code> folder.
     };
 
     runScript();
+
+</details>
+<details>
+    <summary>Click here to see an example automated web crawler login (typescript)</summary>
+<code>automated-web-crawler-login.ts</code>:
+   
+    import { chromium, Browser, Page, Cookie } from 'playwright';
+    import { exec } from 'child_process';
+
+    const loginAndCaptureHeaders = async (url: string, email: string, password: string): Promise<string> => {
+        const browser: Browser = await chromium.launch({ headless: true });
+        const page: Page = await browser.newPage();
+
+        await page.goto(url);
+        await page.fill('input[name="email"]', email);
+        await page.fill('input[name="password"]', password);
+
+        const [response] = await Promise.all([
+            page.waitForNavigation(),
+            page.click('input[type="submit"]'),
+        ]);
+
+        // Format cookie retrieved from page
+        const formatCookies = (cookies: Cookie[]): string => {
+            return cookies.map(cookie => `cookie ${cookie.name}=${cookie.value}`).join('; ');
+        };
+
+        // Retrieve cookies after login
+        let cookies: Cookie[] = await page.context().cookies();
+        const formattedCookies: string = formatCookies(cookies);
+
+        // Close browser
+        await browser.close();
+
+        return formattedCookies;
+    };
+
+    const runPurpleA11yScan = (command: string): void => {
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Error: ${error.message}`);
+                return;
+            }
+            if (stderr) {
+                console.error(stderr);
+            }
+            console.log(stdout);
+        });
+    };
+
+    const runScript = (): void => {
+        loginAndCaptureHeaders(
+            // Test example with authenticationtest.com
+            'https://authenticationtest.com/simpleFormAuth/',
+            'simpleForm@authenticationtest.com',
+            'pa$$w0rd',
+        )
+            .then((formattedCookies: string) => {
+                console.log('Cookies retrieved.\n');
+                // where -m "..." are the headers needed in the format "header1 value1, header2 value2" etc
+                // where -u ".../loginSuccess/" is the destination page after login
+                const command: string = `npm run cli -- -c website -u "https://authenticationtest.com/loginSuccess/" -p 1 -k "Your Name:email@domain.com" -m "${formattedCookies}"`;
+                console.log(`Executing PurpleA11y scan command:\n> ${command}\n`);
+                runPurpleA11yScan(command);
+            })
+            .catch((err: Error) => {
+                console.error('Error:', err);
+            });
+    };
+
+    runScript();   
 
 </details>
