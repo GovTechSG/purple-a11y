@@ -1020,7 +1020,7 @@ export const getLinksFromSitemap = async (
   }
 
   const requestList = Object.values(urls);
-
+  
   return requestList;
 };
 
@@ -1786,7 +1786,8 @@ function isValidHttpUrl(urlString) {
 }
 
 export const isFilePath = (url: string): boolean => {
-  return url.startsWith('file://') || url.startsWith('/');
+  const driveLetterPattern = /^[A-Z]:\//i;
+  return url.startsWith('file://') || url.startsWith('/') || driveLetterPattern.test(url);
 };
 
 export function convertLocalFileToPath(url: string): string {
