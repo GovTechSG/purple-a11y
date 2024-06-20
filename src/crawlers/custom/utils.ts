@@ -19,67 +19,66 @@ export const log = str => {
 export const screenshotFullPage = async (page, screenshotsDir:string, screenshotIdx) => {
   const imgName = `PHScan-screenshot${screenshotIdx}.png`;
   const imgPath = path.join(screenshotsDir, imgName);
-
-  const fullPageSize = await page.evaluate(() => ({
-    width: Math.max(
-      document.body.scrollWidth,
-      document.documentElement.scrollWidth,
-      document.body.offsetWidth,
-      document.documentElement.offsetWidth,
-      document.body.clientWidth,
-      document.documentElement.clientWidth,
-    ),
-    height: Math.max(
-      document.body.scrollHeight,
-      document.documentElement.scrollHeight,
-      document.body.offsetHeight,
-      document.documentElement.offsetHeight,
-      document.body.clientHeight,
-      document.documentElement.clientHeight,
-    ),
-  }));
-
   const originalSize = page.viewportSize();
 
-  const usesInfiniteScroll = async () => {
-    const prevHeight = await page.evaluate(() => document.body.scrollHeight);
+  try {
+    const fullPageSize = await page.evaluate(() => ({
+      width: Math.max(
+        document.body.scrollWidth,
+        document.documentElement.scrollWidth,
+        document.body.offsetWidth,
+        document.documentElement.offsetWidth,
+        document.body.clientWidth,
+        document.documentElement.clientWidth,
+      ),
+      height: Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight,
+        document.body.offsetHeight,
+        document.documentElement.offsetHeight,
+        document.body.clientHeight,
+        document.documentElement.clientHeight,
+      ),
+    }));
 
-    await page.evaluate(() => {
-      window.scrollTo(0, document.body.scrollHeight);
-    });
+    const usesInfiniteScroll = async () => {
+      const prevHeight = await page.evaluate(() => document.body.scrollHeight);
 
-    const isLoadMoreContent = async () =>
-      new Promise(resolve => {
-        setTimeout(async () => {
-          await page.waitForLoadState('domcontentloaded');
-
-          const newHeight = await page.evaluate(
-            // eslint-disable-next-line no-shadow
-            () => document.body.scrollHeight,
-          );
-          const result = newHeight > prevHeight;
-
-          resolve(result);
-        }, 2500);
+      await page.evaluate(() => {
+        window.scrollTo(0, document.body.scrollHeight);
       });
 
-    const result = await isLoadMoreContent();
-    return result;
-  };
+      const isLoadMoreContent = async () =>
+        new Promise(resolve => {
+          setTimeout(async () => {
+            await page.waitForLoadState('domcontentloaded');
 
-  await usesInfiniteScroll();
+            const newHeight = await page.evaluate(
+              // eslint-disable-next-line no-shadow
+              () => document.body.scrollHeight,
+            );
+            const result = newHeight > prevHeight;
 
-  // scroll back to top of page for screenshot
-  await page.evaluate(() => {
-    window.scrollTo(0, 0);
-  });
+            resolve(result);
+          }, 2500);
+        });
 
-  consoleLogger.info(`Screenshot page at: ${urlWithoutAuth(page.url())}`);
-  silentLogger.info(`Screenshot page at: ${urlWithoutAuth(page.url())}`);
+      const result = await isLoadMoreContent();
+      return result;
+    };
 
-  try {
+    await usesInfiniteScroll();
+
+    // scroll back to top of page for screenshot
+    await page.evaluate(() => {
+      window.scrollTo(0, 0);
+    });
+
+    consoleLogger.info(`Screenshot page at: ${urlWithoutAuth(page.url())}`);
+    silentLogger.info(`Screenshot page at: ${urlWithoutAuth(page.url())}`);
+
     await page.screenshot({
-      timeout: 10000,
+      timeout: 5000,
       path: imgPath,
       clip: {
         x: 0,
@@ -95,9 +94,9 @@ export const screenshotFullPage = async (page, screenshotsDir:string, screenshot
   
   } catch (e) {
     consoleLogger.error('Unable to take screenshot');
+    // Do not return screenshot path if screenshot fails
+    return "";
   }
-
-  if (originalSize) await page.setViewportSize(originalSize);
 
   return `screenshots/${imgName}`; // relative path from reports folder
 };
@@ -130,7 +129,8 @@ export const runAxeScan = async (
 export const processPage = async (page, processPageParams) => {
   // make sure to update processPageParams' scannedIdx
   processPageParams.scannedIdx += 1;
-  const {
+
+  let {
     scannedIdx,
     blacklistedPatterns,
     includeScreenshots,
@@ -139,15 +139,14 @@ export const processPage = async (page, processPageParams) => {
     urlsCrawled,
     randomToken,
   } = processPageParams;
+
   try {
-    await page.waitForLoadState('networkidle', { timeout: 10000 });
-    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
   } catch (e) {
-    consoleLogger.info('Unable to detect networkidle');
-    silentLogger.info('Unable to detect networkidle');
+    consoleLogger.info('Unable to detect page load state');
   }
 
-  log(`Scan - processPage: ${page.url()}`);
+  consoleLogger.info(`Attempting to scan: ${page.url()}`);
 
   const pageUrl = page.url();
 
@@ -170,33 +169,46 @@ export const processPage = async (page, processPageParams) => {
   //   return;
   // }
 
-  const initialScrollPos = await page.evaluate(() => ({
-    x: window.scrollX,
-    y: window.scrollY,
-  }));
+  try {
+    const initialScrollPos = await page.evaluate(() => ({
+      x: window.scrollX,
+      y: window.scrollY,
+    }));
+  
+    const pageImagePath = await screenshotFullPage(page, intermediateScreenshotsPath, scannedIdx);
 
-  const pageImagePath = await screenshotFullPage(page, intermediateScreenshotsPath, scannedIdx);
 
-  guiInfoLog(guiInfoStatusTypes.SCANNED, {
-    numScanned: urlsCrawled.scanned.length,
-    urlScanned: pageUrl,
-  });
+    // TODO: This is a temporary fix to not take element screenshots on pages when errors out at full page screenshot
+    if (pageImagePath === "") {
+      includeScreenshots = false;
+    }
 
-  await runAxeScan(
-    page,
-    includeScreenshots,
-    randomToken,
-    {
-      pageIndex: scannedIdx,
-      pageImagePath,
-    },
-    dataset,
-    urlsCrawled,
-  );
+    await runAxeScan(
+      page,
+      includeScreenshots,
+      randomToken,
+      {
+        pageIndex: scannedIdx,
+        pageImagePath,
+      },
+      dataset,
+      urlsCrawled,
+    );
 
-  await page.evaluate(pos => {
-    window.scrollTo(pos.x, pos.y);
-  }, initialScrollPos);
+    guiInfoLog(guiInfoStatusTypes.SCANNED, {
+      numScanned: urlsCrawled.scanned.length,
+      urlScanned: pageUrl,
+    });
+
+    await page.evaluate(pos => {
+      window.scrollTo(pos.x, pos.y);
+    }, initialScrollPos);
+
+  } catch (e) {
+    consoleLogger.error(`Error in scanning page: ${pageUrl}`);
+  }
+ 
+
 };
 
 export const MENU_POSITION = {
@@ -205,7 +217,6 @@ export const MENU_POSITION = {
 };
 
 export const updateMenu = async (page, urlsCrawled) => {
-  await page.waitForLoadState('domcontentloaded');
   log(`Overlay menu: updating: ${page.url()}`);
   await page.evaluate(
     vars => {
@@ -219,7 +230,8 @@ export const updateMenu = async (page, urlsCrawled) => {
     },
     { urlsCrawled },
   );
-  log(`Overlay menu: updating: success`);
+
+  consoleLogger.info(`Overlay menu updated`);
 };
 
 export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {

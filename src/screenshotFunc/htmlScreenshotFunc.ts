@@ -1,5 +1,5 @@
 // import { JSDOM } from "jsdom";
-import { silentLogger } from '../logs.js';
+import { consoleLogger, silentLogger } from '../logs.js';
 import { createHash } from 'crypto';
 import fs from 'fs';
 import path from 'path';
@@ -22,15 +22,22 @@ export const takeScreenshotForHTMLElements = async (violations, page, randomToke
                     const locator = page.locator(selector);
                     const locators = await locator.all();
                     for (const currLocator of locators) {
-                            await currLocator.scrollIntoViewIfNeeded({ timeout: locatorTimeout });
+                        await currLocator.scrollIntoViewIfNeeded({ timeout: locatorTimeout });
+                        const isVisible = await currLocator.isVisible();
+                        
+                        if (isVisible) {
                             const buffer = await currLocator.screenshot({ timeout: locatorTimeout });
                             const screenshotPath = getScreenshotPath(buffer, randomToken);
                             node.screenshotPath = screenshotPath;
                             screenshotCount++;
-                            break; // Stop looping after finding the first visible locator
+                        } else {
+                            consoleLogger.info(`Element at ${currLocator} is not visible`);
+                        }
+
+                        break; // Stop looping after finding the first visible locator
                     }
                 } catch (e) {
-                    silentLogger.info(e);
+                    consoleLogger.info(`Unable to take element screenshot at ${selector}`);
                 }
             }
             newViolationNodes.push(node);
