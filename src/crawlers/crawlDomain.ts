@@ -119,6 +119,8 @@ const crawlDomain = async (
         transformRequestFunction(req) {
           try {
             req.url = encodeURI(req.url);
+            req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+
           } catch (e) {
             silentLogger.info(e);
           }
@@ -164,8 +166,9 @@ const crawlDomain = async (
       page.on('popup', async (newPage: Page) => {
         try {
           if (newPage.url() != initialPageUrl && !isExcluded(newPage.url())) {
+            let newPageUrl: string = newPage.url().replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
             await requestQueue.addRequest({
-              url: encodeURI(newPage.url()),
+              url: encodeURI(newPageUrl),
               skipNavigation: isUrlPdf(encodeURI(newPage.url())),
             });
           }
@@ -192,8 +195,9 @@ const crawlDomain = async (
           if (newFrame.url() !== initialPageUrl &&
             !isExcluded(newFrame.url()) &&
             !(newFrame.url() == 'about:blank')) {
+            let newFrameUrl: string = newFrame.url().replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
             await requestQueue.addRequest({
-              url: encodeURI(newFrame.url()),
+              url: encodeURI(newFrameUrl),
               skipNavigation: isUrlPdf(encodeURI(newFrame.url())),
             });
           }
@@ -270,8 +274,11 @@ const crawlDomain = async (
               }
             });
           if (newUrlFoundInElement && !isExcluded(newUrlFoundInElement)) {
+
+            let newUrlFoundInElementUrl: string = newUrlFoundInElement.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+
             await requestQueue.addRequest({
-              url: encodeURI(newUrlFoundInElement),
+              url: encodeURI(newUrlFoundInElementUrl),
               skipNavigation: isUrlPdf(encodeURI(newUrlFoundInElement)),
             });
           }
@@ -573,8 +580,9 @@ const crawlDomain = async (
             await page.route('**/*', async route => {
               const interceptedRequest = route.request();
               if (interceptedRequest.resourceType() === 'document') {
+                let interceptedRequestUrl = interceptedRequest.url().replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
                 await requestQueue.addRequest({
-                  url: interceptedRequest.url(),
+                  url: interceptedRequestUrl,
                   skipNavigation: isUrlPdf(interceptedRequest.url()),
                 });
                 return;
