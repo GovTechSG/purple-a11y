@@ -135,17 +135,20 @@ With reference to an instance of Purple A11y as `purpleA11y`:
 #### Cypress
 
 <details>
-<summary>Click here to see an example usage in an E2E Cypress test</summary>
+<summary>Click here to see an example usage in an E2E Cypress test (javascript)</summary>
 
 We will be creating the following files in a demo Cypress project:
 
-    ├── cypress
-    │   ├── e2e
-    │   │   └── spec.cy.js
-    │   └── support
-    │       └── e2e.js
-    ├── cypress.config.js
-    └── package.json
+    ├── cypress.config.ts
+    ├── cypress.d.ts
+    ├── package.json
+    ├── src
+    │   └── cypress
+    │       ├── e2e
+    │       │   └── spec.cy.ts
+    │       └── support
+    │           └── e2e.ts
+    └── tsconfig.json
 
 Create a <code>package.json</code> by running <code>npm init</code> . Accept the default options or customise it as needed.
 
@@ -168,7 +171,7 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
     // viewport used in tests to optimise screenshots
     const viewportSettings = { width: 1920, height: 1040 };
     // specifies the number of occurrences before error is thrown for test failure
-    const thresholds = { mustFix: 4, goodToFix: 5 };
+    const thresholds = { mustFix: 20, goodToFix: 25 };
     // additional information to include in the "Scan About" section of the report
     const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
 
@@ -211,7 +214,7 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
         },
     });
 
-Create a sub-folder and file <code>cypress/support/e2e.js</code> with the following contents::
+Create a sub-folder and file <code>cypress/support/e2e.js</code> with the following contents:
 
     Cypress.Commands.add("injectPurpleA11yScripts", () => {
         cy.task("getPurpleA11yScripts").then((s) => {
@@ -256,7 +259,187 @@ Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
         });
     });
 
-Run your test with <code>npx cypress run</code> .
+Run your test with <code>npx cypress run</code>.  
+You will see Purple A11y results generated in <code>results</code> folder.
+
+</details>
+<details>
+<summary>Click here to see an example usage in an E2E Cypress test (typescript)</summary>
+
+We will be creating the following files in a demo Cypress project:
+
+    ├── cypress
+    │   ├── e2e
+    │   │   └── spec.cy.ts
+    │   └── support
+    │       └── e2e.ts
+    ├── cypress.config.ts
+    └── package.json
+
+Create a <code>package.json</code> by running <code>npm init</code> . Accept the default options or customise it as needed.
+
+Change the type of npm package to module by running <code>npm pkg set type="module"</code>
+
+Install the following node dependencies by running <code>npm install cypress @types/cypress @govtechsg/purple-hats typescript --save-dev </code>
+
+Create a <code>tsconfig.json</code> in the root directory and add the following:
+```
+{
+"compilerOptions": {
+"outDir": "./dist",
+"allowJs": true,
+"target": "es2021",
+"module": "nodenext",
+"rootDir": "./src",
+"skipLibCheck": true,
+"types": ["cypress"]
+},
+"include": ["./src/**/*", "cypress.d.ts"]
+}
+```
+
+Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> and <code>npm run build</code> within the folder to install remaining Purple A11y dependencies:
+
+    cd node_modules/@govtechsg/purple-hats
+    npm install
+    npm run build
+    cd ../../..
+
+Create <code>cypress.config.ts</code> with the following contents, and change your Name, E-mail address, and boolean value for whether rule items requiring manual review in the report should be displayed below:
+
+    import { defineConfig } from "cypress";
+    import purpleA11yInit from "@govtechsg/purple-hats";
+
+    interface ViewportSettings {
+        width: number;
+        height: number;
+    }
+
+    interface Thresholds {
+        mustFix: number;
+        goodToFix: number;
+    }
+
+    interface ScanAboutMetadata {
+        browser: string;
+    }
+
+    // viewport used in tests to optimise screenshots
+    const viewportSettings: ViewportSettings = { width: 1920, height: 1040 };
+    // specifies the number of occurrences before error is thrown for test failure
+    const thresholds: Thresholds = { mustFix: 20, goodToFix: 20 };
+    // additional information to include in the "Scan About" section of the report
+    const scanAboutMetadata: ScanAboutMetadata = { browser: 'Chrome (Desktop)' };
+
+    const purpleA11y = await purpleA11yInit(
+        "https://govtechsg.github.io", // initial url to start scan
+        "Demo Cypress Scan", // label for test
+        "Your Name",
+        "email@domain.com",
+        true, // include screenshots of affected elements in the report
+        viewportSettings,
+        thresholds,
+        scanAboutMetadata,
+    );
+
+    export default defineConfig({
+        taskTimeout: 120000, // need to extend as screenshot function requires some time
+        viewportHeight: viewportSettings.height,
+        viewportWidth: viewportSettings.width,
+        e2e: {
+            setupNodeEvents(on, _config) {
+                on("task", {
+                    getPurpleA11yScripts(): string {
+                        return purpleA11y.getScripts();
+                    },
+                    async pushPurpleA11yScanResults({res, metadata, elementsToClick}: { res: any, metadata: any, elementsToClick: any[] }): Promise<{ mustFix: number, goodToFix: number }> {
+                        return await purpleA11y.pushScanResults(res, metadata, elementsToClick);
+                    },
+                    returnResultsDir(): string {
+                        return `results/${purpleA11y.randomToken}_${purpleA11y.scanDetails.urlsCrawled.scanned.length}pages/reports/report.html`;
+                    },
+                    finishPurpleA11yTestCase(): null {
+                        purpleA11y.testThresholds();
+                        return null;
+                    },
+                    async terminatePurpleA11y(): Promise<null> {
+                        return await purpleA11y.terminate();
+                    },
+                });
+            },
+            supportFile: 'dist/cypress/support/e2e.js',
+            specPattern: 'dist/cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
+        },
+    });
+
+Create a sub-folder and file <code>src/cypress/support/e2e.ts</code> with the following contents:
+
+    Cypress.Commands.add("injectPurpleA11yScripts", () => {
+        cy.task("getPurpleA11yScripts").then((s: string) => {
+            cy.window().then((win) => {
+                win.eval(s);
+            });
+        });
+    });
+
+    Cypress.Commands.add("runPurpleA11yScan", (items={}) => {
+        cy.window().then(async (win) => {
+            const { elementsToScan, elementsToClick, metadata } = items;
+            const res = await win.runA11yScan(elementsToScan);
+            cy.task("pushPurpleA11yScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
+            cy.task("pushPurpleA11yScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
+            cy.task("finishPurpleA11yTestCase"); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate purpleA11y instance.
+        });
+    });
+
+    Cypress.Commands.add("terminatePurpleA11y", () => {
+        cy.task("terminatePurpleA11y");
+    });
+
+Create <code>src/cypress/e2e/spec.cy.ts</code> with the following contents:
+
+    describe("template spec", () => {
+        it("should run purple A11y", () => {
+            cy.visit(
+                "https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm"
+            );
+            cy.injectPurpleA11yScripts();
+            cy.runPurpleA11yScan();
+             cy.get("button[onclick=\"toggleSecondSection()\"]").click();
+            // Run a scan on <input> and <button> elements
+            cy.runPurpleA11yScan({
+                elementsToScan: ["input", "button"],
+                elementsToClick: ["button[onclick=\"toggleSecondSection()\"]"],
+                metadata: "Clicked button"
+            });
+
+            cy.terminatePurpleA11y();
+        });
+    });
+
+Create <code>cypress.d.ts</code> in the root directory with the following contents:
+```
+declare namespace Cypress {
+  interface Chainable<Subject> {
+    injectPurpleA11yScripts(): Chainable<void>;
+    runPurpleA11yScan(options?: PurpleA11yScanOptions): Chainable<void>;
+    terminatePurpleA11y(): Chainable<void>;
+  }
+
+  interface PurpleA11yScanOptions {
+    elementsToScan?: string[];
+    elementsToClick?: string[];
+    metadata?: string;
+  }
+}
+
+interface Window {
+  runA11yScan: (elementsToScan?: string[]) => Promise<any>;
+}
+```
+
+Compile your typescript code with <code>npx tsc</code>.  
+Run your test with <code>npx cypress run</code>.
 
 You will see Purple A11y results generated in <code>results</code> folder.
 
@@ -265,11 +448,11 @@ You will see Purple A11y results generated in <code>results</code> folder.
 #### Playwright
 
 <details>
-    <summary>Click here to see an example usage in Playwright</summary>
+    <summary>Click here to see an example usage in Playwright (javascript)</summary>
 
 Create a <code>package.json</code> by running <code>npm init</code> . Accept the default options or customise it as needed.
 
-Change the type of npm package to module by running <code>npm pkg set type="module"</code>;
+Change the type of npm package to module by running <code>npm pkg set type="module"</code>
 
 Install the following node dependencies by running <code>npm install playwright @govtechsg/purple-hats --save-dev</code> and <code>npx playwright install</code>
 
@@ -288,7 +471,7 @@ On your project's root folder, create a Playwright test file <code>purpleA11y-pl
     // viewport used in tests to optimise screenshots
     const viewportSettings = { width: 1920, height: 1040 };
     // specifies the number of occurrences before error is thrown for test failure
-    const thresholds = { mustFix: 4, goodToFix: 5 };
+    const thresholds = { mustFix: 20, goodToFix: 25 };
     // additional information to include in the "Scan About" section of the report
     const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
 
@@ -339,11 +522,118 @@ Run your test with <code>node purpleA11y-playwright-demo.js</code> .
 You will see Purple A11y results generated in <code>results</code> folder.
 
 </details>
+<details>
+    <summary>Click here to see an example usage in Playwright (typescript)</summary>
+
+Create a <code>package.json</code> by running <code>npm init</code> . Accept the default options or customise it as needed.
+
+Change the type of npm package to module by running <code>npm pkg set type="module"</code>
+
+Install the following node dependencies by running <code>npm install playwright @govtechsg/purple-hats typescript --save-dev</code> and <code>npx playwright install</code>
+
+Create a <code>tsconfig.json</code> in the root directory and add the following:
+```
+{
+"compilerOptions": {
+"outDir": "./dist",
+"allowJs": true,
+"target": "es2021",
+"module": "nodenext",
+"rootDir": "./src",
+"skipLibCheck": true
+},
+"include": ["./src/**/*"]
+}
+```
+
+Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> and <code>npm run build</code> within the folder to install remaining Purple A11y dependencies:
+
+    cd node_modules/@govtechsg/purple-hats
+    npm install
+    npm run build
+    cd ../../..
+
+Create a sub-folder and Playwright test file <code>src/purpleA11y-playwright-demo.ts</code> with the following contents:
+
+    import { Browser, BrowserContext, Page, chromium } from "playwright";
+    import purpleA11yInit from "@govtechsg/purple-hats";
+
+    declare const runA11yScan: (elementsToScan?: string[]) => Promise<any>;
+
+    interface ViewportSettings {
+        width: number;
+        height: number;
+    }
+
+    interface Thresholds {
+        mustFix: number;
+        goodToFix: number;
+    }
+
+    interface ScanAboutMetadata {
+        browser: string;
+    }
+
+    // viewport used in tests to optimise screenshots
+    const viewportSettings: ViewportSettings = { width: 1920, height: 1040 };
+    // specifies the number of occurrences before error is thrown for test failure
+    const thresholds: Thresholds = { mustFix: 20, goodToFix: 25 };
+    // additional information to include in the "Scan About" section of the report
+    const scanAboutMetadata: ScanAboutMetadata = { browser: 'Chrome (Desktop)' };
+
+    const purpleA11y = await purpleA11yInit(
+        "https://govtechsg.github.io", // initial url to start scan
+        "Demo Playwright Scan", // label for test
+        "Your Name",
+        "email@domain.com",
+        true, // include screenshots of affected elements in the report
+        viewportSettings,
+        thresholds,
+        scanAboutMetadata,
+    );
+
+    (async () => {
+        const browser: Browser = await chromium.launch({
+            headless: false,
+        });
+        const context: BrowserContext = await browser.newContext();
+        const page: Page = await context.newPage();
+
+        const runPurpleA11yScan = async (elementsToScan?: string[]) => {
+            const scanRes = await page.evaluate(
+                async elementsToScan => await runA11yScan(elementsToScan),
+                elementsToScan,
+            );
+            await purpleA11y.pushScanResults(scanRes);
+            purpleA11y.testThresholds(); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate purpleA11y instance.
+        };
+
+        await page.goto('https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm');
+        await page.evaluate(purpleA11y.getScripts());
+        await runPurpleA11yScan();
+
+        await page.getByRole('button', { name: 'Click Me' }).click();
+        // Run a scan on <input> and <button> elements
+        await runPurpleA11yScan(['input', 'button'])
+
+
+        // ---------------------
+        await context.close();
+        await browser.close();
+        await purpleA11y.terminate();
+    })();
+
+Compile your typescript code with <code>npx tsc</code>.  
+Run your test with <code>node dist/purpleA11y-playwright-demo.js</code>.
+
+You will see Purple A11y results generated in <code>results</code> folder.
+
+</details>
 
 #### Automating Web Crawler Login
 
 <details>
-    <summary>Click here to see an example automated web crawler login</summary>
+    <summary>Click here to see an example automated web crawler login (javascript)</summary>
 <code>automated-web-crawler-login.js</code>:
    
     import { chromium } from 'playwright';
@@ -369,12 +659,12 @@ You will see Purple A11y results generated in <code>results</code> folder.
 
         // Retrieve cookies after login
         let cookies = await page.context().cookies();
-        cookies = formatCookies(cookies);
+        const formattedCookies = formatCookies(cookies);
 
         // Close browser
         await browser.close();
 
-        return cookies;
+        return formattedCookies;
     };
 
     const runPurpleA11yScan = command => {
@@ -411,5 +701,76 @@ You will see Purple A11y results generated in <code>results</code> folder.
     };
 
     runScript();
+
+</details>
+<details>
+    <summary>Click here to see an example automated web crawler login (typescript)</summary>
+<code>automated-web-crawler-login.ts</code>:
+   
+    import { chromium, Browser, Page, Cookie } from 'playwright';
+    import { exec } from 'child_process';
+
+    const loginAndCaptureHeaders = async (url: string, email: string, password: string): Promise<string> => {
+        const browser: Browser = await chromium.launch({ headless: true });
+        const page: Page = await browser.newPage();
+
+        await page.goto(url);
+        await page.fill('input[name="email"]', email);
+        await page.fill('input[name="password"]', password);
+
+        const [response] = await Promise.all([
+            page.waitForNavigation(),
+            page.click('input[type="submit"]'),
+        ]);
+
+        // Format cookie retrieved from page
+        const formatCookies = (cookies: Cookie[]): string => {
+            return cookies.map(cookie => `cookie ${cookie.name}=${cookie.value}`).join('; ');
+        };
+
+        // Retrieve cookies after login
+        let cookies: Cookie[] = await page.context().cookies();
+        const formattedCookies: string = formatCookies(cookies);
+
+        // Close browser
+        await browser.close();
+
+        return formattedCookies;
+    };
+
+    const runPurpleA11yScan = (command: string): void => {
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Error: ${error.message}`);
+                return;
+            }
+            if (stderr) {
+                console.error(stderr);
+            }
+            console.log(stdout);
+        });
+    };
+
+    const runScript = (): void => {
+        loginAndCaptureHeaders(
+            // Test example with authenticationtest.com
+            'https://authenticationtest.com/simpleFormAuth/',
+            'simpleForm@authenticationtest.com',
+            'pa$$w0rd',
+        )
+            .then((formattedCookies: string) => {
+                console.log('Cookies retrieved.\n');
+                // where -m "..." are the headers needed in the format "header1 value1, header2 value2" etc
+                // where -u ".../loginSuccess/" is the destination page after login
+                const command: string = `npm run cli -- -c website -u "https://authenticationtest.com/loginSuccess/" -p 1 -k "Your Name:email@domain.com" -m "${formattedCookies}"`;
+                console.log(`Executing PurpleA11y scan command:\n> ${command}\n`);
+                runPurpleA11yScan(command);
+            })
+            .catch((err: Error) => {
+                console.error('Error:', err);
+            });
+    };
+
+    runScript();   
 
 </details>
