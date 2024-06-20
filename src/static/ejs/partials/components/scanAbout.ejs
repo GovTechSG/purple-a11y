@@ -243,14 +243,8 @@
       </svg>
       <span id="phAppVersion">N/A</span>
     </li>
-    <% if (cypressScanAboutMetadata) { %>
-      <% const metadataItems = Object.keys(cypressScanAboutMetadata); %>
-      <% metadataItems.forEach((key) => { %>
-        <li>
-          <span id = "cypressScanAboutMetadata">N/A</span>
-        </li>
-      <% }) %>  
-    <% } %>
+    <li id = "cypressScanAboutMetadata">
+    </li>
   </ul>
   <hr class="my-4 d-none d-md-block" />
   <iframe

@@ -1,10 +1,3 @@
-<% const formattedCategoryTitles = { 
-  mustFix: "Must Fix",
-  goodToFix: "Good to Fix",
-  needsReview: "Needs Review",
-  passed: "Passed"
-} %>
-
 <div class="d-flex m-3 d-md-none">
   <div id="issueTypeComboBoxWrapper" class="flex-grow-1 position-relative">
     <div
@@ -29,32 +22,6 @@
     </div>
 
     <ul role="listbox" id="issueTypeListbox" class="w-100" aria-label="Issue type">
-  <% Object.keys(items).forEach((category) => { %>
-      <% if (category !== 'passed') { %>
-      <li
-        tabindex="-1"
-        id="<%= category %>DropdownSelector"
-        class="<%= category %> category-selector d-flex flex-row align-items-center gap-2 position-relative"
-        role="option"
-      >
-        <span
-          id="<%= category %>Title"
-          class="d-flex align-items-center category-name fw-bold d-inline mb-0"
-        >
-            <%= formattedCategoryTitles[category] %>
-        </span>
-        <span id="<%= category %>ItemsInformation" class="category-information">
-            <% if (category !== 'passed' && items[category].totalItems !== 0) { %> 
-              (<%= items[category].rules.length %> <%= items[category].rules.length === 1 ? 'issue' : 'issues' %>) 
-            <% } else if (category !== 'passed' && items[category].totalItems === 0) { %>
-              (0 issues)
-            <% } else { %>
-              (<%= items[category].totalItems %> <%= items[category].totalItems === 1 ? 'occurrence' : 'occurrences' %>)
-            <% } %>
-          </span>
-        </li>
-      <% } %>
-    <% }) %>
     </ul>
   </div>
 
