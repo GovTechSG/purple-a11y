@@ -199,7 +199,7 @@ export const init = async (
         randomToken,
         scanDetails.requestUrl,
         scanDetails.crawlType,
-        null,
+        scanAboutMetadata.viewport,
         scanDetails.urlsCrawled.scanned,
         pagesNotScanned,
         testLabel,
