@@ -74,9 +74,9 @@ const crawlLocalFile = async (
   convertLocalFileToPath(sitemapUrl);
 
   // XML Files
-  if (!sitemapUrl.match(/\.xml$/i)) {
+  console.log((!sitemapUrl.match(/\.txt$/i)))
+  if (!(sitemapUrl.match(/\.xml$/i) || sitemapUrl.match(/\.txt$/i))) {
     linksFromSitemap = [new Request({ url: sitemapUrl })];
-    
   // Non XML file
   } else {
     const username = '';

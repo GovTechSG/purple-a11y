@@ -988,7 +988,7 @@ export const getLinksFromSitemap = async (
           if (isLimitReached()) {
             break;
           }
-          if (childSitemapUrlText.endsWith('.xml')) {
+          if (childSitemapUrlText.endsWith('.xml') || childSitemapUrlText.endsWith('.txt')) {
             await fetchUrls(childSitemapUrlText); // Recursive call for nested sitemaps
           } else {
             addToUrlList(childSitemapUrlText); // Add regular URLs to the list
