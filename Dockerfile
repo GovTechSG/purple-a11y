@@ -58,3 +58,16 @@ COPY . .
 
 # Compile TypeScript
 RUN npm run build || true  # true exits with code 0 - temp workaround until errors are resolved
+
+# Install Robot Framework and necessary libraries
+USER root
+RUN pip3 install robotframework robotframework-seleniumlibrary robotframework-requests
+
+# Create results directory
+RUN mkdir -p /app/results
+
+# Switch back to non-privileged user
+USER purple
+
+# Set entrypoint for running Robot Framework tests
+ENTRYPOINT ["robot", "--outputdir", "/app/results", "/_functionaltests_/functional_test_suite.robot"]
