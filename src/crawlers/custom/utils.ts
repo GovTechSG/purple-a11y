@@ -236,7 +236,7 @@ export const updateMenu = async (page, urlsCrawled) => {
 
 export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
   await page.waitForLoadState('domcontentloaded');
-  log(`Overlay menu: adding to ${menuPos}...`);
+  consoleLogger.info(`Overlay menu: adding to ${menuPos}...`);
   interface CustomWindow extends Window {
     updateMenuPos: (newPos: any) => void;
     handleOnScanClick: () => void;
@@ -393,7 +393,7 @@ export const removeOverlayMenu = async page => {
     })
     .then(removed => {
       if (removed) {
-        log('Overlay Menu: successfully removed');
+        consoleLogger.info('Overlay Menu: successfully removed');
       }
     });
 };
@@ -421,15 +421,25 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
 
   // Detection of new url within page
   page.on('domcontentloaded', async () => {
-    log(`Content loaded: ${page.url()}`);
     try {
-      await removeOverlayMenu(page);
-      await addOverlayMenu(page, processPageParams.urlsCrawled, menuPos);
-      await page.waitForLoadState();
+      
       const existingOverlay = await page.evaluate(() => {
         return document.querySelector('#purple-a11y-shadow-host');
       });
-      if (!existingOverlay) { await addOverlayMenu(page, processPageParams.urlsCrawled, menuPos);}
+
+      consoleLogger.info(`Overlay state: ${existingOverlay}`);
+      
+      if (!existingOverlay) { 
+        consoleLogger.info(`Adding overlay menu to page: ${page.url()}`);
+        await addOverlayMenu(page, processPageParams.urlsCrawled, menuPos);
+      }
+
+      setTimeout(() => {
+        // Timeout here to slow things down a little
+      }, 1000);
+
+      consoleLogger.info(`Overlay state: ${existingOverlay}`);
+      
     } catch (e) {
       consoleLogger.info("Error in adding overlay menu to page");
       silentLogger.info("Error in adding overlay menu to page");
