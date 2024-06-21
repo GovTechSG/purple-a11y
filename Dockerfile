@@ -22,7 +22,7 @@ RUN echo $'<?xml version="1.0" encoding="UTF-8" standalone="no"?> \n\
     <com.izforge.izpack.panels.finish.FinishPanel id="finish"/> \n\
 </AutomatedInstallation> ' >> /opt/verapdf-auto-install-docker.xml
 
-RUN wget "https://downloads.verapdf.org/rel/verapdf-installer.zip" -P /opt
+RUN wget "https://github.com/GovTechSG/purple-a11y/releases/download/cache/verapdf-installer.zip" -P /opt
 RUN unzip /opt/verapdf-installer.zip -d /opt
 RUN latest_version=$(ls -d /opt/verapdf-greenfield-* | sort -V | tail -n 1) && [ -n "$latest_version" ] && \
     "$latest_version/verapdf-install" "/opt/verapdf-auto-install-docker.xml"
