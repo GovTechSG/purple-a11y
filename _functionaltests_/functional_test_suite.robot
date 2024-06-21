@@ -1,8 +1,8 @@
 *** Settings ***
 Library    Process
 Library    OperatingSystem
-Resource   ../resources/keywords.robot
-Resource   ../resources/variables.robot
+Resource   resources/keywords.robot
+Resource   resources/variables.robot
 
 *** Test Cases ***
 Functional Test - Sitemap Scan

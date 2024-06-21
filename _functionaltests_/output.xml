@@ -1,0 +1,782 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 7.0.1 (Python 3.12.2 on darwin)" generated="2024-06-21T15:51:40.194091" rpa="false" schemaversion="5">
+<suite id="s1" name="Functional Test Suite" source="/Users/yixuan/Documents/purple-a11y/_functionaltests_/functional_test_suite.robot">
+<test id="s1-t1" name="Functional Test - Sitemap Scan" line="8">
+<kw name="Run Scan" owner="keywords">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.241217" level="INFO">${command} = npm run cli -- -c sitemap -u http://tech.gov.sg/sitemap.xml -k "John Doe:john@domain.com"</msg>
+<var>${command}</var>
+<arg>npm run cli -- -c ${scanner} -u ${url} -k "John Doe:john@domain.com"</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2024-06-21T15:51:40.240930" elapsed="0.000334"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.242867" level="FAIL">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</msg>
+<arg>${device} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -d ${device}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.241449" elapsed="0.001695">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${viewport} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -w ${viewport}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.243324" elapsed="0.000028"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${scanner} == "website" or ${scanner} == "sitemap"</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -p ${maxpages}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.243490" elapsed="0.000026"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<var>${command}</var>
+<arg>${command} ${other_options}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.243645" elapsed="0.000025"/>
+</kw>
+<kw name="Run Process" owner="Process">
+<arg>${command}</arg>
+<doc>Runs a process and waits for it to complete.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.243786" elapsed="0.000022"/>
+</kw>
+<kw name="Should Be Equal As Strings" owner="BuiltIn">
+<arg>${result.rc}</arg>
+<arg>0</arg>
+<doc>Fails if objects are unequal after converting them to strings.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.243916" elapsed="0.000023"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stdout}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.244056" elapsed="0.000023"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stderr}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.244186" elapsed="0.000022"/>
+</kw>
+<arg>sitemap</arg>
+<arg>${SITEMAP_URL}</arg>
+<arg>${CUSTOM_DEVICE}</arg>
+<arg>${VIEWPORT_WIDTH}</arg>
+<arg>${MAX_PAGES}</arg>
+<status status="FAIL" start="2024-06-21T15:51:40.239941" elapsed="0.004416">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Verify Scan Result" owner="keywords">
+<arg>${OUTPUT_DIR}</arg>
+<status status="NOT RUN" start="2024-06-21T15:51:40.244851" elapsed="0.000051"/>
+</kw>
+<doc>Verify that the sitemap scan works correctly.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.239195" elapsed="0.006008">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</test>
+<test id="s1-t2" name="Functional Test - Website Scan" line="13">
+<kw name="Run Scan" owner="keywords">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.247278" level="INFO">${command} = npm run cli -- -c website -u http://tech.gov.sg -k "John Doe:john@domain.com"</msg>
+<var>${command}</var>
+<arg>npm run cli -- -c ${scanner} -u ${url} -k "John Doe:john@domain.com"</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2024-06-21T15:51:40.246982" elapsed="0.000332"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.247961" level="FAIL">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</msg>
+<arg>${device} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -d ${device}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.247487" elapsed="0.000623">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${viewport} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -w ${viewport}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.248276" elapsed="0.000027"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${scanner} == "website" or ${scanner} == "sitemap"</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -p ${maxpages}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.248495" elapsed="0.000033"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<var>${command}</var>
+<arg>${command} ${other_options}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.248663" elapsed="0.000026"/>
+</kw>
+<kw name="Run Process" owner="Process">
+<arg>${command}</arg>
+<doc>Runs a process and waits for it to complete.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.248807" elapsed="0.000023"/>
+</kw>
+<kw name="Should Be Equal As Strings" owner="BuiltIn">
+<arg>${result.rc}</arg>
+<arg>0</arg>
+<doc>Fails if objects are unequal after converting them to strings.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.248939" elapsed="0.000023"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stdout}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.249086" elapsed="0.000024"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stderr}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.249217" elapsed="0.000022"/>
+</kw>
+<arg>website</arg>
+<arg>${BASE_URL}</arg>
+<arg>${CUSTOM_DEVICE}</arg>
+<arg>${VIEWPORT_WIDTH}</arg>
+<arg>${MAX_PAGES}</arg>
+<status status="FAIL" start="2024-06-21T15:51:40.246234" elapsed="0.003136">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Verify Scan Result" owner="keywords">
+<arg>${OUTPUT_DIR}</arg>
+<status status="NOT RUN" start="2024-06-21T15:51:40.249648" elapsed="0.000031"/>
+</kw>
+<doc>Verify that the website scan works correctly.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.245627" elapsed="0.004540">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</test>
+<test id="s1-t3" name="Functional Test - Custom Flow Scan" line="18">
+<kw name="Run Scan" owner="keywords">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.252027" level="INFO">${command} = npm run cli -- -c custom -u http://tech.gov.sg -k "John Doe:john@domain.com"</msg>
+<var>${command}</var>
+<arg>npm run cli -- -c ${scanner} -u ${url} -k "John Doe:john@domain.com"</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2024-06-21T15:51:40.251786" elapsed="0.000274"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.253166" level="FAIL">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</msg>
+<arg>${device} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -d ${device}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.252461" elapsed="0.000874">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${viewport} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -w ${viewport}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.253566" elapsed="0.000034"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${scanner} == "website" or ${scanner} == "sitemap"</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -p ${maxpages}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.253878" elapsed="0.000049"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<var>${command}</var>
+<arg>${command} ${other_options}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.254162" elapsed="0.000044"/>
+</kw>
+<kw name="Run Process" owner="Process">
+<arg>${command}</arg>
+<doc>Runs a process and waits for it to complete.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.254357" elapsed="0.000026"/>
+</kw>
+<kw name="Should Be Equal As Strings" owner="BuiltIn">
+<arg>${result.rc}</arg>
+<arg>0</arg>
+<doc>Fails if objects are unequal after converting them to strings.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.254576" elapsed="0.000077"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stdout}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.254875" elapsed="0.000035"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stderr}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.255076" elapsed="0.000035"/>
+</kw>
+<arg>custom</arg>
+<arg>${BASE_URL}</arg>
+<arg>${CUSTOM_DEVICE}</arg>
+<arg>${VIEWPORT_WIDTH}</arg>
+<arg>${MAX_PAGES}</arg>
+<status status="FAIL" start="2024-06-21T15:51:40.251236" elapsed="0.004030">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Verify Scan Result" owner="keywords">
+<arg>${OUTPUT_DIR}</arg>
+<status status="NOT RUN" start="2024-06-21T15:51:40.256108" elapsed="0.000171"/>
+</kw>
+<doc>Verify that the custom flow scan works correctly.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.250460" elapsed="0.006576">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</test>
+<test id="s1-t4" name="Functional Test - Intelligent Scan" line="23">
+<kw name="Run Scan" owner="keywords">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.259925" level="INFO">${command} = npm run cli -- -c intelligent -u http://tech.gov.sg -k "John Doe:john@domain.com"</msg>
+<var>${command}</var>
+<arg>npm run cli -- -c ${scanner} -u ${url} -k "John Doe:john@domain.com"</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2024-06-21T15:51:40.259602" elapsed="0.000367"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.260679" level="FAIL">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</msg>
+<arg>${device} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -d ${device}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.260181" elapsed="0.000630">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${viewport} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -w ${viewport}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.260993" elapsed="0.000028"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${scanner} == "website" or ${scanner} == "sitemap"</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -p ${maxpages}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.261160" elapsed="0.000024"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<var>${command}</var>
+<arg>${command} ${other_options}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.261305" elapsed="0.000024"/>
+</kw>
+<kw name="Run Process" owner="Process">
+<arg>${command}</arg>
+<doc>Runs a process and waits for it to complete.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.261437" elapsed="0.000022"/>
+</kw>
+<kw name="Should Be Equal As Strings" owner="BuiltIn">
+<arg>${result.rc}</arg>
+<arg>0</arg>
+<doc>Fails if objects are unequal after converting them to strings.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.261565" elapsed="0.000022"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stdout}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.261702" elapsed="0.000022"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stderr}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.261828" elapsed="0.000022"/>
+</kw>
+<arg>intelligent</arg>
+<arg>${BASE_URL}</arg>
+<arg>${CUSTOM_DEVICE}</arg>
+<arg>${VIEWPORT_WIDTH}</arg>
+<arg>${MAX_PAGES}</arg>
+<status status="FAIL" start="2024-06-21T15:51:40.258799" elapsed="0.003171">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Verify Scan Result" owner="keywords">
+<arg>${OUTPUT_DIR}</arg>
+<status status="NOT RUN" start="2024-06-21T15:51:40.262237" elapsed="0.000031"/>
+</kw>
+<doc>Verify that the intelligent scan works correctly.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.258061" elapsed="0.004660">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</test>
+<test id="s1-t5" name="Functional Test - Scan with Basic Authentication" line="28">
+<kw name="Create List" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.263772" level="INFO">${auth_header} = ['Authorization: Basic valid-username:valid-password']</msg>
+<var>${auth_header}</var>
+<arg>Authorization: Basic ${USERNAME}:${PASSWORD}</arg>
+<doc>Returns a list containing given items.</doc>
+<status status="PASS" start="2024-06-21T15:51:40.263498" elapsed="0.000309"/>
+</kw>
+<kw name="Run Scan" owner="keywords">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.265550" level="INFO">${command} = npm run cli -- -c website -u http://tech.gov.sg -k "John Doe:john@domain.com"</msg>
+<var>${command}</var>
+<arg>npm run cli -- -c ${scanner} -u ${url} -k "John Doe:john@domain.com"</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2024-06-21T15:51:40.265189" elapsed="0.000441"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.266475" level="FAIL">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</msg>
+<arg>${device} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -d ${device}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.265855" elapsed="0.000753">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${viewport} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -w ${viewport}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.266794" elapsed="0.000029"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${scanner} == "website" or ${scanner} == "sitemap"</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -p ${maxpages}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.266957" elapsed="0.000024"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<var>${command}</var>
+<arg>${command} ${other_options}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.267107" elapsed="0.000029"/>
+</kw>
+<kw name="Run Process" owner="Process">
+<arg>${command}</arg>
+<doc>Runs a process and waits for it to complete.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.267250" elapsed="0.000022"/>
+</kw>
+<kw name="Should Be Equal As Strings" owner="BuiltIn">
+<arg>${result.rc}</arg>
+<arg>0</arg>
+<doc>Fails if objects are unequal after converting them to strings.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.267380" elapsed="0.000023"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stdout}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.267514" elapsed="0.000022"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stderr}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.267638" elapsed="0.000022"/>
+</kw>
+<arg>website</arg>
+<arg>${BASE_URL}</arg>
+<arg>${CUSTOM_DEVICE}</arg>
+<arg>${VIEWPORT_WIDTH}</arg>
+<arg>${MAX_PAGES}</arg>
+<arg>-m ${auth_header}</arg>
+<status status="FAIL" start="2024-06-21T15:51:40.264148" elapsed="0.003637">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Verify Scan Result" owner="keywords">
+<arg>${OUTPUT_DIR}</arg>
+<status status="NOT RUN" start="2024-06-21T15:51:40.268059" elapsed="0.000030"/>
+</kw>
+<doc>Verify that the scan works with basic authentication.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.263021" elapsed="0.005537">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</test>
+<test id="s1-t6" name="Functional Test - Scan with PDF Files" line="34">
+<kw name="Run Scan" owner="keywords">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.270148" level="INFO">${command} = npm run cli -- -c website -u http://tech.gov.sg -k "John Doe:john@domain.com"</msg>
+<var>${command}</var>
+<arg>npm run cli -- -c ${scanner} -u ${url} -k "John Doe:john@domain.com"</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2024-06-21T15:51:40.269913" elapsed="0.000269"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.270781" level="FAIL">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</msg>
+<arg>${device} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -d ${device}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.270326" elapsed="0.000583">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${viewport} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -w ${viewport}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.271072" elapsed="0.000282"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${scanner} == "website" or ${scanner} == "sitemap"</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -p ${maxpages}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.271503" elapsed="0.000026"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<var>${command}</var>
+<arg>${command} ${other_options}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.271657" elapsed="0.000024"/>
+</kw>
+<kw name="Run Process" owner="Process">
+<arg>${command}</arg>
+<doc>Runs a process and waits for it to complete.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.272030" elapsed="0.000064"/>
+</kw>
+<kw name="Should Be Equal As Strings" owner="BuiltIn">
+<arg>${result.rc}</arg>
+<arg>0</arg>
+<doc>Fails if objects are unequal after converting them to strings.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.272247" elapsed="0.000028"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stdout}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.272400" elapsed="0.000026"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stderr}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.272556" elapsed="0.000024"/>
+</kw>
+<arg>website</arg>
+<arg>${BASE_URL}</arg>
+<arg>${CUSTOM_DEVICE}</arg>
+<arg>${VIEWPORT_WIDTH}</arg>
+<arg>${MAX_PAGES}</arg>
+<arg>-i pdf-only</arg>
+<status status="FAIL" start="2024-06-21T15:51:40.269362" elapsed="0.003365">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Verify Scan Result" owner="keywords">
+<arg>${OUTPUT_DIR}</arg>
+<status status="NOT RUN" start="2024-06-21T15:51:40.273124" elapsed="0.000039"/>
+</kw>
+<doc>Verify that the scan includes PDF files.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.268848" elapsed="0.004563">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</test>
+<test id="s1-t7" name="Functional Test - Scan with Safe Mode" line="39">
+<kw name="Run Scan" owner="keywords">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.275562" level="INFO">${command} = npm run cli -- -c website -u http://tech.gov.sg -k "John Doe:john@domain.com"</msg>
+<var>${command}</var>
+<arg>npm run cli -- -c ${scanner} -u ${url} -k "John Doe:john@domain.com"</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2024-06-21T15:51:40.275323" elapsed="0.000276"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.276195" level="FAIL">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</msg>
+<arg>${device} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -d ${device}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.275747" elapsed="0.000576">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${viewport} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -w ${viewport}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.276488" elapsed="0.000152"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${scanner} == "website" or ${scanner} == "sitemap"</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -p ${maxpages}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.276859" elapsed="0.000031"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<var>${command}</var>
+<arg>${command} ${other_options}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.277097" elapsed="0.000055"/>
+</kw>
+<kw name="Run Process" owner="Process">
+<arg>${command}</arg>
+<doc>Runs a process and waits for it to complete.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.277335" elapsed="0.000033"/>
+</kw>
+<kw name="Should Be Equal As Strings" owner="BuiltIn">
+<arg>${result.rc}</arg>
+<arg>0</arg>
+<doc>Fails if objects are unequal after converting them to strings.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.277493" elapsed="0.000025"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stdout}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.277634" elapsed="0.000024"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stderr}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.277767" elapsed="0.000022"/>
+</kw>
+<arg>website</arg>
+<arg>${BASE_URL}</arg>
+<arg>${CUSTOM_DEVICE}</arg>
+<arg>${VIEWPORT_WIDTH}</arg>
+<arg>${MAX_PAGES}</arg>
+<arg>-f yes</arg>
+<status status="FAIL" start="2024-06-21T15:51:40.274751" elapsed="0.003164">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Verify Scan Result" owner="keywords">
+<arg>${OUTPUT_DIR}</arg>
+<status status="NOT RUN" start="2024-06-21T15:51:40.278182" elapsed="0.000032"/>
+</kw>
+<doc>Verify that the scan runs in safe mode.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.274146" elapsed="0.004273">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</test>
+<test id="s1-t8" name="Functional Test - Scan in Headless Mode" line="44">
+<kw name="Run Scan" owner="keywords">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.280321" level="INFO">${command} = npm run cli -- -c website -u http://tech.gov.sg -k "John Doe:john@domain.com"</msg>
+<var>${command}</var>
+<arg>npm run cli -- -c ${scanner} -u ${url} -k "John Doe:john@domain.com"</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2024-06-21T15:51:40.280010" elapsed="0.000348"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.281878" level="FAIL">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</msg>
+<arg>${device} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -d ${device}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.280878" elapsed="0.001151">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${viewport} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -w ${viewport}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.282235" elapsed="0.000031"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${scanner} == "website" or ${scanner} == "sitemap"</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -p ${maxpages}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.282433" elapsed="0.000069"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<var>${command}</var>
+<arg>${command} ${other_options}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.282665" elapsed="0.000027"/>
+</kw>
+<kw name="Run Process" owner="Process">
+<arg>${command}</arg>
+<doc>Runs a process and waits for it to complete.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.282810" elapsed="0.000031"/>
+</kw>
+<kw name="Should Be Equal As Strings" owner="BuiltIn">
+<arg>${result.rc}</arg>
+<arg>0</arg>
+<doc>Fails if objects are unequal after converting them to strings.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.282987" elapsed="0.000063"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stdout}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.283271" elapsed="0.000028"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stderr}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.283440" elapsed="0.000050"/>
+</kw>
+<arg>website</arg>
+<arg>${BASE_URL}</arg>
+<arg>${CUSTOM_DEVICE}</arg>
+<arg>${VIEWPORT_WIDTH}</arg>
+<arg>${MAX_PAGES}</arg>
+<arg>-h ${HEADLESS}</arg>
+<status status="FAIL" start="2024-06-21T15:51:40.279421" elapsed="0.004691">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Verify Scan Result" owner="keywords">
+<arg>${OUTPUT_DIR}</arg>
+<status status="NOT RUN" start="2024-06-21T15:51:40.285284" elapsed="0.000074"/>
+</kw>
+<doc>Verify that the scan runs in headless mode.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.278899" elapsed="0.006817">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</test>
+<test id="s1-t9" name="Functional Test - Scan with Chrome Browser" line="49">
+<kw name="Run Scan" owner="keywords">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.287896" level="INFO">${command} = npm run cli -- -c website -u http://tech.gov.sg -k "John Doe:john@domain.com"</msg>
+<var>${command}</var>
+<arg>npm run cli -- -c ${scanner} -u ${url} -k "John Doe:john@domain.com"</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2024-06-21T15:51:40.287654" elapsed="0.000278"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.288536" level="FAIL">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</msg>
+<arg>${device} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -d ${device}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.288083" elapsed="0.000582">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${viewport} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -w ${viewport}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.288847" elapsed="0.000034"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${scanner} == "website" or ${scanner} == "sitemap"</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -p ${maxpages}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.289019" elapsed="0.000025"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<var>${command}</var>
+<arg>${command} ${other_options}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.289309" elapsed="0.000077"/>
+</kw>
+<kw name="Run Process" owner="Process">
+<arg>${command}</arg>
+<doc>Runs a process and waits for it to complete.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.289828" elapsed="0.000127"/>
+</kw>
+<kw name="Should Be Equal As Strings" owner="BuiltIn">
+<arg>${result.rc}</arg>
+<arg>0</arg>
+<doc>Fails if objects are unequal after converting them to strings.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.290254" elapsed="0.000045"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stdout}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.290458" elapsed="0.000026"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stderr}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.290603" elapsed="0.000023"/>
+</kw>
+<arg>website</arg>
+<arg>${BASE_URL}</arg>
+<arg>${CUSTOM_DEVICE}</arg>
+<arg>${VIEWPORT_WIDTH}</arg>
+<arg>${MAX_PAGES}</arg>
+<arg>-b ${BROWSER}</arg>
+<status status="FAIL" start="2024-06-21T15:51:40.287069" elapsed="0.003702">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Verify Scan Result" owner="keywords">
+<arg>${OUTPUT_DIR}</arg>
+<status status="NOT RUN" start="2024-06-21T15:51:40.291072" elapsed="0.000033"/>
+</kw>
+<doc>Verify that the scan runs in Chrome browser.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.286190" elapsed="0.005598">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</test>
+<test id="s1-t10" name="Functional Test - Scan and Save Results as Zip" line="54">
+<kw name="Run Scan" owner="keywords">
+<kw name="Set Variable" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.293697" level="INFO">${command} = npm run cli -- -c website -u http://tech.gov.sg -k "John Doe:john@domain.com"</msg>
+<var>${command}</var>
+<arg>npm run cli -- -c ${scanner} -u ${url} -k "John Doe:john@domain.com"</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="PASS" start="2024-06-21T15:51:40.293397" elapsed="0.000365"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<msg time="2024-06-21T15:51:40.295098" level="FAIL">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</msg>
+<arg>${device} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -d ${device}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.294004" elapsed="0.001227">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${viewport} != None</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -w ${viewport}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.295397" elapsed="0.000028"/>
+</kw>
+<kw name="Run Keyword If" owner="BuiltIn">
+<arg>${scanner} == "website" or ${scanner} == "sitemap"</arg>
+<arg>Set Variable</arg>
+<arg>${command}</arg>
+<arg>${command} -p ${maxpages}</arg>
+<doc>Runs the given keyword with the given arguments, if ``condition`` is true.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.295556" elapsed="0.000025"/>
+</kw>
+<kw name="Set Variable" owner="BuiltIn">
+<var>${command}</var>
+<arg>${command} ${other_options}</arg>
+<doc>Returns the given values which can then be assigned to a variables.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.295701" elapsed="0.000023"/>
+</kw>
+<kw name="Run Process" owner="Process">
+<arg>${command}</arg>
+<doc>Runs a process and waits for it to complete.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.295834" elapsed="0.000022"/>
+</kw>
+<kw name="Should Be Equal As Strings" owner="BuiltIn">
+<arg>${result.rc}</arg>
+<arg>0</arg>
+<doc>Fails if objects are unequal after converting them to strings.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.295963" elapsed="0.000022"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stdout}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.296093" elapsed="0.000022"/>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${result.stderr}</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.296215" elapsed="0.000021"/>
+</kw>
+<arg>website</arg>
+<arg>${BASE_URL}</arg>
+<arg>${CUSTOM_DEVICE}</arg>
+<arg>${VIEWPORT_WIDTH}</arg>
+<arg>${MAX_PAGES}</arg>
+<arg>-o ${ZIP_FILENAME}</arg>
+<status status="FAIL" start="2024-06-21T15:51:40.292776" elapsed="0.003575">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</kw>
+<kw name="File Should Exist" owner="OperatingSystem">
+<arg>${ZIP_FILENAME}</arg>
+<doc>Fails unless the given ``path`` points to an existing file.</doc>
+<status status="NOT RUN" start="2024-06-21T15:51:40.296546" elapsed="0.000024"/>
+</kw>
+<doc>Verify that the scan results can be saved as a zip file.</doc>
+<status status="FAIL" start="2024-06-21T15:51:40.292104" elapsed="0.005082">Evaluating expression 'desktop != None' failed: NameError: name 'desktop' is not defined nor importable as module</status>
+</test>
+<status status="FAIL" start="2024-06-21T15:51:40.196092" elapsed="0.102930"/>
+</suite>
+<statistics>
+<total>
+<stat pass="0" fail="10" skip="0">All Tests</stat>
+</total>
+<tag>
+</tag>
+<suite>
+<stat pass="0" fail="10" skip="0" id="s1" name="Functional Test Suite">Functional Test Suite</stat>
+</suite>
+</statistics>
+<errors>
+</errors>
+</robot>
