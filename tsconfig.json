@@ -1,15 +1,12 @@
 {
   "compilerOptions": {
-    "outDir": "./dist",
-    "allowJs": true,
-    "target": "es2021",
-    "module": "nodenext",
-    "rootDir": "./src",
-    "skipLibCheck": true
+  "outDir": "./dist",
+  "allowJs": true,
+  "target": "es2021",
+  "module": "nodenext",
+  "rootDir": "./src",
+  "skipLibCheck": true,
+  "types": ["cypress"]
   },
-  "include": ["./src/**/*"],
-  "exclude": [
-    "node_modules",
-    "**/*.test.ts"
-  ]
-}
+  "include": ["./src/**/*", "cypress.d.ts", "cypress"]
+  }
