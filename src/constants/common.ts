@@ -1786,8 +1786,12 @@ function isValidHttpUrl(urlString) {
 }
 
 export const isFilePath = (url: string): boolean => {
-  const driveLetterPattern = /^[A-Z]:\//i;
-  return url.startsWith('file://') || url.startsWith('/') || driveLetterPattern.test(url);
+  const driveLetterPattern = /^[A-Z]:/i;
+  const backslashPattern = /\\/;
+  return url.startsWith('file://')  ||
+         url.startsWith('/')         ||
+         driveLetterPattern.test(url) || 
+         backslashPattern.test(url);
 };
 
 export function convertLocalFileToPath(url: string): string {
