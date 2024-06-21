@@ -7,7 +7,6 @@ import {
   failedRequestHandler,
   isUrlPdf,
 } from './commonCrawlerFunc.js';
-
 import constants, { guiInfoStatusTypes, basicAuthRegex } from '../constants/constants.js';
 import {
   getLinksFromSitemap,
@@ -74,9 +73,9 @@ const crawlLocalFile = async (
   convertLocalFileToPath(sitemapUrl);
 
   // XML Files
-  if (!sitemapUrl.match(/\.xml$/i)) {
+  console.log((!sitemapUrl.match(/\.txt$/i)))
+  if (!(sitemapUrl.match(/\.xml$/i) || sitemapUrl.match(/\.txt$/i))) {
     linksFromSitemap = [new Request({ url: sitemapUrl })];
-    
   // Non XML file
   } else {
     const username = '';
@@ -145,23 +144,13 @@ const crawlLocalFile = async (
   uuidToPdfMapping[pdfFileName] = trimmedUrl;
 
   if (!isUrlPdf(request.url)) {
-    let browserUsed;
-    // Playwright only supports chromium,firefox and webkit thus hardcoded to chromium
-    if (browser === 'chromium') {
-      browserUsed = await playwright.chromium.launch();
-    } else if (browser === 'firefox') {
-      browserUsed = await playwright.firefox.launch();
-    } else if (browser === 'webkit') {
-      browserUsed = await playwright.webkit.launch();
-    } else if (browser === 'chrome') {
-      browserUsed = await playwright.chromium.launch(); //chrome not supported, default to chromium
-    } else {
-      console.log('Browser not supported, please use chrome, chromium, firefox, webkit');
-      console.log(' ');
-      return;
-    }
-    const context = await browserUsed.newContext();
-    const page = await context.newPage();
+
+    const browserContext = await constants.launcher.launchPersistentContext('', {
+      headless: process.env.CRAWLEE_HEADLESS === '1',
+      ...getPlaywrightLaunchOptions(browser),
+    });
+  
+    const page = await browserContext.newPage();
     request.url = convertPathToLocalFile(request.url);
     await page.goto(request.url);
     const results = await runAxeScript(includeScreenshots, page, randomToken, null);
