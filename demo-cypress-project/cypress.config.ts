@@ -23,7 +23,7 @@ const thresholds: Thresholds = { mustFix: 20, goodToFix: 20 };
 const scanAboutMetadata: ScanAboutMetadata = { browser: 'Chrome (Desktop)' };
 
 const purpleA11y = await purpleA11yInit(
-    "https://govtechsg.github.io", // initial url to start scan
+    "https://tech.gov.sg", // initial url to start scan
     "Demo Cypress Scan", // label for test
     "YX",
     "accesibility@tech.gov.sg",
