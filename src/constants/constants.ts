@@ -359,6 +359,7 @@ const urlCheckStatuses = {
       'No browser available to run scans. Please ensure you have Chrome or Edge (for Windows only) installed.',
   },
   axiosTimeout: { code: 18, message: 'Axios timeout exceeded. Falling back on browser checks.' },
+  notALocalFile: { code: 19, message: 'Provided filepath is not a local html or sitemap file.' },
 };
 
 export enum BrowserTypes {

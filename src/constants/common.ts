@@ -528,12 +528,13 @@ export const checkUrl = async (
   }
 
   if (
-    (res.status === constants.urlCheckStatuses.success.code && scanner === ScannerTypes.SITEMAP) ||
-    (res.status === constants.urlCheckStatuses.success.code && scanner === ScannerTypes.LOCALFILE)
+    (res.status === constants.urlCheckStatuses.success.code && scanner === (ScannerTypes.SITEMAP || ScannerTypes.LOCALFILE))
   ) {
     const isSitemap = isSitemapContent(res.content);
 
-    if (!isSitemap) {
+    if (!isSitemap && scanner === ScannerTypes.LOCALFILE) {
+      res.status = constants.urlCheckStatuses.notALocalFile.code;
+    } else if (!isSitemap){
       res.status = constants.urlCheckStatuses.notASitemap.code;
     }
   }

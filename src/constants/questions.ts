@@ -117,11 +117,16 @@ const startScanQuestions = [
             answers.isLocalFileScan = true;
             answers.finalUrl = finalFilePath;
             return true;
-          } else {
+          } else if (answers.scanner === ScannerTypes.LOCALFILE){
+            return statuses.notALocalFile.message;
+          } else{
             return statuses.notASitemap.message;
           }
         case statuses.notASitemap.code:
           return statuses.notASitemap.message;
+
+        case statuses.notALocalFile.code:
+          return statuses.notALocalFile.message;
       }
     },
     filter: (input: string) => sanitizeUrlInput(input.trim()).url,
