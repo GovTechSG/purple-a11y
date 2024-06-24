@@ -124,7 +124,7 @@
                 const svgIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
                 svgIcon.setAttribute("tabindex", "-1");
                 svgIcon.id = `${category}Description`;
-                svgIcon.className = "ms-2";
+                svgIcon.setAttribute("class", "ms-2");
                 svgIcon.setAttribute("data-bs-toggle", "tooltip");
                 svgIcon.setAttribute("data-bs-placement", "top");
                 svgIcon.setAttribute("title", categoryData.description);
