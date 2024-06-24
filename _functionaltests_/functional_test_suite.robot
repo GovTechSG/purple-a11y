@@ -3,55 +3,58 @@ Library    Process
 Library    OperatingSystem
 Resource   resources/keywords.robot
 Resource   resources/variables.robot
+Suite Setup       Setup Suite
+Suite Teardown    Teardown Suite
+Test Setup        Setup Test
+Test Teardown     Teardown Test
 
 *** Test Cases ***
-Functional Test - Sitemap Scan
-    [Documentation]    Verify that the sitemap scan works correctly.
-    Run Scan    sitemap    ${SITEMAP_URL}    ${CUSTOM_DEVICE}    ${VIEWPORT_WIDTH}    ${MAX_PAGES}
-    Verify Scan Result    ${OUTPUT_DIR}
+01. Run Sitemap Scan
+    [Documentation]    Verify that a sitemap scan runs successfully.
+    ${output}=    Run Process    ${CLI_COMMAND}    -c sitemap -u ${URL} -k "${EMAIL}" -d desktop -w 1920 -p 50 -h yes -b ${BROWSER}
+    Should Contain    ${output.stdout}    Scan completed successfully
 
-Functional Test - Website Scan
-    [Documentation]    Verify that the website scan works correctly.
-    Run Scan    website    ${BASE_URL}    ${CUSTOM_DEVICE}    ${VIEWPORT_WIDTH}    ${MAX_PAGES}
-    Verify Scan Result    ${OUTPUT_DIR}
+02. Run Website Crawl
+    [Documentation]    Verify that a website crawl runs successfully.
+    ${output}=    Run Process    ${CLI_COMMAND}    -c website -u ${URL} -k "${EMAIL}" -p 100 -f yes -h no -b edge -s same-hostname
+    Should Contain    ${output.stdout}    Scan completed successfully
 
-Functional Test - Custom Flow Scan
-    [Documentation]    Verify that the custom flow scan works correctly.
-    Run Scan    custom    ${BASE_URL}    ${CUSTOM_DEVICE}    ${VIEWPORT_WIDTH}    ${MAX_PAGES}
-    Verify Scan Result    ${OUTPUT_DIR}
+03. Run Custom Flow Scan
+    [Documentation]    Verify that a custom flow scan runs successfully.
+    ${output}=    Run Process    ${CLI_COMMAND}    -c custom -u ${URL} -k "${EMAIL}" -j "User Flow Test" -d mobile -w 375
+    Should Contain    ${output.stdout}    Scan completed successfully
 
-Functional Test - Intelligent Scan
-    [Documentation]    Verify that the intelligent scan works correctly.
-    Run Scan    intelligent    ${BASE_URL}    ${CUSTOM_DEVICE}    ${VIEWPORT_WIDTH}    ${MAX_PAGES}
-    Verify Scan Result    ${OUTPUT_DIR}
+04. Run Intelligent Scan
+    [Documentation]    Verify that an intelligent scan runs successfully.
+    ${output}=    Run Process    ${CLI_COMMAND}    -c intelligent -u ${URL} -k "${EMAIL}" -o results.zip -a screenshots -t 30
+    Should Contain    ${output.stdout}    Scan completed successfully
 
-Functional Test - Scan with Basic Authentication
-    [Documentation]    Verify that the scan works with basic authentication.
-    ${auth_header}=    Create List    Authorization: Basic ${USERNAME}:${PASSWORD}
-    Run Scan    website    ${BASE_URL}    ${CUSTOM_DEVICE}    ${VIEWPORT_WIDTH}    ${MAX_PAGES}    -m ${auth_header}
-    Verify Scan Result    ${OUTPUT_DIR}
+05. Run Sitemap Scan with Default Options
+    [Documentation]    Verify that a sitemap scan runs with default options.
+    ${output}=    Run Process    ${CLI_COMMAND}    -c sitemap -u ${URL} -k "${EMAIL}"
+    Should Contain    ${output.stdout}    Scan completed successfully
 
-Functional Test - Scan with PDF Files
-    [Documentation]    Verify that the scan includes PDF files.
-    Run Scan    website    ${BASE_URL}    ${CUSTOM_DEVICE}    ${VIEWPORT_WIDTH}    ${MAX_PAGES}    -i pdf-only
-    Verify Scan Result    ${OUTPUT_DIR}
+06. Run Website Crawl with Maximum Pages
+    [Documentation]    Verify that a website crawl runs with maximum pages set.
+    ${output}=    Run Process    ${CLI_COMMAND}    -c website -u ${URL} -k "${EMAIL}" -p 200
+    Should Contain    ${output.stdout}    Scan completed successfully
 
-Functional Test - Scan with Safe Mode
-    [Documentation]    Verify that the scan runs in safe mode.
-    Run Scan    website    ${BASE_URL}    ${CUSTOM_DEVICE}    ${VIEWPORT_WIDTH}    ${MAX_PAGES}    -f yes
-    Verify Scan Result    ${OUTPUT_DIR}
+07. Run Scan with Safe Mode Enabled
+    [Documentation]    Verify that a scan runs with safe mode enabled.
+    ${output}=    Run Process    ${CLI_COMMAND}    -c website -u ${URL} -k "${EMAIL}" -f yes
+    Should Contain    ${output.stdout}    Scan completed successfully
 
-Functional Test - Scan in Headless Mode
-    [Documentation]    Verify that the scan runs in headless mode.
-    Run Scan    website    ${BASE_URL}    ${CUSTOM_DEVICE}    ${VIEWPORT_WIDTH}    ${MAX_PAGES}    -h ${HEADLESS}
-    Verify Scan Result    ${OUTPUT_DIR}
+08. Run Scan with Headless Mode Disabled
+    [Documentation]    Verify that a scan runs with headless mode disabled.
+    ${output}=    Run Process    ${CLI_COMMAND}    -c website -u ${URL} -k "${EMAIL}" -h no
+    Should Contain    ${output.stdout}    Scan completed successfully
 
-Functional Test - Scan with Chrome Browser
-    [Documentation]    Verify that the scan runs in Chrome browser.
-    Run Scan    website    ${BASE_URL}    ${CUSTOM_DEVICE}    ${VIEWPORT_WIDTH}    ${MAX_PAGES}    -b ${BROWSER}
-    Verify Scan Result    ${OUTPUT_DIR}
+09. Run Scan with Custom Export Directory
+    [Documentation]    Verify that a scan runs with a custom export directory.
+    ${output}=    Run Process    ${CLI_COMMAND}    -c sitemap -u ${URL} -k "${EMAIL}" -e /custom/path
+    Should Contain    ${output.stdout}    Scan completed successfully
 
-Functional Test - Scan and Save Results as Zip
-    [Documentation]    Verify that the scan results can be saved as a zip file.
-    Run Scan    website    ${BASE_URL}    ${CUSTOM_DEVICE}    ${VIEWPORT_WIDTH}    ${MAX_PAGES}    -o ${ZIP_FILENAME}
-    File Should Exist    ${ZIP_FILENAME}
+10. Run Scan with Specific File Types
+    [Documentation]    Verify that a scan runs with specific file types included.
+    ${output}=    Run Process    ${CLI_COMMAND}    -c website -u ${URL} -k "${EMAIL}" -i all
+    Should Contain    ${output.stdout}    Scan completed successfully

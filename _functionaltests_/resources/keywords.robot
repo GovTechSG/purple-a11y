@@ -1,4 +1,17 @@
 *** Keywords ***
+
+Setup Suite
+    Log    Suite Setup
+
+Teardown Suite
+    Log    Suite Teardown
+
+Setup Test
+    Log    Test Setup
+
+Teardown Test
+    Log    Test Teardown
+    
 Run Scan
     [Arguments]    ${scanner}    ${url}    ${device}=    ${viewport}=    ${maxpages}=100    ${other_options}=
     ${command}=    Set Variable    npm run cli -- -c ${scanner} -u ${url} -k "John Doe:john@domain.com"

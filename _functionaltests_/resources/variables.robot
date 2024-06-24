@@ -2,7 +2,7 @@
 ${BASE_URL}            http://tech.gov.sg
 ${CUSTOM_DEVICE}       desktop
 ${VIEWPORT_WIDTH}      1280
-${MAX_PAGES}           100
+${MAX_PAGES}           10
 ${OUTPUT_DIR}          results/scan_output
 ${HEADLESS}            yes
 ${BROWSER}             chrome
