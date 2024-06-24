@@ -5,9 +5,10 @@
     "target": "es2021",
     "module": "nodenext",
     "rootDir": "./src",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["cypress"]
   },
-  "include": ["./src/**/*"],
+  "include": ["./src/**/*", "cypress.d.ts"],
   "exclude": [
     "node_modules",
     "**/*.test.ts"
