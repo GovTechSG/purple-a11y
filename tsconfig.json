@@ -7,10 +7,9 @@
     "rootDir": "./src",
     "skipLibCheck": true
   },
-  "include": ["./src/**/*"],
+  "include": ["./src/**/*" , "demo-cypress-project/cypress.d.ts"],
   "exclude": [
     "node_modules",
     "**/*.test.ts"
-  ],
-  "include": ["./src/**/*", "demo-cypress-project/cypress.d.ts"]
+  ]
 }
