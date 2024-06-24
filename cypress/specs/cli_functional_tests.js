@@ -14,7 +14,7 @@ describe('CLI Functional Tests', function () {
     });
     it('Scan Website - Custom Device', function () {
         cy.exec('npm run cli -- -c website -k "yx:accessibility@tech.gov.sg" -u https://www.tech.gov.sg -b chrome -d mobile');
-    });npm install cypress --save-dev
+    });
 
     it('Custom Flow Scan - Specific Viewport Width', function () {
         cy.exec('npm run cli -- -c custom -k "yx:accessibility@tech.gov.sg" -u https://www.tech.gov.sg -b chrome -w 1200');
