@@ -284,12 +284,18 @@ const scanInit = async (argvs: Answers): Promise<string> => {
           process.exit(0);
         }
         break;
-      } else {
+      } else if (argvs.scanner === ScannerTypes.LOCALFILE) {
+        printMessage([statuses.notALocalFile.message], messageOptions);
+        process.exit(statuses.notALocalFile.code);
+      } else if (argvs.scanner !== ScannerTypes.SITEMAP) {
         printMessage([statuses.notASitemap.message], messageOptions);
         process.exit(statuses.notASitemap.code);
       }
     case statuses.notASitemap.code:
       printMessage([statuses.notASitemap.message], messageOptions);
+      process.exit(res.status);
+    case statuses.notALocalFile.code:
+      printMessage([statuses.notALocalFile.message], messageOptions);
       process.exit(res.status);
     case statuses.browserError.code:
       printMessage([statuses.browserError.message], messageOptions);
