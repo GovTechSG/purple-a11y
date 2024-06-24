@@ -351,7 +351,7 @@ const urlCheckStatuses = {
     code: 14,
     message: 'Something went wrong when verifying the URL. Please try again later.',
   },
-  notASitemap: { code: 15, message: 'Provided URL or filepath is not a sitemap.' },
+  notASitemap: { code: 15, message: 'Provided URL is not a sitemap.' },
   unauthorised: { code: 16, message: 'Provided URL needs basic authorisation.' },
   browserError: {
     code: 17,
