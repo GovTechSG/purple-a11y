@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "allowJs": true,
+    "target": "es2021",
+    "module": "nodenext",
+    "rootDir": "./src",
+    "skipLibCheck": true
+  },
+  "include": ["./src/**/*"],
+  "exclude": [
+    "node_modules",
+    "**/*.test.ts"
+  ]
+}
