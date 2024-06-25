@@ -139,16 +139,13 @@ With reference to an instance of Purple A11y as `purpleA11y`:
 
 We will be creating the following files in a demo Cypress project:
 
-    ├── cypress.config.ts
-    ├── cypress.d.ts
-    ├── package.json
-    ├── src
-    │   └── cypress
-    │       ├── e2e
-    │       │   └── spec.cy.ts
-    │       └── support
-    │           └── e2e.ts
-    └── tsconfig.json
+    ├── cypress
+    │   ├── e2e
+    │   │   └── spec.cy.js
+    │   └── support
+    │       └── e2e.js
+    ├── cypress.config.js
+    └── package.json
 
 Create a <code>package.json</code> by running <code>npm init</code> . Accept the default options or customise it as needed.
 
@@ -268,13 +265,16 @@ You will see Purple A11y results generated in <code>results</code> folder.
 
 We will be creating the following files in a demo Cypress project:
 
-    ├── cypress
-    │   ├── e2e
-    │   │   └── spec.cy.ts
-    │   └── support
-    │       └── e2e.ts
     ├── cypress.config.ts
-    └── package.json
+    ├── cypress.d.ts
+    ├── package.json
+    ├── src
+    │   └── cypress
+    │       ├── e2e
+    │       │   └── spec.cy.ts
+    │       └── support
+    │           └── e2e.ts
+    └── tsconfig.json
 
 Create a <code>package.json</code> by running <code>npm init</code> . Accept the default options or customise it as needed.
 
