@@ -51,6 +51,7 @@ const crawlLocalFile = async (
   let isBasicAuth: boolean;
   let basicAuthPage: number = 0;
   let finalLinks: Request[] = [];
+  const { playwrightDeviceDetailsObject } = viewportSettings;
 
   if (fromCrawlIntelligentSitemap) {
     dataset = datasetFromIntelligent;
@@ -73,7 +74,6 @@ const crawlLocalFile = async (
   convertLocalFileToPath(sitemapUrl);
 
   // XML Files
-  console.log((!sitemapUrl.match(/\.txt$/i)))
   if (!(sitemapUrl.match(/\.xml$/i) || sitemapUrl.match(/\.txt$/i))) {
     linksFromSitemap = [new Request({ url: sitemapUrl })];
   // Non XML file
@@ -144,10 +144,10 @@ const crawlLocalFile = async (
   uuidToPdfMapping[pdfFileName] = trimmedUrl;
 
   if (!isUrlPdf(request.url)) {
-
     const browserContext = await constants.launcher.launchPersistentContext('', {
       headless: process.env.CRAWLEE_HEADLESS === '1',
       ...getPlaywrightLaunchOptions(browser),
+      ...playwrightDeviceDetailsObject,
     });
   
     const page = await browserContext.newPage();
