@@ -6,7 +6,8 @@ Details of each issue and severity rating provided by the current scan engine.
 2. [WCAG 2.0 Level A](#wcag-20-level-a)
 3. [WCAG 2.0 Level AA](#wcag-20-level-aa)
 4. [WCAG 2.1 Level AA](#wcag-21-level-aa)
-5. [Best Practice](#best-practice)
+5. [WCAG 2.2 Level AA](#wcag-22-level-aa)
+6. [Best Practice](#best-practice)
 
 ## Conformance Covered
 | Conformance |
@@ -102,6 +103,11 @@ Details of each issue and severity rating provided by the current scan engine.
 | -------------------- | --------------------------------------------------------------------------------------------- | -------- | ----------- |
 | autocomplete-valid   | Ensure the autocomplete attribute is correct and suitable for the form field                  | Must Fix | WCAG 1.3.5  |
 | avoid-inline-spacing | Ensure that text spacing set through style attributes can be adjusted with custom stylesheets | Must Fix | WCAG 1.4.12 |
+
+## WCAG 2.2 Level AA
+| Issue ID    | Issue Description                                  | Severity | Conformance |
+| ----------- | -------------------------------------------------- | -------- | ----------- |
+| target-size | Ensure touch target have sufficient size and space | Must Fix | WCAG 2.5.8  |
 
 ## Best Practice
 | Issue ID                            | Issue Description                                                                                                                              | Severity    |
