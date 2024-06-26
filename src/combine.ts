@@ -6,7 +6,7 @@ import crawlIntelligentSitemap from './crawlers/crawlIntelligentSitemap.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
 import { ScannerTypes,UrlsCrawled} from './constants/constants.js';
-import { getBlackListedPatterns, submitForm, urlWithoutAuth } from './constants/common.js';
+import { getBlackListedPatterns, isFilePath, submitForm, urlWithoutAuth } from './constants/common.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import runCustom from './crawlers/runCustom.js';
 import { alertMessageOptions } from './constants/cliFunctions.js';
@@ -63,7 +63,7 @@ const combineRun = async (details:Data, deviceToScan:string) => {
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
   const host =
-     (type === ScannerTypes.SITEMAP || type === ScannerTypes.LOCALFILE)
+     (type === ScannerTypes.SITEMAP || type === ScannerTypes.LOCALFILE || (type === ScannerTypes.WEBSITE && isFilePath(url)))
        ? ''
        : getHost(url);
 
