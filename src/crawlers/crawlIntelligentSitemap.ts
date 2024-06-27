@@ -133,7 +133,6 @@ import {chromium} from 'playwright';
 
     if (urlsCrawled.scanned.length < maxRequestsPerCrawl){ 
       // run crawl domain starting from root website, only on pages not scanned before
-      let urlsCrawledFromIntelligent = urlsCrawled;
       urlsCrawledFinal = await crawlDomain(
         url,
         randomToken,
@@ -152,7 +151,7 @@ import {chromium} from 'playwright';
         safeMode,
         fromCrawlIntelligentSitemap,
         dataset, //for crawlDomain to add on to
-        urlsCrawledFromIntelligent, //urls for crawlDomain to exclude
+        urlsCrawledFinal, //urls for crawlDomain to exclude
       )
     }
 

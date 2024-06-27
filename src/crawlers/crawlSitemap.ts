@@ -260,7 +260,7 @@ const crawlSitemap = async (
           const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
           if (isRedirected) {
             const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
-              item => (item.actualUrl || item.url) === request.loadedUrl,
+              item => (item.actualUrl || item.url.href) === request.loadedUrl,
             );
 
             if (isLoadedUrlInCrawledUrls) {
