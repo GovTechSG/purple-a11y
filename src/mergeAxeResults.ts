@@ -616,9 +616,6 @@ export const generateArtifacts = async (
 
     let { items, ...rest } = allIssues;
 
-    let encodedScanItems = base64Encode(items);
-    let encodedScanData = base64Encode(rest);
-
 
     let scanData = {
       url: allIssues.urlScanned,
@@ -649,6 +646,9 @@ export const generateArtifacts = async (
         occurrence: allIssues.items.passed.totalItems,
       },
     };
+
+    let encodedScanItems = base64Encode(items);
+    let encodedScanData = base64Encode(rest);
 
     let scanDataMessage = {
       type: 'scanData',
