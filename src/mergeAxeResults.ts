@@ -614,9 +614,6 @@ export const generateArtifacts = async (
   if (process.env.PURPLE_A11Y_VERBOSE) {
     let axeImpactCount = getAxeImpactCount(allIssues);
 
-    let { items, ...rest } = allIssues;
-
-
     let scanData = {
       url: allIssues.urlScanned,
       startTime: formatDateTimeForMassScanner(allIssues.startTime),
@@ -647,8 +644,9 @@ export const generateArtifacts = async (
       },
     };
 
+    let { items, ...rest } = allIssues;
     let encodedScanItems = base64Encode(items);
-    let encodedScanData = base64Encode(rest);
+    let encodedScanData = base64Encode(scanData);
 
     let scanDataMessage = {
       type: 'scanData',
