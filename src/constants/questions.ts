@@ -29,7 +29,7 @@ const startScanQuestions = [
       { name: 'Website', value: ScannerTypes.WEBSITE },
       { name: 'Custom', value: ScannerTypes.CUSTOM },
       { name: 'Intelligent', value: ScannerTypes.INTELLIGENT },
-      { name: 'Localfile', value: ScannerTypes.LOCALFILE},
+      { name: 'Localfile', value: ScannerTypes.LOCALFILE },
     ],
   },
   {
@@ -117,11 +117,15 @@ const startScanQuestions = [
             answers.isLocalFileScan = true;
             answers.finalUrl = finalFilePath;
             return true;
+          } else if (answers.scanner === ScannerTypes.LOCALFILE) {
+            return statuses.notALocalFile.message;
           } else {
             return statuses.notASitemap.message;
           }
         case statuses.notASitemap.code:
           return statuses.notASitemap.message;
+        case statuses.notALocalFile.code:
+          return statuses.notALocalFile.message;
       }
     },
     filter: (input: string) => sanitizeUrlInput(input.trim()).url,

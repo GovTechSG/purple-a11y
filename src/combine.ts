@@ -63,8 +63,7 @@ const combineRun = async (details:Data, deviceToScan:string) => {
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
   const host =
-     (type === ScannerTypes.SITEMAP && isLocalFileScan) ||
-     (type === ScannerTypes.LOCALFILE && isLocalFileScan)
+     (type === ScannerTypes.SITEMAP || type === ScannerTypes.LOCALFILE)
        ? ''
        : getHost(url);
 
@@ -78,7 +77,7 @@ const combineRun = async (details:Data, deviceToScan:string) => {
   }
 
   // remove basic-auth credentials from URL
-  let finalUrl = (!(type === ScannerTypes.SITEMAP && isLocalFileScan || type === ScannerTypes.LOCALFILE && isLocalFileScan)) ? urlWithoutAuth(url) : new URL(pathToFileURL(url));
+  let finalUrl = (!(type === ScannerTypes.SITEMAP|| type === ScannerTypes.LOCALFILE)) ? urlWithoutAuth(url) : new URL(pathToFileURL(url));
   
   //Use the string version of finalUrl to reduce logic at submitForm
   let finalUrlString = finalUrl.toString();
