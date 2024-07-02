@@ -53,9 +53,9 @@ export const validateDirPath = (dirPath: string): string => {
 };
 
 export class RES {
-  status: number
-  url: string
-  content: string
+  status: number;
+  url: string;
+  content: string;
   constructor(res?: Partial<RES>) {
     if (res) {
       Object.assign(this, res);
@@ -120,7 +120,9 @@ export const validateFilePath = (filePath: string, cliDir: string) => {
   }
 };
 
-export const getBlackListedPatterns = (blacklistedPatternsFilename: string|null): string[] | null=> {
+export const getBlackListedPatterns = (
+  blacklistedPatternsFilename: string | null,
+): string[] | null => {
   let exclusionsFile = null;
   if (blacklistedPatternsFilename) {
     exclusionsFile = blacklistedPatternsFilename;
@@ -233,7 +235,7 @@ export const getFileSitemap = (filePath: string): string | null => {
 
   const file = fs.readFileSync(filePath, 'utf8');
   const isLocalFileScan = isSitemapContent(file);
-  return isLocalFileScan || (file != undefined) ? filePath : null;
+  return isLocalFileScan || file != undefined ? filePath : null;
 };
 
 export const getUrlMessage = (scanner: ScannerTypes): string => {
@@ -531,14 +533,14 @@ export const checkUrl = async (
   }
 
   if (
-    res.status === constants.urlCheckStatuses.success.code && 
+    res.status === constants.urlCheckStatuses.success.code &&
     (scanner === ScannerTypes.SITEMAP || scanner === ScannerTypes.LOCALFILE)
-) {
+  ) {
     const isSitemap = isSitemapContent(res.content);
 
     if (!isSitemap && scanner === ScannerTypes.LOCALFILE) {
       res.status = constants.urlCheckStatuses.notALocalFile.code;
-    } else if (!isSitemap){
+    } else if (!isSitemap) {
       res.status = constants.urlCheckStatuses.notASitemap.code;
     }
   }
@@ -627,7 +629,7 @@ export const getUrlsFromRobotsTxt = async (url: string, browserToRun: string): P
   if (constants.robotsTxtUrls[domain]) return;
   const robotsUrl = domain.concat('/robots.txt');
 
-  let robotsTxt :string ;
+  let robotsTxt: string;
   try {
     if (proxy) {
       robotsTxt = await getRobotsTxtViaPlaywright(robotsUrl, browserToRun);
@@ -637,7 +639,7 @@ export const getUrlsFromRobotsTxt = async (url: string, browserToRun: string): P
   } catch (e) {
     silentLogger.info(e);
   }
-  console.log("robotsTxt",robotsTxt)
+  console.log('robotsTxt', robotsTxt);
   if (!robotsTxt) {
     constants.robotsTxtUrls[domain] = {};
     return;
@@ -712,7 +714,7 @@ const getRobotsTxtViaAxios = async (robotsUrl: string): Promise<string> => {
     }),
   });
 
-  const robotsTxt = await (await instance.get(robotsUrl, { timeout: 2000 })).data as string;
+  const robotsTxt = (await (await instance.get(robotsUrl, { timeout: 2000 })).data) as string;
   return robotsTxt;
 };
 
@@ -764,14 +766,18 @@ export const getLinksFromSitemap = async (
       ? (url = addBasicAuthCredentials(url, username, password))
       : url;
 
-      url = convertPathToLocalFile(url);
+    if (!isFilePath(url)) {
 
-      let request;
-      try {
-        request = new Request({ url: url });
-      } catch (e) {
-        console.log('Error creating request', e);
-      }
+      url = handleRelativePath(sitemapUrl,url);
+    }
+    url = convertPathToLocalFile(url);
+
+    let request;
+    try {
+      request = new Request({ url: url });
+    } catch (e) {
+      console.log('Error creating request', e);
+    }
     if (isUrlPdf(url)) {
       request.skipNavigation = true;
     }
@@ -860,36 +866,39 @@ export const getLinksFromSitemap = async (
 
     let parsedUrl;
 
-     if (scannedSitemaps.has(url)) {
-       // Skip processing if the sitemap has already been scanned
-       return;
-     }
+    if (scannedSitemaps.has(url)) {
+      // Skip processing if the sitemap has already been scanned
+      return;
+    }
 
-     scannedSitemaps.add(url);
+    scannedSitemaps.add(url);
 
-     // Convert file if its not local file path
-     url = convertLocalFileToPath(url)
+    // Convert file if its not local file path
+    url = convertLocalFileToPath(url);
+    // Check whether its a file path or a URL
+    if (isFilePath(url)) {
+      if (!fs.existsSync(url)) {
+        return;
+      }
+      parsedUrl = url;
+    } else if (!isFilePath(url) || !fs.existsSync(url)) {
 
-     // Check whether its a file path or a URL
-     if (isFilePath(url)) {
-        if (!fs.existsSync(url)) {
-          return;
-        }
-       parsedUrl = url;
-     } else if(isValidHttpUrl(url)){
-       parsedUrl = new URL(url);
+      parsedUrl = handleRelativePath(sitemapUrl,url);
+      
+    } else if (isValidHttpUrl(url)) {
+      parsedUrl = new URL(url);
 
-       if (parsedUrl.username !== '' && parsedUrl.password !== '') {
-         isBasicAuth = true;
-         username = decodeURIComponent(parsedUrl.username);
-         password = decodeURIComponent(parsedUrl.password);
-         parsedUrl.username = '';
-         parsedUrl.password = '';
-       }
-     } else{
+      if (parsedUrl.username !== '' && parsedUrl.password !== '') {
+        isBasicAuth = true;
+        username = decodeURIComponent(parsedUrl.username);
+        password = decodeURIComponent(parsedUrl.password);
+        parsedUrl.username = '';
+        parsedUrl.password = '';
+      }
+    } else {
       printMessage([`Invalid Url/Filepath: ${url}`], messageOptions);
       return;
-     }
+    }
 
     const getDataUsingPlaywright = async () => {
       const browserContext = await constants.launcher.launchPersistentContext(
@@ -944,9 +953,9 @@ export const getLinksFromSitemap = async (
               password: password,
             },
           });
-          try{
-          data = await (await instance.get(url, { timeout: 80000 })).data;
-          } catch(error){
+          try {
+            data = await (await instance.get(url, { timeout: 80000 })).data;
+          } catch (error) {
             return; //to skip the error
           }
         } catch (error) {
@@ -1025,7 +1034,7 @@ export const getLinksFromSitemap = async (
   }
 
   const requestList = Object.values(urls);
-  
+
   return requestList;
 };
 
@@ -1071,7 +1080,6 @@ export const getBrowserToRun = (
   preferredBrowser: BrowserTypes,
   isCli = false,
 ): { browserToRun: BrowserTypes; clonedBrowserDataDir: string } => {
-
   const platform = os.platform();
 
   // Prioritise Chrome on Windows and Mac platforms if user does not specify a browser
@@ -1343,10 +1351,9 @@ const cloneLocalStateFile = (options, destDir) => {
   });
   const profileNamesRegex = /([^/\\]+)[/\\]Local State$/;
 
-
   if (localState.length > 0) {
     let success = true;
-    
+
     localState.forEach(dir => {
       const profileName = dir.match(profileNamesRegex)[1];
       try {
@@ -1779,11 +1786,11 @@ export const urlWithoutAuth = (url: string): URL => {
 
 export const waitForPageLoaded = async (page, timeout = 10000) => {
   return Promise.race([
-      page.waitForLoadState('load'),
-      page.waitForLoadState('networkidle'),
-      new Promise((resolve) => setTimeout(resolve, timeout))
+    page.waitForLoadState('load'),
+    page.waitForLoadState('networkidle'),
+    new Promise(resolve => setTimeout(resolve, timeout)),
   ]);
-}
+};
 
 function isValidHttpUrl(urlString) {
   const pattern = /^(http|https):\/\/[^ "]+$/;
@@ -1793,10 +1800,12 @@ function isValidHttpUrl(urlString) {
 export const isFilePath = (url: string): boolean => {
   const driveLetterPattern = /^[A-Z]:/i;
   const backslashPattern = /\\/;
-  return url.startsWith('file://')  ||
-         url.startsWith('/')         ||
-         driveLetterPattern.test(url) || 
-         backslashPattern.test(url);
+  return (
+    url.startsWith('file://') ||
+    url.startsWith('/') ||
+    driveLetterPattern.test(url) ||
+    backslashPattern.test(url)
+  );
 };
 
 export function convertLocalFileToPath(url: string): string {
@@ -1807,11 +1816,11 @@ export function convertLocalFileToPath(url: string): string {
 }
 
 export function convertPathToLocalFile(filePath: string): string {
-  if (filePath.startsWith("/")){
+  if (filePath.startsWith('/')) {
     filePath = pathToFileURL(filePath).toString();
   }
   return filePath;
-} 
+}
 
 export function convertToFilePath(fileUrl) {
   // Parse the file URL
@@ -1820,4 +1829,23 @@ export function convertToFilePath(fileUrl) {
   const filePath = decodeURIComponent(parsedUrl.path);
   // Return the file path without the 'file://' prefix
   return filePath;
+}
+export function handleRelativePath(sitemapUrl, url) {
+
+    // Extract the base directory from sitemapUrl
+    const baseDirectory = path.dirname(sitemapUrl);
+    console.log("baseDirectory", baseDirectory);
+
+    // Resolve the full path by combining baseDirectory and url
+    let normalizedPath = path.resolve(baseDirectory, url);
+    console.log("normalizedPath", normalizedPath);
+
+    // Normalize the path to handle different path separators
+    normalizedPath = path.normalize(normalizedPath);
+    if (!fs.existsSync(normalizedPath)) {
+      return;
+    }
+    url = normalizedPath;
+    return url;
+  
 }
