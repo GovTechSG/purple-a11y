@@ -648,11 +648,6 @@ export const generateArtifacts = async (
     let encodedScanItems = base64Encode(items);
     let encodedScanData = base64Encode(scanData);
 
-    let scanDataMessage = {
-      type: 'scanData',
-      payload: scanData,
-    };
-
     let scanSummaryMessage = {
       type: 'scanSummary',
       payload: [
@@ -670,7 +665,6 @@ export const generateArtifacts = async (
     };
 
     if (process.send){
-      process.send(JSON.stringify(scanDataMessage));
       process.send(JSON.stringify(scanSummaryMessage));
       process.send(JSON.stringify(scanDetailsMessage));
     } else {
