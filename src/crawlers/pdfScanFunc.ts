@@ -213,7 +213,7 @@ export const runPdfScan = async randomToken => {
     '--format',
     'json',
     '-r', // recurse through directory
-    intermediateFolder,
+    `"${intermediateFolder}"`,
   ];
 
   const ls = spawnSync(veraPdfExe, veraPdfCmdArgs, { shell: true });
