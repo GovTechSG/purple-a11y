@@ -647,6 +647,10 @@ export const generateArtifacts = async (
     let encodedScanItems = base64Encode(items);
     let encodedStartTime = formatDateTimeForMassScanner(startTime);
     let encodedEndTime = formatDateTimeForMassScanner(endTime);
+    rest.critical = axeImpactCount.critical;
+    rest.serious= axeImpactCount.serious;
+    rest.moderate= axeImpactCount.moderate;
+    rest.minor= axeImpactCount.minor;
 
     // Adding encoded start time and end time to rest object
     rest.encodedStartTime = encodedStartTime;
