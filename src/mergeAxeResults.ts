@@ -645,7 +645,7 @@ export const generateArtifacts = async (
 
     let { items, ...rest } = allIssues;
     let encodedScanItems = base64Encode(items);
-    let encodedScanData = base64Encode(scanData);
+    let encodedScanData = base64Encode(rest);
 
     let scanSummaryMessage = {
       type: 'scanSummary',
