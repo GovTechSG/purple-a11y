@@ -56,6 +56,7 @@ type AllIssues = {
     rules: string[];
   };
   startTime: Date;
+  endTime: Date;
   urlScanned: string;
   scanType: string;
   formatAboutStartTime: (dateString: any) => string;
@@ -83,7 +84,6 @@ type AllIssues = {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-let allIssues;
 
 const extractFileNames = async (directory: string): Promise<string[]> =>
   fs
@@ -241,8 +241,6 @@ const writeBase64 = async (allIssues, storagePath, htmlFilename = 'report.html')
 
   const htmlFilePath = path.join(storagePath, htmlFilename);
   let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
-
-  const allIssuesJson = JSON.stringify(allIssues);
 
   const headIndex = htmlContent.indexOf('</head>');
   const injectScript = `
@@ -527,6 +525,7 @@ export const generateArtifacts = async (
       rules: purpleAiRules,
     },
     startTime: scanDetails.startTime ? scanDetails.startTime : new Date(),
+    endTime: scanDetails.endTime ? scanDetails.endTime : new Date(),
     urlScanned,
     scanType,
     formatAboutStartTime,
@@ -617,7 +616,7 @@ export const generateArtifacts = async (
     let scanData = {
       url: allIssues.urlScanned,
       startTime: formatDateTimeForMassScanner(allIssues.startTime),
-      endTime: formatDateTimeForMassScanner(scanDetails ? scanDetails.endTime : new Date()),
+      endTime: formatDateTimeForMassScanner(allIssues.endTime),
       pagesScanned: allIssues.pagesScanned.length,
       wcagPassPercentage: allIssues.wcagPassPercentage,
       critical: axeImpactCount.critical,
