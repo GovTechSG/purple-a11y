@@ -1,7 +1,4 @@
-/* eslint-disable no-shadow */
-/* eslint-disable no-undef */
-
-import crawlee from 'crawlee';
+import crawlee, { EnqueueStrategy } from 'crawlee';
 import {
   createCrawleeSubFolders,
   preNavigationHooks,
@@ -9,6 +6,7 @@ import {
   isUrlPdf,
 } from './commonCrawlerFunc.js';
 import constants, {
+  UrlsCrawled,
   blackListedFileExtensions,
   guiInfoStatusTypes,
   cssQuerySelectors
@@ -29,30 +27,33 @@ import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
 import type { BrowserContext, ElementHandle, Frame, Page } from 'playwright';
 import request from 'sync-request-curl';
+import { ViewportSettingsClass } from '#root/combine.js';
+import type { EnqueueLinksOptions } from 'crawlee';
+import type { BatchAddRequestsResult } from '@crawlee/types';
 
 const crawlDomain = async (
-  url,
-  randomToken,
-  host,
-  viewportSettings,
-  maxRequestsPerCrawl,
-  browser,
-  userDataDirectory,
-  strategy,
-  specifiedMaxConcurrency,
-  fileTypes,
-  blacklistedPatterns,
-  includeScreenshots,
-  followRobots,
-  extraHTTPHeaders,
-  safeMode = false, // optional
-  fromCrawlIntelligentSitemap = false, //optional
-  datasetFromIntelligent = null, //optional
-  urlsCrawledFromIntelligent = null, //optional
+  url: string,
+  randomToken: string,
+  _host: string,
+  viewportSettings: ViewportSettingsClass,
+  maxRequestsPerCrawl: number,
+  browser: string,
+  userDataDirectory: string,
+  strategy: EnqueueStrategy,
+  specifiedMaxConcurrency: number,
+  fileTypes: string,
+  blacklistedPatterns: string[],
+  includeScreenshots: boolean,
+  followRobots: boolean,
+  extraHTTPHeaders: Record<string, string>,
+  safeMode: boolean = false, // optional
+  fromCrawlIntelligentSitemap: boolean = false, // optional
+  datasetFromIntelligent: crawlee.Dataset = null, // optional
+  urlsCrawledFromIntelligent: UrlsCrawled = null, // optional
 ) => {
-  let dataset;
-  let urlsCrawled;
-  let requestQueue;
+  let dataset: crawlee.Dataset;
+  let urlsCrawled: UrlsCrawled;
+  let requestQueue: crawlee.RequestQueue;
 
   if (fromCrawlIntelligentSitemap) {
     dataset = datasetFromIntelligent;
@@ -123,7 +124,11 @@ const crawlDomain = async (
     return true;
   };
 
-  const enqueueProcess = async (page, enqueueLinks, browserContext) => {
+  const enqueueProcess = async (
+    page: Page,
+    enqueueLinks: (options: EnqueueLinksOptions) => Promise<BatchAddRequestsResult>,
+    browserContext: BrowserContext,
+  ) => {
     try {
       await enqueueLinks({
         // set selector matches anchor elements with href but not contains # or starting with mailto:
@@ -316,7 +321,7 @@ const crawlDomain = async (
     return;
   };
 
-  const isBlacklisted = url => {
+  const isBlacklisted = (url: string) => {
     const blacklistedPatterns = getBlackListedPatterns(null);
     if (!blacklistedPatterns) {
       return false;
@@ -478,7 +483,7 @@ const crawlDomain = async (
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
-          urlsCrawled.forbidden.push({ url: request.url });
+          urlsCrawled.forbidden.push(request.url);
           return;
         }
 
@@ -487,7 +492,7 @@ const crawlDomain = async (
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
-          urlsCrawled.invalid.push({ url: request.url });
+          urlsCrawled.invalid.push(request.url);
           return;
         }
 
@@ -555,6 +560,7 @@ const crawlDomain = async (
               });
               urlsCrawled.scanned.push({
                 url: urlWithoutAuth(request.url),
+                actualUrl: request.url,
                 pageTitle: results.pageTitle,
               });
               await dataset.pushData(results);

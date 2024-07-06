@@ -1772,11 +1772,11 @@ export const getPlaywrightLaunchOptions = (browser?: string): LaunchOptions => {
   return options;
 };
 
-export const urlWithoutAuth = (url: string): URL => {
+export const urlWithoutAuth = (url: string): string => {
   const parsedUrl = new URL(url);
   parsedUrl.username = '';
   parsedUrl.password = '';
-  return parsedUrl;
+  return parsedUrl.toString();
 };
 
 export const waitForPageLoaded = async (page, timeout = 10000) => {
@@ -1815,7 +1815,7 @@ export function convertPathToLocalFile(filePath: string): string {
   return filePath;
 } 
 
-export function convertToFilePath(fileUrl) {
+export function convertToFilePath(fileUrl: string) {
   // Parse the file URL
   const parsedUrl = url.parse(fileUrl);
   // Decode the URL-encoded path
