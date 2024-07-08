@@ -380,48 +380,7 @@ const optionsAnswer: Answers = {
   blacklistedPatternsFilename: options['blacklistedPatternsFilename'],
   playwrightDeviceDetailsObject: options['playwrightDeviceDetailsObject'],
 };
-
-scanInit(optionsAnswer).then(async (storagePath: string) => {
-  // Take option if set
-  if (typeof optionsAnswer.zip === 'string') {
-    constants.cliZipFileName = optionsAnswer.zip;
-
-    if (!optionsAnswer.zip.endsWith('.zip')) {
-      constants.cliZipFileName += '.zip';
-    }
-  }
-
-  await fs
-    .ensureDir(storagePath)
-    .then(() => {
-      zipResults(constants.cliZipFileName, storagePath);
-      const messageToDisplay = [
-        `Report of this run is at ${constants.cliZipFileName}`,
-        `Results directory is at ${storagePath}`,
-      ];
-
-      if (process.env.REPORT_BREAKDOWN === '1') {
-        messageToDisplay.push(
-          'Reports have been further broken down according to their respective impact level.',
-        );
-      }
-
-      if (process.send && process.env.PURPLE_A11Y_VERBOSE && process.env.REPORT_BREAKDOWN != '1') {
-        let zipFileNameMessage = {
-          type: 'zipFileName',
-          payload: `${constants.cliZipFileName}`,
-        };
-
-        process.send(JSON.stringify(zipFileNameMessage));
-      }
-
-      printMessage(messageToDisplay);
-
-      process.exit(0);
-    })
-    .catch(error => {
-      printMessage([`Error in zipping results: ${error}`]);
-    });
-});
+scanInit(optionsAnswer);
+process.exit(0);
 
 export { options };

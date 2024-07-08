@@ -77,6 +77,7 @@ export type Data = {
   extraHTTPHeaders: string;
   safeMode: boolean;
   userDataDirectory?: string;
+  zip?: string;
 };
 
 const runScan = async (answers: Answers) => {
@@ -115,12 +116,6 @@ const runScan = async (answers: Answers) => {
   // Delete dataset and request queues
   cleanUp(data.randomToken);
 
-  const storagePath = getStoragePath(data.randomToken);
-  const messageToDisplay = [
-    `Report of this run is at ${constants.cliZipFileName}`,
-    `Results directory is at ${storagePath}`,
-  ];
-  printMessage(messageToDisplay);
   process.exit(0);
 };
 

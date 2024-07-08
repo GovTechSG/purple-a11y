@@ -15,6 +15,7 @@ import {
   getWcagPassPercentage,
   formatDateTimeForMassScanner,
   retryFunction,
+  zipResults
 } from './utils.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import itemTypeDescription from './constants/itemTypeDescription.js';
@@ -481,6 +482,7 @@ export const generateArtifacts = async (
   customFlowLabel,
   cypressScanAboutMetadata,
   scanDetails,
+  zip = undefined //optional
 ) => {
   const intermediateDatasetsPath = `${randomToken}/datasets/${randomToken}`;
   const phAppVersion = getVersion();
@@ -673,6 +675,47 @@ export const generateArtifacts = async (
   await writeBase64(allIssues, storagePath);
   await writeSummaryHTML(allIssues, storagePath);
   await retryFunction(() => writeSummaryPdf(storagePath), 1);
+  
+  // Take option if set
+  if (typeof zip === 'string') {
+    constants.cliZipFileName = zip;
+
+    if (!zip.endsWith('.zip')) {
+      constants.cliZipFileName += '.zip';
+    }
+  }
+
+  await fs
+    .ensureDir(storagePath)
+    .then(() => {
+      zipResults(constants.cliZipFileName, storagePath);
+      const messageToDisplay = [
+        `Report of this run is at ${constants.cliZipFileName}`,
+        `Results directory is at ${storagePath}`,
+      ];
+
+      if (process.env.REPORT_BREAKDOWN === '1') {
+        messageToDisplay.push(
+          'Reports have been further broken down according to their respective impact level.',
+        );
+      }
+
+      if (process.send && process.env.PURPLE_A11Y_VERBOSE && process.env.REPORT_BREAKDOWN != '1') {
+        let zipFileNameMessage = {
+          type: 'zipFileName',
+          payload: `${constants.cliZipFileName}`,
+        };
+
+        process.send(JSON.stringify(zipFileNameMessage));
+      }
+
+      printMessage(messageToDisplay);
+
+    })
+    .catch(error => {
+      printMessage([`Error in zipping results: ${error}`]);
+    });
+
   return createRuleIdJson(allIssues);
 };
 
