@@ -226,7 +226,6 @@ Create a sub-folder and file <code>cypress/support/e2e.js</code> with the follow
             const { elementsToScan, elementsToClick, metadata } = items;
             const res = await win.runA11yScan(elementsToScan);
             cy.task("pushPurpleA11yScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
-            cy.task("pushPurpleA11yScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
             cy.task("finishPurpleA11yTestCase"); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate purpleA11y instance.
         });
     });
@@ -386,7 +385,6 @@ Create a sub-folder and file <code>src/cypress/support/e2e.ts</code> with the fo
         cy.window().then(async (win) => {
             const { elementsToScan, elementsToClick, metadata } = items;
             const res = await win.runA11yScan(elementsToScan);
-            cy.task("pushPurpleA11yScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
             cy.task("pushPurpleA11yScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
             cy.task("finishPurpleA11yTestCase"); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate purpleA11y instance.
         });
