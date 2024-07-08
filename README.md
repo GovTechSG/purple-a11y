@@ -212,8 +212,9 @@ Custom flow allows you to specify a user journey by enabling you to click the sc
   ```
 
 1. Specify the URL of the starting page you wish to scan
-2. A Chrome window will appear.  Navigate through the pages and click on the scan button at the top of the broswer's page to conduct an accessibility scan on the current page.
-3. Close the Chrome window to end the scan.
+2. A Chrome window will appear.  Navigate through the pages and click on the **Scan this page** button at the top right of the broswer's page to conduct an accessibility scan on the current page.
+3. You may drag the top black bar to the bottom of the page in the event it prevents you from viewing / blocking certain page elements.
+4. Close the Chrome window to end the scan.
 
 Other options:
 
