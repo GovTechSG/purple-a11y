@@ -52,6 +52,8 @@ Returns an instance of Purple A11y
   - Object containing the max number of mustFix or goodToFix issue occurrences before an error is thrown for test failure. Does not fail tests by default. Example: `{ mustFix: 1, goodToFix: 3 }`
 - `scanAboutMetadata` (optional)
   - Include additional information in the Scan About section of the report by passing in a JSON object.
+- `zip` (optional)
+  - Name of the generated zip of Purple A11y results at the end of scan. Defaults to "a11y-scan-results".
 
 #### Purple A11y Instance
 
@@ -171,6 +173,8 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
     const thresholds = { mustFix: 20, goodToFix: 25 };
     // additional information to include in the "Scan About" section of the report
     const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
+    // name of the generated zip of the results at the end of scan
+    const resultsZipName = "a11y-scan-results"
 
     const purpleA11y = await purpleA11yInit(
         "https://govtechsg.github.io", // initial url to start scan
@@ -181,6 +185,7 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
         viewportSettings,
         thresholds,
         scanAboutMetadata,
+        resultsZipName
     );
 
     export default defineConfig({
@@ -329,6 +334,8 @@ Create <code>cypress.config.ts</code> with the following contents, and change yo
     const thresholds: Thresholds = { mustFix: 20, goodToFix: 20 };
     // additional information to include in the "Scan About" section of the report
     const scanAboutMetadata: ScanAboutMetadata = { browser: 'Chrome (Desktop)' };
+    // name of the generated zip of the results at the end of scan
+    const resultsZipName: string = "a11y-scan-results"
 
     const purpleA11y = await purpleA11yInit(
         "https://govtechsg.github.io", // initial url to start scan
@@ -339,6 +346,7 @@ Create <code>cypress.config.ts</code> with the following contents, and change yo
         viewportSettings,
         thresholds,
         scanAboutMetadata,
+        resultsZipName
     );
 
     export default defineConfig({
