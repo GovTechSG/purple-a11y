@@ -190,9 +190,9 @@ If the website URL provided is invalid, an error message will be prompted for yo
 
 Choose `Mobile` for a default mobile screen size scan and `Custom` to choose a device or specify viewport width options.
 
-### Custom flow (Preview)
+### Custom flow
 
-Custom flow allows you to record a series of actions in the browser and re-play them and Purple A11y will trigger the accessibility scan at each step.  This is useful to scan websites that require user and form input.  The recorded script will be stored as `generatedScript*.js`.
+Custom flow allows you to specify a user journey by enabling you to click the scan button on each desired webpage on a browser to initiate scan.  This is useful to scan websites that require user and form input.
 
 1. Start by choosing the `Custom flow` in the menu selection.
 
@@ -212,8 +212,8 @@ Custom flow allows you to record a series of actions in the browser and re-play 
   ```
 
 1. Specify the URL of the starting page you wish to scan
-2. A Chrome and Playwright Inspector window will appear.  Navigate through the pages you would like to conduct an accessibility scan.
-3. Close the Chrome window.  Purple A11y will then proceed to re-run your recorded actions and scan each page for accessibility.
+2. A Chrome window will appear.  Navigate through the pages and click on the scan button at the top of the broswer's page to conduct an accessibility scan on the current page.
+3. Close the Chrome window to end the scan.
 
 Other options:
 
@@ -223,9 +223,6 @@ Other options:
 \.*login.singpass.gov.sg\.*
 ```
 
-- You can re-run your accessibility scan by running `node generatedScript-PHScan_...js` file that is generated.
-
-**Caution**: During the custom flow, sensitive information such as username and passwords might be stored in `generatedScript*.js` as part of the recording.
 
 #### Known Issues
 
