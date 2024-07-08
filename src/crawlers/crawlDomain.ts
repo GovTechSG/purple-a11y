@@ -124,7 +124,7 @@ const crawlDomain = async (
           } catch (e) {
             silentLogger.info(e);
           }
-          if (urlsCrawled.scanned.some(item => item.url === req.url)) {
+          if (urlsCrawled.scanned.some(item => item.url.href === req.url)) {
             req.skipNavigation = true;
           }
           if (isDisallowedInRobotsTxt(req.url)) return null;
@@ -156,7 +156,7 @@ const crawlDomain = async (
     const initialPageUrl: string = page.url().toString();
 
     const isExcluded = (newPageUrl: string): boolean => {
-      const isAlreadyScanned: boolean = urlsCrawled.scanned.some(item => item.url === newPageUrl);
+      const isAlreadyScanned: boolean = urlsCrawled.scanned.some(item => item.url.href === newPageUrl);
       const isBlacklistedUrl: boolean = isBlacklisted(newPageUrl);
       const isNotFollowStrategy: boolean = !isFollowStrategy(newPageUrl, initialPageUrl, strategy);
       return isAlreadyScanned || isBlacklistedUrl || isNotFollowStrategy;
@@ -408,7 +408,7 @@ const crawlDomain = async (
         }
 
         // if URL has already been scanned
-        if (urlsCrawled.scanned.some(item => item.url === request.url)) {
+        if (urlsCrawled.scanned.some(item => item.url.href === request.url)) {
           await enqueueProcess(page, enqueueLinks, browserContext);
           return;
         }
@@ -508,7 +508,7 @@ const crawlDomain = async (
 
           if (isRedirected) {
             const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
-              item => (item.actualUrl || item.url) === request.loadedUrl,
+              item => (item.actualUrl || item.url.href) === request.loadedUrl,
             );
 
             if (isLoadedUrlInCrawledUrls) {
