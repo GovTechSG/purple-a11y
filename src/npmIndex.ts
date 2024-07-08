@@ -12,7 +12,7 @@ import {
   urlWithoutAuth,
 } from './constants/common.js';
 import { createCrawleeSubFolders, filterAxeResults } from './crawlers/commonCrawlerFunc.js';
-import { createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
+import { createAndUpdateResultsFolders, createDetailsAndLogs, getStoragePath } from './utils.js';
 import { generateArtifacts } from './mergeAxeResults.js';
 import { takeScreenshotForHTMLElements } from './screenshotFunc/htmlScreenshotFunc.js';
 import { silentLogger } from './logs.js';
@@ -206,6 +206,10 @@ export const init = async (
         scanAboutMetadata,
         scanDetails,
       );
+
+      printMessage([
+        `Results directory is at ${getStoragePath(randomToken)}`
+      ]);
 
       await submitForm(
         BrowserTypes.CHROMIUM, // browserToRun
