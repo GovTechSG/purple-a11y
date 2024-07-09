@@ -666,7 +666,6 @@ export const generateArtifacts = async (
     if (process.send){
       process.send(JSON.stringify(scanDetailsMessage));
     }
-
   }
 
   await writeCsv(allIssues, storagePath);
