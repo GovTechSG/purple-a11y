@@ -109,11 +109,11 @@ Returns:
 
 Checks the accumulated issue occurrences count against the specified threshold.
 
-- Terminates purpleA11y instance and throws an error if the number of accumulated mustFix or goodToFix issue occurrences exceeds either of the specified thresholds
+- Terminates purpleA11y instance and throws an error if the number of accumulated mustFix or goodToFix issue occurrences exceeds either of the specified thresholds.
 
 `async terminate()`
 
-Stops the Purple A11y instance and generates the scan report and other scan result artifacts
+Stops the Purple A11y instance and generates the scan report and other scan result artifacts. Returns the name of the generated folder containing the results.
 
 ### How to use
 
@@ -369,7 +369,7 @@ Create <code>cypress.config.ts</code> with the following contents, and change yo
                         purpleA11y.testThresholds();
                         return null;
                     },
-                    async terminatePurpleA11y(): Promise<null> {
+                    async terminatePurpleA11y(): Promise<string> {
                         return await purpleA11y.terminate();
                     },
                 });
@@ -429,7 +429,7 @@ declare namespace Cypress {
   interface Chainable<Subject> {
     injectPurpleA11yScripts(): Chainable<void>;
     runPurpleA11yScan(options?: PurpleA11yScanOptions): Chainable<void>;
-    terminatePurpleA11y(): Chainable<void>;
+    terminatePurpleA11y(): Chainable<any>;
   }
 
   interface PurpleA11yScanOptions {

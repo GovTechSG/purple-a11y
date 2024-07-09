@@ -225,7 +225,7 @@ export const init = async (
       );
     }
 
-    return null;
+    return randomToken;
   };
 
   return {
