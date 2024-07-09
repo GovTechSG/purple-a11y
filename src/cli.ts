@@ -380,7 +380,7 @@ const optionsAnswer: Answers = {
   blacklistedPatternsFilename: options['blacklistedPatternsFilename'],
   playwrightDeviceDetailsObject: options['playwrightDeviceDetailsObject'],
 };
-scanInit(optionsAnswer);
+await scanInit(optionsAnswer);
 process.exit(0);
 
 export { options };
