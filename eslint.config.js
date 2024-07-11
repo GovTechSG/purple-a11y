@@ -1,13 +1,19 @@
+// @ts-check
 import globals from 'globals';
-import js from '@eslint/js';
-import pluginImport from 'eslint-plugin-import';
+import eslint from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import * as pluginImport from 'eslint-plugin-import';
 import pluginPrettier from 'eslint-plugin-prettier';
 import { FlatCompat } from '@eslint/eslintrc';
 
 const compat = new FlatCompat();
 
-export default [
-  js.configs.recommended,
+export default tseslint.config(
+  eslint.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    ignores: ['dist/'],
+  },
   ...compat.extends('airbnb-base', 'plugin:prettier/recommended'),
   {
     languageOptions: { globals: globals.node, ecmaVersion: 'latest', sourceType: 'module' },
@@ -15,8 +21,18 @@ export default [
       pluginImport,
       pluginPrettier,
     },
+    settings: {
+      'import/resolver': {
+        node: {
+          extensions: ['.js', '.jsx', '.ts', '.tsx'],
+        },
+      },
+    },
     rules: {
       'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
+      // disabling import/no-unresolved as typescript already checks this
+      // https://typescript-eslint.io/troubleshooting/typed-linting/performance/#eslint-plugin-import
+      'import/no-unresolved': 'off',
     },
   },
-];
+);
