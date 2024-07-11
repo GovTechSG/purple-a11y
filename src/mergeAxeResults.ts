@@ -56,6 +56,7 @@ type AllIssues = {
     rules: string[];
   };
   startTime: Date;
+  endTime: Date;
   urlScanned: string;
   scanType: string;
   formatAboutStartTime: (dateString: any) => string;
@@ -83,7 +84,6 @@ type AllIssues = {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-let allIssues;
 
 const extractFileNames = async (directory: string): Promise<string[]> =>
   fs
@@ -241,8 +241,6 @@ const writeBase64 = async (allIssues, storagePath, htmlFilename = 'report.html')
 
   const htmlFilePath = path.join(storagePath, htmlFilename);
   let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
-
-  const allIssuesJson = JSON.stringify(allIssues);
 
   const headIndex = htmlContent.indexOf('</head>');
   const injectScript = `
@@ -527,6 +525,7 @@ export const generateArtifacts = async (
       rules: purpleAiRules,
     },
     startTime: scanDetails.startTime ? scanDetails.startTime : new Date(),
+    endTime: scanDetails.endTime ? scanDetails.endTime : new Date(),
     urlScanned,
     scanType,
     formatAboutStartTime,
@@ -614,16 +613,10 @@ export const generateArtifacts = async (
   if (process.env.PURPLE_A11Y_VERBOSE) {
     let axeImpactCount = getAxeImpactCount(allIssues);
 
-    let { items, ...rest } = allIssues;
-
-    let encodedScanItems = base64Encode(items);
-    let encodedScanData = base64Encode(rest);
-
-
     let scanData = {
       url: allIssues.urlScanned,
       startTime: formatDateTimeForMassScanner(allIssues.startTime),
-      endTime: formatDateTimeForMassScanner(scanDetails ? scanDetails.endTime : new Date()),
+      endTime: formatDateTimeForMassScanner(allIssues.endTime),
       pagesScanned: allIssues.pagesScanned.length,
       wcagPassPercentage: allIssues.wcagPassPercentage,
       critical: axeImpactCount.critical,
@@ -650,21 +643,20 @@ export const generateArtifacts = async (
       },
     };
 
-    let scanDataMessage = {
-      type: 'scanData',
-      payload: scanData,
-    };
+    let { items, startTime, endTime, ...rest } = allIssues;
+    let encodedScanItems = base64Encode(items);
+    let formattedStartTime = formatDateTimeForMassScanner(startTime);
+    let formattedEndTime = formatDateTimeForMassScanner(endTime);
+    rest.critical = axeImpactCount.critical;
+    rest.serious= axeImpactCount.serious;
+    rest.moderate= axeImpactCount.moderate;
+    rest.minor= axeImpactCount.minor;
 
-    let scanSummaryMessage = {
-      type: 'scanSummary',
-      payload: [
-        `Must Fix: ${Object.keys(allIssues.items.mustFix.rules).length} ${Object.keys(allIssues.items.mustFix.rules).length === 1 ? 'issue' : 'issues'} / ${allIssues.items.mustFix.totalItems} ${allIssues.items.mustFix.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
-        `Good to Fix: ${Object.keys(allIssues.items.goodToFix.rules).length} ${Object.keys(allIssues.items.goodToFix.rules).length === 1 ? 'issue' : 'issues'} / ${allIssues.items.goodToFix.totalItems} ${allIssues.items.goodToFix.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
-        `Needs Review: ${Object.keys(allIssues.items.needsReview.rules).length} ${Object.keys(allIssues.items.needsReview.rules).length === 1 ? 'issue' : 'issues'} / ${allIssues.items.needsReview.totalItems} ${allIssues.items.needsReview.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
-        `Passed: ${allIssues.items.passed.totalItems} ${allIssues.items.passed.totalItems === 1 ? 'occurrence' : 'occurrences'}`,
-        `Results directory: ${storagePath}`,
-      ],
-    };
+    // Adding encoded start time and end time to rest object
+    rest.formattedStartTime = formattedStartTime;
+    rest.formattedEndTime = formattedEndTime;
+
+    let encodedScanData = base64Encode(rest);
 
     let scanDetailsMessage = {
       type: 'scanDetailsMessage',
@@ -672,13 +664,8 @@ export const generateArtifacts = async (
     };
 
     if (process.send){
-      process.send(JSON.stringify(scanDataMessage));
-      process.send(JSON.stringify(scanSummaryMessage));
       process.send(JSON.stringify(scanDetailsMessage));
-    } else {
-      console.log('Scan Summary: ',scanData);
     }
-
   }
 
   await writeCsv(allIssues, storagePath);
