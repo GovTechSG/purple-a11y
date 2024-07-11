@@ -57,6 +57,7 @@ const combineRun = async (details:Data, deviceToScan:string) => {
     customFlowLabel = 'Custom Flow',
     extraHTTPHeaders,
     safeMode,
+    zip
   } = envDetails;
 
   process.env.CRAWLEE_LOG_LEVEL = 'ERROR';
@@ -210,6 +211,7 @@ const combineRun = async (details:Data, deviceToScan:string) => {
       customFlowLabel,
       undefined,
       scanDetails,
+      zip
     );
     const [name, email] = nameEmail.split(':');
 

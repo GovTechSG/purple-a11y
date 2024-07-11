@@ -52,6 +52,8 @@ Returns an instance of Purple A11y
   - Object containing the max number of mustFix or goodToFix issue occurrences before an error is thrown for test failure. Does not fail tests by default. Example: `{ mustFix: 1, goodToFix: 3 }`
 - `scanAboutMetadata` (optional)
   - Include additional information in the Scan About section of the report by passing in a JSON object.
+- `zip` (optional)
+  - Name of the generated zip of Purple A11y results at the end of scan. Defaults to "a11y-scan-results".
 
 #### Purple A11y Instance
 
@@ -107,11 +109,11 @@ Returns:
 
 Checks the accumulated issue occurrences count against the specified threshold.
 
-- Terminates purpleA11y instance and throws an error if the number of accumulated mustFix or goodToFix issue occurrences exceeds either of the specified thresholds
+- Terminates purpleA11y instance and throws an error if the number of accumulated mustFix or goodToFix issue occurrences exceeds either of the specified thresholds.
 
 `async terminate()`
 
-Stops the Purple A11y instance and generates the scan report and other scan result artifacts
+Stops the Purple A11y instance and generates the scan report and other scan result artifacts. Returns the name of the generated folder containing the results.
 
 ### How to use
 
@@ -171,6 +173,8 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
     const thresholds = { mustFix: 20, goodToFix: 25 };
     // additional information to include in the "Scan About" section of the report
     const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
+    // name of the generated zip of the results at the end of scan
+    const resultsZipName = "a11y-scan-results"
 
     const purpleA11y = await purpleA11yInit(
         "https://govtechsg.github.io", // initial url to start scan
@@ -181,6 +185,7 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
         viewportSettings,
         thresholds,
         scanAboutMetadata,
+        resultsZipName
     );
 
     export default defineConfig({
@@ -225,7 +230,6 @@ Create a sub-folder and file <code>cypress/support/e2e.js</code> with the follow
         cy.window().then(async (win) => {
             const { elementsToScan, elementsToClick, metadata } = items;
             const res = await win.runA11yScan(elementsToScan);
-            cy.task("pushPurpleA11yScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
             cy.task("pushPurpleA11yScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
             cy.task("finishPurpleA11yTestCase"); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate purpleA11y instance.
         });
@@ -330,6 +334,8 @@ Create <code>cypress.config.ts</code> with the following contents, and change yo
     const thresholds: Thresholds = { mustFix: 20, goodToFix: 20 };
     // additional information to include in the "Scan About" section of the report
     const scanAboutMetadata: ScanAboutMetadata = { browser: 'Chrome (Desktop)' };
+    // name of the generated zip of the results at the end of scan
+    const resultsZipName: string = "a11y-scan-results"
 
     const purpleA11y = await purpleA11yInit(
         "https://govtechsg.github.io", // initial url to start scan
@@ -340,6 +346,7 @@ Create <code>cypress.config.ts</code> with the following contents, and change yo
         viewportSettings,
         thresholds,
         scanAboutMetadata,
+        resultsZipName
     );
 
     export default defineConfig({
@@ -362,7 +369,7 @@ Create <code>cypress.config.ts</code> with the following contents, and change yo
                         purpleA11y.testThresholds();
                         return null;
                     },
-                    async terminatePurpleA11y(): Promise<null> {
+                    async terminatePurpleA11y(): Promise<string> {
                         return await purpleA11y.terminate();
                     },
                 });
@@ -386,7 +393,6 @@ Create a sub-folder and file <code>src/cypress/support/e2e.ts</code> with the fo
         cy.window().then(async (win) => {
             const { elementsToScan, elementsToClick, metadata } = items;
             const res = await win.runA11yScan(elementsToScan);
-            cy.task("pushPurpleA11yScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
             cy.task("pushPurpleA11yScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
             cy.task("finishPurpleA11yTestCase"); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate purpleA11y instance.
         });
@@ -423,7 +429,7 @@ declare namespace Cypress {
   interface Chainable<Subject> {
     injectPurpleA11yScripts(): Chainable<void>;
     runPurpleA11yScan(options?: PurpleA11yScanOptions): Chainable<void>;
-    terminatePurpleA11y(): Chainable<void>;
+    terminatePurpleA11y(): Chainable<any>;
   }
 
   interface PurpleA11yScanOptions {

@@ -30,6 +30,7 @@ export const init = async (
   viewportSettings = { width: 1000, height: 660 }, // cypress' default viewport settings
   thresholds = { mustFix: undefined, goodToFix: undefined },
   scanAboutMetadata = undefined,
+  zip = undefined 
 ) => {
   console.log('Starting Purple A11y');
 
@@ -205,6 +206,7 @@ export const init = async (
         testLabel,
         scanAboutMetadata,
         scanDetails,
+        zip
       );
 
       await submitForm(
@@ -223,7 +225,7 @@ export const init = async (
       );
     }
 
-    return null;
+    return randomToken;
   };
 
   return {
