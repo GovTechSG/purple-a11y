@@ -350,7 +350,7 @@ const urlCheckStatuses = {
     code: 14,
     message: 'Something went wrong when verifying the URL. Please try again later.',
   },
-  notASitemap: { code: 15, message: 'Provided URL or filepath is not a sitemap.' },
+  notASitemap: { code: 15, message: 'Provided URL is not a sitemap.' },
   unauthorised: { code: 16, message: 'Provided URL needs basic authorisation.' },
   browserError: {
     code: 17,
@@ -358,6 +358,7 @@ const urlCheckStatuses = {
       'No browser available to run scans. Please ensure you have Chrome or Edge (for Windows only) installed.',
   },
   axiosTimeout: { code: 18, message: 'Axios timeout exceeded. Falling back on browser checks.' },
+  notALocalFile: { code: 19, message: 'Provided filepath is not a local html or sitemap file.' },
 };
 
 export enum BrowserTypes {
