@@ -67,8 +67,21 @@ const crawlLocalFile = async (
 
   // Check if the sitemapUrl is a local file and if it exists
   if (!(isFilePath(sitemapUrl)) || !fs.existsSync(sitemapUrl)) {
-    return;
+    // Convert to an absolute path
+    let normalizedPath = path.resolve(sitemapUrl);
+    
+    // Normalize the path to handle different path separators
+    normalizedPath = path.normalize(normalizedPath);
+
+    // Check if the normalized path exists
+    if (!fs.existsSync(normalizedPath)) {
+      return;
+    }
+    
+    // At this point, normalizedPath is a valid and existing file path
+    sitemapUrl = normalizedPath;
   }
+
 
   // Checks if its in the right file format, and change it before placing into linksFromSitemap
   convertLocalFileToPath(sitemapUrl);

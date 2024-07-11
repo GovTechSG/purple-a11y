@@ -10,6 +10,7 @@ import crawlee, { Request } from 'crawlee';
 import { parseString } from 'xml2js';
 import fs from 'fs';
 import path from 'path';
+import url from 'url';
 import safe from 'safe-regex';
 import * as https from 'https';
 import os from 'os';
@@ -223,6 +224,8 @@ export const getFileSitemap = (filePath: string): string | null => {
       filePath = filePath.match(/^file:\/\/(\/[^?#]+)/)?.[1];
     }
   }
+
+  filePath = convertToFilePath(filePath);
 
   if (!fs.existsSync(filePath)) {
     return null;
@@ -1809,3 +1812,12 @@ export function convertPathToLocalFile(filePath: string): string {
   }
   return filePath;
 } 
+
+export function convertToFilePath(fileUrl) {
+  // Parse the file URL
+  const parsedUrl = url.parse(fileUrl);
+  // Decode the URL-encoded path
+  const filePath = decodeURIComponent(parsedUrl.path);
+  // Return the file path without the 'file://' prefix
+  return filePath;
+}
