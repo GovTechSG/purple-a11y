@@ -1223,7 +1223,7 @@ const cloneChromeProfileCookieFiles = (options, destDir) => {
         if (!fs.existsSync(destProfileDir)) {
           fs.mkdirSync(destProfileDir, { recursive: true });
           if (!fs.existsSync(destProfileDir)) {
-            fs.mkdirSync(destProfileDir);
+            fs.mkdirSync(destProfileDir, { recursive: true });
           }
         }
 
@@ -1299,7 +1299,7 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
         if (!fs.existsSync(destProfileDir)) {
           fs.mkdirSync(destProfileDir, { recursive: true });
           if (!fs.existsSync(destProfileDir)) {
-            fs.mkdirSync(destProfileDir);
+            fs.mkdirSync(destProfileDir, { recursive: true });
           }
         }
 
@@ -1404,7 +1404,7 @@ export const cloneChromeProfiles = (randomToken?: string): string => {
   }
 
   if (!fs.existsSync(destDir)) {
-    fs.mkdirSync(destDir);
+    fs.mkdirSync(destDir, { recursive: true });
   }
 
   const baseOptions = {
@@ -1437,7 +1437,7 @@ export const cloneChromiumProfiles = (randomToken?: string): string => {
   }
 
   if (!fs.existsSync(destDir)) {
-    fs.mkdirSync(destDir);
+    fs.mkdirSync(destDir, { recursive: true });
   }
 
   return destDir;
@@ -1473,7 +1473,7 @@ export const cloneEdgeProfiles = (randomToken?: string): string => {
   }
 
   if (!fs.existsSync(destDir)) {
-    fs.mkdirSync(destDir);
+    fs.mkdirSync(destDir, { recursive: true });
   }
 
   const baseOptions = {
