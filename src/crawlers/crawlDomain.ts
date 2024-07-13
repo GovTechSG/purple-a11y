@@ -28,8 +28,9 @@ import { silentLogger, guiInfoLog } from '../logs.js';
 import type { BrowserContext, ElementHandle, Frame, Page } from 'playwright';
 import request from 'sync-request-curl';
 import { ViewportSettingsClass } from '#root/combine.js';
-import type { EnqueueLinksOptions } from 'crawlee';
+import type { EnqueueLinksOptions, RequestOptions } from 'crawlee';
 import type { BatchAddRequestsResult } from '@crawlee/types';
+import axios from 'axios';
 
 const crawlDomain = async (
   url: string,
@@ -112,14 +113,32 @@ const crawlDomain = async (
     });
   }
 
-  const isProcessibleUrl = (url: string): boolean => {
+  const isProcessibleUrl = async (url: string): Promise<boolean> => {
     // @ts-ignore somehow typescript thinks this is not callable
-    const response = request('HEAD', url);
+    const response = await axios.head(url);
     const contentType = response.headers['content-type'] || '';
 
     if (!contentType.includes('text/html') && !contentType.includes('application/pdf')) {
       silentLogger.info(`Skipping MIME type ${contentType} at URL ${url}`);
       return false;
+    }
+
+    // further check for zip files where the url ends with .zip
+    if (url.endsWith('.zip')) {
+      silentLogger.info(`Checking for zip file magic number at URL ${url}`);
+      // download first 4 bytes of file to check the magic number
+      const response = await axios.get(url, { headers: { Range: 'bytes=0-3' } });
+      // check using startsWith because some server does not handle Range header and returns the whole file
+      if (response.data.startsWith('PK\x03\x04')) {
+        // PK\x03\x04 is the magic number for zip files
+        silentLogger.info(`Skipping zip file at URL ${url}`);
+        return false;
+      } else {
+        // print out the hex value of the first 4 bytes
+        silentLogger.info(
+          `Not skipping ${url} as it has magic number: ${response.data.slice(0, 4).toString('hex')}`,
+        );
+      }
     }
     return true;
   };
@@ -135,12 +154,13 @@ const crawlDomain = async (
         selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
         strategy,
         requestQueue,
-        transformRequestFunction: req => {
+        transformRequestFunction: async (req: RequestOptions): Promise<RequestOptions | null> => {
           try {
             req.url = encodeURI(req.url);
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
 
-            if (!isProcessibleUrl(req.url)) return null;
+            const processible = await isProcessibleUrl(req.url);
+            if (!processible) return null;
           } catch (e) {
             silentLogger.error(e);
           }
