@@ -115,7 +115,7 @@ const crawlDomain = async (
 
   const isProcessibleUrl = async (url: string): Promise<boolean> => {
     // @ts-ignore somehow typescript thinks this is not callable
-    const response = await axios.head(url);
+    const response = await axios.head(url, { headers: { Authorization: authHeader } });
     const contentType = response.headers['content-type'] || '';
 
     if (!contentType.includes('text/html') && !contentType.includes('application/pdf')) {
@@ -127,7 +127,7 @@ const crawlDomain = async (
     if (url.endsWith('.zip')) {
       silentLogger.info(`Checking for zip file magic number at URL ${url}`);
       // download first 4 bytes of file to check the magic number
-      const response = await axios.get(url, { headers: { Range: 'bytes=0-3' } });
+      const response = await axios.get(url, { headers: { Range: 'bytes=0-3', Authorization: authHeader } });
       // check using startsWith because some server does not handle Range header and returns the whole file
       if (response.data.startsWith('PK\x03\x04')) {
         // PK\x03\x04 is the magic number for zip files
