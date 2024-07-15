@@ -155,11 +155,13 @@ Change the type of npm package to module by running <code>npm pkg set type="modu
 
 Install the following node dependencies by running <code>npm install cypress @govtechsg/purple-hats --save-dev </code>
 
-Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> within the folder to install remaining Purple A11y dependencies:
+Add a `postinstall` script to your `package.json`, to install Purple A11y dependencies:
 
-    cd node_modules/@govtechsg/purple-hats
-    npm install
-    cd ../../..
+    "scripts": {
+        "postinstall": "cd node_modules/@govtechsg/purple-hats && npm install"
+    }
+
+Run <code>npm install</code> to install remaining Purple A11y dependencies.
 
 Create <code>cypress.config.js</code> with the following contents, and change your Name, E-mail address, and boolean value for whether rule items requiring manual review in the report should be displayed below:
 
@@ -301,11 +303,13 @@ Create a <code>tsconfig.json</code> in the root directory and add the following:
 }
 ```
 
-Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> within the folder to install remaining Purple A11y dependencies:
+Add a `postinstall` script to your `package.json`, to install Purple A11y dependencies:
 
-    cd node_modules/@govtechsg/purple-hats
-    npm install
-    cd ../../..
+    "scripts": {
+        "postinstall": "cd node_modules/@govtechsg/purple-hats && npm install"
+    }
+
+Run <code>npm install</code> to install remaining Purple A11y dependencies.
 
 Create <code>cypress.config.ts</code> with the following contents, and change your Name, E-mail address, and boolean value for whether rule items requiring manual review in the report should be displayed below:
 
@@ -460,11 +464,13 @@ Change the type of npm package to module by running <code>npm pkg set type="modu
 
 Install the following node dependencies by running <code>npm install playwright @govtechsg/purple-hats --save-dev</code> and <code>npx playwright install</code>
 
-Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> within the folder to install remaining Purple A11y dependencies:
+Add a `postinstall` script to your `package.json`, to install Purple A11y dependencies:
 
-    cd node_modules/@govtechsg/purple-hats
-    npm install
-    cd ../../..
+    "scripts": {
+        "postinstall": "cd node_modules/@govtechsg/purple-hats && npm install"
+    }
+
+Run <code>npm install</code> to install remaining Purple A11y dependencies.
 
 On your project's root folder, create a Playwright test file <code>purpleA11y-playwright-demo.js</code>:
 
@@ -549,11 +555,13 @@ Create a <code>tsconfig.json</code> in the root directory and add the following:
 }
 ```
 
-Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> within the folder to install remaining Purple A11y dependencies:
+Add a `postinstall` script to your `package.json`, to install Purple A11y dependencies:
 
-    cd node_modules/@govtechsg/purple-hats
-    npm install
-    cd ../../..
+    "scripts": {
+        "postinstall": "cd node_modules/@govtechsg/purple-hats && npm install"
+    }
+
+Run <code>npm install</code> to install remaining Purple A11y dependencies.
 
 Create a sub-folder and Playwright test file <code>src/purpleA11y-playwright-demo.ts</code> with the following contents:
 
