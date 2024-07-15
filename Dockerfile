@@ -43,8 +43,6 @@ ENV PATH="/opt/verapdf:${PATH}"
 # Print out the contents of the current directory to verify package.json files are copied
 RUN ls -la
 
-# Install dependencies and compile TypeScript
-RUN npm ci --omit=dev || true  # true exits with code 0 - temp workaround until errors are resolved as npm run build is run as part of postinstall
 
 # Install Playwright browsers
 RUN npx playwright install chromium webkit
@@ -58,3 +56,7 @@ USER purple
 
 # Copy application and support files
 COPY . .
+
+# Install dependencies and compile TypeScript
+# true exits with code 0 - temp workaround until errors are resolved as npm run build is run as part of postinstall
+RUN npm ci --omit=dev || true
