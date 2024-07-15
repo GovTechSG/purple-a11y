@@ -40,6 +40,9 @@ ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD="true"
 ENV PLAYWRIGHT_BROWSERS_PATH="/opt/ms-playwright"
 ENV PATH="/opt/verapdf:${PATH}"
 
+# Print out the contents of the current directory to verify package.json files are copied
+RUN ls -la
+
 # Install dependencies and compile TypeScript
 RUN npm ci --omit=dev || true  # true exits with code 0 - temp workaround until errors are resolved as npm run build is run as part of postinstall
 
