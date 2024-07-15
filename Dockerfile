@@ -40,8 +40,8 @@ ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD="true"
 ENV PLAYWRIGHT_BROWSERS_PATH="/opt/ms-playwright"
 ENV PATH="/opt/verapdf:${PATH}"
 
-# Install dependencies and compile TypeScript
-RUN npm ci --omit=dev || true  # true exits with code 0 - temp workaround until errors are resolved as npm run build is run as part of postinstall
+# Install dependencies, ignore postinstall script which runs installPurpleDependencies.js
+RUN npm ci --omit=dev --ignore-scripts
 
 # Install Playwright browsers
 RUN npx playwright install chromium webkit
@@ -55,3 +55,6 @@ USER purple
 
 # Copy application and support files
 COPY . .
+
+# Compile TypeScript
+RUN npm run build || true  # true exits with code 0 - temp workaround until errors are resolved
