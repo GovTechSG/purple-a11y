@@ -6,8 +6,8 @@ NODE_VERSION="20.10.0"
 SHELL_COMMAND=$(ps -o comm= -p $$)
 SHELL_NAME="${SHELL_COMMAND#-}"
 
-cd "$(dirname "${BASH_SOURCE[0]}")"
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$(dirname "${BASH_SOURCE[0]}")"
 
 CURR_FOLDERNAME="$(basename "$PWD")"
 if [ "$CURR_FOLDERNAME" = "scripts" ]; then
@@ -85,7 +85,7 @@ if [ -d "node_modules" ]; then
 fi
 
 echo "Installing Node dependencies to $PWD"
-npm ci
+npm ci --ignore-scripts # ignore postinstall script which runs installPurpleDependencies.js
 
 echo "Build TypeScript"
 npm run build || true

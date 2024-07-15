@@ -37,7 +37,7 @@ node -v
 - If you do not have node, or if there is a need to manage your node versions, you can consider using [Node Version Manager (NVM)](https://github.com/nvm-sh/nvm).
 - Make sure NVM is pointing to a node version >= 15.10.0. Please refer to [Usage of Node Version Manager (NVM)](<#usage-of-node-version-manager-(NVM)>)
 - Install the required NPM packages with `npm install`.
-- Build the project with `npm run build` before you try to run it with `npm start`.
+- Run it with `npm start`.
 
 #### Usage of Node Version Manager (NVM)
 
