@@ -7,7 +7,7 @@ const platform = os.platform();
 if (platform === 'win32') {
     // Windows
     exec(
-        `./scripts/install_purple_dependencies.cmd`,
+        `scripts\\install_purple_dependencies.cmd`,
         (error, stdout, stderr) => {
             if (error) {
                 console.error(`Error: ${error.message}`);
