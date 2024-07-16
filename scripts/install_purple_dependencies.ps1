@@ -6,12 +6,8 @@ if ((Split-Path -Path $pwd -Leaf) -eq "scripts") {
 $ProgressPreferences = 'SilentlyContinue'
 $ErrorActionPreference = 'Stop'
 
-# Commands to check if node/java is installed and get its version
-$nodeVersion = node --version 2>&1 | Out-String
-$javaVersion = java -version 2>&1 | Out-String
-
 # Install NodeJS binaries
-if (-Not (Test-Path "nodejs-win\node.exe") -and -Not ($nodeVersion -match "v\d+\.\d+\.\d+")) {
+if (-Not (Test-Path "nodejs-win\node.exe") -and -Not (Get-Command node -ErrorAction SilentlyContinue)) {
     Write-Output "Downloading Node"
     Invoke-WebRequest -o ./nodejs-win.zip "https://nodejs.org/dist/v20.10.0/node-v20.10.0-win-x64.zip"     
     
@@ -23,7 +19,7 @@ if (-Not (Test-Path "nodejs-win\node.exe") -and -Not ($nodeVersion -match "v\d+\
 
 
 # Install Coretto-11
-if (-Not (Test-Path "jre\bin\java.exe") -and -Not ($javaVersion -match "java version")) {
+if (-Not (Test-Path "jre\bin\java.exe") -and -Not (Get-Command java -ErrorAction SilentlyContinue)) {
     if (-Not (Test-Path jdk\bin\java.exe)) {
         Write-Output "Downloading Corretto-11"
         Invoke-WebRequest -o ./corretto-11.zip "https://corretto.aws/downloads/latest/amazon-corretto-11-x64-windows-jdk.zip"     
