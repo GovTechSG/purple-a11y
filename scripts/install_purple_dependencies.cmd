@@ -9,5 +9,4 @@ echo hats Shell - Created By younglim - NO WARRANTY PROVIDED
 echo ================================================================
 echo 
 
-@"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -NoExit -ExecutionPolicy Bypass "& ""%~dp0install_purple_dependencies.ps1"""
-Footer
+@"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass "& ""%~dp0install_purple_dependencies.ps1"""

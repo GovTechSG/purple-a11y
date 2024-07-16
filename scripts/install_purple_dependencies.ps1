@@ -7,7 +7,7 @@ $ProgressPreferences = 'SilentlyContinue'
 $ErrorActionPreference = 'Stop'
 
 # Install NodeJS binaries
-if (-Not (Test-Path nodejs-win\node.exe)) {
+if (Not (Test-Path "nodejs-win\node.exe") -and -Not (Test-Path "C:\Program Files\nodejs\node.exe")) {
     Write-Output "Downloading Node"
     Invoke-WebRequest -o ./nodejs-win.zip "https://nodejs.org/dist/v20.10.0/node-v20.10.0-win-x64.zip"     
     
@@ -18,7 +18,7 @@ if (-Not (Test-Path nodejs-win\node.exe)) {
 }
 
 # Install Coretto-11
-if (-Not (Test-Path jre\bin\java.exe)) {
+if (-Not (Test-Path "jre\bin\java.exe") -and -Not (Test-Path "C:\Program Files\Java\jre*\bin\java.exe")) {
     if (-Not (Test-Path jdk\bin\java.exe)) {
         Write-Output "Downloading Corretto-11"
         Invoke-WebRequest -o ./corretto-11.zip "https://corretto.aws/downloads/latest/amazon-corretto-11-x64-windows-jdk.zip"     
@@ -49,7 +49,7 @@ if (-Not (Test-Path verapdf\verapdf.bat)) {
     $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 
     Write-Output "INFO: Installing VeraPDF"
-    .\verapdf-installer\verapdf-install "$PWD\verapdf-auto-install-windows.xml"
+    .\verapdf-installer\verapdf-install "$PSScriptRoot\verapdf-auto-install-windows.xml"
     Move-Item -Path C:\Windows\Temp\verapdf -Destination verapdf
     Remove-Item -Force -Path .\verapdf-installer.zip 
     Remove-Item -Force -Path .\verapdf-installer -recurse
@@ -64,7 +64,7 @@ if (Test-Path -Path .\jdk -PathType Container) {
 # Install Node dependencies
 if (Test-Path purple-a11y) {
     Write-Output "Installing node dependencies"
-    & ".\a11y_shell_ps.ps1" "cd purple-a11y;npm ci --ignore-scripts --force;cd .." # ignore postinstall script which runs installPurpleDependencies.js
+    & "$PSScriptRoot\a11y_shell_ps.ps1" "cd purple-a11y;npm ci --ignore-scripts --force;cd .." # ignore postinstall script which runs installPurpleDependencies.js
 
     # Omit installing Playwright browsers as it is not reuqired
     # Write-Output "Install Playwright browsers"
@@ -72,7 +72,7 @@ if (Test-Path purple-a11y) {
     
     try {
 	Write-Output "Building Typescript" 
-	& ".\a11y_shell_ps.ps1" "cd purple-a11y;npm run build" 
+	& "$PSScriptRoot\a11y_shell_ps.ps1" "cd purple-a11y;npm run build" 
     } catch {
 	Write-Output "Build with some errors but continuing. $_.Exception.Message" 
     } 
@@ -87,10 +87,10 @@ if (Test-Path purple-a11y) {
 
     if (Test-Path package.json) {
         Write-Output "Installing node dependencies"
-        & ".\a11y_shell_ps.ps1" "npm ci --ignore-scripts --force" # ignore postinstall script which runs installPurpleDependencies.js
+        & "$PSScriptRoot\a11y_shell_ps.ps1" "npm ci --ignore-scripts --force" # ignore postinstall script which runs installPurpleDependencies.js
 
         Write-Output "Install Playwright browsers"
-        & "npx playwright install chromium"
+        Invoke-Expression "& npx playwright install chromium"
 
         if (Test-Path .git) {
             Write-Output "Unhide .git folder"
