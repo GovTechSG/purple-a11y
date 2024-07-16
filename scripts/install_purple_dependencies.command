@@ -15,7 +15,7 @@ if [ "$CURR_FOLDERNAME" = "scripts" ]; then
   CURR_FOLDERNAME="$(basename "$PWD")"
 fi
 
-if ! [ -f nodejs-mac-arm64/bin/node ]; then
+if ! [ -f nodejs-mac-arm64/bin/node ] && ! command -v node &> /dev/null; then
   echo "Downloading NodeJS LTS (ARM64)"
   curl -o ./nodejs-mac-arm64.tar.gz --create-dirs https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-darwin-arm64.tar.gz  
   mkdir nodejs-mac-arm64
@@ -23,7 +23,7 @@ if ! [ -f nodejs-mac-arm64/bin/node ]; then
   rm nodejs-mac-arm64.tar.gz
 fi
 
-if ! [ -f nodejs-mac-x64/bin/node ]; then
+if ! [ -f nodejs-mac-x64/bin/node ] && ! command -v node &> /dev/null; then
   echo "Downloading NodeJS LTS (x64)"
   curl -o ./nodejs-mac-x64.tar.gz --create-dirs https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-darwin-x64.tar.gz     
   mkdir nodejs-mac-x64
@@ -38,7 +38,7 @@ echo "INFO: Set path to Corretto-11 JDK"
 export JAVA_HOME="$CORRETTO_BASEDIR/amazon-corretto-11.jdk.x64/Contents/Home"
 export PATH="$JAVA_HOME/bin:$PATH"
 
-if ! [ -f jre/bin/java ]; then
+if ! [ -f jre/bin/java ] && ! command -v java &> /dev/null; then
   cd "$CORRETTO_BASEDIR" 
   if ! [ -f amazon-corretto-11.jdk.x64/Contents/Home/bin/java ]; then
       echo "Downloading Corretto (x64)"
