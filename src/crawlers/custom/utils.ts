@@ -436,8 +436,6 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
         } catch (e) {
           consoleLogger.info(`Error in calling handleOnScanClick, isCypressTest: ${isCypressTest}`);
         }
-      } else {
-        consoleLogger.info(`isCyressTest: ${isCypressTest}`);
       }
 
       consoleLogger.info(`Overlay state: ${existingOverlay}`);
