@@ -8,7 +8,7 @@ import { JSDOM } from 'jsdom';
 import * as cheerio from 'cheerio';
 import crawlee, { Request } from 'crawlee';
 import { parseString } from 'xml2js';
-import fs from 'fs';
+import fs from 'fs-extra'; // Make sure to import fs-extra instead of fs
 import path from 'path';
 import url from 'url';
 import safe from 'safe-regex';
@@ -1386,7 +1386,8 @@ export const cloneChromeProfiles = (randomToken?: string): string => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
-    return;
+    silentLogger.error('Chrome data directory not found');
+    return null;
   }
 
   let destDir;
@@ -1397,28 +1398,44 @@ export const cloneChromeProfiles = (randomToken?: string): string => {
     destDir = path.join(baseDir, 'purple-a11y');
   }
 
-  if (fs.existsSync(destDir)) {
-    process.env.PURPLE_A11Y_VERBOSE
-      ? deleteClonedChromeProfiles(randomToken)
-      : deleteClonedChromeProfiles();
-  }
+  // Ensure the destination directory exists
+  fs.ensureDirSync(destDir);
 
-  if (!fs.existsSync(destDir)) {
-    fs.mkdirSync(destDir, { recursive: true });
-  }
-
-  const baseOptions = {
-    cwd: baseDir,
-    recursive: true,
-    absolute: true,
-    nodir: true,
+  const copyFile = (src, dest) => {
+    try {
+      if (fs.existsSync(src)) {
+        fs.copySync(src, dest, { overwrite: true });
+        console.log(`Successfully copied ${src} to ${dest}`);
+      } else {
+        console.log(`Source file ${src} does not exist. Skipping.`);
+      }
+    } catch (err) {
+      silentLogger.error(`Failed to copy file from ${src} to ${dest}: ${err.message}`);
+      console.error(`Failed to copy file from ${src} to ${dest}: ${err.message}`);
+    }
   };
-  const cloneLocalStateFileSuccess = cloneLocalStateFile(baseOptions, destDir);
-  if (cloneChromeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSuccess) {
-    return destDir;
-  }
 
-  return null;
+  // Copy Local State file
+  const localStateFile = path.join(baseDir, 'Local State');
+  copyFile(localStateFile, path.join(destDir, 'Local State'));
+
+  // Copy Cookies files for all profiles
+  const profiles = fs.readdirSync(baseDir).filter(file => 
+    fs.statSync(path.join(baseDir, file)).isDirectory() && !file.startsWith('purple-a11y')
+  );
+
+  profiles.forEach(profile => {
+    const cookiesFile = path.join(baseDir, profile, 'Network', 'Cookies');
+    if (fs.existsSync(cookiesFile)) {
+      const destCookiesDir = path.join(destDir, profile, 'Network');
+      fs.ensureDirSync(destCookiesDir);
+      copyFile(cookiesFile, path.join(destCookiesDir, 'Cookies'));
+    } else {
+      console.log(`Cookies file not found for profile: ${profile}`);
+    }
+  });
+
+  return destDir;
 };
 
 export const cloneChromiumProfiles = (randomToken?: string): string => {
@@ -1491,13 +1508,13 @@ export const cloneEdgeProfiles = (randomToken?: string): string => {
   return null;
 };
 
-export const deleteClonedProfiles = (browser: string, randomToken?: string): void => {
+export const deleteClonedProfiles = async (browser: string, randomToken?: string): Promise<void> => {
   if (browser === BrowserTypes.CHROME) {
-    deleteClonedChromeProfiles(randomToken);
+    await deleteClonedChromeProfiles(randomToken);
   } else if (browser === BrowserTypes.EDGE) {
-    deleteClonedEdgeProfiles(randomToken);
+    await deleteClonedEdgeProfiles(randomToken);
   } else if (browser === BrowserTypes.CHROMIUM) {
-    deleteClonedChromiumProfiles(randomToken);
+    await deleteClonedChromiumProfiles(randomToken);
   }
 };
 
@@ -1505,41 +1522,93 @@ export const deleteClonedProfiles = (browser: string, randomToken?: string): voi
  * Deletes all the cloned Purple-A11y directories in the Chrome data directory
  * @returns null
  */
-export const deleteClonedChromeProfiles = (randomToken?: string): void => {
+export const deleteClonedChromeProfiles = async (randomToken?: string): Promise<void> => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
+    console.warn('Unable to find Chrome data directory in the system.');
     return;
   }
-  let destDir: string[];
+
+  let destDirs: string[];
   if (randomToken) {
-    destDir = [`${baseDir}/purple-a11y-${randomToken}`];
+    destDirs = [`${baseDir}/purple-a11y-${randomToken}`];
   } else {
     // Find all the Purple-A11y directories in the Chrome data directory
-    destDir = globSync('**/purple-a11y*', {
+    destDirs = globSync('**/purple-a11y*', {
       cwd: baseDir,
       absolute: true,
     });
   }
 
-  if (destDir.length > 0) {
-    destDir.forEach(dir => {
+  if (destDirs.length > 0) {
+    // Add a small delay to ensure all file handles are closed
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    for (const dir of destDirs) {
       if (fs.existsSync(dir)) {
         try {
-          fs.rmSync(dir, { recursive: true });
+          await fs.remove(dir);
+          console.log(`Successfully deleted ${dir}`);
         } catch (err) {
-          silentLogger.error(
-            `CHROME Unable to delete ${dir} folder in the Chrome data directory. ${err}`,
-          );
+          console.error(`Failed to delete ${dir}. Error: ${err.message}`);
+          console.log('Attempting to delete contents individually...');
+          
+          try {
+            const files = await fs.readdir(dir);
+            for (const file of files) {
+              await fs.remove(path.join(dir, file));
+            }
+            await fs.remove(dir);
+            console.log(`Successfully deleted ${dir} after individual removal`);
+          } catch (individualErr) {
+            silentLogger.error(
+              `CHROME Unable to delete ${dir} folder in the Chrome data directory. ${individualErr}`,
+            );
+            console.error(`Failed to delete ${dir} after individual removal. Error: ${individualErr.message}`);
+          }
         }
       }
-    });
-    return;
+    }
+  } else {
+    silentLogger.warn('No Purple-A11y directories found in the Chrome data directory.');
+    console.warn('No Purple-A11y directories found in the Chrome data directory.');
   }
-
-  silentLogger.warn('Unable to find Purple-A11y directory in the Chrome data directory.');
-  console.warn('Unable to find Purple-A11y directory in the Chrome data directory.');
 };
+
+function deleteWithRetry(dir: string, maxRetries: number = 3, delay: number = 1000) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      deleteDirectory(dir);
+      console.log(`Successfully deleted ${dir} on attempt ${i + 1}`);
+      return;
+    } catch (err) {
+      if (i === maxRetries - 1) {
+        throw err;
+      }
+      console.warn(`Failed to delete ${dir} on attempt ${i + 1}. Retrying...`);
+      // Wait for a short time before retrying
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, delay);
+    }
+  }
+}
+
+function deleteDirectory(dir: string) {
+  if (fs.existsSync(dir)) {
+    fs.readdirSync(dir).forEach((file) => {
+      const curPath = path.join(dir, file);
+      if (fs.lstatSync(curPath).isDirectory()) {
+        // Recursive call for subdirectories
+        deleteDirectory(curPath);
+      } else {
+        // Delete file
+        fs.unlinkSync(curPath);
+      }
+    });
+    // Delete the now-empty directory
+    fs.rmdirSync(dir);
+  }
+}
 
 /**
  * Deletes all the cloned Purple-A11y directories in the Edge data directory
