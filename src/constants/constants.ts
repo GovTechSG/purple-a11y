@@ -428,3 +428,8 @@ export const axeVersion = latestAxeVersion;
 export const axeWebPage = `https://dequeuniversity.com/rules/axe/${latestAxeVersion}/`;
 
 export const saflyIconSelector = `#__safly_icon`;
+export const cssQuerySelectors = [
+  ':not(a):is([role="link"]',
+  'button[onclick])',
+  ' a:not([href])'
+];
