@@ -11,6 +11,7 @@ import {
 import constants, {
   blackListedFileExtensions,
   guiInfoStatusTypes,
+  cssQuerySelectors
 } from '../constants/constants.js';
 import {
   getPlaywrightLaunchOptions,
@@ -230,7 +231,8 @@ const crawlDomain = async (
           });
           setPageListeners(page);
         }
-        const selectedElements: ElementHandle<SVGElement | HTMLElement>[] = await page.$$(':not(a):is([role="link"], button[onclick]), a:not([href])');
+        let selectedElementsString = cssQuerySelectors.join(" ,");
+        const selectedElements: ElementHandle<SVGElement | HTMLElement>[] = await page.$$(selectedElementsString);
         // edge case where there might be elements on page that appears intermittently
         if (currentElementIndex + 1 > selectedElements.length || !selectedElements) {
           break;
