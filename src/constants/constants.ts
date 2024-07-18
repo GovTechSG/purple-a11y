@@ -423,7 +423,7 @@ export default {
 
 export const rootPath = __dirname;
 export const wcagWebPage = 'https://www.w3.org/TR/WCAG21/';
-const latestAxeVersion = '4.4';
+const latestAxeVersion = '4.9';
 export const axeVersion = latestAxeVersion;
 export const axeWebPage = `https://dequeuniversity.com/rules/axe/${latestAxeVersion}/`;
 
@@ -431,5 +431,6 @@ export const saflyIconSelector = `#__safly_icon`;
 export const cssQuerySelectors = [
   ':not(a):is([role="link"]',
   'button[onclick])',
-  ' a:not([href])'
+  'a:not([href])',
+  '[role="button"]', // Add this line to select elements with role="button"
 ];
