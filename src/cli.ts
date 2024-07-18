@@ -297,6 +297,8 @@ const scanInit = async (argvs: Answers): Promise<string> => {
 
   const data = await prepareData(argvs);
 
+  await cleanUp(data.randomToken);
+
   // File clean up after url check
   // files will clone a second time below if url check passes
   process.env.PURPLE_A11Y_VERBOSE
@@ -331,8 +333,8 @@ const scanInit = async (argvs: Answers): Promise<string> => {
 
   // Delete cloned directory
   process.env.PURPLE_A11Y_VERBOSE
-    ? deleteClonedProfiles(data.browser, data.randomToken)
-    : deleteClonedProfiles(data.browser); //second deletion
+    ? await deleteClonedProfiles(data.browser, data.randomToken)
+    : await deleteClonedProfiles(data.browser); //second deletion
 
   // Delete dataset and request queues
   await cleanUp(data.randomToken);
