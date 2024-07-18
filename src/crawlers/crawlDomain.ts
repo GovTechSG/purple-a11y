@@ -231,7 +231,7 @@ const crawlDomain = async (
           });
           setPageListeners(page);
         }
-        let selectedElementsString = cssQuerySelectors.join(" ,");
+        let selectedElementsString = cssQuerySelectors.join(", ");
         const selectedElements: ElementHandle<SVGElement | HTMLElement>[] = await page.$$(selectedElementsString);
         // edge case where there might be elements on page that appears intermittently
         if (currentElementIndex + 1 > selectedElements.length || !selectedElements) {
