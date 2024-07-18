@@ -8,6 +8,10 @@ import { consoleLogger, guiInfoLog, silentLogger } from '../../logs.js';
 import { guiInfoStatusTypes } from '../../constants/constants.js';
 import { isSkippedUrl, urlWithoutAuth } from '../../constants/common.js';
 
+//! For Cypress Test
+// env to check if Cypress test is running
+const isCypressTest = process.env.IS_CYPRESS_TEST === 'true';
+
 export const DEBUG = false;
 export const log = str => {
   if (DEBUG) {
@@ -15,8 +19,7 @@ export const log = str => {
   }
 };
 
-
-export const screenshotFullPage = async (page, screenshotsDir:string, screenshotIdx) => {
+export const screenshotFullPage = async (page, screenshotsDir: string, screenshotIdx) => {
   const imgName = `PHScan-screenshot${screenshotIdx}.png`;
   const imgPath = path.join(screenshotsDir, imgName);
   const originalSize = page.viewportSize();
@@ -89,13 +92,12 @@ export const screenshotFullPage = async (page, screenshotsDir:string, screenshot
       fullPage: true,
       scale: 'css',
     });
-  
+
     if (originalSize) await page.setViewportSize(originalSize);
-  
   } catch (e) {
     consoleLogger.error('Unable to take screenshot');
     // Do not return screenshot path if screenshot fails
-    return "";
+    return '';
   }
 
   return `screenshots/${imgName}`; // relative path from reports folder
@@ -109,13 +111,7 @@ export const runAxeScan = async (
   dataset,
   urlsCrawled,
 ) => {
-  const result = await runAxeScript(
-    includeScreenshots,
-    page,
-    randomToken,
-    customFlowDetails,
-  );
-
+  const result = await runAxeScript(includeScreenshots, page, randomToken, customFlowDetails);
 
   await dataset.pushData(result);
 
@@ -174,12 +170,11 @@ export const processPage = async (page, processPageParams) => {
       x: window.scrollX,
       y: window.scrollY,
     }));
-  
+
     const pageImagePath = await screenshotFullPage(page, intermediateScreenshotsPath, scannedIdx);
 
-
     // TODO: This is a temporary fix to not take element screenshots on pages when errors out at full page screenshot
-    if (pageImagePath === "") {
+    if (pageImagePath === '') {
       includeScreenshots = false;
     }
 
@@ -203,12 +198,9 @@ export const processPage = async (page, processPageParams) => {
     await page.evaluate(pos => {
       window.scrollTo(pos.x, pos.y);
     }, initialScrollPos);
-
   } catch (e) {
     consoleLogger.error(`Error in scanning page: ${pageUrl}`);
   }
- 
-
 };
 
 export const MENU_POSITION = {
@@ -260,7 +252,7 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
         menu.addEventListener('mousedown', e => {
           // The EvenTarget Object is the grandfather interface for Element
           // In order to get the tagName of the item you would need polymorph it into Element
-          const targetElement:Element = e.target as Element;
+          const targetElement: Element = e.target as Element;
           if (targetElement.tagName.toLowerCase() !== 'button') {
             e.preventDefault();
             isDragging = true;
@@ -281,16 +273,16 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
           // need to tell typeScript to defer first because down int he script updateMenuPos is defined
           if (isDragging) {
             // Snap the menu when it is below half the screen
-            const halfScreenHeight:number = window.innerHeight / 2;
-            const isTopHalf:boolean = offsetY < halfScreenHeight;
+            const halfScreenHeight: number = window.innerHeight / 2;
+            const isTopHalf: boolean = offsetY < halfScreenHeight;
             if (isTopHalf) {
               menu.style.removeProperty('bottom');
               menu.style.top = '0';
-              (customWindow).updateMenuPos(vars.MENU_POSITION.top);
+              customWindow.updateMenuPos(vars.MENU_POSITION.top);
             } else {
               menu.style.removeProperty('top');
               menu.style.bottom = '0';
-              (customWindow).updateMenuPos(vars.MENU_POSITION.top);
+              customWindow.updateMenuPos(vars.MENU_POSITION.top);
             }
 
             isDragging = false;
@@ -346,20 +338,20 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
 
         shadowRoot.appendChild(menu);
 
-        let currentNode = document.body
+        let currentNode = document.body;
         if (document.body) {
           // The <body> element exists
-          if ( document.body.nodeName.toLowerCase() === 'frameset') {
-              // if currentNode is a <frameset>
-              // Move the variable outside the frameset then appendChild the component
-              while (currentNode.nodeName.toLowerCase()=== 'frameset' ) {
-                currentNode = currentNode.parentElement
-              }
-              currentNode.appendChild(shadowHost);
-            } else {
-              // currentNode is a <body>
-              currentNode.appendChild(shadowHost);
+          if (document.body.nodeName.toLowerCase() === 'frameset') {
+            // if currentNode is a <frameset>
+            // Move the variable outside the frameset then appendChild the component
+            while (currentNode.nodeName.toLowerCase() === 'frameset') {
+              currentNode = currentNode.parentElement;
             }
+            currentNode.appendChild(shadowHost);
+          } else {
+            // currentNode is a <body>
+            currentNode.appendChild(shadowHost);
+          }
         } else if (document.head) {
           // The <head> element exists
           // Append the variable below the head
@@ -369,7 +361,6 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
           // Append the variable to the document
           document.documentElement.appendChild(shadowHost);
         }
-
       },
       { menuPos, MENU_POSITION, urlsCrawled },
     )
@@ -422,14 +413,13 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
   // Detection of new url within page
   page.on('domcontentloaded', async () => {
     try {
-      
       const existingOverlay = await page.evaluate(() => {
         return document.querySelector('#purple-a11y-shadow-host');
       });
 
       consoleLogger.info(`Overlay state: ${existingOverlay}`);
-      
-      if (!existingOverlay) { 
+
+      if (!existingOverlay) {
         consoleLogger.info(`Adding overlay menu to page: ${page.url()}`);
         await addOverlayMenu(page, processPageParams.urlsCrawled, menuPos);
       }
@@ -438,11 +428,20 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
         // Timeout here to slow things down a little
       }, 1000);
 
+      //! For Cypress Test
+      // Auto-clicks 'Scan this page' button only once
+      if (isCypressTest) {
+        try {
+          handleOnScanClick();
+        } catch (e) {
+          consoleLogger.info(`Error in calling handleOnScanClick, isCypressTest: ${isCypressTest}`);
+        }
+      }
+
       consoleLogger.info(`Overlay state: ${existingOverlay}`);
-      
     } catch (e) {
-      consoleLogger.info("Error in adding overlay menu to page");
-      silentLogger.info("Error in adding overlay menu to page");
+      consoleLogger.info('Error in adding overlay menu to page');
+      silentLogger.info('Error in adding overlay menu to page');
     }
   });
 
@@ -467,16 +466,16 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
     }
   };
   await page.exposeFunction('handleOnScanClick', handleOnScanClick);
-  
+
   type UpdateMenuPosFunction = (newPos: any) => void;
 
   // Define the updateMenuPos function
-  const updateMenuPos: UpdateMenuPosFunction = (newPos) => {
-      const prevPos = menuPos;
-      if (prevPos !== newPos) {
-          console.log(`Overlay menu: position updated from ${prevPos} to ${newPos}`);
-          menuPos = newPos;
-      }
+  const updateMenuPos: UpdateMenuPosFunction = newPos => {
+    const prevPos = menuPos;
+    if (prevPos !== newPos) {
+      console.log(`Overlay menu: position updated from ${prevPos} to ${newPos}`);
+      menuPos = newPos;
+    }
   };
   await page.exposeFunction('updateMenuPos', updateMenuPos);
 
