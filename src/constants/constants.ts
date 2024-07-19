@@ -33,8 +33,7 @@ export const blackListedFileExtensions = [
 
 export const getIntermediateScreenshotsPath = (datasetsPath: string): string =>
   `${datasetsPath}/screenshots`;
-export const destinationPath = (storagePath: string): string =>
-  `${storagePath}/screenshots`;
+export const destinationPath = (storagePath: string): string => `${storagePath}/screenshots`;
 
 /**  Get the path to Default Profile in the Chrome Data Directory
  * as per https://chromium.googlesource.com/chromium/src/+/master/docs/user_data_dir.md
@@ -112,36 +111,29 @@ export const getDefaultChromiumDataDir = (): string | null => {
 
     switch (os.platform()) {
       case 'win32':
-        defaultChromiumDataDir = path.join(os.homedir(), 'AppData', 'Local', 'Chromium', 'User Data');
+        defaultChromiumDataDir = path.join(
+          os.homedir(),
+          'AppData',
+          'Local',
+          'Chromium',
+          'User Data',
+        );
         break;
       case 'darwin':
-        defaultChromiumDataDir = path.join(os.homedir(), 'Library', 'Application Support', 'Chromium');
+        defaultChromiumDataDir = path.join(
+          os.homedir(),
+          'Library',
+          'Application Support',
+          'Chromium',
+        );
         break;
       case 'linux':
       default: // Linux and others
-        const possibleDirs = [
-          path.join(os.homedir(), '.config', 'chromium'),
-          path.join(os.homedir(), '.chrome'),
-          '/usr/share/chromium',
-          '/opt/chromium',
-          '/opt/google/chrome',
-          '/home/purple/.config/chromium', // Added based on your Dockerfile
-        ];
-
-        for (const dir of possibleDirs) {
-          if (fs.existsSync(dir)) {
-            defaultChromiumDataDir = dir;
-            break;
-          }
-        }
-
-        if (!defaultChromiumDataDir) {
-          defaultChromiumDataDir = path.join(process.cwd(), 'Chromium Support');
-          try {
-            fs.mkdirSync(defaultChromiumDataDir, { recursive: true });
-          } catch (error) {
-            defaultChromiumDataDir = '/tmp';
-          }
+        defaultChromiumDataDir = path.join(process.cwd(), 'Chromium Support');
+        try {
+          fs.mkdirSync(defaultChromiumDataDir, { recursive: true });
+        } catch (error) {
+          defaultChromiumDataDir = '/tmp';
         }
 
         silentLogger.warn(`Using Chromium support directory at ${defaultChromiumDataDir}`);
