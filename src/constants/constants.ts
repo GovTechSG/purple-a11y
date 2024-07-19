@@ -75,69 +75,65 @@ export const getDefaultChromeDataDir = (): string | null => {
  * Get the path to Default Profile in the Edge Data Directory
  * @returns path to Default Profile in the Edge Data Directory
  */
-export const getDefaultEdgeDataDir = (): string => {
-  try {
-    let defaultEdgeDataDir = null;
-    if (os.platform() === 'win32') {
-      defaultEdgeDataDir = path.join(
-        os.homedir(),
-        'AppData',
-        'Local',
-        'Microsoft',
-        'Edge',
-        'User Data',
-      );
-    } else if (os.platform() === 'darwin') {
-      defaultEdgeDataDir = path.join(
-        os.homedir(),
-        'Library',
-        'Application Support',
-        'Microsoft Edge',
-      );
-    }
+export const getDefaultEdgeDataDir = (): string | null => {
+  let edgeDataDir: string;
 
-    if (defaultEdgeDataDir && fs.existsSync(defaultEdgeDataDir)) {
-      return defaultEdgeDataDir;
+  switch (os.platform()) {
+    case 'darwin':
+      edgeDataDir = path.join(os.homedir(), 'Library', 'Application Support', 'Microsoft Edge');
+      break;
+    case 'win32':
+      edgeDataDir = path.join(os.homedir(), 'AppData', 'Local', 'Microsoft', 'Edge', 'User Data');
+      break;
+    case 'linux':
+      edgeDataDir = path.join(os.homedir(), '.config', 'microsoft-edge');
+      break;
+    default:
+      silentLogger.error(`Unsupported platform: ${os.platform()}`);
+      return null;
+  }
+
+  try {
+    if (fs.existsSync(edgeDataDir)) {
+      return edgeDataDir;
     } else {
+      silentLogger.warn(`Edge data directory not found at ${edgeDataDir}`);
       return null;
     }
   } catch (error) {
-    console.error(`Error in getDefaultEdgeDataDir(): ${error}`);
+    silentLogger.error(`Error checking Edge data directory: ${error.message}`);
+    return null;
   }
 };
 
-export const getDefaultChromiumDataDir = () => {
+export const getDefaultChromiumDataDir = (): string | null => {
+  let chromiumDataDir: string;
+
+  switch (os.platform()) {
+    case 'darwin':
+      chromiumDataDir = path.join(os.homedir(), 'Library', 'Application Support', 'Chromium');
+      break;
+    case 'win32':
+      chromiumDataDir = path.join(os.homedir(), 'AppData', 'Local', 'Chromium', 'User Data');
+      break;
+    case 'linux':
+      chromiumDataDir = path.join(os.homedir(), '.config', 'chromium');
+      break;
+    default:
+      silentLogger.error(`Unsupported platform: ${os.platform()}`);
+      return null;
+  }
+
   try {
-    let defaultChromiumDataDir = null;
-
-    if (os.platform() === 'win32') {
-      defaultChromiumDataDir = path.join(os.homedir(), 'AppData', 'Local', 'Chromium', 'User Data');
-    } else if (os.platform() === 'darwin') {
-      defaultChromiumDataDir = path.join(
-        os.homedir(),
-        'Library',
-        'Application Support',
-        'Chromium',
-      );
+    if (fs.existsSync(chromiumDataDir)) {
+      return chromiumDataDir;
     } else {
-      defaultChromiumDataDir = path.join(process.cwd(), 'Chromium Support');
-
-      try {
-        fs.mkdirSync(defaultChromiumDataDir, { recursive: true }); // Use { recursive: true } to create parent directories if they don't exist
-      } catch (error) {
-        defaultChromiumDataDir = '/tmp';
-      }
-
-      silentLogger.warn(`Using Chromium support directory at ${defaultChromiumDataDir}`);
-    }
-
-    if (defaultChromiumDataDir && fs.existsSync(defaultChromiumDataDir)) {
-      return defaultChromiumDataDir;
-    } else {
+      silentLogger.warn(`Chromium data directory not found at ${chromiumDataDir}`);
       return null;
     }
   } catch (error) {
-    silentLogger.error(`Error in getDefaultChromiumDataDir(): ${error}`);
+    silentLogger.error(`Error checking Chromium data directory: ${error.message}`);
+    return null;
   }
 };
 

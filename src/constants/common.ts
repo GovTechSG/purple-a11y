@@ -1413,41 +1413,12 @@ export const cloneChromeProfiles = async (randomToken?: string): Promise<string 
   }
 };
 
-export const cloneChromiumProfiles = (randomToken?: string): string => {
+export const cloneChromiumProfiles = async (randomToken?: string): Promise<string | null> => {
   const baseDir = getDefaultChromiumDataDir();
 
   if (!baseDir) {
-    return;
-  }
-
-  let destDir: string;
-
-  if (randomToken) {
-    destDir = path.join(baseDir, `purple-a11y-${randomToken}`);
-  } else {
-    destDir = path.join(baseDir, 'purple-a11y');
-  }
-
-  if (!fs.existsSync(destDir)) {
-    fs.mkdirSync(destDir, { recursive: true });
-  }
-
-  return destDir;
-};
-
-/**
- * Checks if the Edge data directory exists and creates a clone
- * of all profile within the Purple-A11y directory located in the
- * .../User Data directory for Windows and
- * .../Microsoft Edge directory for Mac.
- * @param {string} randomToken - random token to append to the cloned directory
- * @returns {string} cloned data directory, null if any of the sub files failed to copy
- */
-export const cloneEdgeProfiles = (randomToken?: string): string => {
-  const baseDir = getDefaultEdgeDataDir();
-
-  if (!baseDir) {
-    return;
+    silentLogger.error('Chromium data directory not found');
+    return null;
   }
 
   let destDir;
@@ -1458,29 +1429,52 @@ export const cloneEdgeProfiles = (randomToken?: string): string => {
     destDir = path.join(baseDir, 'purple-a11y');
   }
 
-  if (fs.existsSync(destDir)) {
-    process.env.PURPLE_A11Y_VERBOSE
-      ? deleteClonedEdgeProfiles(randomToken)
-      : deleteClonedEdgeProfiles();
-  }
-
-  if (!fs.existsSync(destDir)) {
-    fs.mkdirSync(destDir, { recursive: true });
-  }
-
-  const baseOptions = {
-    cwd: baseDir,
-    recursive: true,
-    absolute: true,
-    nodir: true,
-  };
-
-  const cloneLocalStateFileSuccess = cloneLocalStateFile(baseOptions, destDir);
-  if (cloneEdgeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSuccess) {
+  try {
+    // Ensure the destination directory exists
+    await fs.ensureDir(destDir);
+    console.log(`Created directory: ${destDir}`);
     return destDir;
+  } catch (err) {
+    silentLogger.error(`Failed to create directory ${destDir}: ${err.message}`);
+    console.error(`Failed to create directory ${destDir}: ${err.message}`);
+    return null;
+  }
+};
+
+/**
+ * Checks if the Edge data directory exists and creates a clone
+ * of all profile within the Purple-A11y directory located in the
+ * .../User Data directory for Windows and
+ * .../Microsoft Edge directory for Mac.
+ * @param {string} randomToken - random token to append to the cloned directory
+ * @returns {string} cloned data directory, null if any of the sub files failed to copy
+ */
+export const cloneEdgeProfiles = async (randomToken?: string): Promise<string | null> => {
+  const baseDir = getDefaultEdgeDataDir();
+
+  if (!baseDir) {
+    silentLogger.error('Edge data directory not found');
+    return null;
   }
 
-  return null;
+  let destDir;
+
+  if (randomToken) {
+    destDir = path.join(baseDir, `purple-a11y-${randomToken}`);
+  } else {
+    destDir = path.join(baseDir, 'purple-a11y');
+  }
+
+  try {
+    // Ensure the destination directory exists
+    await fs.ensureDir(destDir);
+    console.log(`Created directory: ${destDir}`);
+    return destDir;
+  } catch (err) {
+    silentLogger.error(`Failed to create directory ${destDir}: ${err.message}`);
+    console.error(`Failed to create directory ${destDir}: ${err.message}`);
+    return null;
+  }
 };
 
 export const deleteClonedProfiles = async (browser: string, randomToken?: string): Promise<void> => {
@@ -1572,77 +1566,78 @@ function deleteDirectory(dir: string) {
  * Deletes all the cloned Purple-A11y directories in the Edge data directory
  * @returns null
  */
-export const deleteClonedEdgeProfiles = (randomToken?: string): void => {
-  if (process.env.PURPLE_A11Y_VERBOSE) {
-    return;
-  }
+export const deleteClonedEdgeProfiles = async (randomToken?: string): Promise<void> => {
   const baseDir = getDefaultEdgeDataDir();
 
   if (!baseDir) {
-    console.warn(`Unable to find Edge data directory in the system.`);
+    console.warn('Unable to find Edge data directory in the system.');
     return;
   }
-  let destDir: string[];
+
+  let destDirs: string[];
   if (randomToken) {
-    destDir = [`${baseDir}/purple-a11y-${randomToken}`];
+    destDirs = [`${baseDir}/purple-a11y-${randomToken}`];
   } else {
-    // Find all the Purple-A11y directories in the Chrome data directory
-    destDir = globSync('**/purple-a11y*', {
+    // Find all the Purple-A11y directories in the Edge data directory
+    destDirs = globSync('**/purple-a11y*', {
       cwd: baseDir,
       absolute: true,
     });
   }
 
-  if (destDir.length > 0) {
-    destDir.forEach(dir => {
-      if (fs.existsSync(dir)) {
+  if (destDirs.length > 0) {
+    for (const dir of destDirs) {
+      if (await fs.pathExists(dir)) {
         try {
-          fs.rmSync(dir, { recursive: true });
+          await fs.remove(dir);
+          console.log(`Successfully deleted ${dir}`);
         } catch (err) {
-          silentLogger.error(
-            `EDGE Unable to delete ${dir} folder in the Chrome data directory. ${err}`,
-          );
+          silentLogger.error(`Failed to delete ${dir}: ${err.message}`);
+          console.error(`Failed to delete ${dir}: ${err.message}`);
         }
       }
-    });
-    return;
+    }
+  } else {
+    silentLogger.warn('No Purple-A11y directories found in the Edge data directory.');
+    console.warn('No Purple-A11y directories found in the Edge data directory.');
   }
 };
 
-export const deleteClonedChromiumProfiles = (randomToken?: string): void => {
+export const deleteClonedChromiumProfiles = async (randomToken?: string): Promise<void> => {
   const baseDir = getDefaultChromiumDataDir();
 
   if (!baseDir) {
+    console.warn('Unable to find Chromium data directory in the system.');
     return;
   }
-  let destDir: string[];
+
+  let destDirs: string[];
   if (randomToken) {
-    destDir = [`${baseDir}/purple-a11y-${randomToken}`];
+    destDirs = [`${baseDir}/purple-a11y-${randomToken}`];
   } else {
-    // Find all the Purple-A11y directories in the Chrome data directory
-    destDir = globSync('**/purple-a11y*', {
+    // Find all the Purple-A11y directories in the Chromium data directory
+    destDirs = globSync('**/purple-a11y*', {
       cwd: baseDir,
       absolute: true,
     });
   }
 
-  if (destDir.length > 0) {
-    destDir.forEach(dir => {
-      if (fs.existsSync(dir)) {
+  if (destDirs.length > 0) {
+    for (const dir of destDirs) {
+      if (await fs.pathExists(dir)) {
         try {
-          fs.rmSync(dir, { recursive: true });
+          await fs.remove(dir);
+          console.log(`Successfully deleted ${dir}`);
         } catch (err) {
-          silentLogger.error(
-            `CHROMIUM Unable to delete ${dir} folder in the Chromium data directory. ${err}`,
-          );
+          silentLogger.error(`Failed to delete ${dir}: ${err.message}`);
+          console.error(`Failed to delete ${dir}: ${err.message}`);
         }
       }
-    });
-    return;
+    }
+  } else {
+    silentLogger.warn('No Purple-A11y directories found in the Chromium data directory.');
+    console.warn('No Purple-A11y directories found in the Chromium data directory.');
   }
-
-  silentLogger.warn('Unable to find Purple-A11y directory in Chromium support directory');
-  console.warn('Unable to find Purple-A11y directory in Chromium support directory');
 };
 
 export const getPlaywrightDeviceDetailsObject = (
