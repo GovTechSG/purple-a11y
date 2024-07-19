@@ -1075,10 +1075,10 @@ export const validName = name => {
  * @param isCli boolean flag to indicate if function is called from cli
  * @returns object consisting of browser to run and cloned data directory
  */
-export const getBrowserToRun = (
+export const getBrowserToRun = async (
   preferredBrowser: BrowserTypes,
-  isCli = false,
-): { browserToRun: BrowserTypes; clonedBrowserDataDir: string } => {
+  isCli = false
+): Promise<{ browserToRun: BrowserTypes; clonedBrowserDataDir: string }> => {
   const platform = os.platform();
 
   // Prioritise Chrome on Windows and Mac platforms if user does not specify a browser
@@ -1089,7 +1089,7 @@ export const getBrowserToRun = (
   printMessage([`Preferred browser ${preferredBrowser}`], messageOptions);
 
   if (preferredBrowser === BrowserTypes.CHROME) {
-    const chromeData = getChromeData();
+    const chromeData = await getChromeData();
     if (chromeData) return chromeData;
 
     if (platform === 'darwin') {
@@ -1102,7 +1102,7 @@ export const getBrowserToRun = (
       if (isCli)
         printMessage(['Unable to use Chrome, falling back to Edge browser...'], messageOptions);
 
-      const edgeData = getEdgeData();
+      const edgeData = await getEdgeData();
       if (edgeData) return edgeData;
 
       if (isCli)
@@ -1114,12 +1114,12 @@ export const getBrowserToRun = (
         printMessage(['Unable to use Chrome, falling back to Chromium browser...'], messageOptions);
     }
   } else if (preferredBrowser === BrowserTypes.EDGE) {
-    const edgeData = getEdgeData();
+    const edgeData = await getEdgeData();
     if (edgeData) return edgeData;
 
     if (isCli)
       printMessage(['Unable to use Edge, falling back to Chrome browser...'], messageOptions);
-    const chromeData = getChromeData();
+    const chromeData = await getChromeData();
     if (chromeData) return chromeData;
 
     if (platform === 'darwin') {
@@ -1127,7 +1127,7 @@ export const getBrowserToRun = (
       if (isCli)
         printMessage(
           ['Unable to use both Edge and Chrome, falling back to webkit...'],
-          messageOptions,
+          messageOptions
         );
 
       constants.launcher = webkit;
@@ -1141,37 +1141,22 @@ export const getBrowserToRun = (
       if (isCli)
         printMessage(
           ['Unable to use both Edge and Chrome, falling back to Chromium browser...'],
-          messageOptions,
+          messageOptions
         );
     }
   }
 
   // defaults to chromium
+  const clonedBrowserDataDir = await cloneChromiumProfiles();
   return {
     browserToRun: BrowserTypes.CHROMIUM,
-    clonedBrowserDataDir: cloneChromiumProfiles(),
+    clonedBrowserDataDir,
   };
 };
 
-/**
- * Cloning a second time with random token for parallel browser sessions
- * Also to mitigate against known bug where cookies are
- * overridden after each browser session - i.e. logs user out
- * after checkingUrl and unable to utilise same cookie for scan
- * */
-export const getClonedProfilesWithRandomToken = (browser: string, randomToken: string): string => {
-  if (browser === BrowserTypes.CHROME) {
-    return cloneChromeProfiles(randomToken);
-  } else if (browser === BrowserTypes.EDGE) {
-    return cloneEdgeProfiles(randomToken);
-  } else {
-    return cloneChromiumProfiles(randomToken);
-  }
-};
-
-export const getChromeData = () => {
+const getChromeData = async (): Promise<{ browserToRun: BrowserTypes; clonedBrowserDataDir: string } | null> => {
   const browserDataDir = getDefaultChromeDataDir();
-  const clonedBrowserDataDir = cloneChromeProfiles();
+  const clonedBrowserDataDir = await cloneChromeProfiles();
   if (browserDataDir && clonedBrowserDataDir) {
     const browserToRun = BrowserTypes.CHROME;
     return { browserToRun, clonedBrowserDataDir };
@@ -1180,14 +1165,32 @@ export const getChromeData = () => {
   }
 };
 
-export const getEdgeData = () => {
+const getEdgeData = async (): Promise<{ browserToRun: BrowserTypes; clonedBrowserDataDir: string } | null> => {
   const browserDataDir = getDefaultEdgeDataDir();
-  const clonedBrowserDataDir = cloneEdgeProfiles();
+  const clonedBrowserDataDir = await cloneEdgeProfiles();
   if (browserDataDir && clonedBrowserDataDir) {
     const browserToRun = BrowserTypes.EDGE;
     return { browserToRun, clonedBrowserDataDir };
   }
+  return null;
 };
+
+/**
+ * Cloning a second time with random token for parallel browser sessions
+ * Also to mitigate against known bug where cookies are
+ * overridden after each browser session - i.e. logs user out
+ * after checkingUrl and unable to utilise same cookie for scan
+ * */
+export const getClonedProfilesWithRandomToken = async (browser: string, randomToken: string): Promise<string> => {
+  if (browser === BrowserTypes.CHROME) {
+    return await cloneChromeProfiles(randomToken);
+  } else if (browser === BrowserTypes.EDGE) {
+    return await cloneEdgeProfiles(randomToken);
+  } else {
+    return await cloneChromiumProfiles(randomToken);
+  }
+};
+
 
 /**
  * Clone the Chrome profile cookie files to the destination directory
@@ -1386,7 +1389,8 @@ const cloneLocalStateFile = (options, destDir) => {
  * @param {string} randomToken - random token to append to the cloned directory
  * @returns {string} cloned data directory, null if any of the sub files failed to copy
  */
-export const cloneChromeProfiles = (randomToken?: string): string => {
+
+export const cloneChromeProfiles = async (randomToken?: string): Promise<string | null> => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
@@ -1402,44 +1406,16 @@ export const cloneChromeProfiles = (randomToken?: string): string => {
     destDir = path.join(baseDir, 'purple-a11y');
   }
 
-  // Ensure the destination directory exists
-  fs.ensureDirSync(destDir);
-
-  const copyFile = (src, dest) => {
-    try {
-      if (fs.existsSync(src)) {
-        fs.copySync(src, dest, { overwrite: true });
-        console.log(`Successfully copied ${src} to ${dest}`);
-      } else {
-        console.log(`Source file ${src} does not exist. Skipping.`);
-      }
-    } catch (err) {
-      silentLogger.error(`Failed to copy file from ${src} to ${dest}: ${err.message}`);
-      console.error(`Failed to copy file from ${src} to ${dest}: ${err.message}`);
-    }
-  };
-
-  // Copy Local State file
-  const localStateFile = path.join(baseDir, 'Local State');
-  copyFile(localStateFile, path.join(destDir, 'Local State'));
-
-  // Copy Cookies files for all profiles
-  const profiles = fs.readdirSync(baseDir).filter(file => 
-    fs.statSync(path.join(baseDir, file)).isDirectory() && !file.startsWith('purple-a11y')
-  );
-
-  profiles.forEach(profile => {
-    const cookiesFile = path.join(baseDir, profile, 'Network', 'Cookies');
-    if (fs.existsSync(cookiesFile)) {
-      const destCookiesDir = path.join(destDir, profile, 'Network');
-      fs.ensureDirSync(destCookiesDir);
-      copyFile(cookiesFile, path.join(destCookiesDir, 'Cookies'));
-    } else {
-      console.log(`Cookies file not found for profile: ${profile}`);
-    }
-  });
-
-  return destDir;
+  try {
+    // Ensure the destination directory exists
+    await fs.ensureDir(destDir);
+    console.log(`Created directory: ${destDir}`);
+    return destDir;
+  } catch (err) {
+    silentLogger.error(`Failed to create directory ${destDir}: ${err.message}`);
+    console.error(`Failed to create directory ${destDir}: ${err.message}`);
+    return null;
+  }
 };
 
 export const cloneChromiumProfiles = (randomToken?: string): string => {
@@ -1546,31 +1522,14 @@ export const deleteClonedChromeProfiles = async (randomToken?: string): Promise<
   }
 
   if (destDirs.length > 0) {
-    // Add a small delay to ensure all file handles are closed
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
     for (const dir of destDirs) {
-      if (fs.existsSync(dir)) {
+      if (await fs.pathExists(dir)) {
         try {
           await fs.remove(dir);
           console.log(`Successfully deleted ${dir}`);
         } catch (err) {
-          console.error(`Failed to delete ${dir}. Error: ${err.message}`);
-          console.log('Attempting to delete contents individually...');
-          
-          try {
-            const files = await fs.readdir(dir);
-            for (const file of files) {
-              await fs.remove(path.join(dir, file));
-            }
-            await fs.remove(dir);
-            console.log(`Successfully deleted ${dir} after individual removal`);
-          } catch (individualErr) {
-            silentLogger.error(
-              `CHROME Unable to delete ${dir} folder in the Chrome data directory. ${individualErr}`,
-            );
-            console.error(`Failed to delete ${dir} after individual removal. Error: ${individualErr.message}`);
-          }
+          silentLogger.error(`Failed to delete ${dir}: ${err.message}`);
+          console.error(`Failed to delete ${dir}: ${err.message}`);
         }
       }
     }

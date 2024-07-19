@@ -78,7 +78,7 @@ const startScanQuestions = [
       }
 
       const statuses = constants.urlCheckStatuses;
-      const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(BrowserTypes.CHROME);
+      const { browserToRun, clonedBrowserDataDir } = await getBrowserToRun(BrowserTypes.CHROME);
       const playwrightDeviceDetailsObject = getPlaywrightDeviceDetailsObject(
         answers.deviceChosen,
         answers.customDevice,

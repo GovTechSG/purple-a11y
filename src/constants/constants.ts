@@ -40,35 +40,34 @@ export const destinationPath = (storagePath: string): string =>
  * as per https://chromium.googlesource.com/chromium/src/+/master/docs/user_data_dir.md
  * @returns path to Default Profile in the Chrome Data Directory
  */
-export const getDefaultChromeDataDir = (): string => {
-  try {
-    let defaultChromeDataDir = null;
-    if (os.platform() === 'win32') {
-      defaultChromeDataDir = path.join(
-        os.homedir(),
-        'AppData',
-        'Local',
-        'Google',
-        'Chrome',
-        'User Data',
-      );
-    } else if (os.platform() === 'darwin') {
-      defaultChromeDataDir = path.join(
-        os.homedir(),
-        'Library',
-        'Application Support',
-        'Google',
-        'Chrome',
-      );
-    }
+export const getDefaultChromeDataDir = (): string | null => {
+  let chromeDataDir: string;
 
-    if (defaultChromeDataDir && fs.existsSync(defaultChromeDataDir)) {
-      return defaultChromeDataDir;
+  switch (os.platform()) {
+    case 'darwin':
+      chromeDataDir = path.join(os.homedir(), 'Library', 'Application Support', 'Google', 'Chrome');
+      break;
+    case 'win32':
+      chromeDataDir = path.join(os.homedir(), 'AppData', 'Local', 'Google', 'Chrome', 'User Data');
+      break;
+    case 'linux':
+      chromeDataDir = path.join(os.homedir(), '.config', 'google-chrome');
+      break;
+    default:
+      silentLogger.error(`Unsupported platform: ${os.platform()}`);
+      return null;
+  }
+
+  try {
+    if (fs.existsSync(chromeDataDir)) {
+      return chromeDataDir;
     } else {
+      silentLogger.warn(`Chrome data directory not found at ${chromeDataDir}`);
       return null;
     }
   } catch (error) {
-    console.error(`Error in getDefaultChromeDataDir(): ${error}`);
+    silentLogger.error(`Error checking Chrome data directory: ${error.message}`);
+    return null;
   }
 };
 
