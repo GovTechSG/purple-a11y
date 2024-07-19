@@ -224,7 +224,7 @@ const scanInit = async (argvs: Answers): Promise<string> => {
   let clonedDataDir = '';
   const statuses = constants.urlCheckStatuses;
 
-  const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(argvs.browserToRun, true);
+  const { browserToRun, clonedBrowserDataDir } = await getBrowserToRun(argvs.browserToRun, true);
   argvs.browserToRun = browserToRun;
   clonedDataDir = clonedBrowserDataDir;
 
@@ -337,7 +337,7 @@ const scanInit = async (argvs: Answers): Promise<string> => {
   const screenToScan = getScreenToScan(argvs.deviceChosen, argvs.customDevice, argvs.viewportWidth);
 
   // Clone profiles a second time
-  clonedDataDir = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
+  clonedDataDir = await getClonedProfilesWithRandomToken(data.browser, data.randomToken);
   data.userDataDirectory = clonedDataDir;
 
   printMessage([`Purple A11y version: ${appVersion}`, 'Starting scan...'], messageOptions);

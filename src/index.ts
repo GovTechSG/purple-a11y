@@ -91,7 +91,7 @@ const runScan = async (answers: Answers) => {
     answers.customDevice,
     answers.viewportWidth,
   );
-  let { browserToRun } = getBrowserToRun(BrowserTypes.CHROME);
+  let { browserToRun } = await getBrowserToRun(BrowserTypes.CHROME);
   deleteClonedProfiles(browserToRun);
   answers.browserToRun = browserToRun;
 
@@ -103,7 +103,7 @@ const runScan = async (answers: Answers) => {
   answers.metadata = '{}';
 
   const data:Data = await prepareData(answers);
-  data.userDataDirectory = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
+  data.userDataDirectory = await getClonedProfilesWithRandomToken(data.browser, data.randomToken);
 
   setHeadlessMode(data.browser, data.isHeadless);
   printMessage(['Scanning website...'], messageOptions);
