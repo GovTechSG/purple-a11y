@@ -432,7 +432,8 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
       // Auto-clicks 'Scan this page' button only once
       if (isCypressTest) {
         try {
-          handleOnScanClick();
+          await handleOnScanClick();
+          page.close();
         } catch (e) {
           consoleLogger.info(`Error in calling handleOnScanClick, isCypressTest: ${isCypressTest}`);
         }
