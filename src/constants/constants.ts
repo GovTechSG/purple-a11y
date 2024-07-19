@@ -127,7 +127,6 @@ export const getDefaultChromiumDataDir = (): string | null => {
           'Chromium',
         );
         break;
-      case 'linux':
       default: // Linux and others
         defaultChromiumDataDir = path.join(process.cwd(), 'Chromium Support');
         try {
