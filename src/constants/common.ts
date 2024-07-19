@@ -1148,6 +1148,22 @@ export const getBrowserToRun = async (
   };
 };
 
+/**
+ * Cloning a second time with random token for parallel browser sessions
+ * Also to mitigate against known bug where cookies are
+ * overridden after each browser session - i.e. logs user out
+ * after checkingUrl and unable to utilise same cookie for scan
+ * */
+export const getClonedProfilesWithRandomToken = async (browser: string, randomToken: string): Promise<string> => {
+  if (browser === BrowserTypes.CHROME) {
+    return await cloneChromeProfiles(randomToken);
+  } else if (browser === BrowserTypes.EDGE) {
+    return await cloneEdgeProfiles(randomToken);
+  } else {
+    return await cloneChromiumProfiles(randomToken);
+  }
+};
+
 const getChromeData = async (): Promise<{ browserToRun: BrowserTypes; clonedBrowserDataDir: string } | null> => {
   const browserDataDir = getDefaultChromeDataDir();
   const clonedBrowserDataDir = await cloneChromeProfiles();
@@ -1168,23 +1184,6 @@ const getEdgeData = async (): Promise<{ browserToRun: BrowserTypes; clonedBrowse
   }
   return null;
 };
-
-/**
- * Cloning a second time with random token for parallel browser sessions
- * Also to mitigate against known bug where cookies are
- * overridden after each browser session - i.e. logs user out
- * after checkingUrl and unable to utilise same cookie for scan
- * */
-export const getClonedProfilesWithRandomToken = async (browser: string, randomToken: string): Promise<string> => {
-  if (browser === BrowserTypes.CHROME) {
-    return await cloneChromeProfiles(randomToken);
-  } else if (browser === BrowserTypes.EDGE) {
-    return await cloneEdgeProfiles(randomToken);
-  } else {
-    return await cloneChromiumProfiles(randomToken);
-  }
-};
-
 
 /**
  * Clone the Chrome profile cookie files to the destination directory
