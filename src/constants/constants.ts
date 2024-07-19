@@ -117,7 +117,26 @@ export const getDefaultChromiumDataDir = (): string | null => {
       chromiumDataDir = path.join(os.homedir(), 'AppData', 'Local', 'Chromium', 'User Data');
       break;
     case 'linux':
-      chromiumDataDir = path.join(os.homedir(), '.config', 'chromium');
+      // Check multiple possible locations for Chromium data directory
+      const possibleDirs = [
+        path.join(os.homedir(), '.config', 'chromium'),
+        path.join(os.homedir(), '.chrome'),
+        '/usr/share/chromium',
+        '/opt/chromium',
+        '/opt/google/chrome'
+      ];
+      
+      for (const dir of possibleDirs) {
+        if (fs.existsSync(dir)) {
+          chromiumDataDir = dir;
+          break;
+        }
+      }
+      
+      if (!chromiumDataDir) {
+        silentLogger.error('Unable to find Chromium data directory');
+        return null;
+      }
       break;
     default:
       silentLogger.error(`Unsupported platform: ${os.platform()}`);
