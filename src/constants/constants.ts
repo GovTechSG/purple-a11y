@@ -432,5 +432,5 @@ export const cssQuerySelectors = [
   ':not(a):is([role="link"]',
   'button[onclick])',
   'a:not([href])',
-  '[role="button"]', // Add this line to select elements with role="button"
+  '[role="button"]:not(a[href])', // Add this line to select elements with role="button" where it is not <a> with href
 ];
