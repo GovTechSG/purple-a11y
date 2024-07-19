@@ -1528,23 +1528,6 @@ export const deleteClonedChromeProfiles = async (randomToken?: string): Promise<
   }
 };
 
-function deleteWithRetry(dir: string, maxRetries: number = 3, delay: number = 1000) {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      deleteDirectory(dir);
-      console.log(`Successfully deleted ${dir} on attempt ${i + 1}`);
-      return;
-    } catch (err) {
-      if (i === maxRetries - 1) {
-        throw err;
-      }
-      console.warn(`Failed to delete ${dir} on attempt ${i + 1}. Retrying...`);
-      // Wait for a short time before retrying
-      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, delay);
-    }
-  }
-}
-
 function deleteDirectory(dir: string) {
   if (fs.existsSync(dir)) {
     fs.readdirSync(dir).forEach((file) => {
