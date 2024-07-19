@@ -107,51 +107,55 @@ export const getDefaultEdgeDataDir = (): string | null => {
 };
 
 export const getDefaultChromiumDataDir = (): string | null => {
-  let chromiumDataDir: string;
-
-  switch (os.platform()) {
-    case 'darwin':
-      chromiumDataDir = path.join(os.homedir(), 'Library', 'Application Support', 'Chromium');
-      break;
-    case 'win32':
-      chromiumDataDir = path.join(os.homedir(), 'AppData', 'Local', 'Chromium', 'User Data');
-      break;
-    case 'linux':
-      // Check multiple possible locations for Chromium data directory
-      const possibleDirs = [
-        path.join(os.homedir(), '.config', 'chromium'),
-        path.join(os.homedir(), '.chrome'),
-        '/usr/share/chromium',
-        '/opt/chromium',
-        '/opt/google/chrome'
-      ];
-      
-      for (const dir of possibleDirs) {
-        if (fs.existsSync(dir)) {
-          chromiumDataDir = dir;
-          break;
-        }
-      }
-      
-      if (!chromiumDataDir) {
-        silentLogger.error('Unable to find Chromium data directory');
-        return null;
-      }
-      break;
-    default:
-      silentLogger.error(`Unsupported platform: ${os.platform()}`);
-      return null;
-  }
-
   try {
-    if (fs.existsSync(chromiumDataDir)) {
-      return chromiumDataDir;
+    let defaultChromiumDataDir: string | null = null;
+
+    switch (os.platform()) {
+      case 'win32':
+        defaultChromiumDataDir = path.join(os.homedir(), 'AppData', 'Local', 'Chromium', 'User Data');
+        break;
+      case 'darwin':
+        defaultChromiumDataDir = path.join(os.homedir(), 'Library', 'Application Support', 'Chromium');
+        break;
+      case 'linux':
+      default: // Linux and others
+        const possibleDirs = [
+          path.join(os.homedir(), '.config', 'chromium'),
+          path.join(os.homedir(), '.chrome'),
+          '/usr/share/chromium',
+          '/opt/chromium',
+          '/opt/google/chrome',
+          '/home/purple/.config/chromium', // Added based on your Dockerfile
+        ];
+
+        for (const dir of possibleDirs) {
+          if (fs.existsSync(dir)) {
+            defaultChromiumDataDir = dir;
+            break;
+          }
+        }
+
+        if (!defaultChromiumDataDir) {
+          defaultChromiumDataDir = path.join(process.cwd(), 'Chromium Support');
+          try {
+            fs.mkdirSync(defaultChromiumDataDir, { recursive: true });
+          } catch (error) {
+            defaultChromiumDataDir = '/tmp';
+          }
+        }
+
+        silentLogger.warn(`Using Chromium support directory at ${defaultChromiumDataDir}`);
+        break;
+    }
+
+    if (defaultChromiumDataDir && fs.existsSync(defaultChromiumDataDir)) {
+      return defaultChromiumDataDir;
     } else {
-      silentLogger.warn(`Chromium data directory not found at ${chromiumDataDir}`);
+      silentLogger.warn(`Chromium data directory not found at ${defaultChromiumDataDir}`);
       return null;
     }
   } catch (error) {
-    silentLogger.error(`Error checking Chromium data directory: ${error.message}`);
+    silentLogger.error(`Error in getDefaultChromiumDataDir(): ${error}`);
     return null;
   }
 };
