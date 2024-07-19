@@ -142,7 +142,6 @@ export const getDefaultChromiumDataDir = (): string | null => {
     if (defaultChromiumDataDir && fs.existsSync(defaultChromiumDataDir)) {
       return defaultChromiumDataDir;
     } else {
-      silentLogger.warn(`Chromium data directory not found at ${defaultChromiumDataDir}`);
       return null;
     }
   } catch (error) {
