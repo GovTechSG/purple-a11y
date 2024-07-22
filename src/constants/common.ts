@@ -1069,10 +1069,10 @@ export const validName = name => {
  * @param isCli boolean flag to indicate if function is called from cli
  * @returns object consisting of browser to run and cloned data directory
  */
-export const getBrowserToRun = async (
+export const getBrowserToRun = (
   preferredBrowser: BrowserTypes,
   isCli = false,
-): Promise<{ browserToRun: BrowserTypes; clonedBrowserDataDir: string }> => {
+): { browserToRun: BrowserTypes; clonedBrowserDataDir: string } => {
   const platform = os.platform();
 
   // Prioritise Chrome on Windows and Mac platforms if user does not specify a browser
@@ -1083,7 +1083,7 @@ export const getBrowserToRun = async (
   printMessage([`Preferred browser ${preferredBrowser}`], messageOptions);
 
   if (preferredBrowser === BrowserTypes.CHROME) {
-    const chromeData = await getChromeData();
+    const chromeData = getChromeData();
     if (chromeData) return chromeData;
 
     if (platform === 'darwin') {
@@ -1096,7 +1096,7 @@ export const getBrowserToRun = async (
       if (isCli)
         printMessage(['Unable to use Chrome, falling back to Edge browser...'], messageOptions);
 
-      const edgeData = await getEdgeData();
+      const edgeData = getEdgeData();
       if (edgeData) return edgeData;
 
       if (isCli)
@@ -1108,12 +1108,12 @@ export const getBrowserToRun = async (
         printMessage(['Unable to use Chrome, falling back to Chromium browser...'], messageOptions);
     }
   } else if (preferredBrowser === BrowserTypes.EDGE) {
-    const edgeData = await getEdgeData();
+    const edgeData = getEdgeData();
     if (edgeData) return edgeData;
 
     if (isCli)
       printMessage(['Unable to use Edge, falling back to Chrome browser...'], messageOptions);
-    const chromeData = await getChromeData();
+    const chromeData = getChromeData();
     if (chromeData) return chromeData;
 
     if (platform === 'darwin') {
@@ -1141,10 +1141,9 @@ export const getBrowserToRun = async (
   }
 
   // defaults to chromium
-  const clonedBrowserDataDir = await cloneChromiumProfiles();
   return {
     browserToRun: BrowserTypes.CHROMIUM,
-    clonedBrowserDataDir,
+    clonedBrowserDataDir: cloneChromiumProfiles(),
   };
 };
 
@@ -1154,19 +1153,19 @@ export const getBrowserToRun = async (
  * overridden after each browser session - i.e. logs user out
  * after checkingUrl and unable to utilise same cookie for scan
  * */
-export const getClonedProfilesWithRandomToken = async (browser: string, randomToken: string): Promise<string> => {
+export const getClonedProfilesWithRandomToken = (browser: string, randomToken: string): string => {
   if (browser === BrowserTypes.CHROME) {
-    return await cloneChromeProfiles(randomToken);
+    return cloneChromeProfiles(randomToken);
   } else if (browser === BrowserTypes.EDGE) {
-    return await cloneEdgeProfiles(randomToken);
+    return cloneEdgeProfiles(randomToken);
   } else {
-    return await cloneChromiumProfiles(randomToken);
+    return cloneChromiumProfiles(randomToken);
   }
 };
 
-const getChromeData = async (): Promise<{ browserToRun: BrowserTypes; clonedBrowserDataDir: string } | null> => {
+export const getChromeData = () => {
   const browserDataDir = getDefaultChromeDataDir();
-  const clonedBrowserDataDir = await cloneChromeProfiles();
+  const clonedBrowserDataDir = cloneChromeProfiles();
   if (browserDataDir && clonedBrowserDataDir) {
     const browserToRun = BrowserTypes.CHROME;
     return { browserToRun, clonedBrowserDataDir };
@@ -1175,9 +1174,10 @@ const getChromeData = async (): Promise<{ browserToRun: BrowserTypes; clonedBrow
   }
 };
 
-const getEdgeData = async (): Promise<{ browserToRun: BrowserTypes; clonedBrowserDataDir: string } | null> => {
+
+export const getEdgeData = () => {
   const browserDataDir = getDefaultEdgeDataDir();
-  const clonedBrowserDataDir = await cloneEdgeProfiles();
+  const clonedBrowserDataDir = cloneEdgeProfiles();
   if (browserDataDir && clonedBrowserDataDir) {
     const browserToRun = BrowserTypes.EDGE;
     return { browserToRun, clonedBrowserDataDir };
@@ -1384,7 +1384,7 @@ const cloneLocalStateFile = (options, destDir) => {
  * @returns {string} cloned data directory, null if any of the sub files failed to copy
  */
 
-export const cloneChromeProfiles = async (randomToken?: string): Promise<string | null> => {
+export const cloneChromeProfiles = (randomToken?: string): string => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
@@ -1401,7 +1401,7 @@ export const cloneChromeProfiles = async (randomToken?: string): Promise<string 
 
   try {
     // Ensure the destination directory exists
-    await fs.ensureDir(destDir);
+    fs.ensureDir(destDir);
     console.log(`Created directory: ${destDir}`);
     return destDir;
   } catch (err) {
@@ -1411,7 +1411,7 @@ export const cloneChromeProfiles = async (randomToken?: string): Promise<string 
   }
 };
 
-export const cloneChromiumProfiles = async (randomToken?: string): Promise<string | null> => {
+export const cloneChromiumProfiles = (randomToken?: string): string => {
   const baseDir = getDefaultChromiumDataDir();
 
   if (!baseDir) {
@@ -1428,7 +1428,7 @@ export const cloneChromiumProfiles = async (randomToken?: string): Promise<strin
 
   try {
     // Ensure the destination directory exists
-    await fs.ensureDir(destDir);
+    fs.ensureDir(destDir);
     console.log(`Created directory: ${destDir}`);
     return destDir;
   } catch (err) {
@@ -1446,7 +1446,7 @@ export const cloneChromiumProfiles = async (randomToken?: string): Promise<strin
  * @param {string} randomToken - random token to append to the cloned directory
  * @returns {string} cloned data directory, null if any of the sub files failed to copy
  */
-export const cloneEdgeProfiles = async (randomToken?: string): Promise<string | null> => {
+export const cloneEdgeProfiles = (randomToken?: string): string => {
   const baseDir = getDefaultEdgeDataDir();
 
   if (!baseDir) {
@@ -1463,7 +1463,7 @@ export const cloneEdgeProfiles = async (randomToken?: string): Promise<string | 
 
   try {
     // Ensure the destination directory exists
-    await fs.ensureDir(destDir);
+    fs.ensureDir(destDir);
     console.log(`Created directory: ${destDir}`);
     return destDir;
   } catch (err) {
@@ -1475,11 +1475,11 @@ export const cloneEdgeProfiles = async (randomToken?: string): Promise<string | 
 
 export const deleteClonedProfiles = async (browser: string, randomToken?: string): Promise<void> => {
   if (browser === BrowserTypes.CHROME) {
-    await deleteClonedChromeProfiles(randomToken);
+    deleteClonedChromeProfiles(randomToken);
   } else if (browser === BrowserTypes.EDGE) {
-    await deleteClonedEdgeProfiles(randomToken);
+    deleteClonedEdgeProfiles(randomToken);
   } else if (browser === BrowserTypes.CHROMIUM) {
-    await deleteClonedChromiumProfiles(randomToken);
+    deleteClonedChromiumProfiles(randomToken);
   }
 };
 
@@ -1487,7 +1487,7 @@ export const deleteClonedProfiles = async (browser: string, randomToken?: string
  * Deletes all the cloned Purple-A11y directories in the Chrome data directory
  * @returns null
  */
-export const deleteClonedChromeProfiles = async (randomToken?: string): Promise<void> => {
+export const deleteClonedChromeProfiles = (randomToken?: string): void => {
   const baseDir = getDefaultChromeDataDir();
 
   if (!baseDir) {
@@ -1507,9 +1507,9 @@ export const deleteClonedChromeProfiles = async (randomToken?: string): Promise<
 
   if (destDirs.length > 0) {
     for (const dir of destDirs) {
-      if (await fs.pathExists(dir)) {
+      if (fs.pathExistsSync(dir)) {
         try {
-          await fs.remove(dir);
+          fs.remove(dir);
           console.log(`Successfully deleted ${dir}`);
         } catch (err) {
           silentLogger.error(`CHROME Unable to delete ${dir} folder in the Chrome data directory. ${err}`,);
@@ -1527,7 +1527,7 @@ export const deleteClonedChromeProfiles = async (randomToken?: string): Promise<
  * Deletes all the cloned Purple-A11y directories in the Edge data directory
  * @returns null
  */
-export const deleteClonedEdgeProfiles = async (randomToken?: string): Promise<void> => {
+export const deleteClonedEdgeProfiles = (randomToken?: string): void => {
   const baseDir = getDefaultEdgeDataDir();
 
   if (!baseDir) {
@@ -1547,9 +1547,9 @@ export const deleteClonedEdgeProfiles = async (randomToken?: string): Promise<vo
 
   if (destDirs.length > 0) {
     for (const dir of destDirs) {
-      if (await fs.pathExists(dir)) {
+      if (fs.pathExists(dir)) {
         try {
-          await fs.remove(dir);
+          fs.remove(dir);
           console.log(`Successfully deleted ${dir}`);
         } catch (err) {
           silentLogger.error(
@@ -1565,7 +1565,7 @@ export const deleteClonedEdgeProfiles = async (randomToken?: string): Promise<vo
   }
 };
 
-export const deleteClonedChromiumProfiles = async (randomToken?: string): Promise<void> => {
+export const deleteClonedChromiumProfiles = (randomToken?: string): void => {
   const baseDir = getDefaultChromiumDataDir();
 
   if (!baseDir) {
@@ -1585,9 +1585,9 @@ export const deleteClonedChromiumProfiles = async (randomToken?: string): Promis
 
   if (destDirs.length > 0) {
     for (const dir of destDirs) {
-      if (await fs.pathExists(dir)) {
+      if (fs.pathExists(dir)) {
         try {
-          await fs.remove(dir);
+          fs.remove(dir);
           console.log(`Successfully deleted ${dir}`);
         } catch (err) {
           silentLogger.error(

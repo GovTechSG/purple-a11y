@@ -97,7 +97,7 @@ export const init = async (
     throwErrorIfTerminated();
     if (includeScreenshots) {
       // use chrome by default
-      const { browserToRun, clonedBrowserDataDir } = await getBrowserToRun(BrowserTypes.CHROME);
+      const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(BrowserTypes.CHROME);
       const browserContext = await constants.launcher.launchPersistentContext(
         clonedBrowserDataDir,
         { viewport: scanAboutMetadata.viewport, ...getPlaywrightLaunchOptions(browserToRun) },

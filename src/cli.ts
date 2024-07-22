@@ -224,7 +224,7 @@ const scanInit = async (argvs: Answers): Promise<string> => {
   let clonedDataDir = '';
   const statuses = constants.urlCheckStatuses;
 
-  const { browserToRun, clonedBrowserDataDir } = await getBrowserToRun(argvs.browserToRun, true);
+  const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(argvs.browserToRun, true);
   argvs.browserToRun = browserToRun;
   clonedDataDir = clonedBrowserDataDir;
 
@@ -337,7 +337,7 @@ const scanInit = async (argvs: Answers): Promise<string> => {
   const screenToScan = getScreenToScan(argvs.deviceChosen, argvs.customDevice, argvs.viewportWidth);
 
   // Clone profiles a second time
-  clonedDataDir = await getClonedProfilesWithRandomToken(data.browser, data.randomToken);
+  clonedDataDir = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
   data.userDataDirectory = clonedDataDir;
 
   printMessage([`Purple A11y version: ${appVersion}`, 'Starting scan...'], messageOptions);
@@ -346,8 +346,8 @@ const scanInit = async (argvs: Answers): Promise<string> => {
 
   // Delete cloned directory
   process.env.PURPLE_A11Y_VERBOSE
-    ? await deleteClonedProfiles(data.browser, data.randomToken)
-    : await deleteClonedProfiles(data.browser); //second deletion
+    ? deleteClonedProfiles(data.browser, data.randomToken)
+    : deleteClonedProfiles(data.browser); //second deletion
 
   // Delete dataset and request queues
   await cleanUp(data.randomToken);
