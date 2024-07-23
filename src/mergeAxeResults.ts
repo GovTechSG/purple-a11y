@@ -1,7 +1,7 @@
 /* eslint-disable consistent-return */
 /* eslint-disable no-console */
 import os from 'os';
-import fs from 'fs-extra';
+import fs, { ensureDirSync } from 'fs-extra';
 import printMessage from 'print-message';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -15,7 +15,7 @@ import {
   getWcagPassPercentage,
   formatDateTimeForMassScanner,
   retryFunction,
-  zipResults
+  zipResults,
 } from './utils.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import itemTypeDescription from './constants/itemTypeDescription.js';
@@ -86,8 +86,10 @@ type AllIssues = {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const extractFileNames = async (directory: string): Promise<string[]> =>
-  fs
+const extractFileNames = async (directory: string): Promise<string[]> => {
+  ensureDirSync(directory);
+
+  return fs
     .readdir(directory)
     .then(allFiles => allFiles.filter(file => path.extname(file).toLowerCase() === '.json'))
     .catch(readdirError => {
@@ -95,7 +97,7 @@ const extractFileNames = async (directory: string): Promise<string[]> =>
       silentLogger.error(`(extractFileNames) - ${readdirError}`);
       throw readdirError;
     });
-
+};
 const parseContentToJson = async rPath =>
   fs
     .readFile(rPath, 'utf8')
@@ -104,7 +106,6 @@ const parseContentToJson = async rPath =>
       consoleLogger.info('An error has occurred when parsing the content, please try again.');
       silentLogger.error(`(parseContentToJson) - ${parseError}`);
     });
-
 
 const writeCsv = async (allIssues, storagePath) => {
   const csvOutput = createWriteStream(`${storagePath}/report.csv`, { encoding: 'utf8' });
@@ -225,7 +226,6 @@ const base64Encode = data => {
 };
 
 const writeBase64 = async (allIssues, storagePath, htmlFilename = 'report.html') => {
-
   const { items, ...rest } = allIssues;
 
   const encodedScanItems = base64Encode(items);
@@ -238,7 +238,10 @@ const writeBase64 = async (allIssues, storagePath, htmlFilename = 'report.html')
     fs.mkdirSync(directoryPath, { recursive: true });
   }
 
-  await fs.promises.writeFile(filePath, `scanData_base64,scanItems_base64\n${encodedScanData},${encodedScanItems}`);
+  await fs.promises.writeFile(
+    filePath,
+    `scanData_base64,scanItems_base64\n${encodedScanData},${encodedScanItems}`,
+  );
 
   const htmlFilePath = path.join(storagePath, htmlFilename);
   let htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
@@ -482,14 +485,17 @@ export const generateArtifacts = async (
   customFlowLabel,
   cypressScanAboutMetadata,
   scanDetails,
-  zip = undefined //optional
+  zip = undefined, //optional
 ) => {
   const intermediateDatasetsPath = `${randomToken}/datasets/${randomToken}`;
+  console.log('intermediateDatasetsPath', intermediateDatasetsPath);
   const phAppVersion = getVersion();
   const storagePath = getStoragePath(randomToken);
 
-
-  urlScanned = (scanType === ScannerTypes.SITEMAP || scanType === ScannerTypes.LOCALFILE) ? urlScanned : urlWithoutAuth(urlScanned);
+  urlScanned =
+    scanType === ScannerTypes.SITEMAP || scanType === ScannerTypes.LOCALFILE
+      ? urlScanned
+      : urlWithoutAuth(urlScanned);
 
   const formatAboutStartTime = dateString => {
     const utcStartTimeDate = new Date(dateString);
@@ -553,6 +559,7 @@ export const generateArtifacts = async (
   };
 
   const allFiles = await extractFileNames(intermediateDatasetsPath);
+  console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaallFiles', allFiles);
 
   const jsonArray = await Promise.all(
     allFiles.map(async file => parseContentToJson(`${intermediateDatasetsPath}/${file}`)),
@@ -650,9 +657,9 @@ export const generateArtifacts = async (
     let formattedStartTime = formatDateTimeForMassScanner(startTime);
     let formattedEndTime = formatDateTimeForMassScanner(endTime);
     rest.critical = axeImpactCount.critical;
-    rest.serious= axeImpactCount.serious;
-    rest.moderate= axeImpactCount.moderate;
-    rest.minor= axeImpactCount.minor;
+    rest.serious = axeImpactCount.serious;
+    rest.moderate = axeImpactCount.moderate;
+    rest.minor = axeImpactCount.minor;
 
     // Adding encoded start time and end time to rest object
     rest.formattedStartTime = formattedStartTime;
@@ -665,7 +672,7 @@ export const generateArtifacts = async (
       payload: { scanData: encodedScanData, scanItems: encodedScanItems },
     };
 
-    if (process.send){
+    if (process.send) {
       process.send(JSON.stringify(scanDetailsMessage));
     }
   }
@@ -675,7 +682,7 @@ export const generateArtifacts = async (
   await writeBase64(allIssues, storagePath);
   await writeSummaryHTML(allIssues, storagePath);
   await retryFunction(() => writeSummaryPdf(storagePath), 1);
-  
+
   // Take option if set
   if (typeof zip === 'string') {
     constants.cliZipFileName = zip;
@@ -710,7 +717,6 @@ export const generateArtifacts = async (
       }
 
       printMessage(messageToDisplay);
-
     })
     .catch(error => {
       printMessage([`Error in zipping results: ${error}`]);
@@ -718,4 +724,3 @@ export const generateArtifacts = async (
 
   return createRuleIdJson(allIssues);
 };
-

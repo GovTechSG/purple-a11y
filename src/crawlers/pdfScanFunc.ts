@@ -9,6 +9,7 @@ import os from 'os';
 import path from 'path';
 import { getPageFromContext } from '../screenshotFunc/pdfScreenshotFunc.js';
 import { isFilePath } from '../constants/common.js';
+import { ensureDirSync } from 'fs-extra';
 
 const require = createRequire(import.meta.url);
 
@@ -36,15 +37,15 @@ class TranslatedObject {
   constructor() {
     this.goodToFix = {
       rules: {},
-      totalItems: 0
+      totalItems: 0,
     };
     this.mustFix = {
       rules: {},
-      totalItems: 0
+      totalItems: 0,
     };
     this.needsReview = {
       rules: {},
-      totalItems: 0
+      totalItems: 0,
     };
   }
 }
@@ -52,7 +53,7 @@ class TransformedRuleObject {
   description: string;
   totalItems: number;
   conformance: string[];
-  items: { message: string; page: string; context: any; }[];
+  items: { message: string; page: string; context: any }[];
 
   constructor() {
     this.description = '';
@@ -140,7 +141,7 @@ const isPDF = buffer => {
 
 export const handlePdfDownload = (randomToken, pdfDownloads, request, sendRequest, urlsCrawled) => {
   const pdfFileName = randomUUID();
-  const url:string = request.url
+  const url: string = request.url;
   const pageTitle = decodeURI(request.url).split('/').pop();
 
   pdfDownloads.push(
@@ -239,67 +240,67 @@ export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
   const resultsList = [];
 
   if (parsedJsonData) {
-  // jobs: files that are scanned
-  const {
-    report: { jobs },
-  } = parsedJsonData;
+    // jobs: files that are scanned
+    const {
+      report: { jobs },
+    } = parsedJsonData;
 
-  // loop through all jobs
-  for (let jobIdx = 0; jobIdx < jobs.length; jobIdx++) {
-    const translated = new TranslatedObject();
+    // loop through all jobs
+    for (let jobIdx = 0; jobIdx < jobs.length; jobIdx++) {
+      const translated = new TranslatedObject();
 
-    const { itemDetails, validationResult } = jobs[jobIdx];
-    const { name: fileName } = itemDetails;
+      const { itemDetails, validationResult } = jobs[jobIdx];
+      const { name: fileName } = itemDetails;
 
-    const uuid = fileName
-      .split(os.platform() === 'win32' ? '\\' : '/')
-      .pop()
-      .split('.')[0];
-    const url = uuidToUrlMapping[uuid];
-    const pageTitle = decodeURI(url).split('/').pop();
-    const filePath = `${randomToken}/${uuid}.pdf`;
+      const uuid = fileName
+        .split(os.platform() === 'win32' ? '\\' : '/')
+        .pop()
+        .split('.')[0];
+      const url = uuidToUrlMapping[uuid];
+      const pageTitle = decodeURI(url).split('/').pop();
+      const filePath = `${randomToken}/${uuid}.pdf`;
 
-    translated.url = url;
-    translated.pageTitle = pageTitle;
-    translated.filePath = filePath;
+      translated.url = url;
+      translated.pageTitle = pageTitle;
+      translated.filePath = filePath;
 
-    if (!validationResult) {
-      // check for error in scan
-      consoleLogger.info(`Unable to scan ${pageTitle}, skipping`);
-      continue; // skip this job
+      if (!validationResult) {
+        // check for error in scan
+        consoleLogger.info(`Unable to scan ${pageTitle}, skipping`);
+        continue; // skip this job
+      }
+
+      // destructure validation result
+      const { passedChecks, failedChecks, ruleSummaries } = validationResult.details;
+      const totalChecks = passedChecks + failedChecks;
+
+      translated.totalItems = totalChecks;
+
+      // loop through all failed rules
+      for (let ruleIdx = 0; ruleIdx < ruleSummaries.length; ruleIdx++) {
+        const rule = ruleSummaries[ruleIdx];
+        const { specification, testNumber, clause } = rule;
+
+        if (isRuleExcluded(rule)) continue;
+        const [ruleId, transformedRule] = await transformRule(rule, filePath);
+
+        // ignore if violation is not in the meta file
+        const meta = errorMeta[specification][clause][testNumber]?.STATUS ?? 'ignore';
+        const category = translated[metaToCategoryMap[meta]];
+
+        category.rules[ruleId] = transformedRule;
+        category.totalItems += transformedRule.totalItems;
+      }
+
+      resultsList.push(translated);
     }
-
-    // destructure validation result
-    const { passedChecks, failedChecks, ruleSummaries } = validationResult.details;
-    const totalChecks = passedChecks + failedChecks;
-
-    translated.totalItems = totalChecks;
-
-    // loop through all failed rules
-    for (let ruleIdx = 0; ruleIdx < ruleSummaries.length; ruleIdx++) {
-      const rule = ruleSummaries[ruleIdx];
-      const { specification, testNumber, clause } = rule;
-
-      if (isRuleExcluded(rule)) continue;
-      const [ruleId, transformedRule] = await transformRule(rule, filePath);
-
-      // ignore if violation is not in the meta file
-      const meta = errorMeta[specification][clause][testNumber]?.STATUS ?? 'ignore';
-      const category = translated[metaToCategoryMap[meta]];
-
-      category.rules[ruleId] = transformedRule;
-      category.totalItems += transformedRule.totalItems;
-    }
-
-    resultsList.push(translated);
   }
-}
   return resultsList;
 };
 
 const transformRule = async (rule, filePath): Promise<[string, TransformedRuleObject]> => {
   // get specific rule
-  const transformed = new TransformedRuleObject;
+  const transformed = new TransformedRuleObject();
   const { specification, description, clause, testNumber, checks } = rule;
 
   transformed.description = description;
@@ -323,21 +324,21 @@ const transformRule = async (rule, filePath): Promise<[string, TransformedRuleOb
   return [ruleId, transformed];
 };
 
-// export const doPdfScreenshots = async (randomToken, result) => {
-//   const { filePath, pageTitle } = result;
-//   const formattedPageTitle = pageTitle.replaceAll(" ", "_").split('.')[0];
-//   const screenshotsDir = path.join(randomToken, 'elemScreenshots', 'pdf');
+export const doPdfScreenshots = async (randomToken, result) => {
+  const { filePath, pageTitle } = result;
+  const formattedPageTitle = pageTitle.replaceAll(' ', '_').split('.')[0];
+  const screenshotsDir = path.join(randomToken, 'elemScreenshots', 'pdf');
 
-//   ensureDirSync(screenshotsDir);
+  ensureDirSync(screenshotsDir);
 
-//   for (const category of ['mustFix', 'goodToFix']) {
-//     const ruleItems = Object.entries(result[category].rules);
-//     for (const [ruleId, ruleInfo] of ruleItems) {
-//       const { items } = ruleInfo;
-//       const filename = `${formattedPageTitle}-${category}-${ruleId}`;
-//       const screenshotPath = path.join(screenshotsDir, filename);
-//       const newItems = await getPdfScreenshots(filePath, items, screenshotPath);
-//       ruleInfo.items = newItems;
-//     }
-//   }
-// };
+  for (const category of ['mustFix', 'goodToFix']) {
+    const ruleItems = Object.entries(result[category].rules);
+    for (const [ruleId, ruleInfo] of ruleItems) {
+      const { items } = ruleInfo;
+      const filename = `${formattedPageTitle}-${category}-${ruleId}`;
+      const screenshotPath = path.join(screenshotsDir, filename);
+      const newItems = await getPdfScreenshots(filePath, items, screenshotPath);
+      ruleInfo.items = newItems;
+    }
+  }
+};

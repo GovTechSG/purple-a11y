@@ -10,6 +10,7 @@
     "@json2csv/node": "^7.0.3",
     "axe-core": "^4.9.1",
     "axios": "^1.6.2",
+    "canvas": "^2.11.2",
     "cheerio": "^1.0.0-rc.12",
     "crawlee": "^3.8.1",
     "ejs": "^3.1.9",
