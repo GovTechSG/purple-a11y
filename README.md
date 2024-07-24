@@ -58,9 +58,6 @@ java --version
 - VeraPDF is used for scanning PDF files.  Install VeraPDF by following [this guide](https://docs.verapdf.org/install/).  You may wish to use the Automated installation script provided on that page, and changing the XML installation script section `  <installpath>/tmp/verapdf-test</installpath>` to a location oif your choice.
 - Ensure you have VeraPDF set in PATH by `export PATH="location of verapdf:$PATH"` and verify verapdf is installed by running `verapdf --version`.
 
-#### Usage of Node Version Manager (NVM)
-
-
 #### Facing issues?
 
 Please refer to [Troubleshooting section](#troubleshooting) for more information.
