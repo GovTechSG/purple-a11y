@@ -27,10 +27,10 @@ Portable Purple A11y is the recommended way to run Purple A11y as it reduces the
 
 ### Manual Installation
 
-#### Requirements
 Please ensure the following requirements are met:
 
-- **Node.js version to be version 20 (LTS) and above.**
+#### Node.js
+- A Node distribution of 20 (LTS) or above.
 - To check your version of Node, go into terminal and paste the command bellow
 ```shell
 node -v
@@ -47,14 +47,15 @@ nvm use --lts
 - Install the required NPM packages with `npm install`.
 - Build the project with `npm run build` before you try to run it with `npm start`.
 
-- **Java JRE/JDK version to be version 11 and above.**
+#### Java JRE/JDK
+- A JRE/JDK distribution of version 11 or above.
 - To check your version of Java, go into terminal and paste the command bellow
 ```shell
 java --version
 ```
 - If you do not have java, you can consider installing [Corretto](https://docs.aws.amazon.com/corretto/latest/corretto-11-ug/what-is-corretto-11.html) distribution of OpenJDK.
 
-- **VeraPDF to be installed in PATH.**
+#### VeraPDF
 - VeraPDF is used for scanning PDF files.  Install VeraPDF by following [this guide](https://docs.verapdf.org/install/).  You may wish to use the Automated installation script provided on that page, and changing the XML installation script section `  <installpath>/tmp/verapdf-test</installpath>` to a location oif your choice.
 - Ensure you have VeraPDF set in PATH by `export PATH="location of verapdf:$PATH"` and verify verapdf is installed by running `verapdf --version`.
 
