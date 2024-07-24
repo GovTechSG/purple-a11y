@@ -35,7 +35,7 @@ Please ensure the following requirements are met:
 ```shell
 node -v
 ```
-- If you do not have node, or if there is a need to manage your node versions, you can consider using [Node Version Manager (NVM)](https://github.com/nvm-sh/nvm).  Follow the instructions on the poge.
+- If you do not have node, or if there is a need to manage your node versions, you can consider using [Node Version Manager (NVM)](https://github.com/nvm-sh/nvm).  After NVM is installed, you can then install an LTS version of Node:
 ```shell
 # Install NodeJS version with NVM
 nvm install --lts
@@ -43,7 +43,6 @@ nvm install --lts
 # For subsequent use, you will need to run the command below as time you open a new terminal
 nvm use --lts
 ```
-- Make sure NVM is pointing to a node version >= 15.10.0. Please refer to [Usage of Node Version Manager (NVM)](<#usage-of-node-version-manager-(NVM)>)
 - Install the required NPM packages with `npm install`.
 - Build the project with `npm run build` before you try to run it with `npm start`.
 
@@ -57,7 +56,14 @@ java --version
 
 #### VeraPDF
 - VeraPDF is used for scanning PDF files.  Install VeraPDF by following [this guide](https://docs.verapdf.org/install/).  You may wish to use the Automated installation script provided on that page, and changing the XML installation script section `<installpath>/tmp/verapdf-test</installpath>` to a location of your choice.
-- Ensure you have VeraPDF set in PATH by `export PATH="location of verapdf:$PATH"` then verify verapdf is installed by running `verapdf --version`.
+- Ensure you have VeraPDF set in PATH then verify verapdf is installed correctly:
+```shell
+# Add VeraPDF to PATH. For subsequent use, you will need to run the command below each time you open a new terminal
+export PATH="location of verapdf:$PATH"`
+
+# Verify verapdf is installed
+verapdf --version
+```
 
 #### Facing issues?
 
