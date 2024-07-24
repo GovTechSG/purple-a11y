@@ -56,8 +56,8 @@ java --version
 - If you do not have java, you can consider installing [Corretto](https://docs.aws.amazon.com/corretto/latest/corretto-11-ug/what-is-corretto-11.html) distribution of OpenJDK.
 
 #### VeraPDF
-- VeraPDF is used for scanning PDF files.  Install VeraPDF by following [this guide](https://docs.verapdf.org/install/).  You may wish to use the Automated installation script provided on that page, and changing the XML installation script section `  <installpath>/tmp/verapdf-test</installpath>` to a location oif your choice.
-- Ensure you have VeraPDF set in PATH by `export PATH="location of verapdf:$PATH"` and verify verapdf is installed by running `verapdf --version`.
+- VeraPDF is used for scanning PDF files.  Install VeraPDF by following [this guide](https://docs.verapdf.org/install/).  You may wish to use the Automated installation script provided on that page, and changing the XML installation script section `<installpath>/tmp/verapdf-test</installpath>` to a location of your choice.
+- Ensure you have VeraPDF set in PATH by `export PATH="location of verapdf:$PATH"` then verify verapdf is installed by running `verapdf --version`.
 
 #### Facing issues?
 
