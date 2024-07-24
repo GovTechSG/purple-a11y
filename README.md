@@ -23,7 +23,7 @@ If you wish to use Purple A11y as a NodeJS module that can be integrated with en
 
 ### Portable Purple A11y
 
-Portable Purple A11y is the recommended way to run Purple A11y as it reduces the difficulty for installation. Refer to [Installation Guide](./INSTALLATION.md) for step-by-step instructions.
+Portable Purple A11y is the recommended way to run Purple A11y as it reduces the difficulty for installation. Refer to [Installation Guide](./INSTALLATION.md) for step-by-step instructions for portable Purple A11y.
 
 ### Manual Installation
 
@@ -40,7 +40,7 @@ node -v
 # Install NodeJS version with NVM
 nvm install --lts
 
-# For subsequent use, you will need to run the command below as time you open a new terminal
+# For subsequent use, you will need to run the command below each time you open a new terminal
 nvm use --lts
 ```
 - Install the required NPM packages with `npm install`.
