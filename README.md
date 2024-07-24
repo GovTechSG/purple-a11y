@@ -505,7 +505,7 @@ const URL_NO_COMMAS_REGEX = RegExp('https?://(www\\.)?[\\p{L}0-9][-\\p{L}0-9@:%.
                             ^
 SyntaxError: Invalid regular expression: /https?://(www\.)?[\p{L}0-9][-\p{L}0-9@:%\._\+~#=]{0,254}[\p{L}0-9]\.[a-z]{2,63}(:\d{1,5})?(/[-\p{L}0-9@:%_\+.~#?&//=\(\)]*)?/: Invalid escape
 ```
-**Solution**: Install Node.js versions > v15.10.0, i.e. Node.js v16 and above.
+**Solution**: Install Node.js versions >= 20, i.e. Node.js v20 and above.
 
 ### Compiled against a different Node.js version
 
