@@ -559,7 +559,6 @@ export const generateArtifacts = async (
   };
 
   const allFiles = await extractFileNames(intermediateDatasetsPath);
-  console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaallFiles', allFiles);
 
   const jsonArray = await Promise.all(
     allFiles.map(async file => parseContentToJson(`${intermediateDatasetsPath}/${file}`)),

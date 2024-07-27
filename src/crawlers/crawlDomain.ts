@@ -24,7 +24,7 @@ import {
   waitForPageLoaded,
 } from '../constants/common.js';
 import { areLinksEqual, isFollowStrategy } from '../utils.js';
-import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
+import { handlePdfDownload, runPdfScan, mapPdfScanResults, doPdfScreenshots } from './pdfScanFunc.js';
 import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
 import type { BrowserContext, ElementHandle, Frame, Page } from 'playwright';

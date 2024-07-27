@@ -67,7 +67,6 @@ export async function getPdfScreenshots(pdfFilePath, items, screenshotPath) {
   });
   const pdf = await loadingTask.promise;
   const structureTree = await pdf._pdfInfo.structureTree;
-
   // save some resources by caching page canvases to be reused by diff violations
   const pageCanvasCache = {};
 
@@ -642,7 +641,7 @@ export const parseMcidToBbox = (listOfMcid, pageMap, annotations, viewport, rota
     width:number
     height:number
   }
-  let coords:coordsObject;
+  let coords:coordsObject = {x:undefined, y:undefined, width:undefined, height:undefined};
 
   if (listOfMcid instanceof Array) {
     listOfMcid.forEach(mcid => {

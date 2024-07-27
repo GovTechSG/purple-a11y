@@ -7,7 +7,7 @@ import { randomUUID } from 'crypto';
 import { createRequire } from 'module';
 import os from 'os';
 import path from 'path';
-import { getPageFromContext } from '../screenshotFunc/pdfScreenshotFunc.js';
+import { getPageFromContext, getPdfScreenshots } from '../screenshotFunc/pdfScreenshotFunc.js';
 import { isFilePath } from '../constants/common.js';
 import { ensureDirSync } from 'fs-extra';
 
