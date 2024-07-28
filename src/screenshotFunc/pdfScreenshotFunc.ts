@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import pdfjs from 'pdfjs-dist';
 import fs from 'fs';
-import Canvas from 'canvas';
+import { createCanvas } from '@napi-rs/canvas';
 import assert from 'assert';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -14,22 +14,20 @@ const __dirname = path.dirname(__filename);
 const BBOX_PADDING = 50;
 
 // Interfaces
-interface pathObject
-  {
-    pageIndex?: number;
-    contentStream?: number;
-    content?: number;
-    contentItems?: number[];
-    mcid?: number;
-    annot?: number;
-  }
-
+interface pathObject {
+  pageIndex?: number;
+  contentStream?: number;
+  content?: number;
+  contentItems?: number[];
+  mcid?: number;
+  annot?: number;
+}
 
 function NodeCanvasFactory() {}
 NodeCanvasFactory.prototype = {
   create: function NodeCanvasFactory_create(width, height) {
     assert(width > 0 && height > 0, 'Invalid canvas size');
-    const canvas = Canvas.createCanvas(width, height);
+    const canvas = createCanvas(width, height);
     const context = canvas.getContext('2d');
     return {
       canvas,
@@ -47,8 +45,6 @@ NodeCanvasFactory.prototype = {
   destroy: function NodeCanvasFactory_destroy(canvasAndContext) {
     assert(canvasAndContext.canvas, 'Canvas is not specified');
 
-    canvasAndContext.canvas.width = 0;
-    canvasAndContext.canvas.height = 0;
     canvasAndContext.canvas = null;
     canvasAndContext.context = null;
   },
@@ -60,13 +56,13 @@ export async function getPdfScreenshots(pdfFilePath, items, screenshotPath) {
   const newItems = _.cloneDeep(items);
   const loadingTask = pdfjs.getDocument({
     url: pdfFilePath,
-    canvasFactory,
     standardFontDataUrl: path.join(__dirname, '../node_modules/pdfjs-dist/standard_fonts/'),
     disableFontFace: true,
     verbosity: 0,
   });
   const pdf = await loadingTask.promise;
   const structureTree = await pdf._pdfInfo.structureTree;
+
   // save some resources by caching page canvases to be reused by diff violations
   const pageCanvasCache = {};
 
@@ -76,17 +72,17 @@ export async function getPdfScreenshots(pdfFilePath, items, screenshotPath) {
     const bbox = { location: context };
     const bboxMap = buildBboxMap([bbox], structureTree);
 
-     for (const [pageNum, bboxList] of Object.entries(bboxMap)) {
-       const page = await pdf.getPage(parseInt(pageNum, 10));
+    for (const [pageNum, bboxList] of Object.entries(bboxMap)) {
+      const page = await pdf.getPage(parseInt(pageNum, 10));
 
-       // an array of length 1, containing location of current violation
-       const bboxesWithCoords = await Promise.all([
-         page.getOperatorList(),
-         page.getAnnotations(),
-       ]).then(getBboxesList(bboxList, page));
+      // an array of length 1, containing location of current violation
+      const bboxesWithCoords = await Promise.all([
+        page.getOperatorList(),
+        page.getAnnotations(),
+      ]).then(getBboxesList(bboxList, page));
 
-       // Render the page on a Node canvas with 200% scale.
-       const viewport = page.getViewport({ scale: 2.0 });
+      // Render the page on a Node canvas with 200% scale.
+      const viewport = page.getViewport({ scale: 2.0 });
 
       const canvasAndContext =
         pageCanvasCache[pageNum] ?? canvasFactory.create(viewport.width, viewport.height);
@@ -98,6 +94,7 @@ export async function getPdfScreenshots(pdfFilePath, items, screenshotPath) {
       const renderContext = {
         canvasContext: origCtx,
         viewport,
+        canvasFactory,
       };
       const renderTask = page.render(renderContext); // render pdf page onto a canvas
       await renderTask.promise;
@@ -108,8 +105,8 @@ export async function getPdfScreenshots(pdfFilePath, items, screenshotPath) {
         viewport,
       )(bboxesWithCoords[0]);
 
-       newItems[i].screenshotPath = finalScreenshotPath;
-       newItems[i].page = parseInt(pageNum, 10);
+      newItems[i].screenshotPath = finalScreenshotPath;
+      newItems[i].page = parseInt(pageNum, 10);
 
       page.cleanup();
     }
@@ -128,9 +125,9 @@ const annotateAndSave = (origCanvas, screenshotPath, viewport) => {
       viewport.height,
     );
 
-     highlightCtx.drawImage(origCanvas, 0, 0);
-     highlightCtx.fillStyle = 'rgba(0, 255, 255, 0.2)';
-     highlightCtx.fillRect(...rectParams);
+    highlightCtx.drawImage(origCanvas, 0, 0);
+    highlightCtx.fillStyle = 'rgba(0, 255, 255, 0.2)';
+    highlightCtx.fillRect(...rectParams);
 
     const rectParamsWithPadding = [
       left - BBOX_PADDING,
@@ -154,8 +151,9 @@ const annotateAndSave = (origCanvas, screenshotPath, viewport) => {
       rectParamsWithPadding[3],
     );
 
-     // convert the canvas to an image
-     const croppedImage = croppedCanvas.toBuffer();
+    // convert the canvas to an image
+    // const croppedImage = croppedCanvas.toBuffer();
+    const croppedImage = croppedCanvas.toBuffer('image/png');
 
     // save image
     let counter = 0;
@@ -172,8 +170,8 @@ const annotateAndSave = (origCanvas, screenshotPath, viewport) => {
       }
     });
 
-     canvasFactory.destroy({ canvas: croppedCanvas, context: croppedCtx });
-     canvasFactory.destroy({ canvas: highlightCanvas, context: highlightCtx });
+    canvasFactory.destroy({ canvas: croppedCanvas, context: croppedCtx });
+    canvasFactory.destroy({ canvas: highlightCanvas, context: highlightCtx });
 
     // current screenshot path leads to a temp dir, so modify to save the final file path
     const [_, ...rest] = indexedScreenshotPath.split(path.sep);
@@ -336,21 +334,21 @@ export const getSelectedPageByLocation = bboxLocation => {
 };
 
 export const getPageFromContext = async (context, pdfFilePath) => {
-  try{
-  const loadingTask = pdfjs.getDocument({
-    url: pdfFilePath,
-    // canvasFactory,
-    standardFontDataUrl: path.join(__dirname, '../../node_modules/pdfjs-dist/standard_fonts/'),
-    disableFontFace: true,
-    verbosity: 0,
-  });
-  const pdf = await loadingTask.promise;
-  const structureTree = await pdf._pdfInfo.structureTree;
-  const page = getBboxPage({ location: context }, structureTree);
-  return page;
-} catch (error){
-  // Error handling
-}
+  try {
+    const loadingTask = pdfjs.getDocument({
+      url: pdfFilePath,
+      standardFontDataUrl: path.join(__dirname, '../../node_modules/pdfjs-dist/standard_fonts/'),
+      disableFontFace: true,
+      verbosity: 0,
+    });
+    const pdf = await loadingTask.promise;
+    const structureTree = await pdf._pdfInfo.structureTree;
+
+    const page = getBboxPage({ location: context }, structureTree);
+    return page;
+  } catch (error) {
+    // Error handling
+  }
 };
 
 export const getBboxPages = (bboxes, structure) => {
@@ -376,6 +374,7 @@ export const getBboxPage = (bbox, structure) => {
       return bboxesFromLocation.length ? bboxesFromLocation[0].page : 0;
     }
   } catch (e) {
+    console.error(e);
     console.error(`Location not supported: ${bbox.location}`);
     return -1;
   }
@@ -457,8 +456,7 @@ const getTagsFromErrorPlace = (context, structure) => {
     );
   }
 
-  if (isPathObject(selectedTag))
-  {
+  if (isPathObject(selectedTag)) {
     if (selectedTag.hasOwnProperty('mcid') && selectedTag.hasOwnProperty('pageIndex')) {
       return [[[selectedTag.mcid], selectedTag.pageIndex]];
     } else if (selectedTag.hasOwnProperty('annot') && selectedTag.hasOwnProperty('pageIndex')) {
@@ -513,8 +511,8 @@ const getTagsFromErrorPlace = (context, structure) => {
 type Node = [number, string];
 type ConvertContextToPathReturn = pathObject | Node[];
 
-const convertContextToPath = (errorContext = '') : ConvertContextToPathReturn=> {
-  let arrayOfNodes:Node[] = [];
+const convertContextToPath = (errorContext = ''): ConvertContextToPathReturn => {
+  let arrayOfNodes: Node[] = [];
   if (!errorContext) {
     return arrayOfNodes;
   }
@@ -528,7 +526,7 @@ const convertContextToPath = (errorContext = '') : ConvertContextToPathReturn=> 
       );
       if (result) {
         try {
-          let path:pathObject;
+          let path: pathObject;
           path.pageIndex = parseInt(result.groups.pages, 10);
           path.contentStream = parseInt(result.groups.contentStream, 10);
           path.content = parseInt(result.groups.content, 10);
@@ -547,7 +545,7 @@ const convertContextToPath = (errorContext = '') : ConvertContextToPathReturn=> 
     }
 
     if (contextString.includes('contentItem')) {
-      let path:pathObject;
+      let path: pathObject;
       contextString.split('/').forEach(nodeString => {
         if (nodeString.includes('page')) {
           path.pageIndex = parseInt(nodeString.split(/[[\]]/)[1], 10);
@@ -557,7 +555,7 @@ const convertContextToPath = (errorContext = '') : ConvertContextToPathReturn=> 
       });
       return path;
     } else if (contextString.includes('annots')) {
-      let path:pathObject;
+      let path: pathObject;
       contextString.split('/').forEach(nodeString => {
         if (nodeString.includes('page')) {
           path.pageIndex = parseInt(nodeString.split(/[[\]]/)[1], 10);
@@ -568,10 +566,10 @@ const convertContextToPath = (errorContext = '') : ConvertContextToPathReturn=> 
       return path;
     }
 
-    let contextStringArray:string[] = contextString.split('PDStructTreeRoot)/')[1].split('/'); // cut path before start of Document
+    let contextStringArray: string[] = contextString.split('PDStructTreeRoot)/')[1].split('/'); // cut path before start of Document
     contextStringArray.forEach(nodeString => {
       const nextIndex = parseInt(nodeString.split('](')[0].split('K[')[1], 10);
-      let nextTag:string|string[] = nodeString.split('(')[1].split(')')[0].split(' ');
+      let nextTag: string | string[] = nodeString.split('(')[1].split(')')[0].split(' ');
       nextTag = nextTag[nextTag.length - 1];
 
       arrayOfNodes = [...arrayOfNodes, [nextIndex, nextTag]];
@@ -636,12 +634,12 @@ export const getBboxForGlyph = (
 
 export const parseMcidToBbox = (listOfMcid, pageMap, annotations, viewport, rotateAngle) => {
   type coordsObject = {
-    x:number
-    y:number
-    width:number
-    height:number
-  }
-  let coords:coordsObject = {x:undefined, y:undefined, width:undefined, height:undefined};
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  let coords: coordsObject = { x: undefined, y: undefined, width: undefined, height: undefined };
 
   if (listOfMcid instanceof Array) {
     listOfMcid.forEach(mcid => {
