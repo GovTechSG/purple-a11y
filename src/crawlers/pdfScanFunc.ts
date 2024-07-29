@@ -196,7 +196,7 @@ export const runPdfScan = async randomToken => {
   // const veraPdfProfile = getVeraProfile();
   const veraPdfProfile =
     '"' +
-    path.join(execFile, '..', 'profiles/veraPDF-validation-profiles-rel-1.24/PDF_UA/WCAG-21.xml') +
+    path.join(execFile, '..', 'profiles/veraPDF-validation-profiles-rel-1.26/PDF_UA/WCAG-2-2.xml') +
     '"';
   if (!veraPdfExe || !veraPdfProfile) {
     process.exit(1);
