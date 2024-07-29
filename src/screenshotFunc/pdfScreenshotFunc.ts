@@ -164,11 +164,11 @@ const annotateAndSave = (origCanvas, screenshotPath, viewport) => {
       indexedScreenshotPath = `${screenshotPath}-${counter}.png`;
       fileExists = fs.existsSync(indexedScreenshotPath);
     }
-    fs.writeFileSync(indexedScreenshotPath, croppedImage, error => {
-      if (error) {
-        silentLogger.error('Error in writing screenshot: ' + error);
-      }
-    });
+    try {
+      fs.writeFileSync(indexedScreenshotPath, croppedImage);
+    } catch (e) {
+      silentLogger.error('Error in writing screenshot:', e);
+    }
 
     canvasFactory.destroy({ canvas: croppedCanvas, context: croppedCtx });
     canvasFactory.destroy({ canvas: highlightCanvas, context: highlightCtx });

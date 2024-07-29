@@ -488,7 +488,6 @@ export const generateArtifacts = async (
   zip = undefined, //optional
 ) => {
   const intermediateDatasetsPath = `${randomToken}/datasets/${randomToken}`;
-  console.log('intermediateDatasetsPath', intermediateDatasetsPath);
   const phAppVersion = getVersion();
   const storagePath = getStoragePath(randomToken);
 

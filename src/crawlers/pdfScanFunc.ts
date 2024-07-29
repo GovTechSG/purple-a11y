@@ -15,18 +15,20 @@ const require = createRequire(import.meta.url);
 
 // CONSTANTS
 
+
+type RulesMap = { [key: string]: TransformedRuleObject };
 // Classes
 class TranslatedObject {
   goodToFix: {
-    rules: any; // You can specify the type for rules if known
+    rules: RulesMap;
     totalItems: number;
   };
   mustFix: {
-    rules: any; // You can specify the type for rules if known
+    rules: RulesMap;
     totalItems: number;
   };
   needsReview: {
-    rules: any; // You can specify the type for rules if known
+    rules: RulesMap;
     totalItems: number;
   };
   url: string = '';
@@ -324,7 +326,7 @@ const transformRule = async (rule, filePath): Promise<[string, TransformedRuleOb
   return [ruleId, transformed];
 };
 
-export const doPdfScreenshots = async (randomToken, result) => {
+export const doPdfScreenshots = async (randomToken: string, result: TranslatedObject) => {
   const { filePath, pageTitle } = result;
   const formattedPageTitle = pageTitle.replaceAll(' ', '_').split('.')[0];
   const screenshotsDir = path.join(randomToken, 'elemScreenshots', 'pdf');
@@ -332,7 +334,7 @@ export const doPdfScreenshots = async (randomToken, result) => {
   ensureDirSync(screenshotsDir);
 
   for (const category of ['mustFix', 'goodToFix']) {
-    const ruleItems = Object.entries(result[category].rules);
+    const ruleItems = Object.entries(result[category].rules) as [keyof RulesMap, RulesMap[keyof RulesMap]][];
     for (const [ruleId, ruleInfo] of ruleItems) {
       const { items } = ruleInfo;
       const filename = `${formattedPageTitle}-${category}-${ruleId}`;
