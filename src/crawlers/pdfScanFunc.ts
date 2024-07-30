@@ -51,7 +51,7 @@ class TranslatedObject {
     };
   }
 }
-class TransformedRuleObject {
+export class TransformedRuleObject {
   description: string;
   totalItems: number;
   conformance: string[];

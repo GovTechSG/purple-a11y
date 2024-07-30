@@ -1,11 +1,13 @@
 import _ from 'lodash';
 import pdfjs from 'pdfjs-dist';
 import fs from 'fs';
-import { createCanvas } from '@napi-rs/canvas';
+import { Canvas, createCanvas, SKRSContext2D } from '@napi-rs/canvas';
 import assert from 'assert';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { silentLogger } from '../logs.js';
+import { TransformedRuleObject } from '#root/crawlers/pdfScanFunc.js';
+import { ViewportSize } from '#root/types/types.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +27,7 @@ interface pathObject {
 
 function NodeCanvasFactory() {}
 NodeCanvasFactory.prototype = {
-  create: function NodeCanvasFactory_create(width, height) {
+  create: function NodeCanvasFactory_create(width: number, height: number) {
     assert(width > 0 && height > 0, 'Invalid canvas size');
     const canvas = createCanvas(width, height);
     const context = canvas.getContext('2d');
@@ -35,14 +37,18 @@ NodeCanvasFactory.prototype = {
     };
   },
 
-  reset: function NodeCanvasFactory_reset(canvasAndContext, width, height) {
+  reset: function NodeCanvasFactory_reset(
+    canvasAndContext: { canvas: Canvas; context: SKRSContext2D },
+    width: number,
+    height: number,
+  ) {
     assert(canvasAndContext.canvas, 'Canvas is not specified');
     assert(width > 0 && height > 0, 'Invalid canvas size');
     canvasAndContext.canvas.width = width;
     canvasAndContext.canvas.height = height;
   },
 
-  destroy: function NodeCanvasFactory_destroy(canvasAndContext) {
+  destroy: function NodeCanvasFactory_destroy(canvasAndContext: { canvas: Canvas; context: SKRSContext2D }) {
     assert(canvasAndContext.canvas, 'Canvas is not specified');
 
     canvasAndContext.canvas = null;
@@ -52,7 +58,7 @@ NodeCanvasFactory.prototype = {
 
 const canvasFactory = new NodeCanvasFactory();
 
-export async function getPdfScreenshots(pdfFilePath, items, screenshotPath) {
+export async function getPdfScreenshots(pdfFilePath: string, items: TransformedRuleObject["items"], screenshotPath: string) {
   const newItems = _.cloneDeep(items);
   const loadingTask = pdfjs.getDocument({
     url: pdfFilePath,
@@ -114,7 +120,7 @@ export async function getPdfScreenshots(pdfFilePath, items, screenshotPath) {
   return newItems;
 }
 
-const annotateAndSave = (origCanvas, screenshotPath, viewport) => {
+const annotateAndSave = (origCanvas: Canvas, screenshotPath: string, viewport: ViewportSize) => {
   return ({ location }) => {
     const [left, bottom, width, height] = location.map(loc => loc * 2); // scale up by 2
     const rectParams = [left, viewport.height - bottom - height, width, height];
