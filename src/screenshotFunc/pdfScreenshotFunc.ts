@@ -7,7 +7,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { silentLogger } from '../logs.js';
 import { TransformedRuleObject } from '#root/crawlers/pdfScanFunc.js';
-import { ViewportSize } from '#root/types/types.js';
+
+type ViewportSize = {
+  width: number;
+  height: number;
+};
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
