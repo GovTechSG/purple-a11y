@@ -1,6 +1,5 @@
 import constants, { getExecutablePath, guiInfoStatusTypes, UrlsCrawled } from '../constants/constants.js';
 import { spawnSync } from 'child_process';
-import { globSync } from 'glob';
 import { consoleLogger, guiInfoLog, silentLogger } from '../logs.js';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
@@ -55,7 +54,7 @@ export class TransformedRuleObject {
   description: string;
   totalItems: number;
   conformance: string[];
-  items: { message: string; page: string; context: any }[];
+  items: { message: string; page: number; screenshotPath?: string; context: string }[];
 
   constructor() {
     this.description = '';
@@ -228,23 +227,6 @@ const getVeraExecutable = () => {
     silentLogger.error(veraPdfExeNotFoundError);
   }
   return veraPdfExe;
-};
-
-// get validation profile
-const getVeraProfile = () => {
-  const veraPdfProfile = globSync('**/verapdf/**/WCAG-21.xml', {
-    absolute: true,
-    nodir: true,
-  });
-
-  if (veraPdfProfile.length === 0) {
-    let veraPdfProfileNotFoundError =
-      'Could not find veraPDF validation profile.  Please ensure veraPDF is installed at current directory.';
-    consoleLogger.error(veraPdfProfileNotFoundError);
-    silentLogger.error(veraPdfProfileNotFoundError);
-    return undefined;
-  }
-  return veraPdfProfile[0];
 };
 
 const isPDF = (buffer: Buffer) => {

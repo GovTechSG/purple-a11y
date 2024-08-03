@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import pdfjs from 'pdfjs-dist';
+import pdfjs, { PDFPageProxy } from 'pdfjs-dist';
 import fs from 'fs';
 import { Canvas, createCanvas, SKRSContext2D } from '@napi-rs/canvas';
 import assert from 'assert';
@@ -7,11 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { silentLogger } from '../logs.js';
 import { TransformedRuleObject } from '#root/crawlers/pdfScanFunc.js';
-
-type ViewportSize = {
-  width: number;
-  height: number;
-};
+import { IBboxLocation, StructureTree, ViewportSize } from '#root/types/types.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -79,7 +75,7 @@ export async function getPdfScreenshots(pdfFilePath: string, items: TransformedR
   // iterate through each violation
   for (let i = 0; i < newItems.length; i++) {
     const { context } = newItems[i];
-    const bbox = { location: context };
+    const bbox: IBboxLocation = { location: context };
     const bboxMap = buildBboxMap([bbox], structureTree);
 
     for (const [pageNum, bboxList] of Object.entries(bboxMap)) {
@@ -194,7 +190,7 @@ const annotateAndSave = (origCanvas: Canvas, screenshotPath: string, viewport: V
 // https://github.com/veraPDF/verapdf-js-viewer/blob/master/src/services/bboxService.ts
 // to determine the bounding box data of the violations from the context field
 
-export const getBboxesList = (bboxList, page) => {
+export const getBboxesList = (bboxList, page: PDFPageProxy) => {
   return ([operatorList, annotations]) => {
     const operationData = operatorList.argsArray[operatorList.argsArray.length - 2];
     const [positionData, noMCIDData] = operatorList.argsArray[operatorList.argsArray.length - 1];
@@ -244,7 +240,7 @@ export const getBboxesList = (bboxList, page) => {
   };
 };
 
-export const buildBboxMap = (bboxes, structure) => {
+export const buildBboxMap = (bboxes: IBboxLocation[], structure: StructureTree) => {
   const bboxMap = {};
   bboxes.forEach((bbox, index) => {
     try {
@@ -343,7 +339,7 @@ export const getSelectedPageByLocation = bboxLocation => {
   return pageNumber;
 };
 
-export const getPageFromContext = async (context, pdfFilePath) => {
+export const getPageFromContext = async (context: string, pdfFilePath: string): Promise<number> => {
   try {
     const loadingTask = pdfjs.getDocument({
       url: pdfFilePath,
@@ -375,7 +371,7 @@ export const getBboxPage = (bbox, structure) => {
       bbox.location === 'root'
     ) {
       const mcidData = getTagsFromErrorPlace(bbox.location, structure);
-      const pageIndex = mcidData[0][1];
+      const pageIndex = mcidData[0][1] as number;
       return pageIndex + 1;
     } else {
       const bboxesFromLocation = bbox.location.includes('pages[')
@@ -447,7 +443,7 @@ const calculateLocationJSON = location => {
   return bboxes;
 };
 
-const getTagsFromErrorPlace = (context, structure) => {
+const getTagsFromErrorPlace = (context: string, structure: StructureTree) => {
   const defaultValue = [[[], -1, undefined]];
   let selectedTag = convertContextToPath(context);
 
