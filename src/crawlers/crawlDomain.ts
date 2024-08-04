@@ -9,7 +9,7 @@ import constants, {
   UrlsCrawled,
   blackListedFileExtensions,
   guiInfoStatusTypes,
-  cssQuerySelectors
+  cssQuerySelectors,
 } from '../constants/constants.js';
 import {
   getPlaywrightLaunchOptions,
@@ -171,7 +171,7 @@ const crawlDomain = async (
           } catch (e) {
             silentLogger.error(e);
           }
-          if (urlsCrawled.scanned.some(item => item.url.href === req.url)) {
+          if (urlsCrawled.scanned.some(item => item.url === req.url)) {
             req.skipNavigation = true;
           }
           if (isDisallowedInRobotsTxt(req.url)) return null;
@@ -206,7 +206,7 @@ const crawlDomain = async (
     const initialPageUrl: string = page.url().toString();
 
     const isExcluded = (newPageUrl: string): boolean => {
-      const isAlreadyScanned: boolean = urlsCrawled.scanned.some(item => item.url.href === newPageUrl);
+      const isAlreadyScanned: boolean = urlsCrawled.scanned.some(item => item.url === newPageUrl);
       const isBlacklistedUrl: boolean = isBlacklisted(newPageUrl);
       const isNotFollowStrategy: boolean = !isFollowStrategy(newPageUrl, initialPageUrl, strategy);
       return isAlreadyScanned || isBlacklistedUrl || isNotFollowStrategy;
@@ -276,8 +276,9 @@ const crawlDomain = async (
           });
           setPageListeners(page);
         }
-        let selectedElementsString = cssQuerySelectors.join(", ");
-        const selectedElements: ElementHandle<SVGElement | HTMLElement>[] = await page.$$(selectedElementsString);
+        let selectedElementsString = cssQuerySelectors.join(', ');
+        const selectedElements: ElementHandle<SVGElement | HTMLElement>[] =
+          await page.$$(selectedElementsString);
         // edge case where there might be elements on page that appears intermittently
         if (currentElementIndex + 1 > selectedElements.length || !selectedElements) {
           break;
@@ -445,7 +446,7 @@ const crawlDomain = async (
         }
 
         // if URL has already been scanned
-        if (urlsCrawled.scanned.some(item => item.url.href === request.url)) {
+        if (urlsCrawled.scanned.some(item => item.url === request.url)) {
           await enqueueProcess(page, enqueueLinks, browserContext);
           return;
         }
@@ -545,7 +546,7 @@ const crawlDomain = async (
 
           if (isRedirected) {
             const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
-              item => (item.actualUrl || item.url.href) === request.loadedUrl,
+              item => (item.actualUrl || item.url) === request.loadedUrl,
             );
 
             if (isLoadedUrlInCrawledUrls) {

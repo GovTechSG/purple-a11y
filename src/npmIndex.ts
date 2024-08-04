@@ -30,7 +30,7 @@ export const init = async (
   viewportSettings = { width: 1000, height: 660 }, // cypress' default viewport settings
   thresholds = { mustFix: undefined, goodToFix: undefined },
   scanAboutMetadata = undefined,
-  zip = undefined 
+  zip = undefined,
 ) => {
   console.log('Starting Purple A11y');
 
@@ -138,6 +138,7 @@ export const init = async (
     });
     urlsCrawled.scanned.push({
       url: urlWithoutAuth(res.pageUrl).toString(),
+      actualUrl: 'tbd',
       pageTitle: `${pageIndex}: ${res.pageTitle}`,
     });
 
@@ -206,7 +207,7 @@ export const init = async (
         testLabel,
         scanAboutMetadata,
         scanDetails,
-        zip
+        zip,
       );
 
       await submitForm(
