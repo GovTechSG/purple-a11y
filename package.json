@@ -9,6 +9,7 @@
   "dependencies": {
     "@crawlee/core": "github:GovTechSG/crawlee-core",
     "@json2csv/node": "^7.0.3",
+    "@napi-rs/canvas": "^0.1.53",
     "axe-core": "^4.9.1",
     "axios": "^1.6.2",
     "cheerio": "^1.0.0-rc.12",
@@ -40,6 +41,7 @@
     "@types/eslint__js": "^8.42.3",
     "@types/fs-extra": "^11.0.4",
     "@types/inquirer": "^9.0.7",
+    "@types/lodash": "^4.17.7",
     "@types/safe-regex": "^1.1.6",
     "@types/validator": "^13.11.10",
     "@types/which": "^3.0.4",
