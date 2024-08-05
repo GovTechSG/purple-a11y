@@ -1,7 +1,4 @@
-/* eslint-disable no-shadow */
-/* eslint-disable no-undef */
-
-import crawlee from 'crawlee';
+import crawlee, { EnqueueStrategy } from 'crawlee';
 import {
   createCrawleeSubFolders,
   preNavigationHooks,
@@ -9,9 +6,10 @@ import {
   isUrlPdf,
 } from './commonCrawlerFunc.js';
 import constants, {
+  UrlsCrawled,
   blackListedFileExtensions,
   guiInfoStatusTypes,
-  cssQuerySelectors
+  cssQuerySelectors,
 } from '../constants/constants.js';
 import {
   getPlaywrightLaunchOptions,
@@ -28,30 +26,35 @@ import { handlePdfDownload, runPdfScan, mapPdfScanResults, doPdfScreenshots } fr
 import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
 import type { BrowserContext, ElementHandle, Frame, Page } from 'playwright';
+import request from 'sync-request-curl';
+import { ViewportSettingsClass } from '#root/combine.js';
+import type { EnqueueLinksOptions, RequestOptions } from 'crawlee';
+import type { BatchAddRequestsResult } from '@crawlee/types';
+import axios from 'axios';
 
 const crawlDomain = async (
-  url,
-  randomToken,
-  host,
-  viewportSettings,
-  maxRequestsPerCrawl,
-  browser,
-  userDataDirectory,
-  strategy,
-  specifiedMaxConcurrency,
-  fileTypes,
-  blacklistedPatterns,
-  includeScreenshots,
-  followRobots,
-  extraHTTPHeaders,
-  safeMode = false, // optional
-  fromCrawlIntelligentSitemap = false, //optional
-  datasetFromIntelligent = null, //optional
-  urlsCrawledFromIntelligent = null, //optional
+  url: string,
+  randomToken: string,
+  _host: string,
+  viewportSettings: ViewportSettingsClass,
+  maxRequestsPerCrawl: number,
+  browser: string,
+  userDataDirectory: string,
+  strategy: EnqueueStrategy,
+  specifiedMaxConcurrency: number,
+  fileTypes: string,
+  blacklistedPatterns: string[],
+  includeScreenshots: boolean,
+  followRobots: boolean,
+  extraHTTPHeaders: Record<string, string>,
+  safeMode: boolean = false, // optional
+  fromCrawlIntelligentSitemap: boolean = false, // optional
+  datasetFromIntelligent: crawlee.Dataset = null, // optional
+  urlsCrawledFromIntelligent: UrlsCrawled = null, // optional
 ) => {
-  let dataset;
-  let urlsCrawled;
-  let requestQueue;
+  let dataset: crawlee.Dataset;
+  let urlsCrawled: UrlsCrawled;
+  let requestQueue: crawlee.RequestQueue;
 
   if (fromCrawlIntelligentSitemap) {
     dataset = datasetFromIntelligent;
@@ -79,12 +82,12 @@ const crawlDomain = async (
   let authHeader = '';
 
   // Test basic auth and add auth header if auth exist
-  const parsedUrl = new URL(url); 
-  let username:string;
-  let password:string;
+  const parsedUrl = new URL(url);
+  let username: string;
+  let password: string;
   if (parsedUrl.username !== '' && parsedUrl.password !== '') {
     isBasicAuth = true;
-    username= decodeURIComponent(parsedUrl.username);
+    username = decodeURIComponent(parsedUrl.username);
     password = decodeURIComponent(parsedUrl.password);
 
     // Create auth header
@@ -110,22 +113,65 @@ const crawlDomain = async (
     });
   }
 
-  const enqueueProcess = async (page, enqueueLinks, browserContext) => {
+  const isProcessibleUrl = async (url: string): Promise<boolean> => {
+    try {
+      const response = await axios.head(url, { headers: { Authorization: authHeader } });
+      const contentType = response.headers['content-type'] || '';
+
+      if (!contentType.includes('text/html') && !contentType.includes('application/pdf')) {
+        silentLogger.info(`Skipping MIME type ${contentType} at URL ${url}`);
+        return false;
+      }
+
+      // further check for zip files where the url ends with .zip
+      if (url.endsWith('.zip')) {
+        silentLogger.info(`Checking for zip file magic number at URL ${url}`);
+        // download first 4 bytes of file to check the magic number
+        const response = await axios.get(url, {
+          headers: { Range: 'bytes=0-3', Authorization: authHeader },
+        });
+        // check using startsWith because some server does not handle Range header and returns the whole file
+        if (response.data.startsWith('PK\x03\x04')) {
+          // PK\x03\x04 is the magic number for zip files
+          silentLogger.info(`Skipping zip file at URL ${url}`);
+          return false;
+        } else {
+          // print out the hex value of the first 4 bytes
+          silentLogger.info(
+            `Not skipping ${url} as it has magic number: ${response.data.slice(0, 4).toString('hex')}`,
+          );
+        }
+      }
+    } catch (e) {
+      silentLogger.error(`Error checking the MIME type of ${url}: ${e.message}`);
+      // when failing to check the MIME type (e.g. need to go through proxy), let crawlee handle the request
+      return true;
+    }
+    return true;
+  };
+
+  const enqueueProcess = async (
+    page: Page,
+    enqueueLinks: (options: EnqueueLinksOptions) => Promise<BatchAddRequestsResult>,
+    browserContext: BrowserContext,
+  ) => {
     try {
       await enqueueLinks({
         // set selector matches anchor elements with href but not contains # or starting with mailto:
         selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
         strategy,
         requestQueue,
-        transformRequestFunction(req) {
+        transformRequestFunction: async (req: RequestOptions): Promise<RequestOptions | null> => {
           try {
             req.url = encodeURI(req.url);
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
 
+            const processible = await isProcessibleUrl(req.url);
+            if (!processible) return null;
           } catch (e) {
-            silentLogger.info(e);
+            silentLogger.error(e);
           }
-          if (urlsCrawled.scanned.some(item => item.url.href === req.url)) {
+          if (urlsCrawled.scanned.some(item => item.url === req.url)) {
             req.skipNavigation = true;
           }
           if (isDisallowedInRobotsTxt(req.url)) return null;
@@ -153,16 +199,19 @@ const crawlDomain = async (
     }
   };
 
-  const customEnqueueLinksByClickingElements = async (page: Page, browserContext: BrowserContext): Promise<void> => {
+  const customEnqueueLinksByClickingElements = async (
+    page: Page,
+    browserContext: BrowserContext,
+  ): Promise<void> => {
     const initialPageUrl: string = page.url().toString();
 
     const isExcluded = (newPageUrl: string): boolean => {
-      const isAlreadyScanned: boolean = urlsCrawled.scanned.some(item => item.url.href === newPageUrl);
+      const isAlreadyScanned: boolean = urlsCrawled.scanned.some(item => item.url === newPageUrl);
       const isBlacklistedUrl: boolean = isBlacklisted(newPageUrl);
       const isNotFollowStrategy: boolean = !isFollowStrategy(newPageUrl, initialPageUrl, strategy);
       return isAlreadyScanned || isBlacklistedUrl || isNotFollowStrategy;
     };
-    const setPageListeners = (page: Page) : void => {
+    const setPageListeners = (page: Page): void => {
       // event listener to handle new page popups upon button click
       page.on('popup', async (newPage: Page) => {
         try {
@@ -172,19 +221,16 @@ const crawlDomain = async (
               url: encodeURI(newPageUrl),
               skipNavigation: isUrlPdf(encodeURI(newPage.url())),
             });
-          }
-          else {
+          } else {
             try {
               await newPage.close();
-            }
-            catch (e) {
+            } catch (e) {
               // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
               // Handles browser page object been closed.
             }
           }
           return;
-        }
-        catch (e) {
+        } catch (e) {
           // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
           // Handles browser page object been closed.
         }
@@ -193,9 +239,11 @@ const crawlDomain = async (
       // event listener to handle navigation to new url within same page upon element click
       page.on('framenavigated', async (newFrame: Frame) => {
         try {
-          if (newFrame.url() !== initialPageUrl &&
+          if (
+            newFrame.url() !== initialPageUrl &&
             !isExcluded(newFrame.url()) &&
-            !(newFrame.url() == 'about:blank')) {
+            !(newFrame.url() == 'about:blank')
+          ) {
             let newFrameUrl: string = newFrame.url().replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
             await requestQueue.addRequest({
               url: encodeURI(newFrameUrl),
@@ -203,13 +251,11 @@ const crawlDomain = async (
             });
           }
           return;
-        }
-        catch (e) {
+        } catch (e) {
           // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
           // Handles browser page object been closed.
         }
       });
-      
     };
     setPageListeners(page);
     let currentElementIndex: number = 0;
@@ -220,19 +266,19 @@ const crawlDomain = async (
         if (page.url() != initialPageUrl) {
           try {
             await page.close();
-          }
-          catch (e) {
+          } catch (e) {
             // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
             // Handles browser page object been closed.
           }
-          page = await browserContext.newPage()
+          page = await browserContext.newPage();
           await page.goto(initialPageUrl, {
             waitUntil: 'domcontentloaded',
           });
           setPageListeners(page);
         }
-        let selectedElementsString = cssQuerySelectors.join(", ");
-        const selectedElements: ElementHandle<SVGElement | HTMLElement>[] = await page.$$(selectedElementsString);
+        let selectedElementsString = cssQuerySelectors.join(', ');
+        const selectedElements: ElementHandle<SVGElement | HTMLElement>[] =
+          await page.$$(selectedElementsString);
         // edge case where there might be elements on page that appears intermittently
         if (currentElementIndex + 1 > selectedElements.length || !selectedElements) {
           break;
@@ -241,14 +287,14 @@ const crawlDomain = async (
         if (currentElementIndex + 1 == selectedElements.length) {
           isAllElementsHandled = true;
         }
-        let element: ElementHandle<SVGElement | HTMLElement> = selectedElements[currentElementIndex];
+        let element: ElementHandle<SVGElement | HTMLElement> =
+          selectedElements[currentElementIndex];
         currentElementIndex += 1;
         let newUrlFoundInElement: string = null;
         if (await element.isVisible()) {
           // Find url in html elements without clicking them
           await page
             .evaluate(element => {
-
               //find href attribute
               let hrefUrl: string = element.getAttribute('href');
 
@@ -267,8 +313,7 @@ const crawlDomain = async (
                 try {
                   // Check if newUrlFoundInElement is a valid absolute URL
                   absoluteUrl = new URL(newUrlFoundInElement);
-                }
-                catch (e) {
+                } catch (e) {
                   // If it's not a valid URL, treat it as a relative URL
                   absoluteUrl = new URL(newUrlFoundInElement, baseUrl);
                 }
@@ -276,28 +321,27 @@ const crawlDomain = async (
               }
             });
           if (newUrlFoundInElement && !isExcluded(newUrlFoundInElement)) {
-
-            let newUrlFoundInElementUrl: string = newUrlFoundInElement.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+            let newUrlFoundInElementUrl: string = newUrlFoundInElement.replace(
+              /(?<=&|\?)utm_.*?(&|$)/gim,
+              '',
+            );
 
             await requestQueue.addRequest({
               url: encodeURI(newUrlFoundInElementUrl),
               skipNavigation: isUrlPdf(encodeURI(newUrlFoundInElement)),
             });
-          }
-          else if (!newUrlFoundInElement) {
+          } else if (!newUrlFoundInElement) {
             try {
               // Find url in html elements by manually clicking them. New page navigation/popups will be handled by event listeners above
               await element.click();
               await page.waitForTimeout(1000); // Add a delay of 1 second between each Element click
-            }
-            catch (e) {
+            } catch (e) {
               // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
               // Handles browser page object been closed.
             }
           }
         }
-      }
-      catch (e) {
+      } catch (e) {
         // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
         // Handles browser page object been closed.
       }
@@ -305,7 +349,7 @@ const crawlDomain = async (
     return;
   };
 
-  const isBlacklisted = url => {
+  const isBlacklisted = (url: string) => {
     const blacklistedPatterns = getBlackListedPatterns(null);
     if (!blacklistedPatterns) {
       return false;
@@ -360,32 +404,24 @@ const crawlDomain = async (
           },
         ]
       : [
-          async ({ page, request }) => {
+          async ({ request }) => {
             request.url = encodeURI(request.url);
             preNavigationHooks(extraHTTPHeaders);
           },
         ],
     requestHandlerTimeoutSecs: 90, // Allow each page to be processed by up from default 60 seconds
-    requestHandler: async ({
-      page,
-      request,
-      response,
-      crawler,
-      sendRequest,
-      enqueueLinks,
-    }) => {
+    requestHandler: async ({ page, request, response, crawler, sendRequest, enqueueLinks }) => {
       const browserContext: BrowserContext = page.context();
       try {
         // Set basic auth header if needed
-        if (isBasicAuth)
-        {
+        if (isBasicAuth) {
           await page.setExtraHTTPHeaders({
             Authorization: authHeader,
           });
           const currentUrl = new URL(request.url);
           currentUrl.username = username;
           currentUrl.password = password;
-          request.url = currentUrl.href;          
+          request.url = currentUrl.href;
         }
 
         await waitForPageLoaded(page, 10000);
@@ -410,7 +446,7 @@ const crawlDomain = async (
         }
 
         // if URL has already been scanned
-        if (urlsCrawled.scanned.some(item => item.url.href === request.url)) {
+        if (urlsCrawled.scanned.some(item => item.url === request.url)) {
           await enqueueProcess(page, enqueueLinks, browserContext);
           return;
         }
@@ -445,7 +481,7 @@ const crawlDomain = async (
         const resHeaders = response ? response.headers() : {}; // Safely access response headers
         const contentType = resHeaders['content-type'] || ''; // Ensure contentType is defined
 
-        // whitelist html and pdf document types
+        // Skip non-HTML and non-PDF URLs
         if (!contentType.includes('text/html') && !contentType.includes('application/pdf')) {
           guiInfoLog(guiInfoStatusTypes.SKIPPED, {
             numScanned: urlsCrawled.scanned.length,
@@ -475,7 +511,7 @@ const crawlDomain = async (
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
-          urlsCrawled.forbidden.push({ url: request.url });
+          urlsCrawled.forbidden.push(request.url);
           return;
         }
 
@@ -484,7 +520,7 @@ const crawlDomain = async (
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
-          urlsCrawled.invalid.push({ url: request.url });
+          urlsCrawled.invalid.push(request.url);
           return;
         }
 
@@ -506,11 +542,11 @@ const crawlDomain = async (
             return;
           }
 
-          const results = await runAxeScript(includeScreenshots, page, randomToken,null);
+          const results = await runAxeScript(includeScreenshots, page, randomToken, null);
 
           if (isRedirected) {
             const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
-              item => (item.actualUrl || item.url.href) === request.loadedUrl,
+              item => (item.actualUrl || item.url) === request.loadedUrl,
             );
 
             if (isLoadedUrlInCrawledUrls) {
@@ -552,6 +588,7 @@ const crawlDomain = async (
               });
               urlsCrawled.scanned.push({
                 url: urlWithoutAuth(request.url),
+                actualUrl: request.url,
                 pageTitle: results.pageTitle,
               });
               await dataset.pushData(results);
@@ -582,7 +619,9 @@ const crawlDomain = async (
             await page.route('**/*', async route => {
               const interceptedRequest = route.request();
               if (interceptedRequest.resourceType() === 'document') {
-                let interceptedRequestUrl = interceptedRequest.url().replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+                let interceptedRequestUrl = interceptedRequest
+                  .url()
+                  .replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
                 await requestQueue.addRequest({
                   url: interceptedRequestUrl,
                   skipNavigation: isUrlPdf(interceptedRequest.url()),
@@ -641,4 +680,5 @@ const crawlDomain = async (
 
   return urlsCrawled;
 };
+
 export default crawlDomain;

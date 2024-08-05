@@ -23,6 +23,7 @@ import {
 import questions from './constants/questions.js';
 import combineRun from './combine.js';
 import constants, { BrowserTypes, ScannerTypes } from './constants/constants.js';
+import { EnqueueStrategy } from 'crawlee';
 
 export type Answers = {
   headless: boolean;
@@ -62,7 +63,7 @@ export type Data = {
   viewportWidth: number;
   playwrightDeviceDetailsObject: Object;
   maxRequestsPerCrawl: number;
-  strategy: string;
+  strategy: EnqueueStrategy;
   isLocalFileScan: boolean;
   browser: string;
   nameEmail: string;
@@ -74,7 +75,7 @@ export type Data = {
   includeScreenshots: boolean;
   metadata: string;
   followRobots: boolean;
-  extraHTTPHeaders: string;
+  extraHTTPHeaders: Record<string, string>;
   safeMode: boolean;
   userDataDirectory?: string;
   zip?: string;

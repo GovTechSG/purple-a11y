@@ -194,7 +194,7 @@ export const runAxeScript = async (
   return filterAxeResults(results, pageTitle, customFlowDetails);
 };
 
-export const createCrawleeSubFolders = async randomToken => {
+export const createCrawleeSubFolders = async (randomToken:string): Promise<{dataset:crawlee.Dataset, requestQueue:crawlee.RequestQueue}> => {
   const dataset= await crawlee.Dataset.open(randomToken);
   const requestQueue = await crawlee.RequestQueue.open(randomToken);
   return { dataset, requestQueue };

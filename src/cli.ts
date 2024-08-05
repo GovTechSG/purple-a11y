@@ -19,6 +19,7 @@ import {
   validateDirPath,
   validateFilePath,
   validateCustomFlowLabel,
+  parseHeaders,
 } from './constants/common.js';
 import constants, { ScannerTypes } from './constants/constants.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
@@ -178,27 +179,13 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return option;
   })
   .coerce('m', option => {
-    const headerValues = option.split(', ');
-    const allHeaders = {};
-
-    headerValues.map((headerValue: string) => {
-      const headerValuePair = headerValue.split(/ (.*)/s);
-      if (headerValuePair.length < 2) {
-        printMessage(
-          [
-            `Invalid value for authorisation request header. Please provide valid keywords in the format: "<header> <value>". For multiple authentication headers, please provide the keywords in the format:  "<header> <value>, <header2> <value2>, ..." .`,
-          ],
-          messageOptions,
-        );
-        process.exit(1);
-      }
-      allHeaders[headerValuePair[0]] = headerValuePair[1]; // {"header": "value", "header2": "value2", ...}
-    });
-
-    return allHeaders;
+    return parseHeaders(option);
   })
   .check(argvs => {
-    if ((argvs.scanner === ScannerTypes.CUSTOM || argvs.scanner === ScannerTypes.LOCALFILE) && argvs.maxpages) {
+    if (
+      (argvs.scanner === ScannerTypes.CUSTOM || argvs.scanner === ScannerTypes.LOCALFILE) &&
+      argvs.maxpages
+    ) {
       throw new Error('-p or --maxpages is only available in website and sitemap scans.');
     }
     return true;

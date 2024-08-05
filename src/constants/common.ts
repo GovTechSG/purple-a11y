@@ -6,7 +6,7 @@ import validator from 'validator';
 import axios from 'axios';
 import { JSDOM } from 'jsdom';
 import * as cheerio from 'cheerio';
-import crawlee, { Request } from 'crawlee';
+import crawlee, { EnqueueStrategy, Request } from 'crawlee';
 import { parseString } from 'xml2js';
 import fs from 'fs';
 import path from 'path';
@@ -53,9 +53,9 @@ export const validateDirPath = (dirPath: string): string => {
 };
 
 export class RES {
-  status: number
-  url: string
-  content: string
+  status: number;
+  url: string;
+  content: string;
   constructor(res?: Partial<RES>) {
     if (res) {
       Object.assign(this, res);
@@ -120,7 +120,9 @@ export const validateFilePath = (filePath: string, cliDir: string) => {
   }
 };
 
-export const getBlackListedPatterns = (blacklistedPatternsFilename: string|null): string[] | null=> {
+export const getBlackListedPatterns = (
+  blacklistedPatternsFilename: string | null,
+): string[] | null => {
   let exclusionsFile = null;
   if (blacklistedPatternsFilename) {
     exclusionsFile = blacklistedPatternsFilename;
@@ -233,7 +235,7 @@ export const getFileSitemap = (filePath: string): string | null => {
 
   const file = fs.readFileSync(filePath, 'utf8');
   const isLocalFileScan = isSitemapContent(file);
-  return isLocalFileScan || (file != undefined) ? filePath : null;
+  return isLocalFileScan || file != undefined ? filePath : null;
 };
 
 export const getUrlMessage = (scanner: ScannerTypes): string => {
@@ -272,7 +274,11 @@ export const sanitizeUrlInput = (url: string): { isValid: boolean; url: string }
   }
 };
 
-const requestToUrl = async (url, isCustomFlow, extraHTTPHeaders) => {
+const requestToUrl = async (
+  url: string,
+  isCustomFlow: boolean,
+  extraHTTPHeaders: Record<string, string>,
+) => {
   // User-Agent is modified to emulate a browser to handle cases where some sites ban non browser agents, resulting in a 403 error
   const res = new RES();
   const parsedUrl = new URL(url);
@@ -531,14 +537,14 @@ export const checkUrl = async (
   }
 
   if (
-    res.status === constants.urlCheckStatuses.success.code && 
+    res.status === constants.urlCheckStatuses.success.code &&
     (scanner === ScannerTypes.SITEMAP || scanner === ScannerTypes.LOCALFILE)
-) {
+  ) {
     const isSitemap = isSitemapContent(res.content);
 
     if (!isSitemap && scanner === ScannerTypes.LOCALFILE) {
       res.status = constants.urlCheckStatuses.notALocalFile.code;
-    } else if (!isSitemap){
+    } else if (!isSitemap) {
       res.status = constants.urlCheckStatuses.notASitemap.code;
     }
   }
@@ -546,6 +552,27 @@ export const checkUrl = async (
 };
 
 const isEmptyObject = (obj: Object): boolean => !Object.keys(obj).length;
+
+export const parseHeaders = (header?: string): Record<string, string> => {
+  // parse HTTP headers from string
+  if (!header) return {};
+  const headerValues = header.split(', ');
+  const allHeaders = {};
+  headerValues.map((headerValue: string) => {
+    const headerValuePair = headerValue.split(/ (.*)/s);
+    if (headerValuePair.length < 2) {
+      printMessage(
+        [
+          `Invalid value for authorisation request header. Please provide valid keywords in the format: "<header> <value>". For multiple authentication headers, please provide the keywords in the format:  "<header> <value>, <header2> <value2>, ..." .`,
+        ],
+        messageOptions,
+      );
+      process.exit(1);
+    }
+    allHeaders[headerValuePair[0]] = headerValuePair[1]; // {"header": "value", "header2": "value2", ...}
+  });
+  return allHeaders;
+};
 
 export const prepareData = async (argv: Answers): Promise<Data> => {
   if (isEmptyObject(argv)) {
@@ -574,7 +601,7 @@ export const prepareData = async (argv: Answers): Promise<Data> => {
     followRobots,
     header,
     safeMode,
-    zip
+    zip,
   } = argv;
 
   // construct filename for scan results
@@ -604,7 +631,8 @@ export const prepareData = async (argv: Answers): Promise<Data> => {
     viewportWidth,
     playwrightDeviceDetailsObject,
     maxRequestsPerCrawl: maxpages || constants.maxRequestsPerCrawl,
-    strategy,
+    strategy:
+      strategy === 'same-hostname' ? EnqueueStrategy.SameHostname : EnqueueStrategy.SameDomain,
     isLocalFileScan,
     browser: browserToRun,
     nameEmail,
@@ -616,9 +644,9 @@ export const prepareData = async (argv: Answers): Promise<Data> => {
     includeScreenshots: !(additional === 'none'),
     metadata,
     followRobots,
-    extraHTTPHeaders: header,
+    extraHTTPHeaders: parseHeaders(header),
     safeMode,
-    zip
+    zip,
   };
 };
 
@@ -629,7 +657,7 @@ export const getUrlsFromRobotsTxt = async (url: string, browserToRun: string): P
   if (constants.robotsTxtUrls[domain]) return;
   const robotsUrl = domain.concat('/robots.txt');
 
-  let robotsTxt :string ;
+  let robotsTxt: string;
   try {
     if (proxy) {
       robotsTxt = await getRobotsTxtViaPlaywright(robotsUrl, browserToRun);
@@ -639,7 +667,7 @@ export const getUrlsFromRobotsTxt = async (url: string, browserToRun: string): P
   } catch (e) {
     silentLogger.info(e);
   }
-  console.log("robotsTxt",robotsTxt)
+  console.log('robotsTxt', robotsTxt);
   if (!robotsTxt) {
     constants.robotsTxtUrls[domain] = {};
     return;
@@ -714,7 +742,7 @@ const getRobotsTxtViaAxios = async (robotsUrl: string): Promise<string> => {
     }),
   });
 
-  const robotsTxt = await (await instance.get(robotsUrl, { timeout: 2000 })).data as string;
+  const robotsTxt = (await (await instance.get(robotsUrl, { timeout: 2000 })).data) as string;
   return robotsTxt;
 };
 
@@ -766,14 +794,14 @@ export const getLinksFromSitemap = async (
       ? (url = addBasicAuthCredentials(url, username, password))
       : url;
 
-      url = convertPathToLocalFile(url);
+    url = convertPathToLocalFile(url);
 
-      let request;
-      try {
-        request = new Request({ url: url });
-      } catch (e) {
-        console.log('Error creating request', e);
-      }
+    let request;
+    try {
+      request = new Request({ url: url });
+    } catch (e) {
+      console.log('Error creating request', e);
+    }
     if (isUrlPdf(url)) {
       request.skipNavigation = true;
     }
@@ -862,36 +890,36 @@ export const getLinksFromSitemap = async (
 
     let parsedUrl;
 
-     if (scannedSitemaps.has(url)) {
-       // Skip processing if the sitemap has already been scanned
-       return;
-     }
+    if (scannedSitemaps.has(url)) {
+      // Skip processing if the sitemap has already been scanned
+      return;
+    }
 
-     scannedSitemaps.add(url);
+    scannedSitemaps.add(url);
 
-     // Convert file if its not local file path
-     url = convertLocalFileToPath(url)
+    // Convert file if its not local file path
+    url = convertLocalFileToPath(url);
 
-     // Check whether its a file path or a URL
-     if (isFilePath(url)) {
-        if (!fs.existsSync(url)) {
-          return;
-        }
-       parsedUrl = url;
-     } else if(isValidHttpUrl(url)){
-       parsedUrl = new URL(url);
+    // Check whether its a file path or a URL
+    if (isFilePath(url)) {
+      if (!fs.existsSync(url)) {
+        return;
+      }
+      parsedUrl = url;
+    } else if (isValidHttpUrl(url)) {
+      parsedUrl = new URL(url);
 
-       if (parsedUrl.username !== '' && parsedUrl.password !== '') {
-         isBasicAuth = true;
-         username = decodeURIComponent(parsedUrl.username);
-         password = decodeURIComponent(parsedUrl.password);
-         parsedUrl.username = '';
-         parsedUrl.password = '';
-       }
-     } else{
+      if (parsedUrl.username !== '' && parsedUrl.password !== '') {
+        isBasicAuth = true;
+        username = decodeURIComponent(parsedUrl.username);
+        password = decodeURIComponent(parsedUrl.password);
+        parsedUrl.username = '';
+        parsedUrl.password = '';
+      }
+    } else {
       printMessage([`Invalid Url/Filepath: ${url}`], messageOptions);
       return;
-     }
+    }
 
     const getDataUsingPlaywright = async () => {
       const browserContext = await constants.launcher.launchPersistentContext(
@@ -946,9 +974,9 @@ export const getLinksFromSitemap = async (
               password: password,
             },
           });
-          try{
-          data = await (await instance.get(url, { timeout: 80000 })).data;
-          } catch(error){
+          try {
+            data = await (await instance.get(url, { timeout: 80000 })).data;
+          } catch (error) {
             return; //to skip the error
           }
         } catch (error) {
@@ -1027,7 +1055,7 @@ export const getLinksFromSitemap = async (
   }
 
   const requestList = Object.values(urls);
-  
+
   return requestList;
 };
 
@@ -1073,7 +1101,6 @@ export const getBrowserToRun = (
   preferredBrowser: BrowserTypes,
   isCli = false,
 ): { browserToRun: BrowserTypes; clonedBrowserDataDir: string } => {
-
   const platform = os.platform();
 
   // Prioritise Chrome on Windows and Mac platforms if user does not specify a browser
@@ -1345,10 +1372,9 @@ const cloneLocalStateFile = (options, destDir) => {
   });
   const profileNamesRegex = /([^/\\]+)[/\\]Local State$/;
 
-
   if (localState.length > 0) {
     let success = true;
-    
+
     localState.forEach(dir => {
       const profileName = dir.match(profileNamesRegex)[1];
       try {
@@ -1772,20 +1798,20 @@ export const getPlaywrightLaunchOptions = (browser?: string): LaunchOptions => {
   return options;
 };
 
-export const urlWithoutAuth = (url: string): URL => {
+export const urlWithoutAuth = (url: string): string => {
   const parsedUrl = new URL(url);
   parsedUrl.username = '';
   parsedUrl.password = '';
-  return parsedUrl;
+  return parsedUrl.toString();
 };
 
 export const waitForPageLoaded = async (page, timeout = 10000) => {
   return Promise.race([
-      page.waitForLoadState('load'),
-      page.waitForLoadState('networkidle'),
-      new Promise((resolve) => setTimeout(resolve, timeout))
+    page.waitForLoadState('load'),
+    page.waitForLoadState('networkidle'),
+    new Promise(resolve => setTimeout(resolve, timeout)),
   ]);
-}
+};
 
 function isValidHttpUrl(urlString) {
   const pattern = /^(http|https):\/\/[^ "]+$/;
@@ -1795,10 +1821,12 @@ function isValidHttpUrl(urlString) {
 export const isFilePath = (url: string): boolean => {
   const driveLetterPattern = /^[A-Z]:/i;
   const backslashPattern = /\\/;
-  return url.startsWith('file://')  ||
-         url.startsWith('/')         ||
-         driveLetterPattern.test(url) || 
-         backslashPattern.test(url);
+  return (
+    url.startsWith('file://') ||
+    url.startsWith('/') ||
+    driveLetterPattern.test(url) ||
+    backslashPattern.test(url)
+  );
 };
 
 export function convertLocalFileToPath(url: string): string {
@@ -1809,13 +1837,13 @@ export function convertLocalFileToPath(url: string): string {
 }
 
 export function convertPathToLocalFile(filePath: string): string {
-  if (filePath.startsWith("/")){
+  if (filePath.startsWith('/')) {
     filePath = pathToFileURL(filePath).toString();
   }
   return filePath;
-} 
+}
 
-export function convertToFilePath(fileUrl) {
+export function convertToFilePath(fileUrl: string) {
   // Parse the file URL
   const parsedUrl = url.parse(fileUrl);
   // Decode the URL-encoded path
