@@ -271,7 +271,11 @@ export const handlePdfDownload = (randomToken: string, pdfDownloads: Promise<voi
             numScanned: urlsCrawled.scanned.length,
             urlScanned: request.url,
           });
-          urlsCrawled.scanned.push({ url: url, pageTitle });
+          urlsCrawled.scanned.push({
+            url: request.url, 
+            pageTitle,
+            actualUrl: url,
+          });
         } else {
           guiInfoLog(guiInfoStatusTypes.SKIPPED, {
             numScanned: urlsCrawled.scanned.length,
