@@ -1,31 +1,33 @@
-import constants, { getExecutablePath, guiInfoStatusTypes } from '../constants/constants.js';
+import constants, { getExecutablePath, guiInfoStatusTypes, UrlsCrawled } from '../constants/constants.js';
 import { spawnSync } from 'child_process';
-import { globSync } from 'glob';
 import { consoleLogger, guiInfoLog, silentLogger } from '../logs.js';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
 import { createRequire } from 'module';
 import os from 'os';
 import path from 'path';
-import { getPageFromContext } from '../screenshotFunc/pdfScreenshotFunc.js';
+import { getPageFromContext, getPdfScreenshots } from '../screenshotFunc/pdfScreenshotFunc.js';
 import { isFilePath } from '../constants/common.js';
+import { ensureDirSync, ReadStream } from 'fs-extra';
+import { Request } from 'crawlee';
 
 const require = createRequire(import.meta.url);
 
 // CONSTANTS
 
+type RulesMap = { [key: string]: TransformedRuleObject };
 // Classes
 class TranslatedObject {
   goodToFix: {
-    rules: any; // You can specify the type for rules if known
+    rules: RulesMap;
     totalItems: number;
   };
   mustFix: {
-    rules: any; // You can specify the type for rules if known
+    rules: RulesMap;
     totalItems: number;
   };
   needsReview: {
-    rules: any; // You can specify the type for rules if known
+    rules: RulesMap;
     totalItems: number;
   };
   url: string = '';
@@ -36,23 +38,23 @@ class TranslatedObject {
   constructor() {
     this.goodToFix = {
       rules: {},
-      totalItems: 0
+      totalItems: 0,
     };
     this.mustFix = {
       rules: {},
-      totalItems: 0
+      totalItems: 0,
     };
     this.needsReview = {
       rules: {},
-      totalItems: 0
+      totalItems: 0,
     };
   }
 }
-class TransformedRuleObject {
+export class TransformedRuleObject {
   description: string;
   totalItems: number;
   conformance: string[];
-  items: { message: string; page: string; context: any; }[];
+  items: { message: string; page: number; screenshotPath?: string; context: string }[];
 
   constructor() {
     this.description = '';
@@ -62,6 +64,118 @@ class TransformedRuleObject {
   }
 }
 
+// VeraPDF Scan Results types
+type VeraPdfScanResults = { report: Report };
+
+type Report = {
+  buildInformation: BuildInformation;
+  jobs: Job[];
+  batchSummary: BatchSummary;
+};
+
+type BuildInformation = {
+  releaseDetails: ReleaseDetail[];
+};
+
+type ReleaseDetail = {
+  id: string;
+  version: string;
+  buildDate: number;
+};
+
+type Job = {
+  itemDetails: ItemDetails;
+  validationResult: ValidationResult;
+  processingTime: ProcessingTime;
+};
+
+type ItemDetails = {
+  name: string;
+  size: number;
+};
+
+type ValidationResult = {
+  details: ValidationDetails;
+  jobEndStatus: string;
+  profileName: string;
+  statement: string;
+  compliant: boolean;
+};
+
+type ValidationDetails = {
+  passedRules: number;
+  failedRules: number;
+  passedChecks: number;
+  failedChecks: number;
+  ruleSummaries: RuleSummary[];
+};
+
+type RuleSummary = {
+  ruleStatus: string;
+  specification: string;
+  clause: string;
+  testNumber: number;
+  status: string;
+  failedChecks: number;
+  description: string;
+  object: string;
+  test: string;
+  checks: Check[];
+};
+
+type Check = {
+  status: string;
+  context: string;
+  errorMessage: string;
+  errorArguments: any[];
+};
+
+type ProcessingTime = {
+  start: number;
+  finish: number;
+  duration: string;
+  difference: number;
+};
+
+type BatchSummary = {
+  duration: Duration;
+  totalJobs: number;
+  outOfMemory: number;
+  veraExceptions: number;
+  failedEncryptedJobs: number;
+  failedParsingJobs: number;
+  validationSummary: ValidationSummary;
+  featuresSummary: FeaturesSummary;
+  repairSummary: RepairSummary;
+  multiJob: boolean;
+};
+
+type Duration = {
+  start: number;
+  finish: number;
+  duration: string;
+  difference: number;
+};
+
+type ValidationSummary = {
+  nonCompliantPdfaCount: number;
+  compliantPdfaCount: number;
+  failedJobCount: number;
+  totalJobCount: number;
+  successfulJobCount: number;
+};
+
+type FeaturesSummary = {
+  failedJobCount: number;
+  totalJobCount: number;
+  successfulJobCount: number;
+};
+
+type RepairSummary = {
+  failedJobCount: number;
+  totalJobCount: number;
+  successfulJobCount: number;
+};
 // AAA: 1.4.8, 2.4.9
 // AA: 1.3.4, 1.4.3, 1.4.4, 1.4.10
 // A: 1.3.1, 4.1.1, 4.1.2
@@ -92,7 +206,7 @@ const EXCLUDED_RULES = {
   '1.3.4': { 1: true }, // test for page orientation deemed a false positive, so its excluded
 };
 
-const isRuleExcluded = rule => {
+const isRuleExcluded = (rule: RuleSummary) => {
   const isExcluded = EXCLUDED_RULES[rule.clause]
     ? EXCLUDED_RULES[rule.clause][rule.testNumber]
     : false;
@@ -100,7 +214,7 @@ const isRuleExcluded = rule => {
 };
 
 const getVeraExecutable = () => {
-  let veraPdfExe;
+  let veraPdfExe: string;
   if (os.platform() === 'win32') {
     veraPdfExe = getExecutablePath('**/verapdf', 'verapdf.bat');
   } else {
@@ -115,38 +229,21 @@ const getVeraExecutable = () => {
   return veraPdfExe;
 };
 
-// get validation profile
-const getVeraProfile = () => {
-  const veraPdfProfile = globSync('**/verapdf/**/WCAG-21.xml', {
-    absolute: true,
-    nodir: true,
-  });
-
-  if (veraPdfProfile.length === 0) {
-    let veraPdfProfileNotFoundError =
-      'Could not find veraPDF validation profile.  Please ensure veraPDF is installed at current directory.';
-    consoleLogger.error(veraPdfProfileNotFoundError);
-    silentLogger.error(veraPdfProfileNotFoundError);
-    return undefined;
-  }
-  return veraPdfProfile[0];
-};
-
-const isPDF = buffer => {
+const isPDF = (buffer: Buffer) => {
   return (
     Buffer.isBuffer(buffer) && buffer.lastIndexOf('%PDF-') === 0 && buffer.lastIndexOf('%%EOF') > -1
   );
 };
 
-export const handlePdfDownload = (randomToken, pdfDownloads, request, sendRequest, urlsCrawled) => {
+export const handlePdfDownload = (randomToken: string, pdfDownloads: Promise<void>[], request: Request, sendRequest: any, urlsCrawled: UrlsCrawled): { pdfFileName: string; url: string } => {
   const pdfFileName = randomUUID();
-  const url:string = request.url
+  const url: string = request.url;
   const pageTitle = decodeURI(request.url).split('/').pop();
 
   pdfDownloads.push(
     new Promise<void>(async resolve => {
       let bufs = [];
-      let pdfResponse;
+      let pdfResponse: ReadStream;
 
       if (isFilePath(url)) {
         // Read the file from the file system
@@ -161,7 +258,7 @@ export const handlePdfDownload = (randomToken, pdfDownloads, request, sendReques
         flags: 'a',
       });
 
-      pdfResponse.on('data', chunk => {
+      pdfResponse.on('data', (chunk: Buffer) => {
         downloadFile.write(chunk, 'binary');
         bufs.push(Buffer.from(chunk));
       });
@@ -190,7 +287,7 @@ export const handlePdfDownload = (randomToken, pdfDownloads, request, sendReques
   return { pdfFileName, url };
 };
 
-export const runPdfScan = async randomToken => {
+export const runPdfScan = async (randomToken: string) => {
   const execFile = getVeraExecutable();
   const veraPdfExe = '"' + execFile + '"';
   // const veraPdfProfile = getVeraProfile();
@@ -221,13 +318,13 @@ export const runPdfScan = async randomToken => {
 };
 
 // transform results from veraPDF to desired format for report
-export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
+export const mapPdfScanResults = async (randomToken: string, uuidToUrlMapping: Record<string, string>) => {
   const intermediateFolder = randomToken;
   const intermediateResultPath = `${intermediateFolder}/${constants.pdfScanResultFileName}`;
 
   const rawdata = fs.readFileSync(intermediateResultPath, 'utf-8');
 
-  let parsedJsonData;
+  let parsedJsonData: VeraPdfScanResults;
   try {
     parsedJsonData = JSON.parse(rawdata);
   } catch (err) {
@@ -239,67 +336,70 @@ export const mapPdfScanResults = async (randomToken, uuidToUrlMapping) => {
   const resultsList = [];
 
   if (parsedJsonData) {
-  // jobs: files that are scanned
-  const {
-    report: { jobs },
-  } = parsedJsonData;
+    // jobs: files that are scanned
+    const {
+      report: { jobs },
+    } = parsedJsonData;
 
-  // loop through all jobs
-  for (let jobIdx = 0; jobIdx < jobs.length; jobIdx++) {
-    const translated = new TranslatedObject();
+    // loop through all jobs
+    for (let jobIdx = 0; jobIdx < jobs.length; jobIdx++) {
+      const translated = new TranslatedObject();
 
-    const { itemDetails, validationResult } = jobs[jobIdx];
-    const { name: fileName } = itemDetails;
+      const { itemDetails, validationResult } = jobs[jobIdx];
+      const { name: fileName } = itemDetails;
 
-    const uuid = fileName
-      .split(os.platform() === 'win32' ? '\\' : '/')
-      .pop()
-      .split('.')[0];
-    const url = uuidToUrlMapping[uuid];
-    const pageTitle = decodeURI(url).split('/').pop();
-    const filePath = `${randomToken}/${uuid}.pdf`;
+      const uuid = fileName
+        .split(os.platform() === 'win32' ? '\\' : '/')
+        .pop()
+        .split('.')[0];
+      const url = uuidToUrlMapping[uuid];
+      const pageTitle = decodeURI(url).split('/').pop();
+      const filePath = `${randomToken}/${uuid}.pdf`;
 
-    translated.url = url;
-    translated.pageTitle = pageTitle;
-    translated.filePath = filePath;
+      translated.url = url;
+      translated.pageTitle = pageTitle;
+      translated.filePath = filePath;
 
-    if (!validationResult) {
-      // check for error in scan
-      consoleLogger.info(`Unable to scan ${pageTitle}, skipping`);
-      continue; // skip this job
+      if (!validationResult) {
+        // check for error in scan
+        consoleLogger.info(`Unable to scan ${pageTitle}, skipping`);
+        continue; // skip this job
+      }
+
+      // destructure validation result
+      const { passedChecks, failedChecks, ruleSummaries } = validationResult.details;
+      const totalChecks = passedChecks + failedChecks;
+
+      translated.totalItems = totalChecks;
+
+      // loop through all failed rules
+      for (let ruleIdx = 0; ruleIdx < ruleSummaries.length; ruleIdx++) {
+        const rule = ruleSummaries[ruleIdx];
+        const { specification, testNumber, clause } = rule;
+
+        if (isRuleExcluded(rule)) continue;
+        const [ruleId, transformedRule] = await transformRule(rule, filePath);
+
+        // ignore if violation is not in the meta file
+        const meta = errorMeta[specification][clause][testNumber]?.STATUS ?? 'ignore';
+        const category = translated[metaToCategoryMap[meta]];
+
+        category.rules[ruleId] = transformedRule;
+        category.totalItems += transformedRule.totalItems;
+      }
+
+      resultsList.push(translated);
     }
-
-    // destructure validation result
-    const { passedChecks, failedChecks, ruleSummaries } = validationResult.details;
-    const totalChecks = passedChecks + failedChecks;
-
-    translated.totalItems = totalChecks;
-
-    // loop through all failed rules
-    for (let ruleIdx = 0; ruleIdx < ruleSummaries.length; ruleIdx++) {
-      const rule = ruleSummaries[ruleIdx];
-      const { specification, testNumber, clause } = rule;
-
-      if (isRuleExcluded(rule)) continue;
-      const [ruleId, transformedRule] = await transformRule(rule, filePath);
-
-      // ignore if violation is not in the meta file
-      const meta = errorMeta[specification][clause][testNumber]?.STATUS ?? 'ignore';
-      const category = translated[metaToCategoryMap[meta]];
-
-      category.rules[ruleId] = transformedRule;
-      category.totalItems += transformedRule.totalItems;
-    }
-
-    resultsList.push(translated);
   }
-}
   return resultsList;
 };
 
-const transformRule = async (rule, filePath): Promise<[string, TransformedRuleObject]> => {
+const transformRule = async (
+  rule: RuleSummary,
+  filePath: string,
+): Promise<[string, TransformedRuleObject]> => {
   // get specific rule
-  const transformed = new TransformedRuleObject;
+  const transformed = new TransformedRuleObject();
   const { specification, description, clause, testNumber, checks } = rule;
 
   transformed.description = description;
@@ -323,21 +423,24 @@ const transformRule = async (rule, filePath): Promise<[string, TransformedRuleOb
   return [ruleId, transformed];
 };
 
-// export const doPdfScreenshots = async (randomToken, result) => {
-//   const { filePath, pageTitle } = result;
-//   const formattedPageTitle = pageTitle.replaceAll(" ", "_").split('.')[0];
-//   const screenshotsDir = path.join(randomToken, 'elemScreenshots', 'pdf');
+export const doPdfScreenshots = async (randomToken: string, result: TranslatedObject) => {
+  const { filePath, pageTitle } = result;
+  const formattedPageTitle = pageTitle.replaceAll(' ', '_').split('.')[0];
+  const screenshotsDir = path.join(randomToken, 'elemScreenshots', 'pdf');
 
-//   ensureDirSync(screenshotsDir);
+  ensureDirSync(screenshotsDir);
 
-//   for (const category of ['mustFix', 'goodToFix']) {
-//     const ruleItems = Object.entries(result[category].rules);
-//     for (const [ruleId, ruleInfo] of ruleItems) {
-//       const { items } = ruleInfo;
-//       const filename = `${formattedPageTitle}-${category}-${ruleId}`;
-//       const screenshotPath = path.join(screenshotsDir, filename);
-//       const newItems = await getPdfScreenshots(filePath, items, screenshotPath);
-//       ruleInfo.items = newItems;
-//     }
-//   }
-// };
+  for (const category of ['mustFix', 'goodToFix']) {
+    const ruleItems = Object.entries(result[category].rules) as [
+      keyof RulesMap,
+      RulesMap[keyof RulesMap],
+    ][];
+    for (const [ruleId, ruleInfo] of ruleItems) {
+      const { items } = ruleInfo;
+      const filename = `${formattedPageTitle}-${category}-${ruleId}`;
+      const screenshotPath = path.join(screenshotsDir, filename);
+      const newItems = await getPdfScreenshots(filePath, items, screenshotPath);
+      ruleInfo.items = newItems;
+    }
+  }
+};

@@ -1,11 +1,13 @@
 import _ from 'lodash';
-import pdfjs from 'pdfjs-dist';
+import pdfjs, { PDFPageProxy } from 'pdfjs-dist';
 import fs from 'fs';
-// import Canvas from 'canvas';
-// import assert from 'assert';
+import { Canvas, createCanvas, SKRSContext2D } from '@napi-rs/canvas';
+import assert from 'assert';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { silentLogger } from '../logs.js';
+import { TransformedRuleObject } from '#root/crawlers/pdfScanFunc.js';
+import { IBboxLocation, StructureTree, ViewportSize } from '#root/types/types.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,180 +16,181 @@ const __dirname = path.dirname(__filename);
 const BBOX_PADDING = 50;
 
 // Interfaces
-interface pathObject
-  {
-    pageIndex?: number;
-    contentStream?: number;
-    content?: number;
-    contentItems?: number[];
-    mcid?: number;
-    annot?: number;
+interface pathObject {
+  pageIndex?: number;
+  contentStream?: number;
+  content?: number;
+  contentItems?: number[];
+  mcid?: number;
+  annot?: number;
+}
+
+function NodeCanvasFactory() {}
+NodeCanvasFactory.prototype = {
+  create: function NodeCanvasFactory_create(width: number, height: number) {
+    assert(width > 0 && height > 0, 'Invalid canvas size');
+    const canvas = createCanvas(width, height);
+    const context = canvas.getContext('2d');
+    return {
+      canvas,
+      context,
+    };
+  },
+
+  reset: function NodeCanvasFactory_reset(
+    canvasAndContext: { canvas: Canvas; context: SKRSContext2D },
+    width: number,
+    height: number,
+  ) {
+    assert(canvasAndContext.canvas, 'Canvas is not specified');
+    assert(width > 0 && height > 0, 'Invalid canvas size');
+    canvasAndContext.canvas.width = width;
+    canvasAndContext.canvas.height = height;
+  },
+
+  destroy: function NodeCanvasFactory_destroy(canvasAndContext: { canvas: Canvas; context: SKRSContext2D }) {
+    assert(canvasAndContext.canvas, 'Canvas is not specified');
+
+    canvasAndContext.canvas = null;
+    canvasAndContext.context = null;
+  },
+};
+
+const canvasFactory = new NodeCanvasFactory();
+
+export async function getPdfScreenshots(pdfFilePath: string, items: TransformedRuleObject["items"], screenshotPath: string) {
+  const newItems = _.cloneDeep(items);
+  const loadingTask = pdfjs.getDocument({
+    url: pdfFilePath,
+    standardFontDataUrl: path.join(__dirname, '../node_modules/pdfjs-dist/standard_fonts/'),
+    disableFontFace: true,
+    verbosity: 0,
+  });
+  const pdf = await loadingTask.promise;
+  const structureTree = await pdf._pdfInfo.structureTree;
+
+  // save some resources by caching page canvases to be reused by diff violations
+  const pageCanvasCache = {};
+
+  // iterate through each violation
+  for (let i = 0; i < newItems.length; i++) {
+    const { context } = newItems[i];
+    const bbox: IBboxLocation = { location: context };
+    const bboxMap = buildBboxMap([bbox], structureTree);
+
+    for (const [pageNum, bboxList] of Object.entries(bboxMap)) {
+      const page = await pdf.getPage(parseInt(pageNum, 10));
+
+      // an array of length 1, containing location of current violation
+      const bboxesWithCoords = await Promise.all([
+        page.getOperatorList(),
+        page.getAnnotations(),
+      ]).then(getBboxesList(bboxList, page));
+
+      // Render the page on a Node canvas with 200% scale.
+      const viewport = page.getViewport({ scale: 2.0 });
+
+      const canvasAndContext =
+        pageCanvasCache[pageNum] ?? canvasFactory.create(viewport.width, viewport.height);
+      if (!pageCanvasCache[pageNum]) {
+        pageCanvasCache[pageNum] = canvasAndContext;
+      }
+      const { canvas: origCanvas, context: origCtx } = canvasAndContext;
+
+      const renderContext = {
+        canvasContext: origCtx,
+        viewport,
+        canvasFactory,
+      };
+      const renderTask = page.render(renderContext); // render pdf page onto a canvas
+      await renderTask.promise;
+
+      const finalScreenshotPath = annotateAndSave(
+        origCanvas,
+        screenshotPath,
+        viewport,
+      )(bboxesWithCoords[0]);
+
+      newItems[i].screenshotPath = finalScreenshotPath;
+      newItems[i].page = parseInt(pageNum, 10);
+
+      page.cleanup();
+    }
   }
+  return newItems;
+}
 
+const annotateAndSave = (origCanvas: Canvas, screenshotPath: string, viewport: ViewportSize) => {
+  return ({ location }) => {
+    const [left, bottom, width, height] = location.map(loc => loc * 2); // scale up by 2
+    const rectParams = [left, viewport.height - bottom - height, width, height];
 
-// function NodeCanvasFactory() {}
-// NodeCanvasFactory.prototype = {
-//   create: function NodeCanvasFactory_create(width, height) {
-//     assert(width > 0 && height > 0, 'Invalid canvas size');
-//     const canvas = Canvas.createCanvas(width, height);
-//     const context = canvas.getContext('2d');
-//     return {
-//       canvas,
-//       context,
-//     };
-//   },
+    // create new canvas to annotate so we do not "pollute" the original
+    const { context: highlightCtx, canvas: highlightCanvas } = canvasFactory.create(
+      viewport.width,
+      viewport.height,
+    );
 
-//   reset: function NodeCanvasFactory_reset(canvasAndContext, width, height) {
-//     assert(canvasAndContext.canvas, 'Canvas is not specified');
-//     assert(width > 0 && height > 0, 'Invalid canvas size');
-//     canvasAndContext.canvas.width = width;
-//     canvasAndContext.canvas.height = height;
-//   },
+    highlightCtx.drawImage(origCanvas, 0, 0);
+    highlightCtx.fillStyle = 'rgba(0, 255, 255, 0.2)';
+    highlightCtx.fillRect(...rectParams);
 
-//   destroy: function NodeCanvasFactory_destroy(canvasAndContext) {
-//     assert(canvasAndContext.canvas, 'Canvas is not specified');
+    const rectParamsWithPadding = [
+      left - BBOX_PADDING,
+      viewport.height - bottom - height - BBOX_PADDING,
+      width + BBOX_PADDING * 2,
+      height + BBOX_PADDING * 2,
+    ];
 
-//     canvasAndContext.canvas.width = 0;
-//     canvasAndContext.canvas.height = 0;
-//     canvasAndContext.canvas = null;
-//     canvasAndContext.context = null;
-//   },
-// };
+    // create new canvas to crop image
+    const { context: croppedCtx, canvas: croppedCanvas } = canvasFactory.create(
+      rectParamsWithPadding[2],
+      rectParamsWithPadding[3],
+    );
 
-// const canvasFactory = new NodeCanvasFactory();
+    croppedCtx.drawImage(
+      highlightCanvas,
+      ...rectParamsWithPadding,
+      0,
+      0,
+      rectParamsWithPadding[2],
+      rectParamsWithPadding[3],
+    );
 
-// export async function getPdfScreenshots(pdfFilePath, items, screenshotPath) {
-//   const newItems = _.cloneDeep(items);
-//   const loadingTask = pdfjs.getDocument({
-//     url: pdfFilePath,
-//     canvasFactory,
-//     standardFontDataUrl: path.join(__dirname, '../node_modules/pdfjs-dist/standard_fonts/'),
-//     disableFontFace: true,
-//     verbosity: 0,
-//   });
-//   const pdf = await loadingTask.promise;
-//   const structureTree = await pdf._pdfInfo.structureTree;
+    // convert the canvas to an image
+    // const croppedImage = croppedCanvas.toBuffer();
+    const croppedImage = croppedCanvas.toBuffer('image/png');
 
-//   // save some resources by caching page canvases to be reused by diff violations
-//   const pageCanvasCache = {};
+    // save image
+    let counter = 0;
+    let indexedScreenshotPath = `${screenshotPath}-${counter}.png`;
+    let fileExists = fs.existsSync(indexedScreenshotPath);
+    while (fileExists) {
+      counter++;
+      indexedScreenshotPath = `${screenshotPath}-${counter}.png`;
+      fileExists = fs.existsSync(indexedScreenshotPath);
+    }
+    try {
+      fs.writeFileSync(indexedScreenshotPath, croppedImage);
+    } catch (e) {
+      silentLogger.error('Error in writing screenshot:', e);
+    }
 
-//   // iterate through each violation
-//   for (let i = 0; i < newItems.length; i++) {
-//     const { context } = newItems[i];
-//     const bbox = { location: context };
-//     const bboxMap = buildBboxMap([bbox], structureTree);
+    canvasFactory.destroy({ canvas: croppedCanvas, context: croppedCtx });
+    canvasFactory.destroy({ canvas: highlightCanvas, context: highlightCtx });
 
-//     for (const [pageNum, bboxList] of Object.entries(bboxMap)) {
-//       const page = await pdf.getPage(parseInt(pageNum, 10));
-
-//       // an array of length 1, containing location of current violation
-//       const bboxesWithCoords = await Promise.all([
-//         page.getOperatorList(),
-//         page.getAnnotations(),
-//       ]).then(getBboxesList(bboxList, page));
-
-//       // Render the page on a Node canvas with 200% scale.
-//       const viewport = page.getViewport({ scale: 2.0 });
-
-//       const canvasAndContext =
-//         pageCanvasCache[pageNum] ?? canvasFactory.create(viewport.width, viewport.height);
-//       if (!pageCanvasCache[pageNum]) {
-//         pageCanvasCache[pageNum] = canvasAndContext;
-//       }
-//       const { canvas: origCanvas, context: origCtx } = canvasAndContext;
-
-//       const renderContext = {
-//         canvasContext: origCtx,
-//         viewport,
-//       };
-//       const renderTask = page.render(renderContext); // render pdf page onto a canvas
-//       await renderTask.promise;
-
-//       const finalScreenshotPath = annotateAndSave(
-//         origCanvas,
-//         screenshotPath,
-//         viewport,
-//       )(bboxesWithCoords[0]);
-
-//       newItems[i].screenshotPath = finalScreenshotPath;
-//       newItems[i].page = parseInt(pageNum, 10);
-
-//       page.cleanup();
-//     }
-//   }
-//   return newItems;
-// }
-
-// const annotateAndSave = (origCanvas, screenshotPath, viewport) => {
-//   return ({ location }) => {
-//     const [left, bottom, width, height] = location.map(loc => loc * 2); // scale up by 2
-//     const rectParams = [left, viewport.height - bottom - height, width, height];
-
-//     // create new canvas to annotate so we do not "pollute" the original
-//     const { context: highlightCtx, canvas: highlightCanvas } = canvasFactory.create(
-//       viewport.width,
-//       viewport.height,
-//     );
-
-//     highlightCtx.drawImage(origCanvas, 0, 0);
-//     highlightCtx.fillStyle = 'rgba(0, 255, 255, 0.2)';
-//     highlightCtx.fillRect(...rectParams);
-
-//     const rectParamsWithPadding = [
-//       left - BBOX_PADDING,
-//       viewport.height - bottom - height - BBOX_PADDING,
-//       width + BBOX_PADDING * 2,
-//       height + BBOX_PADDING * 2,
-//     ];
-
-//     // create new canvas to crop image
-//     const { context: croppedCtx, canvas: croppedCanvas } = canvasFactory.create(
-//       rectParamsWithPadding[2],
-//       rectParamsWithPadding[3],
-//     );
-
-//     croppedCtx.drawImage(
-//       highlightCanvas,
-//       ...rectParamsWithPadding,
-//       0,
-//       0,
-//       rectParamsWithPadding[2],
-//       rectParamsWithPadding[3],
-//     );
-
-//     // convert the canvas to an image
-//     const croppedImage = croppedCanvas.toBuffer();
-
-//     // save image
-//     let counter = 0;
-//     let indexedScreenshotPath = `${screenshotPath}-${counter}.png`;
-//     let fileExists = fs.existsSync(indexedScreenshotPath);
-//     while (fileExists) {
-//       counter++;
-//       indexedScreenshotPath = `${screenshotPath}-${counter}.png`;
-//       fileExists = fs.existsSync(indexedScreenshotPath);
-//     }
-//     fs.writeFileSync(indexedScreenshotPath, croppedImage, error => {
-//       if (error) {
-//         silentLogger.error('Error in writing screenshot: ' + error);
-//       }
-//     });
-
-//     canvasFactory.destroy({ canvas: croppedCanvas, context: croppedCtx });
-//     canvasFactory.destroy({ canvas: highlightCanvas, context: highlightCtx });
-
-//     // current screenshot path leads to a temp dir, so modify to save the final file path
-//     const [_, ...rest] = indexedScreenshotPath.split(path.sep);
-//     const finalScreenshotPath = path.join(...rest);
-//     return finalScreenshotPath;
-//   };
-// };
+    // current screenshot path leads to a temp dir, so modify to save the final file path
+    const [_, ...rest] = indexedScreenshotPath.split(path.sep);
+    const finalScreenshotPath = path.join(...rest);
+    return finalScreenshotPath;
+  };
+};
 
 // Below are methods adapted from
 // https://github.com/veraPDF/verapdf-js-viewer/blob/master/src/services/bboxService.ts
 // to determine the bounding box data of the violations from the context field
 
-export const getBboxesList = (bboxList, page) => {
+export const getBboxesList = (bboxList, page: PDFPageProxy) => {
   return ([operatorList, annotations]) => {
     const operationData = operatorList.argsArray[operatorList.argsArray.length - 2];
     const [positionData, noMCIDData] = operatorList.argsArray[operatorList.argsArray.length - 1];
@@ -237,7 +240,7 @@ export const getBboxesList = (bboxList, page) => {
   };
 };
 
-export const buildBboxMap = (bboxes, structure) => {
+export const buildBboxMap = (bboxes: IBboxLocation[], structure: StructureTree) => {
   const bboxMap = {};
   bboxes.forEach((bbox, index) => {
     try {
@@ -336,22 +339,22 @@ export const getSelectedPageByLocation = bboxLocation => {
   return pageNumber;
 };
 
-export const getPageFromContext = async (context, pdfFilePath) => {
-  try{
-  const loadingTask = pdfjs.getDocument({
-    url: pdfFilePath,
-    // canvasFactory,
-    standardFontDataUrl: path.join(__dirname, '../../node_modules/pdfjs-dist/standard_fonts/'),
-    disableFontFace: true,
-    verbosity: 0,
-  });
-  const pdf = await loadingTask.promise;
-  const structureTree = await pdf._pdfInfo.structureTree;
-  const page = getBboxPage({ location: context }, structureTree);
-  return page;
-} catch (error){
-  // Error handling
-}
+export const getPageFromContext = async (context: string, pdfFilePath: string): Promise<number> => {
+  try {
+    const loadingTask = pdfjs.getDocument({
+      url: pdfFilePath,
+      standardFontDataUrl: path.join(__dirname, '../../node_modules/pdfjs-dist/standard_fonts/'),
+      disableFontFace: true,
+      verbosity: 0,
+    });
+    const pdf = await loadingTask.promise;
+    const structureTree = await pdf._pdfInfo.structureTree;
+
+    const page = getBboxPage({ location: context }, structureTree);
+    return page;
+  } catch (error) {
+    // Error handling
+  }
 };
 
 export const getBboxPages = (bboxes, structure) => {
@@ -368,7 +371,7 @@ export const getBboxPage = (bbox, structure) => {
       bbox.location === 'root'
     ) {
       const mcidData = getTagsFromErrorPlace(bbox.location, structure);
-      const pageIndex = mcidData[0][1];
+      const pageIndex = mcidData[0][1] as number;
       return pageIndex + 1;
     } else {
       const bboxesFromLocation = bbox.location.includes('pages[')
@@ -377,6 +380,7 @@ export const getBboxPage = (bbox, structure) => {
       return bboxesFromLocation.length ? bboxesFromLocation[0].page : 0;
     }
   } catch (e) {
+    console.error(e);
     console.error(`Location not supported: ${bbox.location}`);
     return -1;
   }
@@ -439,7 +443,7 @@ const calculateLocationJSON = location => {
   return bboxes;
 };
 
-const getTagsFromErrorPlace = (context, structure) => {
+const getTagsFromErrorPlace = (context: string, structure: StructureTree) => {
   const defaultValue = [[[], -1, undefined]];
   let selectedTag = convertContextToPath(context);
 
@@ -458,8 +462,7 @@ const getTagsFromErrorPlace = (context, structure) => {
     );
   }
 
-  if (isPathObject(selectedTag))
-  {
+  if (isPathObject(selectedTag)) {
     if (selectedTag.hasOwnProperty('mcid') && selectedTag.hasOwnProperty('pageIndex')) {
       return [[[selectedTag.mcid], selectedTag.pageIndex]];
     } else if (selectedTag.hasOwnProperty('annot') && selectedTag.hasOwnProperty('pageIndex')) {
@@ -514,8 +517,8 @@ const getTagsFromErrorPlace = (context, structure) => {
 type Node = [number, string];
 type ConvertContextToPathReturn = pathObject | Node[];
 
-const convertContextToPath = (errorContext = '') : ConvertContextToPathReturn=> {
-  let arrayOfNodes:Node[] = [];
+const convertContextToPath = (errorContext = ''): ConvertContextToPathReturn => {
+  let arrayOfNodes: Node[] = [];
   if (!errorContext) {
     return arrayOfNodes;
   }
@@ -529,7 +532,7 @@ const convertContextToPath = (errorContext = '') : ConvertContextToPathReturn=> 
       );
       if (result) {
         try {
-          let path:pathObject;
+          let path: pathObject;
           path.pageIndex = parseInt(result.groups.pages, 10);
           path.contentStream = parseInt(result.groups.contentStream, 10);
           path.content = parseInt(result.groups.content, 10);
@@ -548,7 +551,7 @@ const convertContextToPath = (errorContext = '') : ConvertContextToPathReturn=> 
     }
 
     if (contextString.includes('contentItem')) {
-      let path:pathObject;
+      let path: pathObject;
       contextString.split('/').forEach(nodeString => {
         if (nodeString.includes('page')) {
           path.pageIndex = parseInt(nodeString.split(/[[\]]/)[1], 10);
@@ -558,7 +561,7 @@ const convertContextToPath = (errorContext = '') : ConvertContextToPathReturn=> 
       });
       return path;
     } else if (contextString.includes('annots')) {
-      let path:pathObject;
+      let path: pathObject;
       contextString.split('/').forEach(nodeString => {
         if (nodeString.includes('page')) {
           path.pageIndex = parseInt(nodeString.split(/[[\]]/)[1], 10);
@@ -569,10 +572,10 @@ const convertContextToPath = (errorContext = '') : ConvertContextToPathReturn=> 
       return path;
     }
 
-    let contextStringArray:string[] = contextString.split('PDStructTreeRoot)/')[1].split('/'); // cut path before start of Document
+    let contextStringArray: string[] = contextString.split('PDStructTreeRoot)/')[1].split('/'); // cut path before start of Document
     contextStringArray.forEach(nodeString => {
       const nextIndex = parseInt(nodeString.split('](')[0].split('K[')[1], 10);
-      let nextTag:string|string[] = nodeString.split('(')[1].split(')')[0].split(' ');
+      let nextTag: string | string[] = nodeString.split('(')[1].split(')')[0].split(' ');
       nextTag = nextTag[nextTag.length - 1];
 
       arrayOfNodes = [...arrayOfNodes, [nextIndex, nextTag]];
@@ -637,12 +640,12 @@ export const getBboxForGlyph = (
 
 export const parseMcidToBbox = (listOfMcid, pageMap, annotations, viewport, rotateAngle) => {
   type coordsObject = {
-    x:number
-    y:number
-    width:number
-    height:number
-  }
-  let coords:coordsObject;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  let coords: coordsObject = { x: undefined, y: undefined, width: undefined, height: undefined };
 
   if (listOfMcid instanceof Array) {
     listOfMcid.forEach(mcid => {
