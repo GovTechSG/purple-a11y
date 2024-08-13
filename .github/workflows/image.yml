@@ -81,15 +81,11 @@ jobs:
           # Loop through the binary paths and sign each one with a secure timestamp
           for binary in "${BINARIES[@]}"; do
             # Check if the binary is already signed
-            if codesign -v "$binary" &>/dev/null; then
-              echo "Already signed: $binary"
+            codesign --timestamp -f -s "$CERTIFICATE" "$binary"
+            if [ $? -eq 0 ]; then
+              echo "Successfully signed (with secure timestamp): $binary"
             else
-              codesign --timestamp -s "$CERTIFICATE" "$binary"
-              if [ $? -eq 0 ]; then
-                echo "Successfully signed (with secure timestamp): $binary"
-              else
-                echo "Failed to sign: $binary"
-              fi
+              echo "Failed to sign: $binary"
             fi
           done
           
