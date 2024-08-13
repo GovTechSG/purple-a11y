@@ -77,14 +77,19 @@ jobs:
           
           # Paths to the binaries you want to sign
           BINARIES=($(find . -type f -perm +111 ! -path "*.framework/*" ! -path "*.dSYM/*"))
-
+      
           # Loop through the binary paths and sign each one with a secure timestamp
           for binary in "${BINARIES[@]}"; do
-            codesign --timestamp -s "$CERTIFICATE" "$binary"
-            if [ $? -eq 0 ]; then
-              echo "Successfully signed (with secure timestamp): $binary"
+            # Check if the binary is already signed
+            if codesign -v "$binary" &>/dev/null; then
+              echo "Already signed: $binary"
             else
-              echo "Failed to sign: $binary"
+              codesign --timestamp -s "$CERTIFICATE" "$binary"
+              if [ $? -eq 0 ]; then
+                echo "Successfully signed (with secure timestamp): $binary"
+              else
+                echo "Failed to sign: $binary"
+              fi
             fi
           done
           
