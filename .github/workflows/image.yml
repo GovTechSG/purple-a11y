@@ -69,7 +69,25 @@ jobs:
       - name: Install Purple dependencies for MacOS
         run: |
           ./install_purple_dependencies.command
-        
+
+      - name: Sign required binaries for MacOS
+        run: |
+          # Find a valid signing certificate in your keychain
+          CERTIFICATE=$(security find-identity -v -p codesigning -s - | tail -n +2 | grep -o '"[^"]*"' | sed 's/"//g')
+          
+          # Paths to the binaries you want to sign
+          BINARIES=($(find . -type f -perm +111 ! -path "*.framework/*" ! -path "*.dSYM/*"))
+
+          # Loop through the binary paths and sign each one with a secure timestamp
+          for binary in "${BINARIES[@]}"; do
+            codesign --timestamp -s "$CERTIFICATE" "$binary"
+            if [ $? -eq 0 ]; then
+              echo "Successfully signed (with secure timestamp): $binary"
+            else
+              echo "Failed to sign: $binary"
+            fi
+          done
+          
       - name: Zip entire Purple folder (Mac)
         run: |
           zip purple-a11y-portable-mac.zip -y -r ./
