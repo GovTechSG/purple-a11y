@@ -7,7 +7,6 @@
     "#root/*.js": "./dist/*.js"
   },
   "dependencies": {
-    "@crawlee/core": "github:GovTechSG/crawlee-core",
     "@json2csv/node": "^7.0.3",
     "@napi-rs/canvas": "^0.1.53",
     "axe-core": "^4.9.1",
@@ -56,6 +55,7 @@
     "typescript-eslint": "^7.14.1"
   },
   "overrides": {
+    "@crawlee/core": "github:GovTechSG/crawlee-core",
     "node-fetch": "^2.3.0",
     "json5": "^2.2.3",
     "ansi-regex": "^5.0.1",
