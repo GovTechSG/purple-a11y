@@ -27,7 +27,7 @@ import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
 import type { BrowserContext, ElementHandle, Frame, Page } from 'playwright';
 import request from 'sync-request-curl';
-import { ViewportSettingsClass } from '#root/combine.js';
+import { ViewportSettingsClass } from '../combine.js';
 import type { EnqueueLinksOptions, RequestOptions } from 'crawlee';
 import type { BatchAddRequestsResult } from '@crawlee/types';
 import axios from 'axios';

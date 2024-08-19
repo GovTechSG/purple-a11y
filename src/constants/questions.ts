@@ -1,4 +1,4 @@
-import { Answers } from '#root/index.js';
+import { Answers } from '../index.js';
 import { Question } from 'inquirer';
 import { getUserDataTxt } from '../utils.js';
 import {
