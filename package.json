@@ -55,7 +55,7 @@
     "typescript-eslint": "^7.14.1"
   },
   "overrides": {
-    "@crawlee/core": "github:GovTechSG/crawlee-core",
+    "@crawlee/core": "github:shioju/crawlee-core",
     "node-fetch": "^2.3.0",
     "json5": "^2.2.3",
     "ansi-regex": "^5.0.1",
