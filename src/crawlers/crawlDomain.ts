@@ -166,8 +166,8 @@ const crawlDomain = async (
             req.url = encodeURI(req.url);
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
 
-            const processible = await isProcessibleUrl(req.url);
-            if (!processible) return null;
+            // const processible = await isProcessibleUrl(req.url);
+            // if (!processible) return null;
           } catch (e) {
             silentLogger.error(e);
           }
