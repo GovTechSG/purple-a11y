@@ -26,7 +26,6 @@ import { handlePdfDownload, runPdfScan, mapPdfScanResults, doPdfScreenshots } fr
 import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
 import type { BrowserContext, ElementHandle, Frame, Page } from 'playwright';
-import request from 'sync-request-curl';
 import { ViewportSettingsClass } from '#root/combine.js';
 import type { EnqueueLinksOptions, RequestOptions } from 'crawlee';
 import type { BatchAddRequestsResult } from '@crawlee/types';
@@ -113,43 +112,6 @@ const crawlDomain = async (
     });
   }
 
-  const isProcessibleUrl = async (url: string): Promise<boolean> => {
-    try {
-      const response = await axios.head(url, { headers: { Authorization: authHeader } });
-      const contentType = response.headers['content-type'] || '';
-
-      if (!contentType.includes('text/html') && !contentType.includes('application/pdf')) {
-        silentLogger.info(`Skipping MIME type ${contentType} at URL ${url}`);
-        return false;
-      }
-
-      // further check for zip files where the url ends with .zip
-      if (url.endsWith('.zip')) {
-        silentLogger.info(`Checking for zip file magic number at URL ${url}`);
-        // download first 4 bytes of file to check the magic number
-        const response = await axios.get(url, {
-          headers: { Range: 'bytes=0-3', Authorization: authHeader },
-        });
-        // check using startsWith because some server does not handle Range header and returns the whole file
-        if (response.data.startsWith('PK\x03\x04')) {
-          // PK\x03\x04 is the magic number for zip files
-          silentLogger.info(`Skipping zip file at URL ${url}`);
-          return false;
-        } else {
-          // print out the hex value of the first 4 bytes
-          silentLogger.info(
-            `Not skipping ${url} as it has magic number: ${response.data.slice(0, 4).toString('hex')}`,
-          );
-        }
-      }
-    } catch (e) {
-      silentLogger.error(`Error checking the MIME type of ${url}: ${e.message}`);
-      // when failing to check the MIME type (e.g. need to go through proxy), let crawlee handle the request
-      return true;
-    }
-    return true;
-  };
-
   const enqueueProcess = async (
     page: Page,
     enqueueLinks: (options: EnqueueLinksOptions) => Promise<BatchAddRequestsResult>,
@@ -161,13 +123,10 @@ const crawlDomain = async (
         selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
         strategy,
         requestQueue,
-        transformRequestFunction: async (req: RequestOptions): Promise<RequestOptions | null> => {
+        transformRequestFunction: (req: RequestOptions): RequestOptions | null => {
           try {
             req.url = encodeURI(req.url);
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-
-            const processible = await isProcessibleUrl(req.url);
-            if (!processible) return null;
           } catch (e) {
             silentLogger.error(e);
           }
