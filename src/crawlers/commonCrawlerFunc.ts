@@ -167,7 +167,7 @@ export const runAxeScript = async (
 
       axe.configure({
         branding: {
-          application: 'purple-a11y',
+          application: 'oobee',
         },
         rules: [
           { id: 'target-size', enabled: true },

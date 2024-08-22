@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "a11y Shell - Created By younglim - NO WARRANTY PROVIDED"
+echo "oobee Shell - Created By younglim - NO WARRANTY PROVIDED"
 echo "================================================================"
 echo ""
 
@@ -31,8 +31,8 @@ fi
 export PATH="$PATH_TO_NODE:$PATH"
 
 echo "INFO: Set path to node_modules for this session"
-if find ./purple-a11y -name "node_modules" -maxdepth 1 -type l -ls &> /dev/null; then
-    export PATH="$PWD/purple-a11y/node_modules/.bin:$PATH"
+if find ./oobee -name "node_modules" -maxdepth 1 -type l -ls &> /dev/null; then
+    export PATH="$PWD/oobee/node_modules/.bin:$PATH"
 else
     export PATH="$PWD/node_modules/.bin:$PATH"
 fi

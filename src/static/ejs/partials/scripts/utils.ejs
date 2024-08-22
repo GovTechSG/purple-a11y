@@ -6,8 +6,8 @@
     return tempContainer.firstChild;
   }
 
-  const purpleAiHtmlETL = <%- purpleAi.htmlETL %>;
-  const purpleAiRules = <%- JSON.stringify(purpleAi.rules) %>;
+  const oobeeAiHtmlETL = <%- oobeeAi.htmlETL %>;
+  const oobeeAiRules = <%- JSON.stringify(oobeeAi.rules) %>;
 
   // extract tagname and attribute name from html tag
   // e.g. ["input", "type", "value", "role"] from <input type="text" value="..." role="..." />
@@ -217,14 +217,14 @@
   const api = memoizeApiCall();
 
   const apiUrls = {
-    catalog: 'https://govtechsg.github.io/purple-ai/catalog.json',
-    getRuleIdData: (ruleId) => `https://govtechsg.github.io/purple-ai/results/${ruleId}.json`
+    catalog: 'https://govtechsg.github.io/oobee-ai/catalog.json',
+    getRuleIdData: (ruleId) => `https://govtechsg.github.io/oobee-ai/results/${ruleId}.json`
   }
 
   const isOffline = () => !window.navigator.onLine;
 
   const checkPurpleAiQueryLabel = async (ruleId, ruleHtml) => {
-    const purpleAiQueryLabel = {
+    const oobeeAiQueryLabel = {
       label: null, 
       hasNetworkError: false,
       hasGenericError: false
@@ -233,7 +233,7 @@
     return api(apiUrls.catalog).then(catalogData => {
         // no information for current rule
         if (!catalogData[ruleId] || catalogData[ruleId].length === 0) {
-          return purpleAiQueryLabel;
+          return oobeeAiQueryLabel;
         }
 
         if (rulesUsingRoles.includes(ruleId)) {
@@ -244,18 +244,18 @@
           if (roleForHtml) {
             const currentLabel = `${htmlElement}_${roleForHtml}`.trim();
             const foundLabel = catalogData[ruleId].find(label => label === currentLabel);
-            purpleAiQueryLabel.label = foundLabel ? escapeHtmlForAI(currentLabel) : null;
-            return purpleAiQueryLabel;
+            oobeeAiQueryLabel.label = foundLabel ? escapeHtmlForAI(currentLabel) : null;
+            return oobeeAiQueryLabel;
           }
         }
 
         // e.g. li_aria-controls_aria-selected_role
-        const currentLabelList = getHtmlTagAndAttributes(purpleAiHtmlETL(ruleHtml));
+        const currentLabelList = getHtmlTagAndAttributes(oobeeAiHtmlETL(ruleHtml));
         const currentLabel = currentLabelList.join('_');
 
         if (catalogData[ruleId].includes(currentLabel)) {
-          purpleAiQueryLabel.label = escapeHtmlForAI(currentLabel);
-          return purpleAiQueryLabel;
+          oobeeAiQueryLabel.label = escapeHtmlForAI(currentLabel);
+          return oobeeAiQueryLabel;
         }
 
         // count the number of elements in keyArr that
@@ -269,8 +269,8 @@
           return attrMatch.length >= 3;
         })
 
-        purpleAiQueryLabel.label = foundLabel ? escapeHtmlForAI(foundLabel) : null;
-        return purpleAiQueryLabel;
+        oobeeAiQueryLabel.label = foundLabel ? escapeHtmlForAI(foundLabel) : null;
+        return oobeeAiQueryLabel;
       })
       .catch(err => {
         console.error(`An error has occurred while checking if ${ruleId} needs AI query`);
@@ -291,8 +291,8 @@
   }
 
   const handleOfflinePurpleAi = async (ruleId, accordionDiv, html, buttonsDiv, aiErrorDiv) => {
-    let purpleAiQueryLabel = await checkPurpleAiQueryLabel(ruleId, html);
-    if (purpleAiQueryLabel.hasNetworkError) {
+    let oobeeAiQueryLabel = await checkPurpleAiQueryLabel(ruleId, html);
+    if (oobeeAiQueryLabel.hasNetworkError) {
       document
         .getElementById(aiErrorDiv)
         .replaceChildren(
@@ -300,7 +300,7 @@
             `<div class="generateAiError">This feature requires internet connection. Please try again</div>`,
           ),
         );
-    } else if (purpleAiQueryLabel.hasNetworkError) {
+    } else if (oobeeAiQueryLabel.hasNetworkError) {
       document
         .getElementById(aiErrorDiv)
         .replaceChildren(
@@ -308,10 +308,10 @@
             `<div class="generateAiError">Something went wrong. Please try again</div>`,
           ),
         );
-    } else if (!purpleAiQueryLabel.label) {
+    } else if (!oobeeAiQueryLabel.label) {
       document.getElementById(accordionDiv).innerHTML = `<span class="processAI">Processing AI suggestions, please check back later.</span>`
     } else {
-      await getPurpleAiAnswer(ruleId, accordionDiv, purpleAiQueryLabel.label, buttonsDiv, aiErrorDiv);
+      await getPurpleAiAnswer(ruleId, accordionDiv, oobeeAiQueryLabel.label, buttonsDiv, aiErrorDiv);
     }
   }
 

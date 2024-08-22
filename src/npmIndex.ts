@@ -32,7 +32,7 @@ export const init = async (
   scanAboutMetadata = undefined,
   zip = undefined,
 ) => {
-  console.log('Starting Purple A11y');
+  console.log('Starting Oobee');
 
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
   const domain = new URL(entryUrl).hostname;
@@ -64,7 +64,7 @@ export const init = async (
 
   const throwErrorIfTerminated = () => {
     if (isInstanceTerminated) {
-      throw new Error('This instance of Purple A11y was terminated. Please start a new instance.');
+      throw new Error('This instance of Oobee was terminated. Please start a new instance.');
     }
   };
 
@@ -77,7 +77,7 @@ export const init = async (
     async function runA11yScan(elementsToScan = []) {
       axe.configure({
         branding: {
-          application: 'purple-a11y',
+          application: 'oobee',
         },
         rules: [{ id: 'target-size', enabled: true }],
       });
@@ -179,7 +179,7 @@ export const init = async (
 
   const terminate = async () => {
     throwErrorIfTerminated();
-    console.log('Stopping Purple A11y');
+    console.log('Stopping Oobee');
     isInstanceTerminated = true;
     scanDetails.endTime = new Date();
     scanDetails.urlsCrawled = urlsCrawled;

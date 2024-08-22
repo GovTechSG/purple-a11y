@@ -404,7 +404,7 @@ const reserveFileNameKeywords = [
 ];
 
 export default {
-  cliZipFileName: 'a11y-scan-results.zip',
+  cliZipFileName: 'oobee-scan-results.zip',
   exportDirectory: `${process.cwd()}`,
   maxRequestsPerCrawl,
   maxConcurrency: 25,

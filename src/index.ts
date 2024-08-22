@@ -125,7 +125,7 @@ const userData = getUserDataTxt();
 if (userData) {
   printMessage(
     [
-      `Purple A11y (ver ${getVersion()})`,
+      `Oobee (ver ${getVersion()})`,
       'We recommend using Chrome browser for the best experience.',
       '',
       `Welcome back ${userData.name}!`,
@@ -144,7 +144,7 @@ if (userData) {
 } else {
   printMessage(
     [
-      `Purple A11y (ver ${getVersion()})`,
+      `Oobee (ver ${getVersion()})`,
       'We recommend using Chrome browser for the best experience.',
     ],
     {

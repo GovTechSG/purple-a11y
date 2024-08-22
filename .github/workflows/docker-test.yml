@@ -16,27 +16,27 @@ jobs:
 
     - name: Build and run Docker container
       run: |
-        # Build your Docker image (replace 'purple-a11y' and 'Dockerfile' with your image name and Dockerfile path)
-        docker build -t purple-a11y .
+        # Build your Docker image (replace 'oobee' and 'Dockerfile' with your image name and Dockerfile path)
+        docker build -t oobee .
         # Run the Docker container (adjust any options as needed)
-        docker run -dit --name purple-a11y-container purple-a11y
+        docker run -dit --name oobee-container oobee
       # Ensure the Docker container is running before running the next step
       continue-on-error: true
 
     - name: Run Node CLI command inside the Docker container
       run: |
         # Execute a webisite crawl
-        docker exec purple-a11y-container npm run cli -- -u "${{ vars.A11Y_SCAN_URL }}" -c 2 -p "${{ vars.A11Y_SCAN_MAX_NUM_PAGES }}" -t "${{ vars.A11Y_SCAN_MAX_CONCURRENCY }}" -k "${{ github.actor }}:${{ github.actor }}@users.noreply.github.com" -b chromium || true
+        docker exec oobee-container npm run cli -- -u "${{ vars.OOBEE_SCAN_URL }}" -c 2 -p "${{ vars.OOBEE_SCAN_MAX_NUM_PAGES }}" -t "${{ vars.OOBEE_SCAN_MAX_CONCURRENCY }}" -k "${{ github.actor }}:${{ github.actor }}@users.noreply.github.com" -b chromium || true
        
     - name: Print errors
       run: |
-        docker exec purple-a11y-container cat errors.txt || true
+        docker exec oobee-container cat errors.txt || true
       
     - name: Print logs
       run: |
-        docker exec purple-a11y-container cat logs/*/*.txt || true
+        docker exec oobee-container cat logs/*/*.txt || true
     - name: Copy Results from Docker Container
-      run: docker cp purple-a11y-container:/app/results ./results
+      run: docker cp oobee-container:/app/results ./results
 
     - name: Zip Results
       run: zip -r results.zip ./results
@@ -50,5 +50,5 @@ jobs:
     - name: Cleanup Docker container
       run: |
         # Stop and remove the Docker container
-        docker stop purple-a11y-container
-        docker rm purple-a11y-container
+        docker stop oobee-container
+        docker rm oobee-container

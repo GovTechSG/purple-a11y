@@ -248,20 +248,20 @@
   </ul>
   <hr class="my-4 d-none d-md-block" />
   <iframe
-    id="a11y-online-banner"
+    id="oobee-online-banner"
     title="GovTech Accessibility Enabling Team information banner"
     class="h-auto w-100"
-    src="https://govtechsg.github.io/purple-banner-embeds/"
+    src="https://govtechsg.github.io/oobee-banner-embeds/"
     scrolling="no"
   ></iframe>
   <script>
-    const a11yOnlineBannerElem = document.getElementById('a11y-online-banner'); 
-    a11yOnlineBannerElem.style.display = 'none'; 
-    fetch('https://govtechsg.github.io/purple-banner-embeds/')
+    const oobeeOnlineBannerElem = document.getElementById('oobee-online-banner'); 
+    oobeeOnlineBannerElem.style.display = 'none'; 
+    fetch('https://govtechsg.github.io/oobee-banner-embeds/')
       .then((response) => {
         if (response.ok) {
           console.log(response);
-          a11yOnlineBannerElem.style.display = 'block';
+          oobeeOnlineBannerElem.style.display = 'block';
         }
       })
   </script>

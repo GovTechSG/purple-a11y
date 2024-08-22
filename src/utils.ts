@@ -30,8 +30,8 @@ export const isWhitelistedContentType = contentType => {
 };
 
 export const getStoragePath = (randomToken: string): string => {
-  if (process.env.PURPLE_A11Y_VERBOSE_STORAGE_PATH) {
-    return `${process.env.PURPLE_A11Y_VERBOSE_STORAGE_PATH}/${randomToken}`;
+  if (process.env.OOBEE_VERBOSE_STORAGE_PATH) {
+    return `${process.env.OOBEE_VERBOSE_STORAGE_PATH}/${randomToken}`;
   }
   if (constants.exportDirectory === process.cwd()) {
     return `results/${randomToken}`;
@@ -77,18 +77,18 @@ export const createDetailsAndLogs = async (randomToken) => {
 export const getUserDataFilePath = () => {
   const platform = os.platform();
   if (platform === 'win32') {
-    return path.join(process.env.APPDATA, 'Purple A11y', 'userData.txt');
+    return path.join(process.env.APPDATA, 'Oobee', 'userData.txt');
   } else if (platform === 'darwin') {
     return path.join(
       process.env.HOME,
       'Library',
       'Application Support',
-      'Purple A11y',
+      'Oobee',
       'userData.txt',
     );
   } else {
     // linux and other OS
-    return path.join(process.env.HOME, '.config', 'purple-a11y', 'userData.txt');
+    return path.join(process.env.HOME, '.config', 'oobee', 'userData.txt');
   }
 };
 

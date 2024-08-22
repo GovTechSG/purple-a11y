@@ -6,44 +6,44 @@ on:
     types: [published]
 
 jobs:
-  windows-install-purple:
+  windows-install-oobee:
     runs-on: windows-latest
 
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
-          path: purple-a11y
+          path: oobee
 
       - name: Copy scripts to parent directory
         run: |
-          cp ${{github.workspace}}/purple-a11y/scripts/*.ps1 ${{github.workspace}}
-          cp ${{github.workspace}}/purple-a11y/scripts/*.cmd ${{github.workspace}}      
-          cp ${{github.workspace}}/purple-a11y/scripts/*.xml ${{github.workspace}}  
+          cp ${{github.workspace}}/oobee/scripts/*.ps1 ${{github.workspace}}
+          cp ${{github.workspace}}/oobee/scripts/*.cmd ${{github.workspace}}      
+          cp ${{github.workspace}}/oobee/scripts/*.xml ${{github.workspace}}  
           
       - name: Install Purple dependencies for Windows
         shell: pwsh
-        run: powershell.exe -NoProfile -ExecutionPolicy Bypass "& ${{github.workspace}}\install_purple_dependencies.ps1"     
+        run: powershell.exe -NoProfile -ExecutionPolicy Bypass "& ${{github.workspace}}\install_oobee_dependencies.ps1"     
         working-directory:  ${{github.workspace}}
 
       - name: Zip entire Purple folder (Windows)
         shell: pwsh
-        run: Compress-Archive -Path ${{github.workspace}}/* -DestinationPath purple-a11y-portable-windows.zip
+        run: Compress-Archive -Path ${{github.workspace}}/* -DestinationPath oobee-portable-windows.zip
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v3
         with:
-          name: purple-a11y-portable-windows
-          path: ./purple-a11y-portable-windows.zip
+          name: oobee-portable-windows
+          path: ./oobee-portable-windows.zip
 
       - name: Release Windows artifact
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            purple-a11y-portable-windows.zip
+            oobee-portable-windows.zip
             
-  mac-install-purple:
+  mac-install-oobee:
     runs-on: self-hosted
     environment: macos
     
@@ -56,19 +56,19 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
-          path: purple-a11y
+          path: oobee
       
       - name: Grant execute permissions for user
         run: chmod ugo+rwx ./scripts/*.command ./scripts/*.sh
-        working-directory: purple-a11y
+        working-directory: oobee
 
       - name: Copy scripts to parent directory
         run: |
-          cp ./purple-a11y/scripts/{*.command,*.sh,*.xml}  ${{ github.workspace }}
+          cp ./oobee/scripts/{*.command,*.sh,*.xml}  ${{ github.workspace }}
 
       - name: Install Purple dependencies for MacOS
         run: |
-          ./install_purple_dependencies.command
+          ./install_oobee_dependencies.command
 
       - name: Sign required binaries for MacOS
         run: |
@@ -91,17 +91,17 @@ jobs:
           
       - name: Zip entire Purple folder (Mac)
         run: |
-          zip purple-a11y-portable-mac.zip -y -r ./
+          zip oobee-portable-mac.zip -y -r ./
       
       - name: Upload Mac artifact
         uses: actions/upload-artifact@v3
         with:
-          name: purple-a11y-portable-mac
-          path: ./purple-a11y-portable-mac.zip
+          name: oobee-portable-mac
+          path: ./oobee-portable-mac.zip
           
       - name: Release Mac artifact
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            purple-a11y-portable-mac.zip
+            oobee-portable-mac.zip
