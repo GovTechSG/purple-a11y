@@ -1,6 +1,6 @@
 # Oobee
 
-[Oobee](https://go.gov.sg/oobee-cli) is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).
+[Oobee](https://go.gov.sg/oobee-cli) (formerly known as Purple A11y) is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).
 
 This is the engine and command-line interface (CLI) for Oobee.  For a desktop graphical user interface (GUI), check out [Oobee Desktop](https://go.gov.sg/oobee). The official application can only be downloaded at [https://go.gov.sg/oobee-cicd](https://go.gov.sg/oobee-cicd). We recommend that you download the software only from the official link, as other sources and/or third party links may pose risks and/or compromise your system.
 

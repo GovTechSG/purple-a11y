@@ -1,6 +1,6 @@
 ## Integrating Oobee with end-to-end testing frameworks
 
-Oobee provides functionalities that makes it possible to be integrated with end-to-end testing frameworks such as [Cypress](https://www.cypress.io/) and [Playwright](https://playwright.dev/).
+Oobee (formerly known as Purple A11y) provides functionalities that makes it possible to be integrated with end-to-end testing frameworks such as [Cypress](https://www.cypress.io/) and [Playwright](https://playwright.dev/).
 
 ### Prerequisites
 

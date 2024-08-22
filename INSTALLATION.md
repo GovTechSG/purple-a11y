@@ -1,6 +1,6 @@
 ## Installation Guide
 
-Oobee is provided as a portable distribution which minimises installation steps required for Windows and Mac.
+Oobee (formerly known as Purple A11y) is provided as a portable distribution which minimises installation steps required for Windows and Mac.
 
 ### About Oobee
 Oobee is a customisable, automated accessibility testing tool that allows software development teams to find and fix accessibility problems to improve persons with disabilities (PWDs) access to digital services.
