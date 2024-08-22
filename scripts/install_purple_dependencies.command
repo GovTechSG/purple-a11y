@@ -85,7 +85,7 @@ if [ -d "node_modules" ]; then
 fi
 
 echo "Installing Node dependencies to $PWD"
-npm ci
+npm install --force --omit=dev
 
 echo "Build TypeScript"
 npm run build || true
