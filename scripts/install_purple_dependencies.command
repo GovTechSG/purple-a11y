@@ -87,5 +87,12 @@ fi
 echo "Installing Node dependencies to $PWD"
 npm install --force --omit=dev
 
+# Add additional canvas dependency in x64 mode
+if [ "$(uname -m)" = "arm64" ]; then
+    # Prepend node-mac-x64 to the PATH
+    export PATH="$PWD/nodejs-mac-x64/bin:$PATH"
+    arch -x86_64 npm install --force --omit=dev
+fi
+
 echo "Build TypeScript"
 npm run build || true

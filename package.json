@@ -61,13 +61,13 @@
     "micromatch": "github:micromatch/micromatch.git#4.0.7"
   },
   "optionalDependencies": {
-    "@napi-rs/canvas-darwin-arm64": "0.1.53",
+    "@napi-rs/canvas-darwin-arm64": "^0.1.53",
     "@napi-rs/canvas-darwin-x64": "0.1.53",
-    "@napi-rs/canvas-win32-x64-msvc": "0.1.53",
-    "@napi-rs/canvas-linux-x64-gnu": "0.1.53",
     "@napi-rs/canvas-linux-arm64-gnu": "0.1.53",
     "@napi-rs/canvas-linux-arm64-musl": "0.1.53",
-    "@napi-rs/canvas-linux-x64-musl": "0.1.53"
+    "@napi-rs/canvas-linux-x64-gnu": "0.1.53",
+    "@napi-rs/canvas-linux-x64-musl": "0.1.53",
+    "@napi-rs/canvas-win32-x64-msvc": "0.1.53"
   },
   "scripts": {
     "build": "npm run copyfiles && tsc",
