@@ -22,11 +22,15 @@ import {
   waitForPageLoaded,
 } from '../constants/common.js';
 import { areLinksEqual, isFollowStrategy } from '../utils.js';
-import { handlePdfDownload, runPdfScan, mapPdfScanResults, doPdfScreenshots } from './pdfScanFunc.js';
+import {
+  handlePdfDownload,
+  runPdfScan,
+  mapPdfScanResults,
+  doPdfScreenshots,
+} from './pdfScanFunc.js';
 import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
 import type { BrowserContext, ElementHandle, Frame, Page } from 'playwright';
-import request from 'sync-request-curl';
 import { ViewportSettingsClass } from '../combine.js';
 import type { EnqueueLinksOptions, RequestOptions } from 'crawlee';
 import type { BatchAddRequestsResult } from '@crawlee/types';
@@ -113,13 +117,20 @@ const crawlDomain = async (
     });
   }
 
+  const httpHeadCache = new Map<string, boolean>();
   const isProcessibleUrl = async (url: string): Promise<boolean> => {
+    if (httpHeadCache.has(url)) {
+      silentLogger.info('cache hit', url, httpHeadCache.get(url));
+      return false; // return false to avoid processing the url again
+    }
+
     try {
       const response = await axios.head(url, { headers: { Authorization: authHeader } });
       const contentType = response.headers['content-type'] || '';
 
       if (!contentType.includes('text/html') && !contentType.includes('application/pdf')) {
         silentLogger.info(`Skipping MIME type ${contentType} at URL ${url}`);
+        httpHeadCache.set(url, false);
         return false;
       }
 
@@ -134,6 +145,7 @@ const crawlDomain = async (
         if (response.data.startsWith('PK\x03\x04')) {
           // PK\x03\x04 is the magic number for zip files
           silentLogger.info(`Skipping zip file at URL ${url}`);
+          httpHeadCache.set(url, false);
           return false;
         } else {
           // print out the hex value of the first 4 bytes
@@ -145,8 +157,10 @@ const crawlDomain = async (
     } catch (e) {
       silentLogger.error(`Error checking the MIME type of ${url}: ${e.message}`);
       // when failing to check the MIME type (e.g. need to go through proxy), let crawlee handle the request
+      httpHeadCache.set(url, true);
       return true;
     }
+    httpHeadCache.set(url, true);
     return true;
   };
 
@@ -166,8 +180,8 @@ const crawlDomain = async (
             req.url = encodeURI(req.url);
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
 
-            // const processible = await isProcessibleUrl(req.url);
-            // if (!processible) return null;
+            const processible = await isProcessibleUrl(req.url);
+            if (!processible) return null;
           } catch (e) {
             silentLogger.error(e);
           }
