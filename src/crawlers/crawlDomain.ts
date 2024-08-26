@@ -461,7 +461,7 @@ const crawlDomain = async (
 
         // if URL has already been scanned
         if (urlsCrawled.scanned.some(item => item.url === request.url)) {
-          await enqueueProcess(page, enqueueLinks, browserContext);
+          // await enqueueProcess(page, enqueueLinks, browserContext);
           return;
         }
 
