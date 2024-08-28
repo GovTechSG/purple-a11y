@@ -175,7 +175,7 @@ const crawlDomain = async (
         selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
         strategy,
         requestQueue,
-        transformRequestFunction: (req: RequestOptions): RequestOptions | null => {
+        transformRequestFunction: async (req: RequestOptions): Promise<false | RequestOptions> => {
           try {
             req.url = encodeURI(req.url);
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
