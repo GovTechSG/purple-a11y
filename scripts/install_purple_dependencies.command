@@ -85,7 +85,17 @@ if [ -d "node_modules" ]; then
 fi
 
 echo "Installing Node dependencies to $PWD"
-npm ci
+npm install --force --omit=dev
+
+# Add additional canvas dependency in x64 mode
+if [ "$(uname -m)" = "arm64" ] && /usr/bin/pgrep oahd >/dev/null 2>&1; then
+    if [ -f package.json ]; then
+      export PATH="$(dirname "$PWD")/nodejs-mac-x64/bin:$PATH"
+    else
+      export PATH="$PWD/nodejs-mac-x64/bin:$PATH"
+    fi
+    arch -x86_64 npm install @napi-rs/canvas-darwin-x64@0.1.53 --force --omit=dev
+fi
 
 echo "Build TypeScript"
 npm run build || true

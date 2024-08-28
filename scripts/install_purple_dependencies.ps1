@@ -64,7 +64,7 @@ if (Test-Path -Path .\jdk -PathType Container) {
 # Install Node dependencies
 if (Test-Path purple-a11y) {
     Write-Output "Installing node dependencies"
-    & ".\a11y_shell_ps.ps1" "cd purple-a11y;npm ci --force;cd .."
+    & ".\a11y_shell_ps.ps1" "cd purple-a11y;npm install --force --omit=dev;cd .."
 
     # Omit installing Playwright browsers as it is not reuqired
     # Write-Output "Install Playwright browsers"
@@ -87,7 +87,7 @@ if (Test-Path purple-a11y) {
 
     if (Test-Path package.json) {
         Write-Output "Installing node dependencies"
-        & ".\a11y_shell_ps.ps1" "npm ci --force" 
+        & ".\a11y_shell_ps.ps1" "npm install --force --omit=dev" 
 
         Write-Output "Install Playwright browsers"
         & "npx playwright install chromium"

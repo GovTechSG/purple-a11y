@@ -175,13 +175,10 @@ const crawlDomain = async (
         selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
         strategy,
         requestQueue,
-        transformRequestFunction: async (req: RequestOptions): Promise<RequestOptions | null> => {
+        transformRequestFunction: (req: RequestOptions): RequestOptions | null => {
           try {
             req.url = encodeURI(req.url);
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-
-            const processible = await isProcessibleUrl(req.url);
-            if (!processible) return null;
           } catch (e) {
             silentLogger.error(e);
           }
