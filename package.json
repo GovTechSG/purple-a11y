@@ -1,7 +1,7 @@
 {
   "name": "@govtechsg/purple-hats",
   "main": "dist/npmIndex.js",
-  "version": "0.10.11",
+  "version": "0.10.12",
   "type": "module",
   "dependencies": {
     "@json2csv/node": "^7.0.3",

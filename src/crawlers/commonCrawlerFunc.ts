@@ -169,8 +169,48 @@ export const runAxeScript = async (
         branding: {
           application: 'purple-a11y',
         },
+        // Add custom img alt text check
+        checks: [
+          {
+            id: 'confusing-alt-text-check',
+            evaluate: function(node: HTMLElement) {
+              const altText = node.getAttribute('alt');
+              const confusingTexts = ['img', 'image', 'picture', 'photo', 'graphic'];
+      
+              if (altText) {
+                const trimmedAltText = altText.trim().toLowerCase();
+                if (confusingTexts.includes(trimmedAltText) || trimmedAltText.length < 5) {
+                  return false; // Fail the check if the alt text is confusing or not useful
+                }
+              }
+      
+              return true; // Pass the check if the alt text seems appropriate
+            },
+            metadata: {
+              impact: 'serious', // Set the severity to serious
+              messages: {
+                pass: 'The image alt text is probably useful',
+                fail: 'The image alt text is confusing or not useful',
+              }
+            }
+          }
+        ],
         rules: [
           { id: 'target-size', enabled: true },
+          {
+            id: 'confusing-alt-text',
+            selector: 'img[alt]',
+            enabled: true,
+            any: ['confusing-alt-text-check'],
+            all: [],
+            none: [],
+            tags: ['wcag2a', 'wcag111'],
+            metadata: {
+              description: 'Ensures image alt text is clear and useful',
+              help: 'Image alt text must not be vague or unhelpful',
+              helpUrl: 'https://www.deque.com/blog/great-alt-text-introduction/'
+            }
+          }
         ]
       });
 
