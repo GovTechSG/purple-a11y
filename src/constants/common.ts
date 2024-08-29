@@ -30,7 +30,7 @@ import constants, {
 import { silentLogger } from '../logs.js';
 import { isUrlPdf } from '../crawlers/commonCrawlerFunc.js';
 import { randomThreeDigitNumberString } from '../utils.js';
-import { Answers, Data } from '#root/index.js';
+import { Answers, Data } from '../index.js';
 import { fileURLToPath, pathToFileURL } from 'url';
 
 // validateDirPath validates a provided directory path

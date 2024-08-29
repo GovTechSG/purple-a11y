@@ -6,8 +6,8 @@ import assert from 'assert';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { silentLogger } from '../logs.js';
-import { TransformedRuleObject } from '#root/crawlers/pdfScanFunc.js';
-import { IBboxLocation, StructureTree, ViewportSize } from '#root/types/types.js';
+import { TransformedRuleObject } from '../crawlers/pdfScanFunc.js';
+import { IBboxLocation, StructureTree, ViewportSize } from '../types/types.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
