@@ -179,7 +179,8 @@ export const runAxeScript = async (
       
               if (altText) {
                 const trimmedAltText = altText.trim().toLowerCase();
-                if (confusingTexts.includes(trimmedAltText) || trimmedAltText.length < 5) {
+                // Check if the alt text exactly matches one of the confusingTexts
+                if (confusingTexts.some(text => text === trimmedAltText)) {
                   return false; // Fail the check if the alt text is confusing or not useful
                 }
               }
