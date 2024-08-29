@@ -190,7 +190,7 @@ export const runAxeScript = async (
               impact: 'serious', // Set the severity to serious
               messages: {
                 pass: 'The image alt text is probably useful',
-                fail: 'The image alt text is confusing or not useful',
+                fail: 'The image alt text set as \'img\', \'image\', \'picture\', \'photo\', or \'graphic\' is confusing or not useful',
               }
             }
           }
