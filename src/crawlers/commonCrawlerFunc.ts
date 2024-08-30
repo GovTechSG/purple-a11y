@@ -172,7 +172,7 @@ export const runAxeScript = async (
         // Add custom img alt text check
         checks: [
           {
-            id: 'confusing-alt-text-check',
+            id: 'oobee-confusing-alt-text',
             evaluate: function(node: HTMLElement) {
               const altText = node.getAttribute('alt');
               const confusingTexts = ['img', 'image', 'picture', 'photo', 'graphic'];
@@ -199,10 +199,10 @@ export const runAxeScript = async (
         rules: [
           { id: 'target-size', enabled: true },
           {
-            id: 'confusing-alt-text',
+            id: 'oobee-confusing-alt-text',
             selector: 'img[alt]',
             enabled: true,
-            any: ['confusing-alt-text-check'],
+            any: ['oobee-confusing-alt-text'],
             all: [],
             none: [],
             tags: ['wcag2a', 'wcag111'],
