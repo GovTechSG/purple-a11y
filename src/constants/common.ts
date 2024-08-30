@@ -1225,14 +1225,14 @@ const cloneChromeProfileCookieFiles = (options, destDir) => {
   if (os.platform() === 'win32') {
     profileCookiesDir = globSync('**/Network/Cookies', {
       ...options,
-      ignore: ['Purple-A11y/**'],
+      ignore: ['oobee/**'],
     });
     profileNamesRegex = /User Data\\(.*?)\\Network/;
   } else if (os.platform() === 'darwin') {
-    // maxDepth 2 to avoid copying cookies from the Purple-A11y directory if it exists
+    // maxDepth 2 to avoid copying cookies from the oobee directory if it exists
     profileCookiesDir = globSync('**/Cookies', {
       ...options,
-      ignore: 'Purple-A11y/**',
+      ignore: 'oobee/**',
     });
     profileNamesRegex = /Chrome\/(.*?)\/Cookies/;
   }
@@ -1297,18 +1297,18 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
   // Cookies file per profile is located in .../User Data/<profile name>/Network/Cookies for windows
   // and ../Chrome/<profile name>/Cookies for mac
   let profileNamesRegex;
-  // Ignores the cloned Purple-A11y directory if exists
+  // Ignores the cloned oobee directory if exists
   if (os.platform() === 'win32') {
     profileCookiesDir = globSync('**/Network/Cookies', {
       ...options,
-      ignore: 'Purple-A11y/**',
+      ignore: 'oobee/**',
     });
     profileNamesRegex = /User Data\\(.*?)\\Network/;
   } else if (os.platform() === 'darwin') {
-    // Ignores copying cookies from the Purple-A11y directory if it exists
+    // Ignores copying cookies from the oobee directory if it exists
     profileCookiesDir = globSync('**/Cookies', {
       ...options,
-      ignore: 'Purple-A11y/**',
+      ignore: 'oobee/**',
     });
     profileNamesRegex = /Microsoft Edge\/(.*?)\/Cookies/;
   }
@@ -1402,7 +1402,7 @@ const cloneLocalStateFile = (options, destDir) => {
 
 /**
  * Checks if the Chrome data directory exists and creates a clone
- * of all profile within the Purple-A11y directory located in the
+ * of all profile within the oobee directory located in the
  * .../User Data directory for Windows and
  * .../Chrome directory for Mac.
  * @param {string} randomToken - random token to append to the cloned directory
@@ -1471,7 +1471,7 @@ export const cloneChromiumProfiles = (randomToken?: string): string => {
 
 /**
  * Checks if the Edge data directory exists and creates a clone
- * of all profile within the Purple-A11y directory located in the
+ * of all profile within the oobee directory located in the
  * .../User Data directory for Windows and
  * .../Microsoft Edge directory for Mac.
  * @param {string} randomToken - random token to append to the cloned directory
@@ -1528,7 +1528,7 @@ export const deleteClonedProfiles = (browser: string, randomToken?: string): voi
 };
 
 /**
- * Deletes all the cloned Purple-A11y directories in the Chrome data directory
+ * Deletes all the cloned oobee directories in the Chrome data directory
  * @returns null
  */
 export const deleteClonedChromeProfiles = (randomToken?: string): void => {
@@ -1541,7 +1541,7 @@ export const deleteClonedChromeProfiles = (randomToken?: string): void => {
   if (randomToken) {
     destDir = [`${baseDir}/oobee-${randomToken}`];
   } else {
-    // Find all the Purple-A11y directories in the Chrome data directory
+    // Find all the oobee directories in the Chrome data directory
     destDir = globSync('**/oobee*', {
       cwd: baseDir,
       absolute: true,
@@ -1563,12 +1563,12 @@ export const deleteClonedChromeProfiles = (randomToken?: string): void => {
     return;
   }
 
-  silentLogger.warn('Unable to find Purple-A11y directory in the Chrome data directory.');
-  console.warn('Unable to find Purple-A11y directory in the Chrome data directory.');
+  silentLogger.warn('Unable to find oobee directory in the Chrome data directory.');
+  console.warn('Unable to find oobee directory in the Chrome data directory.');
 };
 
 /**
- * Deletes all the cloned Purple-A11y directories in the Edge data directory
+ * Deletes all the cloned oobee directories in the Edge data directory
  * @returns null
  */
 export const deleteClonedEdgeProfiles = (randomToken?: string): void => {
@@ -1585,7 +1585,7 @@ export const deleteClonedEdgeProfiles = (randomToken?: string): void => {
   if (randomToken) {
     destDir = [`${baseDir}/oobee-${randomToken}`];
   } else {
-    // Find all the Purple-A11y directories in the Chrome data directory
+    // Find all the oobee directories in the Chrome data directory
     destDir = globSync('**/oobee*', {
       cwd: baseDir,
       absolute: true,
@@ -1618,7 +1618,7 @@ export const deleteClonedChromiumProfiles = (randomToken?: string): void => {
   if (randomToken) {
     destDir = [`${baseDir}/oobee-${randomToken}`];
   } else {
-    // Find all the Purple-A11y directories in the Chrome data directory
+    // Find all the oobee directories in the Chrome data directory
     destDir = globSync('**/oobee*', {
       cwd: baseDir,
       absolute: true,
@@ -1640,8 +1640,8 @@ export const deleteClonedChromiumProfiles = (randomToken?: string): void => {
     return;
   }
 
-  silentLogger.warn('Unable to find Purple-A11y directory in Chromium support directory');
-  console.warn('Unable to find Purple-A11y directory in Chromium support directory');
+  silentLogger.warn('Unable to find oobee directory in Chromium support directory');
+  console.warn('Unable to find oobee directory in Chromium support directory');
 };
 
 export const getPlaywrightDeviceDetailsObject = (

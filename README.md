@@ -82,7 +82,7 @@ Oobee can perform the following to scan the target URL.
 - To **run** Oobee in **terminal**, run `npm start`. Questions will be prompted to assist you in providing the right inputs.
 - Results will be compiled in JSON format, followed by generating a HTML report.
 
-> NOTE: For your initial scan, there may be some loading time required before use. Purple-A11y will also ask for your name and email address and collect your app usage data to personalise your experience. Your information fully complies with [GovTech’s Privacy Policy](https://www.tech.gov.sg/privacy/).
+> NOTE: For your initial scan, there may be some loading time required before use. Oobee will also ask for your name and email address and collect your app usage data to personalise your experience. Your information fully complies with [GovTech’s Privacy Policy](https://www.tech.gov.sg/privacy/).
 
 #### Delete/Edit Details
 > You may delete and edit your cached name and e-mail address by running the following command to delete `userData.txt`:

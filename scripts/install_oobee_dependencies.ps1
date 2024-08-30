@@ -64,7 +64,7 @@ if (Test-Path -Path .\jdk -PathType Container) {
 # Install Node dependencies
 if (Test-Path oobee) {
     Write-Output "Installing node dependencies"
-    & ".\oobee_shell_ps.ps1" "cd purple-a11y;npm install --force --omit=dev;cd .."
+    & ".\oobee_shell_ps.ps1" "cd oobee;npm install --force --omit=dev;cd .."
 
     # Omit installing Playwright browsers as it is not reuqired
     # Write-Output "Install Playwright browsers"
