@@ -41,7 +41,7 @@ ENV PLAYWRIGHT_BROWSERS_PATH="/opt/ms-playwright"
 ENV PATH="/opt/verapdf:${PATH}"
 
 # Install dependencies
-RUN npm ci --omit=dev
+RUN npm install --force --omit=dev
 
 # Install Playwright browsers
 RUN npx playwright install chromium webkit
