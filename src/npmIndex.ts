@@ -79,7 +79,50 @@ export const init = async (
         branding: {
           application: 'purple-a11y',
         },
-        rules: [{ id: 'target-size', enabled: true }],
+        // Add custom img alt text check
+        checks: [
+          {
+            id: 'oobee-confusing-alt-text',
+            evaluate: function(node: HTMLElement) {
+              const altText = node.getAttribute('alt');
+              const confusingTexts = ['img', 'image', 'picture', 'photo', 'graphic'];
+      
+              if (altText) {
+                const trimmedAltText = altText.trim().toLowerCase();
+                // Check if the alt text exactly matches one of the confusingTexts
+                if (confusingTexts.some(text => text === trimmedAltText)) {
+                  return false; // Fail the check if the alt text is confusing or not useful
+                }
+              }
+      
+              return true; // Pass the check if the alt text seems appropriate
+            },
+            metadata: {
+              impact: 'serious', // Set the severity to serious
+              messages: {
+                pass: 'The image alt text is probably useful',
+                fail: 'The image alt text set as \'img\', \'image\', \'picture\', \'photo\', or \'graphic\' is confusing or not useful',
+              }
+            }
+          }
+        ],
+        rules: [
+          { id: 'target-size', enabled: true },
+          {
+            id: 'oobee-confusing-alt-text',
+            selector: 'img[alt]',
+            enabled: true,
+            any: ['oobee-confusing-alt-text'],
+            all: [],
+            none: [],
+            tags: ['wcag2a', 'wcag111'],
+            metadata: {
+              description: 'Ensures image alt text is clear and useful',
+              help: 'Image alt text must not be vague or unhelpful',
+              helpUrl: 'https://www.deque.com/blog/great-alt-text-introduction/'
+            }
+          }
+        ]
       });
       const axeScanResults = await axe.run(elementsToScan, {
         resultTypes: ['violations', 'passes', 'incomplete'],
