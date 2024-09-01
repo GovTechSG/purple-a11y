@@ -32,4 +32,5 @@ jre
 
 # test folders
 /test-codes
-_test-ui
+# _test-ui
+a11y-scan-results.zip
