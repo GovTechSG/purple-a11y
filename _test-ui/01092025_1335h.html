@@ -12455,6 +12455,16 @@
   #accessibility-site-report:root {
     --bs-border-color: var(--a11y-black-25);
     --bs-border-radius: 0.25rem;
+
+  }
+
+  #accessibility-site-report .btn-close {
+    --bs-btn-close-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%2393928d'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e");
+    --bs-btn-close-opacity: 1;
+  }
+
+  #accessibility-site-report .accordion {
+    --bs-accordion-btn-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23525048'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
   }
 
   #accessibility-site-report .row > * {
@@ -12468,6 +12478,10 @@
     border-width: 1px;
     border-radius: 0;
     color: unset;
+  }
+
+  .modal-content {
+    background-color: var(--true-white);
   }
 
   #scan-about.card {
