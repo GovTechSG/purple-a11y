@@ -12453,7 +12453,7 @@
 
   /* Bootstrap CSS overrides */
   #accessibility-site-report:root {
-    --bs-border-color: #b5c5ca;
+    --bs-border-color: var(--a11y-black-25);
     --bs-border-radius: 0.25rem;
   }
 
@@ -12478,14 +12478,14 @@
   #accessibility-site-report html {
     all: unset;
     font-family: 'Open Sans', 'Helvetica', sans-serif;
-    background-color: #f6f8f9;
+    background-color: var(--a11y-black-5);
     margin: 0;
     min-height: 100vh;
     line-height: 1.75rem;
   }
 
   #accessibility-site-report hr {
-    border-color: #b5c5ca;
+    border-color: var(--a11y-black-25);
     opacity: 1;
   }
 
@@ -12607,7 +12607,7 @@
     padding: 1.5rem 1rem;
     display: flex;
     align-items: center;
-    border-bottom: 1px solid #b5c5ca;
+    border-bottom: 1px solid var(--a11y-black-25);
     box-shadow: 0 3px 5px 0 #736ccb1a;
   }
 
@@ -12667,7 +12667,7 @@
     flex-wrap: nowrap;
     height: 76px;
     border-radius: 0px 0px 4px 4px;
-    border: 1px solid var(--A11Y-Grey-400, #b5c5ca);
+    border: 1px solid var(--A11Y-Grey-400, var(--a11y-black-25));
     background: var(--A11Y-Grey-100, #f6f8f9);
     max-width: 100%;
     min-width: 100%;
@@ -12680,8 +12680,8 @@
     height: 44px;
     gap: 10px;
     border-radius: 5px;
-    border: 1px solid var(--A11Y-Grey-400, #b5c5ca);
-    background: #f6f8f9;
+    border: 1px solid var(--A11Y-Grey-400, var(--a11y-black-25));
+    background: var(--a11y-black-5);
     box-sizing: border-box;
     text-align: center;
     justify-content: center;
@@ -12696,8 +12696,8 @@
     height: 44px;
     gap: 10px;
     border-radius: 4px;
-    border: 1px solid var(--A11Y-Grey-400, #b5c5ca);
-    background: #f6f8f9;
+    border: 1px solid var(--A11Y-Grey-400, var(--a11y-black-25));
+    background: var(--a11y-black-5);
     box-sizing: border-box;
     text-align: center;
     justify-content: center;
@@ -12713,8 +12713,8 @@
     height: 44px;
     gap: 10px;
     border-radius: 4px;
-    border: 1px solid var(--A11Y-Grey-400, #b5c5ca);
-    background: #f6f8f9;
+    border: 1px solid var(--A11Y-Grey-400, var(--a11y-black-25));
+    background: var(--a11y-black-5);
     box-sizing: border-box;
     text-align: center;
     justify-content: center;
@@ -13059,7 +13059,7 @@
     display: flex;
     flex-direction: column;
     padding: 0.5rem;
-    border-bottom: 1px solid #b5c5ca;
+    border-bottom: 1px solid var(--a11y-black-25);
   }
   #pagesScannedModal .nav-tabs {
     border-width: 2px !important;
@@ -13130,13 +13130,13 @@
   #scanabout-compliance-card {
     box-shadow: none;
     border-width: 1.5px;
-    border-color: #b5c5ca;
+    border-color: var(--a11y-black-25);
   }
 
   .wcag-compliance-passes-panel {
     margin: 1.5rem 0;
     padding: 1rem;
-    border: 1px solid #b5c5ca;
+    border: 1px solid var(--a11y-black-25);
     border-radius: 0.25rem;
   }
 
@@ -13254,13 +13254,13 @@
   }
 
   #top-five-card li:not(:last-of-type) {
-    border-bottom: 1px solid #b5c5ca;
+    border-bottom: 1px solid var(--a11y-black-25);
     padding-bottom: 0.5rem;
     margin-bottom: 0.5rem;
   }
 
   .category-selector {
-    border: 1px solid #b5c5ca;
+    border: 1px solid var(--a11y-black-25);
     background-color: white;
     border-radius: 0.25rem;
     padding: 1rem;
@@ -13367,7 +13367,7 @@
     width: 300px;
     padding: 1.5rem 1rem;
     word-break: break-all;
-    border-right: 1px solid #b5c5ca;
+    border-right: 1px solid var(--a11y-black-25);
   }
 
   #scan-about ul {
@@ -13429,7 +13429,7 @@
     width: 100%;
     background-color: transparent;
     border: 0;
-    border-bottom: 1px solid #b5c5ca;
+    border-bottom: 1px solid var(--a11y-black-25);
   }
 
   .rule-item:hover {
@@ -13505,8 +13505,8 @@
   }
 
   #expandedRule .offcanvas-body {
-    background-color: #f6f8f9;
-    border-top: 1px solid #b5c5ca;
+    background-color: var(--a11y-black-5);
+    border-top: 1px solid var(--a11y-black-25);
     padding: 2rem 1.5rem;
     overflow-y: unset;
   }
@@ -13612,7 +13612,7 @@
   #expandedRuleCategoryContent .accordion-button .counter {
     padding: 0.5rem;
     min-width: 61px;
-    border: 1px solid #b5c5ca;
+    border: 1px solid var(--a11y-black-25);
     border-radius: 0.375rem;
     padding: 0.25rem 0.5rem;
     font-weight: bold;
@@ -13659,7 +13659,7 @@
 
   #expandedRuleCategoryContent .accordion-body .card .needsReview {
     color: #4a6168;
-    background-color: #f6f8f9;
+    background-color: var(--a11y-black-5);
     border-bottom: 1px solid #d1dbde;
     padding: 0.5rem 1rem;
     display: flex;
@@ -13695,7 +13695,7 @@
 
   .ai-response-card {
     padding: 1rem;
-    border: 1px solid #b5c5ca;
+    border: 1px solid var(--a11y-black-25);
     background-color: #f7f6fe;
     border-radius: 4px;
   }
@@ -13759,8 +13759,8 @@
 
   #expandedRuleCategoryContent .accordion-body pre,
   .bg-grey-w-border {
-    background-color: #f6f8f9;
-    border: 1px solid #b5c5ca;
+    background-color: var(--a11y-black-5);
+    border: 1px solid var(--a11y-black-25);
     font-size: 1rem;
     padding: 0.5rem;
     white-space: normal;
@@ -13799,7 +13799,7 @@
   }
 
   #expandedRuleCategoryContent .page-items-count {
-    border: 1px solid #b5c5ca;
+    border: 1px solid var(--a11y-black-25);
     border-radius: 0.475rem;
     margin-left: 0.5rem;
     padding: 0 0.5rem;
@@ -13807,9 +13807,9 @@
 
   #summary-table-header {
     border-bottom: 3px solid var(--a11y-purple-100-light) !important;
-    border-top: 1px solid #b5c5ca;
-    border-left: 1px solid #b5c5ca;
-    border-right: 1px solid #b5c5ca;
+    border-top: 1px solid var(--a11y-black-25);
+    border-left: 1px solid var(--a11y-black-25);
+    border-right: 1px solid var(--a11y-black-25);
     border-style: solid;
     padding-left: 16px;
     padding-top: 14px;
@@ -13907,8 +13907,8 @@
   }
 
   .aiGenerateResponseButton:disabled {
-    border: 1px solid #b5c5ca;
-    color: #b5c5ca;
+    border: 1px solid var(--a11y-black-25);
+    color: var(--a11y-black-25);
   }
 
   .aiGenerateResponseButton:hover:not(:disabled) {
@@ -13969,8 +13969,8 @@
 
   .codeForAiResponse {
     display: inline-block;
-    background-color: #f6f8f9;
-    border: 1px solid #b5c5ca;
+    background-color: var(--a11y-black-5);
+    border: 1px solid var(--a11y-black-25);
     font-size: 1rem;
     padding: 0.5rem;
     white-space: normal;
@@ -14119,12 +14119,12 @@
       }
 
       &:hover {
-        border-color: #b5c5ca;
+        border-color: var(--a11y-black-25);
         background-color: #f2f6ff;
       }
 
       &:focus {
-        border-color: #b5c5ca;
+        border-color: var(--a11y-black-25);
         background-color: #f2f6ff;
       }
     }
@@ -14508,7 +14508,7 @@
           <g clip-path="url(.clip0_1630_1670)">
             <path
               d="M11.9528 2.05329C9.22079 -0.68205 4.78867 -0.68477 2.0533 2.04718C-0.682042 4.7792 -0.684795 9.21135 2.04722 11.9467C4.77917 14.6821 9.21135 14.6848 11.9467 11.9528C14.682 9.22085 14.6848 4.78863 11.9528 2.05329ZM7.00216 11.2406C6.6319 11.2406 6.33174 10.9405 6.33174 10.5702C6.33174 10.1999 6.63187 9.89976 7.00216 9.89976C7.37243 9.89976 7.67259 10.1999 7.67259 10.5702C7.67255 10.9405 7.37243 11.2406 7.00216 11.2406ZM8.09214 7.20401C7.70918 7.42788 7.67645 7.7033 7.6748 8.49691C7.6747 8.54938 7.67453 8.60233 7.67423 8.65558C7.67185 9.03068 7.36712 9.33312 6.99253 9.33312C6.99105 9.33312 6.98957 9.33312 6.98813 9.33312C6.61159 9.33074 6.3083 9.02356 6.31066 8.64699C6.31099 8.59568 6.31109 8.54468 6.31119 8.49415C6.31287 7.67852 6.31492 6.66352 7.40395 6.02694C8.27777 5.51613 8.3879 5.18059 8.28543 4.74029C8.16503 4.2231 7.69273 4.08907 7.32418 4.1312C7.20042 4.14541 6.58322 4.24724 6.58322 4.85783C6.58322 5.23431 6.27795 5.5396 5.90141 5.5396C5.52487 5.5396 5.21964 5.23431 5.21964 4.85783C5.21964 3.76416 6.02107 2.90831 7.16859 2.77656C8.35043 2.64099 9.35515 3.32135 9.61338 4.4312C9.99939 6.08915 8.61379 6.89911 8.09214 7.20401Z"
-              fill="#B5C5CA"
+              fill="#c9c8c6"
             />
           </g>
           <defs>
@@ -14532,7 +14532,7 @@
         <path d="M570.417 312.458C532.125 272.25 504.709 224.75 503.75 182.625C531.042 174.833 587.792 182.667 643.334 205.875C699.75 229.458 754.5 268.958 774.917 323.833C775.5 325.458 776.125 327.083 776.625 328.667C773.753 346.216 766.13 362.643 754.584 376.167C743.75 387.792 730.167 396.458 715.084 401.375C667.459 391.792 612.417 356.625 570.417 312.458ZM802.959 405.958C763.084 419.875 726.334 460.583 699.917 509.375C670.875 562.875 654.375 626.042 659.917 674.292C669.292 687.083 681.709 697.333 696.125 704C712.542 710.792 730.542 712.958 748.084 710.292C749.667 709.167 751 708.083 752.25 707.167C798.209 670.833 818.917 606.625 823.917 545.708C828.875 485.833 818.834 429.458 802.959 405.958ZM472.167 264.75C472.172 248.88 468.113 233.273 460.375 219.417C451.084 204.29 437.827 191.998 422.042 183.875L416.917 183.958C358.334 186.375 303.834 226.167 263.917 272.542C224.709 318.042 199.625 369.583 198.667 397.917C239.042 409.917 292.709 398.625 342.792 374.625V374.708C397.792 348.417 448.292 307 472.167 264.75ZM331.667 610.042C323.625 549.667 299.792 488.917 266.959 453.083C251.849 448.209 235.749 447.249 220.167 450.292C202.875 454.417 187.084 463.208 174.459 475.708L172.959 480.625C157.125 537.083 178.167 601.167 209.875 653.375C241.084 704.75 282.417 744.417 309.125 754.125C333.167 719.458 339.042 665 331.625 610L331.667 610.042ZM552.375 693.375C492.417 682.375 427.209 686.208 383 706.333C373.66 719.158 367.764 734.164 365.875 749.917C364.459 767.667 367.959 785.417 376 801.292C377.375 802.333 378.792 803.25 380.167 804.125C429 836.583 496.542 836.375 556.125 822.375C614.667 808.542 665.25 781.625 682.75 759.25C657.167 725.625 607.042 703.25 552.417 693.25L552.375 693.375ZM1000 500C1000 775.917 776.5 999.667 500.625 1000C224.459 1000.33 0.333706 776.75 0.000372233 500.625C-0.332961 224.458 223.25 0.333426 499.375 9.29975e-05H499.417C775.709 -0.166574 999.834 223.708 1000 500ZM935.542 500C935.417 259.25 740.125 64.2084 499.375 64.3334C258.792 64.6251 63.9587 259.875 64.2504 500.5C64.542 741.125 259.792 935.917 500.417 935.625C740.834 935.333 935.542 740.417 935.542 500Z" fill="black"/>
         </mask>
         <g mask="url(#mask0_459_43)">
-        <rect x="-291" y="-101" width="1451" height="1409" fill="#B5C5CA"/>
+        <rect x="-291" y="-101" width="1451" height="1409" fill="#c9c8c6"/>
         </g>
       </svg>
       <span id="phAppVersion">N/A</span>
@@ -14676,7 +14676,7 @@
     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
       <path
         d="M21.6143 19.5152C23.0668 17.5332 23.7173 15.0759 23.4358 12.6349C23.1543 10.1939 21.9615 7.94918 20.096 6.34987C18.2305 4.75056 15.83 3.91458 13.3746 4.00919C10.9192 4.1038 8.59012 5.12202 6.85325 6.86014C5.11637 8.59825 4.09982 10.9281 4.00697 13.3835C3.91412 15.839 4.75181 18.2389 6.35246 20.1032C7.95311 21.9676 10.1987 23.1588 12.6399 23.4386C15.0811 23.7183 17.5379 23.066 19.5188 21.6122H19.5173C19.5623 21.6722 19.6103 21.7292 19.6643 21.7847L25.4393 27.5597C25.7206 27.8411 26.1022 27.9993 26.5001 27.9995C26.898 27.9996 27.2796 27.8417 27.5611 27.5604C27.8426 27.2792 28.0008 26.8976 28.0009 26.4997C28.001 26.1018 27.8431 25.7201 27.5618 25.4387L21.7868 19.6637C21.7332 19.6094 21.6756 19.5592 21.6143 19.5137V19.5152ZM22.0013 13.7492C22.0013 14.8326 21.788 15.9054 21.3734 16.9063C20.9588 17.9072 20.3511 18.8167 19.585 19.5828C18.8189 20.3489 17.9094 20.9566 16.9085 21.3712C15.9075 21.7858 14.8348 21.9992 13.7513 21.9992C12.6679 21.9992 11.5951 21.7858 10.5942 21.3712C9.59327 20.9566 8.6838 20.3489 7.91772 19.5828C7.15163 18.8167 6.54394 17.9072 6.12934 16.9063C5.71474 15.9054 5.50135 14.8326 5.50135 13.7492C5.50135 11.5611 6.37054 9.46272 7.91772 7.91554C9.46489 6.36837 11.5633 5.49917 13.7513 5.49917C15.9394 5.49917 18.0378 6.36837 19.585 7.91554C21.1322 9.46272 22.0013 11.5611 22.0013 13.7492Z"
-        fill="#B5C5CA"
+        fill="#c9c8c6"
       />
     </svg>
   </span>
@@ -14767,7 +14767,7 @@
       <g clip-path="url(.clip0_1630_1670)">
         <path
           d="M11.9528 2.05329C9.22079 -0.68205 4.78867 -0.68477 2.0533 2.04718C-0.682042 4.7792 -0.684795 9.21135 2.04722 11.9467C4.77917 14.6821 9.21135 14.6848 11.9467 11.9528C14.682 9.22085 14.6848 4.78863 11.9528 2.05329ZM7.00216 11.2406C6.6319 11.2406 6.33174 10.9405 6.33174 10.5702C6.33174 10.1999 6.63187 9.89976 7.00216 9.89976C7.37243 9.89976 7.67259 10.1999 7.67259 10.5702C7.67255 10.9405 7.37243 11.2406 7.00216 11.2406ZM8.09214 7.20401C7.70918 7.42788 7.67645 7.7033 7.6748 8.49691C7.6747 8.54938 7.67453 8.60233 7.67423 8.65558C7.67185 9.03068 7.36712 9.33312 6.99253 9.33312C6.99105 9.33312 6.98957 9.33312 6.98813 9.33312C6.61159 9.33074 6.3083 9.02356 6.31066 8.64699C6.31099 8.59568 6.31109 8.54468 6.31119 8.49415C6.31287 7.67852 6.31492 6.66352 7.40395 6.02694C8.27777 5.51613 8.3879 5.18059 8.28543 4.74029C8.16503 4.2231 7.69273 4.08907 7.32418 4.1312C7.20042 4.14541 6.58322 4.24724 6.58322 4.85783C6.58322 5.23431 6.27795 5.5396 5.90141 5.5396C5.52487 5.5396 5.21964 5.23431 5.21964 4.85783C5.21964 3.76416 6.02107 2.90831 7.16859 2.77656C8.35043 2.64099 9.35515 3.32135 9.61338 4.4312C9.99939 6.08915 8.61379 6.89911 8.09214 7.20401Z"
-          fill="#B5C5CA"
+          fill="#c9c8c6"
         />
       </g>
       <defs>
@@ -14870,7 +14870,7 @@
           <g clip-path="url(.clip0_1630_1670)">
             <path
               d="M11.9528 2.05329C9.22079 -0.68205 4.78867 -0.68477 2.0533 2.04718C-0.682042 4.7792 -0.684795 9.21135 2.04722 11.9467C4.77917 14.6821 9.21135 14.6848 11.9467 11.9528C14.682 9.22085 14.6848 4.78863 11.9528 2.05329ZM7.00216 11.2406C6.6319 11.2406 6.33174 10.9405 6.33174 10.5702C6.33174 10.1999 6.63187 9.89976 7.00216 9.89976C7.37243 9.89976 7.67259 10.1999 7.67259 10.5702C7.67255 10.9405 7.37243 11.2406 7.00216 11.2406ZM8.09214 7.20401C7.70918 7.42788 7.67645 7.7033 7.6748 8.49691C7.6747 8.54938 7.67453 8.60233 7.67423 8.65558C7.67185 9.03068 7.36712 9.33312 6.99253 9.33312C6.99105 9.33312 6.98957 9.33312 6.98813 9.33312C6.61159 9.33074 6.3083 9.02356 6.31066 8.64699C6.31099 8.59568 6.31109 8.54468 6.31119 8.49415C6.31287 7.67852 6.31492 6.66352 7.40395 6.02694C8.27777 5.51613 8.3879 5.18059 8.28543 4.74029C8.16503 4.2231 7.69273 4.08907 7.32418 4.1312C7.20042 4.14541 6.58322 4.24724 6.58322 4.85783C6.58322 5.23431 6.27795 5.5396 5.90141 5.5396C5.52487 5.5396 5.21964 5.23431 5.21964 4.85783C5.21964 3.76416 6.02107 2.90831 7.16859 2.77656C8.35043 2.64099 9.35515 3.32135 9.61338 4.4312C9.99939 6.08915 8.61379 6.89911 8.09214 7.20401Z"
-              fill="#B5C5CA"
+              fill="#c9c8c6"
             />
           </g>
           <defs>
@@ -17002,7 +17002,7 @@
   function handleFilterMouseOut(button) {
     if (button != currentlyClickedButton) {
       button.style.background = '#FFF';
-      button.style.border = '1px solid var(--A11Y-Grey-400, #B5C5CA)';
+      button.style.border = '1px solid var(--A11Y-Grey-400, #c9c8c6)';
     }
   }
 
@@ -17347,7 +17347,7 @@
 
                 const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                 path.setAttribute("d", "M11.9528 2.05329C9.22079 -0.68205 4.78867 -0.68477 2.0533 2.04718C-0.682042 4.7792 -0.684795 9.21135 2.04722 11.9467C4.77917 14.6821 9.21135 14.6848 11.9467 11.9528C14.682 9.22085 14.6848 4.78863 11.9528 2.05329ZM7.00216 11.2406C6.6319 11.2406 6.33174 10.9405 6.33174 10.5702C6.33174 10.1999 6.63187 9.89976 7.00216 9.89976C7.37243 9.89976 7.67259 10.1999 7.67259 10.5702C7.67255 10.9405 7.37243 11.2406 7.00216 11.2406ZM8.09214 7.20401C7.70918 7.42788 7.67645 7.7033 7.6748 8.49691C7.6747 8.54938 7.67453 8.60233 7.67423 8.65558C7.67185 9.03068 7.36712 9.33312 6.99253 9.33312C6.99105 9.33312 6.98957 9.33312 6.98813 9.33312C6.61159 9.33074 6.3083 9.02356 6.31066 8.64699C6.31099 8.59568 6.31109 8.54468 6.31119 8.49415C6.31287 7.67852 6.31492 6.66352 7.40395 6.02694C8.27777 5.51613 8.3879 5.18059 8.28543 4.74029C8.16503 4.2231 7.69273 4.08907 7.32418 4.1312C7.20042 4.14541 6.58322 4.24724 6.58322 4.85783C6.58322 5.23431 6.27795 5.5396 5.90141 5.5396C5.52487 5.5396 5.21964 5.23431 5.21964 4.85783C5.21964 3.76416 6.02107 2.90831 7.16859 2.77656C8.35043 2.64099 9.35515 3.32135 9.61338 4.4312C9.99939 6.08915 8.61379 6.89911 8.09214 7.20401Z");
-                path.setAttribute("fill", "#B5C5CA");
+                path.setAttribute("fill", "#c9c8c6");
 
                 clipPath.appendChild(rect);
                 svgIcon.appendChild(clipPath);
