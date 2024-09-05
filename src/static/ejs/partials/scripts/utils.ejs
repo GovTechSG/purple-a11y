@@ -87,7 +87,7 @@
         mode: 'no-cors'
       });
 
-      // Store useful value in storage 
+      // Store useful value in storage
       let aiUsefulFeedbackLog = localStorage.getItem(storagePath);
       if (aiUsefulFeedbackLog === null) {
         aiUsefulFeedbackLog = {};
@@ -225,7 +225,7 @@
 
   const checkPurpleAiQueryLabel = async (ruleId, ruleHtml) => {
     const oobeeAiQueryLabel = {
-      label: null, 
+      label: null,
       hasNetworkError: false,
       hasGenericError: false
     }
@@ -282,8 +282,8 @@
           }
         } else {
           return {
-            label: null, 
-            hasNetworkError: false, 
+            label: null,
+            hasNetworkError: false,
             hasGenericError: true
           }
         }
@@ -367,7 +367,7 @@
                     />
                   </svg>
                   Useful
-                </button>    
+                </button>
                 <button class="aiFeedbackButton" style="margin-left:16px" onClick="logAiResponseFeedback('notUseful', '${ruleId}', '${buttonsDiv}', '${replacedRuleHtmlLabel}')">
                   <svg
                     width="16"
@@ -388,14 +388,14 @@
             document.getElementById(accordionDiv).getElementsByClassName('ai-response-card')[0].appendChild(feedbackButtonsElem);
           }
         }
-        
+
         document.querySelectorAll('.codeForAiResponse').forEach(el => {
           hljs.highlightElement(el);
         });
       }).catch((err) => {
         console.log('Error fetching AI response', err);
         document.getElementById(buttonsDiv).disabled = false;
-        document.getElementById(buttonsDiv).style = `border: 1px solid #6E52EF;color: #6E52EF;`;
+        document.getElementById(buttonsDiv).style = `border: 1px solid #9021a6;color: #9021a6;`;
         document.getElementById(buttonsDiv).textContent = 'Generate response';
         const errorMessageToDisplay = err.message === 'Network Error'
           ? 'This feature requires internet connection. Please try again'
