@@ -34,7 +34,7 @@ const yargs = _yargs(hideBin(process.argv));
 const options = yargs
   .version(false)
   .usage(
-    `Oobee version: ${appVersion}
+    `Oobee Desktop Version: ${appVersion}
 Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   )
   .strictOptions(true)
@@ -325,7 +325,7 @@ const scanInit = async (argvs: Answers): Promise<string> => {
   clonedDataDir = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
   data.userDataDirectory = clonedDataDir;
 
-  printMessage([`Oobee version: ${appVersion}`, 'Starting scan...'], messageOptions);
+  printMessage([`Oobee Desktop Version: ${appVersion}`, 'Starting scan...'], messageOptions);
 
   await combineRun(data, screenToScan);
 
