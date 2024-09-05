@@ -136,7 +136,7 @@ category summary is clicked %>
               >
               <span
                   id="${category}Title"
-                  class="d-flex align-items-center category-name fw-bold d-inline mb-0"
+                  class="d-flex align-items-center category-name fw-bold d-inline mb-0 me-2"
               >
               ${getFormattedCategoryTitle(category)}
               </span>
@@ -386,7 +386,7 @@ category summary is clicked %>
                   <button
                     aria-label="Page ${index + 1}: ${page.pageTitle}, ${page.items.length} ${page.items.length === 1 ? 'occurrence' : 'occurrences'}" class="accordion-button collapsed"
                     type="button"
-                    
+
                   >
                     <span class="sr-only visually-hidden">${page.items.length} ${page.items.length === 1 ? 'occurrence' : 'occurrences'}</span>
                     <div class="me-3">${page.metadata ? page.metadata : page.pageTitle}</div>
