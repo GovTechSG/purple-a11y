@@ -6,7 +6,7 @@
   function handleFilterMouseOver(button) {
     if (button != currentlyClickedButton) {
       button.style.background = '#f2f6ff';
-      button.style.border = '1px solid #0047fa';
+      button.style.border = '1px solid #006b8c';
     }
   }
 
@@ -16,7 +16,6 @@
       button.style.border = '1px solid var(--OOBEE-Grey-400, #B5C5CA)';
     }
   }
-
 
   function showFilter() {
     let searchFilterGroup = document.getElementById('searchFilter');
@@ -28,7 +27,6 @@
         searchFilterGroup.classList.add('search-filter-on');
         searchBarInput.classList.add('rounded-bottom-0');
       }
-
     }
   }
 
@@ -41,7 +39,7 @@
     ) {
       searchFilterGroup.classList.remove('search-filter-on');
       searchFilterGroup.classList.add('d-none');
-      searchBarInput.classList.remove('rounded-bottom-0')
+      searchBarInput.classList.remove('rounded-bottom-0');
     }
   }
 
@@ -185,19 +183,21 @@
     const occurrenceLabel = filteredItems[category].totalItems === 1 ? 'occurrence' : 'occurrences';
 
     if (category !== 'passed' && filteredItems[category].totalItems !== 0) {
-      updatedIssueOccurrence = `<strong style="color: #0047FA;">${filteredItems[category].rules.length}</strong> ${issueLabel} / <strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong> ${occurrenceLabel}`;
+      updatedIssueOccurrence = `<strong style="color: #006b8c;">${filteredItems[category].rules.length}</strong> ${issueLabel} / <strong style="color: #006b8c;">${filteredItems[category].totalItems}</strong> ${occurrenceLabel}`;
     } else if (category !== 'passed' && filteredItems[category].totalItems === 0) {
-      updatedIssueOccurrence = `<strong style="color: #0047FA;">0</strong> issues`;
+      updatedIssueOccurrence = `<strong style="color: #006b8c;">0</strong> issues`;
     } else {
-      updatedIssueOccurrence = `<strong style="color: #0047FA;">${filteredItems[category].totalItems}</strong> ${occurrenceLabel}`;
+      updatedIssueOccurrence = `<strong style="color: #006b8c;">${filteredItems[category].totalItems}</strong> ${occurrenceLabel}`;
     }
-    if (category !== 'passed') document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurrence;
+    if (category !== 'passed')
+      document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurrence;
   }
 
   function resetIssueOccurrence(filteredItems) {
     for (let category in filteredItems) {
       const issueLabel = filteredItems[category].rules.length === 1 ? 'issue' : 'issues';
-      const occurrenceLabel = filteredItems[category].totalItems === 1 ? 'occurrence' : 'occurrences';
+      const occurrenceLabel =
+        filteredItems[category].totalItems === 1 ? 'occurrence' : 'occurrences';
       let updatedIssueOccurrence = '';
       if (category !== 'passed' && filteredItems[category].totalItems !== 0) {
         updatedIssueOccurrence = `${filteredItems[category].rules.length} ${issueLabel} / ${filteredItems[category].totalItems} ${occurrenceLabel}`;
@@ -206,7 +206,8 @@
       } else {
         updatedIssueOccurrence = `${filteredItems[category].totalItems} ${occurrenceLabel}`;
       }
-      if (category !== 'passed') document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurrence;
+      if (category !== 'passed')
+        document.getElementById(`${category}ItemsInformation`).innerHTML = updatedIssueOccurrence;
     }
   }
 
@@ -230,8 +231,10 @@
       textSearchInput.textContent = searchInput.trim();
       let inWord = document.createTextNode('" in ');
       let filterCategory = document.createElement('strong');
-      filterCategory.textContent = document.querySelector(`label[for="${currentlyClickedButton.id}"]`).textContent.trim();
-      let fullStop = document.createTextNode(".");
+      filterCategory.textContent = document
+        .querySelector(`label[for="${currentlyClickedButton.id}"]`)
+        .textContent.trim();
+      let fullStop = document.createTextNode('.');
       // Append the text nodes and elements to the span element
       warningDiv.innerHTML = '';
       warningDiv.appendChild(warningStart);
