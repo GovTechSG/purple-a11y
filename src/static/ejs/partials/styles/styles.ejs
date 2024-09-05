@@ -43,7 +43,7 @@
   #accessibility-site-report body,
   #accessibility-site-report html {
     all: unset;
-    font-family: 'Open Sans', 'Helvetica', sans-serif;
+    font-family: 'PT Sans';
     background-color: #f6f8f9;
     margin: 0;
     min-height: 100vh;
@@ -156,7 +156,7 @@
   }
 
   * {
-    color: #333;
+    color: var(--a11y-black-100);
   }
 
   a[target='_blank']:after {
@@ -314,7 +314,7 @@
   .filter-words {
     color: var(--a11y-black-100);
     font-size: 16px;
-    font-family: 'Open Sans', sans-serif;
+    font-family: 'PT Sans';
     font-weight: 400;
     line-height: 28px;
     white-space: nowrap;
@@ -1682,8 +1682,8 @@
       background-color: rgb(255, 255, 255);
 
       &[aria-selected='true']::after {
-        border-bottom: 1px solid #333;
-        border-right: 1px solid #333;
+        border-bottom: 1px solid #26241b;
+        border-right: 1px solid #26241b;
         content: '';
         height: 16px;
         position: absolute;
@@ -1730,8 +1730,8 @@
 
   .expanded-rule-issue-type-combobox-button::after,
   .ally-toggle-button-2::after {
-    border-bottom: 1px solid #333;
-    border-right: 1px solid #333;
+    border-bottom: 1px solid #26241b;
+    border-right: 1px solid #26241b;
     content: '';
     display: block;
     height: 12px;
