@@ -170,12 +170,14 @@ const crawlDomain = async (
     browserContext: BrowserContext,
   ) => {
     try {
+
       await enqueueLinks({
         // set selector matches anchor elements with href but not contains # or starting with mailto:
         selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
         strategy,
         requestQueue,
-        transformRequestFunction: async (req: RequestOptions): Promise<false | RequestOptions> => {
+        transformRequestFunction: (req:   
+       RequestOptions): Promise<false | RequestOptions> => {
           try {
             req.url = encodeURI(req.url);
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
@@ -185,13 +187,15 @@ const crawlDomain = async (
           if (urlsCrawled.scanned.some(item => item.url === req.url)) {
             req.skipNavigation = true;
           }
-          if (isDisallowedInRobotsTxt(req.url)) return null;
+          if (isDisallowedInRobotsTxt(req.url)) {
+            return Promise.resolve(null);
+          }
           if (isUrlPdf(req.url)) {
             // playwright headless mode does not support navigation to pdf document
             req.skipNavigation = true;
           }
-
-          return req;
+      
+          return Promise.resolve(req);
         },
       });
 
