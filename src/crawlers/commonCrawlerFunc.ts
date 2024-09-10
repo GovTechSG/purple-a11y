@@ -6,6 +6,7 @@ import { axeScript, guiInfoStatusTypes, saflyIconSelector } from '../constants/c
 import { guiInfoLog } from '../logs.js';
 import { takeScreenshotForHTMLElements } from '../screenshotFunc/htmlScreenshotFunc.js';
 import { isFilePath } from '../constants/common.js';
+import { customAxeConfig } from './customAxeFunctions.js'; // KC: Custom functions defined here
 
 // types
 type RuleDetails = {
@@ -42,8 +43,6 @@ export const filterAxeResults = (
   pageTitle: string,
   customFlowDetails?: CustomFlowDetails,
 ): FilteredResults => {
-
-
   const { violations, passes, incomplete, url } = results;
 
   let totalItems = 0;
@@ -76,7 +75,14 @@ export const filterAxeResults = (
       const { html, failureSummary, screenshotPath, target } = node;
       const axeImpact = node.impact;
       if (!(rule in category.rules)) {
-        category.rules[rule] = {description,axeImpact, helpUrl, conformance, totalItems: 0, items: [] };
+        category.rules[rule] = {
+          description,
+          axeImpact,
+          helpUrl,
+          conformance,
+          totalItems: 0,
+          items: [],
+        };
       }
       const message = displayNeedsReview
         ? failureSummary.slice(failureSummary.indexOf('\n') + 1).trim()
@@ -117,7 +123,6 @@ export const filterAxeResults = (
   violations.forEach(item => process(item, false));
   incomplete.forEach(item => process(item, true));
 
-
   passes.forEach(item => {
     const { id: rule, help: description, axeImpact, helpUrl, tags, nodes } = item;
 
@@ -128,7 +133,14 @@ export const filterAxeResults = (
     nodes.forEach(node => {
       const { html } = node;
       if (!(rule in passed.rules)) {
-        passed.rules[rule] = { description,axeImpact, helpUrl, conformance, totalItems: 0, items: [] };
+        passed.rules[rule] = {
+          description,
+          axeImpact,
+          helpUrl,
+          conformance,
+          totalItems: 0,
+          items: [],
+        };
       }
       passed.rules[rule].items.push({ html });
       passed.totalItems += 1;
@@ -141,7 +153,9 @@ export const filterAxeResults = (
     url,
     pageTitle: customFlowDetails ? `${customFlowDetails.pageIndex}: ${pageTitle}` : pageTitle,
     pageIndex: customFlowDetails ? customFlowDetails.pageIndex : undefined,
-    metadata: customFlowDetails?.metadata ? `${customFlowDetails.pageIndex}: ${customFlowDetails.metadata}` : undefined,
+    metadata: customFlowDetails?.metadata
+      ? `${customFlowDetails.pageIndex}: ${customFlowDetails.metadata}`
+      : undefined,
     pageImagePath: customFlowDetails ? customFlowDetails.pageImagePath : undefined,
     totalItems,
     mustFix,
@@ -161,69 +175,45 @@ export const runAxeScript = async (
   await crawlee.playwrightUtils.injectFile(page, axeScript);
 
   const results = await page.evaluate(
-    async ({ selectors, saflyIconSelector}) => {
+    async ({ selectors, saflyIconSelector, customAxeConfig }) => {
+      // KC: This func cannot directly be added to playwright browser context
+      // KC: This stays in page.evaluate
+      const evaluateAltText = node => {
+        const altText = node.getAttribute('alt');
+        const confusingTexts = ['img', 'image', 'picture', 'photo', 'graphic'];
+
+        if (altText) {
+          const trimmedAltText = altText.trim().toLowerCase();
+          if (confusingTexts.includes(trimmedAltText)) {
+            return false;
+          }
+        }
+        return true;
+      };
+
       // remove so that axe does not scan
       document.querySelector(saflyIconSelector)?.remove();
 
+      // KC: This is where the custom rules are being set up
       axe.configure({
-        branding: {
-          application: 'purple-a11y',
-        },
-        // Add custom img alt text check
+        branding: customAxeConfig.branding,
         checks: [
           {
-            id: 'oobee-confusing-alt-text',
-            evaluate: function(node: HTMLElement) {
-              const altText = node.getAttribute('alt');
-              const confusingTexts = ['img', 'image', 'picture', 'photo', 'graphic'];
-      
-              if (altText) {
-                const trimmedAltText = altText.trim().toLowerCase();
-                // Check if the alt text exactly matches one of the confusingTexts
-                if (confusingTexts.some(text => text === trimmedAltText)) {
-                  return false; // Fail the check if the alt text is confusing or not useful
-                }
-              }
-      
-              return true; // Pass the check if the alt text seems appropriate
-            },
-            metadata: {
-              impact: 'serious', // Set the severity to serious
-              messages: {
-                pass: 'The image alt text is probably useful',
-                fail: 'The image alt text set as \'img\', \'image\', \'picture\', \'photo\', or \'graphic\' is confusing or not useful',
-              }
-            }
-          }
+            ...customAxeConfig.checks[0],
+            evaluate: evaluateAltText,
+          },
         ],
-        rules: [
-          { id: 'target-size', enabled: true },
-          {
-            id: 'oobee-confusing-alt-text',
-            selector: 'img[alt]',
-            enabled: true,
-            any: ['oobee-confusing-alt-text'],
-            all: [],
-            none: [],
-            tags: ['wcag2a', 'wcag111'],
-            metadata: {
-              description: 'Ensures image alt text is clear and useful',
-              help: 'Image alt text must not be vague or unhelpful',
-              helpUrl: 'https://www.deque.com/blog/great-alt-text-introduction/'
-            }
-          }
-        ]
+        rules: customAxeConfig.rules,
       });
 
       //removed needsReview condition
-      let defaultResultTypes:resultGroups[]= ['violations', 'passes', 'incomplete']
-        
+      let defaultResultTypes: resultGroups[] = ['violations', 'passes', 'incomplete'];
 
       return axe.run(selectors, {
         resultTypes: defaultResultTypes,
       });
     },
-    { selectors, saflyIconSelector},
+    { selectors, saflyIconSelector, customAxeConfig }, //KC: add customAxeConfig as a parameter
   );
 
   if (includeScreenshots) {
@@ -235,25 +225,28 @@ export const runAxeScript = async (
   return filterAxeResults(results, pageTitle, customFlowDetails);
 };
 
-export const createCrawleeSubFolders = async (randomToken:string): Promise<{dataset:crawlee.Dataset, requestQueue:crawlee.RequestQueue}> => {
-  const dataset= await crawlee.Dataset.open(randomToken);
+export const createCrawleeSubFolders = async (
+  randomToken: string,
+): Promise<{ dataset: crawlee.Dataset; requestQueue: crawlee.RequestQueue }> => {
+  const dataset = await crawlee.Dataset.open(randomToken);
   const requestQueue = await crawlee.RequestQueue.open(randomToken);
   return { dataset, requestQueue };
 };
 
-export const preNavigationHooks = (extraHTTPHeaders) => {
+export const preNavigationHooks = extraHTTPHeaders => {
   return [
-  async (crawlingContext, gotoOptions) => {
-    if (extraHTTPHeaders) {
-      crawlingContext.request.headers = extraHTTPHeaders;
-    }
-    gotoOptions = { waitUntil: 'networkidle', timeout: 30000 };
-  },
-]};
+    async (crawlingContext, gotoOptions) => {
+      if (extraHTTPHeaders) {
+        crawlingContext.request.headers = extraHTTPHeaders;
+      }
+      gotoOptions = { waitUntil: 'networkidle', timeout: 30000 };
+    },
+  ];
+};
 
 export const postNavigationHooks = [
   async _crawlingContext => {
-    guiInfoLog(guiInfoStatusTypes.COMPLETED,{});
+    guiInfoLog(guiInfoStatusTypes.COMPLETED, {});
   },
 ];
 
@@ -263,13 +256,10 @@ export const failedRequestHandler = async ({ request }) => {
 };
 
 export const isUrlPdf = url => {
-  if(isFilePath(url)) {
+  if (isFilePath(url)) {
     return /\.pdf$/i.test(url);
   } else {
     const parsedUrl = new URL(url);
     return /\.pdf($|\?|#)/i.test(parsedUrl.pathname) || /\.pdf($|\?|#)/i.test(parsedUrl.href);
   }
 };
-
-
-
