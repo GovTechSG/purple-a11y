@@ -242,6 +242,7 @@ export const getUrlMessage = (scanner: ScannerTypes): string => {
   switch (scanner) {
     case ScannerTypes.WEBSITE:
     case ScannerTypes.CUSTOM:
+    case ScannerTypes.INTELLIGENT:
       return 'Please enter URL of website: ';
     case ScannerTypes.SITEMAP:
       return 'Please enter URL or file path to sitemap, or drag and drop a sitemap file here: ';
