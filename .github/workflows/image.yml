@@ -31,7 +31,7 @@ jobs:
         run: Compress-Archive -Path ${{github.workspace}}/* -DestinationPath purple-a11y-portable-windows.zip
 
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: purple-a11y-portable-windows
           path: ./purple-a11y-portable-windows.zip
@@ -94,7 +94,7 @@ jobs:
           zip purple-a11y-portable-mac.zip -y -r ./
       
       - name: Upload Mac artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: purple-a11y-portable-mac
           path: ./purple-a11y-portable-mac.zip
