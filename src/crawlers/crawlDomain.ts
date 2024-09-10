@@ -176,8 +176,7 @@ const crawlDomain = async (
         selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
         strategy,
         requestQueue,
-        transformRequestFunction: (req:   
-       RequestOptions): Promise<false | RequestOptions> => {
+        transformRequestFunction: (req: RequestOptions): RequestOptions | null => {
           try {
             req.url = encodeURI(req.url);
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
@@ -187,15 +186,13 @@ const crawlDomain = async (
           if (urlsCrawled.scanned.some(item => item.url === req.url)) {
             req.skipNavigation = true;
           }
-          if (isDisallowedInRobotsTxt(req.url)) {
-            return Promise.resolve(null);
-          }
+          if (isDisallowedInRobotsTxt(req.url)) return null;
           if (isUrlPdf(req.url)) {
             // playwright headless mode does not support navigation to pdf document
             req.skipNavigation = true;
           }
-      
-          return Promise.resolve(req);
+
+          return req;
         },
       });
 
