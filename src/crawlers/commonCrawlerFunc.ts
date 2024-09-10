@@ -172,6 +172,29 @@ export const runAxeScript = async (
   customFlowDetails,
   selectors = [],
 ) => {
+  // Checking for DOM mutations before proceeding to scan
+  await page.evaluate(() => {
+    return new Promise((resolve) => {
+      let timeout;
+
+      const observer = new MutationObserver(() => {
+        clearTimeout(timeout);
+
+        timeout = setTimeout(() => {
+          observer.disconnect();
+          resolve('DOM stabilized after mutations.');
+        }, 1000);
+      });
+
+      timeout = setTimeout(() => {
+        observer.disconnect();
+        resolve('No mutations detected, exit from idle state');
+      }, 1000);
+
+      observer.observe(document, { childList: true, subtree: true, attributes: true });
+    });
+  });
+
   await crawlee.playwrightUtils.injectFile(page, axeScript);
 
   const results = await page.evaluate(
