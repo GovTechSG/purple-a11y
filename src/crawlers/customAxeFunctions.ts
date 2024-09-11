@@ -25,8 +25,8 @@ export const customAxeConfig = {
       tags: ['wcag2a', 'wcag111'],
       metadata: {
         description: 'Ensures image alt text is clear and useful.',
-        help: 'Image alt text must not be vague or unhelpful. customAxeConfig', // Added customAxeConfig string for testing
-        helpUrl: 'https://www.google.com', // Changed website for testing
+        help: 'Image alt text must not be vague or unhelpful.',
+        helpUrl: 'https://www.deque.com/blog/great-alt-text-introduction/',
       },
     },
   ],

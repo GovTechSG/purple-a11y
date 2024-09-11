@@ -6,7 +6,7 @@ import { axeScript, guiInfoStatusTypes, saflyIconSelector } from '../constants/c
 import { guiInfoLog } from '../logs.js';
 import { takeScreenshotForHTMLElements } from '../screenshotFunc/htmlScreenshotFunc.js';
 import { isFilePath } from '../constants/common.js';
-import { customAxeConfig } from './customAxeFunctions.js'; // KC: Custom functions defined here
+import { customAxeConfig } from './customAxeFunctions.js';
 
 // types
 type RuleDetails = {
@@ -174,7 +174,7 @@ export const runAxeScript = async (
 ) => {
   // Checking for DOM mutations before proceeding to scan
   await page.evaluate(() => {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       let timeout;
 
       const observer = new MutationObserver(() => {
@@ -199,8 +199,6 @@ export const runAxeScript = async (
 
   const results = await page.evaluate(
     async ({ selectors, saflyIconSelector, customAxeConfig }) => {
-      // KC: This func cannot directly be added to playwright browser context
-      // KC: This stays in page.evaluate
       const evaluateAltText = node => {
         const altText = node.getAttribute('alt');
         const confusingTexts = ['img', 'image', 'picture', 'photo', 'graphic'];
@@ -217,7 +215,6 @@ export const runAxeScript = async (
       // remove so that axe does not scan
       document.querySelector(saflyIconSelector)?.remove();
 
-      // KC: This is where the custom rules are being set up
       axe.configure({
         branding: customAxeConfig.branding,
         checks: [
@@ -236,7 +233,7 @@ export const runAxeScript = async (
         resultTypes: defaultResultTypes,
       });
     },
-    { selectors, saflyIconSelector, customAxeConfig }, //KC: add customAxeConfig as a parameter
+    { selectors, saflyIconSelector, customAxeConfig },
   );
 
   if (includeScreenshots) {
