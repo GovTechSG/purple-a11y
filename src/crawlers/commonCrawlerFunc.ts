@@ -174,7 +174,7 @@ export const runAxeScript = async (
 ) => {
   // Checking for DOM mutations before proceeding to scan
   await page.evaluate(() => {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       let timeout;
 
       const observer = new MutationObserver(() => {
