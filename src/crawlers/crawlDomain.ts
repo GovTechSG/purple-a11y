@@ -345,7 +345,7 @@ const crawlDomain = async (
           } else if (!newUrlFoundInElement) {
             try {
               // Find url in html elements by manually clicking them. New page navigation/popups will be handled by event listeners above
-              await element.click();
+              await element.click({ force: true });
               await page.waitForTimeout(1000); // Add a delay of 1 second between each Element click
             } catch (e) {
               // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
