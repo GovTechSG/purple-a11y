@@ -46,7 +46,7 @@
         const passPecentage = document.getElementById("passPercentage");
         passPecentage.innerHTML = scanData.wcagPassPercentage+"%";
         const wcagBarProgess = document.getElementById("wcag-compliance-passes-bar-progress");
-        wcagBarProgess.style.width = `${scanData.wcagPassPercentage}%`; // Set this to your desired width
+        wcagBarProgess.style.width = `${scanData.wcagPassPercentage}% of automated checks`; // Set this to your desired width
 
         const wcagLinksList = document.getElementById("wcagLinksList");
 
