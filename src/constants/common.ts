@@ -56,6 +56,7 @@ export class RES {
   status: number;
   url: string;
   content: string;
+  hasMetaRefresh?: boolean;
   constructor(res?: Partial<RES>) {
     if (res) {
       Object.assign(this, res);
@@ -523,7 +524,7 @@ export const checkUrl = async (
     );
   } else {
     res = await checkUrlConnectivity(url, isCustomFlow, extraHTTPHeaders);
-    if (res.status === constants.urlCheckStatuses.axiosTimeout.code) {
+    if (res.status === constants.urlCheckStatuses.axiosTimeout.code || res.hasMetaRefresh) {
       if (browser || constants.launcher === webkit) {
         res = await checkUrlConnectivityWithBrowser(
           url,
