@@ -454,6 +454,13 @@ const checkUrlConnectivityWithBrowser = async (
       }
 
       res.content = await page.content();
+
+      const contentType = response.headers()['content-type'];
+      if (contentType.includes('xml')) {
+        const responseFromUrl = await requestToUrl(res.url, true, extraHTTPHeaders)
+
+        res.content = responseFromUrl.content
+      }
     } catch (error) {
       silentLogger.error(error);
       res.status = constants.urlCheckStatuses.systemError.code;
