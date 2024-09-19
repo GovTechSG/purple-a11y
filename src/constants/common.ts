@@ -56,7 +56,6 @@ export class RES {
   status: number;
   url: string;
   content: string;
-  hasMetaRefresh?: boolean;
   constructor(res?: Partial<RES>) {
     if (res) {
       Object.assign(this, res);
