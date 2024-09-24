@@ -176,9 +176,44 @@ export const runAxeScript = async (
   await page.evaluate(() => {
     return new Promise((resolve) => {
       let timeout;
+      let mutationCount = 0;
+      const MAX_MUTATIONS = 100;
+      const MAX_SAME_MUTATION_LIMIT = 10;
+      const mutationHash = {};
 
-      const observer = new MutationObserver(() => {
+      const observer = new MutationObserver((mutationsList) => {
         clearTimeout(timeout);
+
+        mutationCount += 1;
+
+        if (mutationCount > MAX_MUTATIONS) {
+          observer.disconnect();
+          resolve('Too many mutations detected');
+        }
+
+        // To handle scenario where DOM elements are constantly changing and unable to exit
+        mutationsList.forEach((mutation) => {
+          let mutationKey;
+
+          if (mutation.target instanceof Element) {
+            Array.from(mutation.target.attributes).forEach(attr => {
+              mutationKey = `${mutation.target.nodeName}-${attr.name}`;
+  
+              if (mutationKey) {
+                if (!mutationHash[mutationKey]) {
+                  mutationHash[mutationKey] = 1;
+                } else {
+                  mutationHash[mutationKey]++;
+                }
+
+                if (mutationHash[mutationKey] >= MAX_SAME_MUTATION_LIMIT) {
+                  observer.disconnect();
+                  resolve(`Repeated mutation detected for ${mutationKey}`);
+                }
+              }
+            });
+          }
+        });
 
         timeout = setTimeout(() => {
           observer.disconnect();

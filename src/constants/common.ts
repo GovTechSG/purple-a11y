@@ -374,19 +374,6 @@ const requestToUrl = async (
   return res;
 };
 
-const checkUrlConnectivity = async (url, isCustomFlow, extraHTTPHeaders) => {
-  const data = sanitizeUrlInput(url);
-
-  if (data.isValid) {
-    // Validate the connectivity of URL if the string format is url format
-    const res = await requestToUrl(data.url, isCustomFlow, extraHTTPHeaders);
-    return res;
-  }
-
-  // reaches here if input is not a URL or not using http/https protocols
-  return { status: constants.urlCheckStatuses.invalidUrl.code };
-};
-
 const checkUrlConnectivityWithBrowser = async (
   url,
   browserToRun,
@@ -466,6 +453,13 @@ const checkUrlConnectivityWithBrowser = async (
       }
 
       res.content = await page.content();
+
+      const contentType = response.headers()['content-type'];
+      if (contentType.includes('xml')) {
+        const responseFromUrl = await requestToUrl(res.url, true, extraHTTPHeaders)
+
+        res.content = responseFromUrl.content
+      }
     } catch (error) {
       silentLogger.error(error);
       res.status = constants.urlCheckStatuses.systemError.code;
@@ -511,31 +505,14 @@ export const checkUrl = async (
   isCustomFlow,
   extraHTTPHeaders,
 ) => {
-  let res;
-  if (proxy) {
-    res = await checkUrlConnectivityWithBrowser(
-      url,
-      browser,
-      clonedDataDir,
-      playwrightDeviceDetailsObject,
-      isCustomFlow,
-      extraHTTPHeaders,
-    );
-  } else {
-    res = await checkUrlConnectivity(url, isCustomFlow, extraHTTPHeaders);
-    if (res.status === constants.urlCheckStatuses.axiosTimeout.code) {
-      if (browser || constants.launcher === webkit) {
-        res = await checkUrlConnectivityWithBrowser(
-          url,
-          browser,
-          clonedDataDir,
-          playwrightDeviceDetailsObject,
-          isCustomFlow,
-          extraHTTPHeaders,
-        );
-      }
-    }
-  }
+  const res = await checkUrlConnectivityWithBrowser(
+    url,
+    browser,
+    clonedDataDir,
+    playwrightDeviceDetailsObject,
+    isCustomFlow,
+    extraHTTPHeaders,
+  );
 
   if (
     res.status === constants.urlCheckStatuses.success.code &&
