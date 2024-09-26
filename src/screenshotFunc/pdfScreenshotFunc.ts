@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import pdfjs, { PDFPageProxy } from 'pdfjs-dist';
+import { getDocument, PDFPageProxy } from 'pdfjs-dist';
 import fs from 'fs';
 import { Canvas, createCanvas, SKRSContext2D } from '@napi-rs/canvas';
 import assert from 'assert';
@@ -60,7 +60,7 @@ const canvasFactory = new NodeCanvasFactory();
 
 export async function getPdfScreenshots(pdfFilePath: string, items: TransformedRuleObject["items"], screenshotPath: string) {
   const newItems = _.cloneDeep(items);
-  const loadingTask = pdfjs.getDocument({
+  const loadingTask = getDocument({
     url: pdfFilePath,
     standardFontDataUrl: path.join(__dirname, '../node_modules/pdfjs-dist/standard_fonts/'),
     disableFontFace: true,
@@ -341,7 +341,7 @@ export const getSelectedPageByLocation = bboxLocation => {
 
 export const getPageFromContext = async (context: string, pdfFilePath: string): Promise<number> => {
   try {
-    const loadingTask = pdfjs.getDocument({
+    const loadingTask = getDocument({
       url: pdfFilePath,
       standardFontDataUrl: path.join(__dirname, '../../node_modules/pdfjs-dist/standard_fonts/'),
       disableFontFace: true,
