@@ -65,6 +65,7 @@ export async function getPdfScreenshots(pdfFilePath: string, items: TransformedR
     standardFontDataUrl: path.join(__dirname, '../node_modules/pdfjs-dist/standard_fonts/'),
     disableFontFace: true,
     verbosity: 0,
+    isEvalSupported: false,
   });
   const pdf = await loadingTask.promise;
   const structureTree = await pdf._pdfInfo.structureTree;
@@ -346,6 +347,7 @@ export const getPageFromContext = async (context: string, pdfFilePath: string): 
       standardFontDataUrl: path.join(__dirname, '../../node_modules/pdfjs-dist/standard_fonts/'),
       disableFontFace: true,
       verbosity: 0,
+      isEvalSupported: false,
     });
     const pdf = await loadingTask.promise;
     const structureTree = await pdf._pdfInfo.structureTree;
