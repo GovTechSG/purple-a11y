@@ -101,9 +101,9 @@ export const init = async (
               messages: {
                 pass: 'The image alt text is probably useful',
                 fail: 'The image alt text set as \'img\', \'image\', \'picture\', \'photo\', or \'graphic\' is confusing or not useful',
-              }
-            }
-          }
+              },
+            },
+          },
         ],
         rules: [
           { id: 'target-size', enabled: true },
@@ -119,9 +119,9 @@ export const init = async (
               description: 'Ensures image alt text is clear and useful',
               help: 'Image alt text must not be vague or unhelpful',
               helpUrl: 'https://www.deque.com/blog/great-alt-text-introduction/'
-            }
-          }
-        ]
+            },
+          },
+        ],
       });
       const axeScanResults = await axe.run(elementsToScan, {
         resultTypes: ['violations', 'passes', 'incomplete'],
