@@ -33,7 +33,7 @@ export type Answers = {
   scanner: ScannerTypes;
   url: string;
   clonedBrowserDataDir: string;
-  playwrightDeviceDetailsObject: Object;
+  playwrightDeviceDetailsObject: object;
   nameEmail: string;
   fileTypes: string;
   metadata: string;
@@ -60,7 +60,7 @@ export type Data = {
   deviceChosen: string;
   customDevice: string;
   viewportWidth: number;
-  playwrightDeviceDetailsObject: Object;
+  playwrightDeviceDetailsObject: object;
   maxRequestsPerCrawl: number;
   strategy: EnqueueStrategy;
   isLocalFileScan: boolean;
