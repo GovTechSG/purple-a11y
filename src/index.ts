@@ -102,14 +102,14 @@ const runScan = async (answers: Answers) => {
   answers.fileTypes = 'html-only';
   answers.metadata = '{}';
 
-  const data:Data = await prepareData(answers);
+  const data: Data = await prepareData(answers);
   data.userDataDirectory = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
 
   setHeadlessMode(data.browser, data.isHeadless);
   printMessage(['Scanning website...'], messageOptions);
 
   await combineRun(data, screenToScan);
-  
+
   // Delete cloned directory
   deleteClonedProfiles(data.browser);
 
