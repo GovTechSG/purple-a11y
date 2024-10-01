@@ -3,7 +3,7 @@ import _yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import printMessage from 'print-message';
 import { devices } from 'playwright';
-import { cleanUp, zipResults, setHeadlessMode, getVersion, getStoragePath } from './utils.js';
+import { cleanUp, setHeadlessMode, getVersion, getStoragePath } from './utils.js';
 import {
   checkUrl,
   prepareData,
