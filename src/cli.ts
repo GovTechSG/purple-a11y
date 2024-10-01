@@ -204,41 +204,43 @@ const scanInit = async (argvs: Answers): Promise<string> => {
     isCustomFlow = true;
   }
 
+  const updatedArgvs = { ...argvs };
+
   // let chromeDataDir = null;
   // let edgeDataDir = null;
   // Empty string for profile directory will use incognito mode in playwright
   let clonedDataDir = '';
   const statuses = constants.urlCheckStatuses;
 
-  const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(argvs.browserToRun, true);
-  argvs.browserToRun = browserToRun;
+  const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(updatedArgvs.browserToRun, true);
+  updatedArgvs.browserToRun = browserToRun;
   clonedDataDir = clonedBrowserDataDir;
 
-  if (argvs.customDevice === 'Desktop' || argvs.customDevice === 'Mobile') {
-    argvs.deviceChosen = argvs.customDevice;
-    delete argvs.customDevice;
+  if (updatedArgvs.customDevice === 'Desktop' || updatedArgvs.customDevice === 'Mobile') {
+    updatedArgvs.deviceChosen = argvs.customDevice;
+    delete updatedArgvs.customDevice;
   }
 
   // Creating the playwrightDeviceDetailObject
   // for use in crawlDomain & crawlSitemap's preLaunchHook
-  argvs.playwrightDeviceDetailsObject = getPlaywrightDeviceDetailsObject(
-    argvs.deviceChosen,
-    argvs.customDevice,
-    argvs.viewportWidth,
+  updatedArgvs.playwrightDeviceDetailsObject = getPlaywrightDeviceDetailsObject(
+    updatedArgvs.deviceChosen,
+    updatedArgvs.customDevice,
+    updatedArgvs.viewportWidth,
   );
 
   const res = await checkUrl(
-    argvs.scanner,
-    argvs.url,
-    argvs.browserToRun,
+    updatedArgvs.scanner,
+    updatedArgvs.url,
+    updatedArgvs.browserToRun,
     clonedDataDir,
-    argvs.playwrightDeviceDetailsObject,
+    updatedArgvs.playwrightDeviceDetailsObject,
     isCustomFlow,
-    argvs.header,
+    updatedArgvs.header,
   );
   switch (res.status) {
     case statuses.success.code:
-      argvs.finalUrl = res.url;
+      updatedArgvs.finalUrl = res.url;
       if (process.env.VALIDATE_URL_PH_GUI) {
         console.log('Url is valid');
         process.exit(0);
@@ -254,26 +256,26 @@ const scanInit = async (argvs: Answers): Promise<string> => {
       printMessage([statuses.systemError.message], messageOptions);
       process.exit(res.status);
     case statuses.invalidUrl.code:
-      if (argvs.scanner !== ScannerTypes.SITEMAP && argvs.scanner !== ScannerTypes.LOCALFILE) {
+      if (updatedArgvs.scanner !== ScannerTypes.SITEMAP && updatedArgvs.scanner !== ScannerTypes.LOCALFILE) {
         printMessage([statuses.invalidUrl.message], messageOptions);
         process.exit(res.status);
       }
       /* if sitemap scan is selected, treat this URL as a filepath
           isFileSitemap will tell whether the filepath exists, and if it does, whether the
           file is a sitemap */
-      const finalFilePath = getFileSitemap(argvs.url);
+      const finalFilePath = getFileSitemap(updatedArgvs.url);
       if (finalFilePath) {
-        argvs.isLocalFileScan = true;
-        argvs.finalUrl = finalFilePath;
+        updatedArgvs.isLocalFileScan = true;
+        updatedArgvs.finalUrl = finalFilePath;
         if (process.env.VALIDATE_URL_PH_GUI) {
           console.log('Url is valid');
           process.exit(0);
         }
         break;
-      } else if (argvs.scanner === ScannerTypes.LOCALFILE) {
+      } else if (updatedArgvs.scanner === ScannerTypes.LOCALFILE) {
         printMessage([statuses.notALocalFile.message], messageOptions);
         process.exit(statuses.notALocalFile.code);
-      } else if (argvs.scanner !== ScannerTypes.SITEMAP) {
+      } else if (updatedArgvs.scanner !== ScannerTypes.SITEMAP) {
         printMessage([statuses.notASitemap.message], messageOptions);
         process.exit(statuses.notASitemap.code);
       }
@@ -290,11 +292,11 @@ const scanInit = async (argvs: Answers): Promise<string> => {
       break;
   }
 
-  if (argvs.scanner === ScannerTypes.WEBSITE && !argvs.strategy) {
-    argvs.strategy = 'same-domain';
+  if (updatedArgvs.scanner === ScannerTypes.WEBSITE && !updatedArgvs.strategy) {
+    updatedArgvs.strategy = 'same-domain';
   }
 
-  const data = await prepareData(argvs);
+  const data = await prepareData(updatedArgvs);
 
   // File clean up after url check
   // files will clone a second time below if url check passes
@@ -304,8 +306,8 @@ const scanInit = async (argvs: Answers): Promise<string> => {
     deleteClonedProfiles(data.browser); // first deletion
   }
 
-  if (argvs.exportDirectory) {
-    constants.exportDirectory = argvs.exportDirectory;
+  if (updatedArgvs.exportDirectory) {
+    constants.exportDirectory = updatedArgvs.exportDirectory;
   }
 
   if (process.env.RUNNING_FROM_PH_GUI || process.env.PURPLE_A11Y_VERBOSE) {
@@ -320,7 +322,11 @@ const scanInit = async (argvs: Answers): Promise<string> => {
 
   setHeadlessMode(data.browser, data.isHeadless);
 
-  const screenToScan = getScreenToScan(argvs.deviceChosen, argvs.customDevice, argvs.viewportWidth);
+  const screenToScan = getScreenToScan(
+    updatedArgvs.deviceChosen,
+    updatedArgvs.customDevice,
+    updatedArgvs.viewportWidth,
+  );
 
   // Clone profiles a second time
   clonedDataDir = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
