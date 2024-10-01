@@ -3,6 +3,7 @@
 /* eslint-disable no-param-reassign */
 import printMessage from 'print-message';
 import inquirer from 'inquirer';
+import { EnqueueStrategy } from 'crawlee';
 import {
   getVersion,
   cleanUp,
@@ -22,7 +23,6 @@ import {
 import questions from './constants/questions.js';
 import combineRun from './combine.js';
 import { BrowserTypes, ScannerTypes } from './constants/constants.js';
-import { EnqueueStrategy } from 'crawlee';
 
 export type Answers = {
   headless: boolean;
