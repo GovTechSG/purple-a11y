@@ -36,6 +36,23 @@ import type { EnqueueLinksOptions, RequestOptions } from 'crawlee';
 import type { BatchAddRequestsResult } from '@crawlee/types';
 import axios from 'axios';
 
+const isBlacklisted = (url: string) => {
+  const blacklistedPatterns = getBlackListedPatterns(null);
+  if (!blacklistedPatterns) {
+    return false;
+  }
+  try {
+    const parsedUrl = new URL(url);
+
+    return blacklistedPatterns.some(
+      pattern => new RegExp(pattern).test(parsedUrl.hostname) || new RegExp(pattern).test(url),
+    );
+  } catch (error) {
+    console.error(`Error parsing URL: ${url}`, error);
+    return false;
+  }
+};
+
 const crawlDomain = async (
   url: string,
   randomToken: string,
@@ -80,6 +97,15 @@ const crawlDomain = async (
   const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
   const { maxConcurrency } = constants;
   const { playwrightDeviceDetailsObject } = viewportSettings;
+  const isBlacklistedUrl = isBlacklisted(url);
+
+  if (isBlacklistedUrl) {
+    guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+      numScanned: urlsCrawled.scanned.length,
+      urlScanned: url,
+    });
+    return;
+  }
 
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth = false;
@@ -366,22 +392,6 @@ const crawlDomain = async (
     return;
   };
 
-  const isBlacklisted = (url: string) => {
-    const blacklistedPatterns = getBlackListedPatterns(null);
-    if (!blacklistedPatterns) {
-      return false;
-    }
-    try {
-      const parsedUrl = new URL(url);
-      return blacklistedPatterns.some(
-        pattern => new RegExp(pattern).test(parsedUrl.hostname) || new RegExp(pattern).test(url),
-      );
-    } catch (error) {
-      console.error(`Error parsing URL: ${url}`, error);
-      return false;
-    }
-  };
-
   let isAbortingScanNow = false;
 
   const crawler = new crawlee.PlaywrightCrawler({
@@ -423,32 +433,32 @@ const crawlDomain = async (
             const MAX_MUTATIONS = 100;
             const MAX_SAME_MUTATION_LIMIT = 10;
             const mutationHash = {};
-      
+
             const observer = new MutationObserver((mutationsList) => {
               clearTimeout(timeout);
-      
+
               mutationCount += 1;
-      
+
               if (mutationCount > MAX_MUTATIONS) {
                 observer.disconnect();
                 resolve('Too many mutations detected');
               }
-      
+
               // To handle scenario where DOM elements are constantly changing and unable to exit
               mutationsList.forEach((mutation) => {
                 let mutationKey;
-      
+
                 if (mutation.target instanceof Element) {
                   Array.from(mutation.target.attributes).forEach(attr => {
                     mutationKey = `${mutation.target.nodeName}-${attr.name}`;
-        
+
                     if (mutationKey) {
                       if (!mutationHash[mutationKey]) {
                         mutationHash[mutationKey] = 1;
                       } else {
                         mutationHash[mutationKey]++;
                       }
-      
+
                       if (mutationHash[mutationKey] >= MAX_SAME_MUTATION_LIMIT) {
                         observer.disconnect();
                         resolve(`Repeated mutation detected for ${mutationKey}`);
@@ -457,18 +467,18 @@ const crawlDomain = async (
                   });
                 }
               });
-      
+
               timeout = setTimeout(() => {
                 observer.disconnect();
                 resolve('DOM stabilized after mutations.');
               }, 1000);
             });
-      
+
             timeout = setTimeout(() => {
               observer.disconnect();
               resolve('No mutations detected, exit from idle state');
             }, 1000);
-      
+
             observer.observe(document, { childList: true, subtree: true, attributes: true });
           });
         });
@@ -483,12 +493,12 @@ const crawlDomain = async (
           strategy,
         );
         if (!isLoadedUrlFollowStrategy) {
-          finalUrl = requestLabelUrl
+          finalUrl = requestLabelUrl;
         }
 
         const isRedirected = !areLinksEqual(finalUrl, requestLabelUrl);
         if (isRedirected) {
-          await requestQueue.addRequest({ url: finalUrl, label: finalUrl })
+          await requestQueue.addRequest({ url: finalUrl, label: finalUrl });
         } else {
           request.skipNavigation = false;
         }
