@@ -18,8 +18,8 @@ import { takeScreenshotForHTMLElements } from './screenshotFunc/htmlScreenshotFu
 import { silentLogger } from './logs.js';
 import { alertMessageOptions } from './constants/cliFunctions.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const filename = fileURLToPath(import.meta.url);
+const dirname = path.dirname(filename);
 
 export const init = async (
   entryUrl,
@@ -70,7 +70,7 @@ export const init = async (
   const getScripts = () => {
     throwErrorIfTerminated();
     const axeScript = fs.readFileSync(
-      path.join(__dirname, '../node_modules/axe-core/axe.min.js'),
+      path.join(dirname, '../node_modules/axe-core/axe.min.js'),
       'utf-8',
     );
     async function runA11yScan(elementsToScan = []) {

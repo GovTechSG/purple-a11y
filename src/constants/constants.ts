@@ -8,8 +8,8 @@ import { spawnSync, execSync } from 'child_process';
 import { chromium } from 'playwright';
 import { silentLogger } from '../logs.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const filename = fileURLToPath(import.meta.url);
+const dirname = path.dirname(filename);
 
 const maxRequestsPerCrawl = 100;
 
@@ -180,7 +180,7 @@ export const getExecutablePath = function (dir: string, file: string): string {
 export const basicAuthRegex = /^.*\/\/.*:.*@.*$/i;
 
 // for crawlers
-export const axeScript = path.join(__dirname, '../../node_modules/axe-core/axe.min.js');
+export const axeScript = path.join(dirname, '../../node_modules/axe-core/axe.min.js');
 export class UrlsCrawled {
   toScan: string[] = [];
   scanned: { url: string; actualUrl: string; pageTitle: string }[] = [];
@@ -420,7 +420,7 @@ export default {
   robotsTxtUrls: null,
 };
 
-export const rootPath = __dirname;
+export const rootPath = dirname;
 export const wcagWebPage = 'https://www.w3.org/TR/WCAG21/';
 const latestAxeVersion = '4.9';
 export const axeVersion = latestAxeVersion;
