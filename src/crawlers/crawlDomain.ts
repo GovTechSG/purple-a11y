@@ -104,16 +104,18 @@ const crawlDomain = async (
     const finalUrl = parsedUrl.toString();
 
     await requestQueue.addRequest({
-      url: encodeURI(finalUrl),
-      skipNavigation: isUrlPdf(encodeURI(finalUrl)),
+      url: finalUrl,
+      skipNavigation: isUrlPdf(finalUrl),
       headers: {
         Authorization: authHeader,
       },
+      label: finalUrl,
     });
   } else {
     await requestQueue.addRequest({
-      url: encodeURI(url),
-      skipNavigation: isUrlPdf(encodeURI(url)),
+      url: url,
+      skipNavigation: isUrlPdf(url),
+      label: url,
     });
   }
 
@@ -178,7 +180,6 @@ const crawlDomain = async (
         requestQueue,
         transformRequestFunction: (req: RequestOptions): RequestOptions | null => {
           try {
-            req.url = encodeURI(req.url);
             req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
           } catch (e) {
             silentLogger.error(e);
@@ -191,6 +192,7 @@ const crawlDomain = async (
             // playwright headless mode does not support navigation to pdf document
             req.skipNavigation = true;
           }
+          req.label = req.url
 
           return req;
         },
@@ -230,8 +232,9 @@ const crawlDomain = async (
           if (newPage.url() != initialPageUrl && !isExcluded(newPage.url())) {
             let newPageUrl: string = newPage.url().replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
             await requestQueue.addRequest({
-              url: encodeURI(newPageUrl),
-              skipNavigation: isUrlPdf(encodeURI(newPage.url())),
+              url: newPageUrl,
+              skipNavigation: isUrlPdf(newPage.url()),
+              label: newPageUrl
             });
           } else {
             try {
@@ -258,8 +261,9 @@ const crawlDomain = async (
           ) {
             let newFrameUrl: string = newFrame.url().replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
             await requestQueue.addRequest({
-              url: encodeURI(newFrameUrl),
-              skipNavigation: isUrlPdf(encodeURI(newFrame.url())),
+              url: newFrameUrl,
+              skipNavigation: isUrlPdf(newFrame.url()),
+              label: newFrameUrl,
             });
           }
           return;
@@ -339,8 +343,9 @@ const crawlDomain = async (
             );
 
             await requestQueue.addRequest({
-              url: encodeURI(newUrlFoundInElementUrl),
-              skipNavigation: isUrlPdf(encodeURI(newUrlFoundInElement)),
+              url: newUrlFoundInElementUrl,
+              skipNavigation: isUrlPdf(newUrlFoundInElement),
+              label: newUrlFoundInElementUrl,
             });
           } else if (!newUrlFoundInElement) {
             try {
@@ -405,10 +410,93 @@ const crawlDomain = async (
       ],
     },
     requestQueue,
+    postNavigationHooks: [
+      async (crawlingContext) => {
+        const { page, request } = crawlingContext;
+
+        request.skipNavigation = true;
+
+        await page.evaluate(() => {
+          return new Promise((resolve) => {
+            let timeout;
+            let mutationCount = 0;
+            const MAX_MUTATIONS = 100;
+            const MAX_SAME_MUTATION_LIMIT = 10;
+            const mutationHash = {};
+      
+            const observer = new MutationObserver((mutationsList) => {
+              clearTimeout(timeout);
+      
+              mutationCount += 1;
+      
+              if (mutationCount > MAX_MUTATIONS) {
+                observer.disconnect();
+                resolve('Too many mutations detected');
+              }
+      
+              // To handle scenario where DOM elements are constantly changing and unable to exit
+              mutationsList.forEach((mutation) => {
+                let mutationKey;
+      
+                if (mutation.target instanceof Element) {
+                  Array.from(mutation.target.attributes).forEach(attr => {
+                    mutationKey = `${mutation.target.nodeName}-${attr.name}`;
+        
+                    if (mutationKey) {
+                      if (!mutationHash[mutationKey]) {
+                        mutationHash[mutationKey] = 1;
+                      } else {
+                        mutationHash[mutationKey]++;
+                      }
+      
+                      if (mutationHash[mutationKey] >= MAX_SAME_MUTATION_LIMIT) {
+                        observer.disconnect();
+                        resolve(`Repeated mutation detected for ${mutationKey}`);
+                      }
+                    }
+                  });
+                }
+              });
+      
+              timeout = setTimeout(() => {
+                observer.disconnect();
+                resolve('DOM stabilized after mutations.');
+              }, 1000);
+            });
+      
+            timeout = setTimeout(() => {
+              observer.disconnect();
+              resolve('No mutations detected, exit from idle state');
+            }, 1000);
+      
+            observer.observe(document, { childList: true, subtree: true, attributes: true });
+          });
+        });
+
+        let finalUrl = page.url();
+        let requestLabelUrl = request.label;
+
+        // to handle scenario where the redirected link is not within the scanning website
+        const isLoadedUrlFollowStrategy = isFollowStrategy(
+          finalUrl,
+          requestLabelUrl,
+          strategy,
+        );
+        if (!isLoadedUrlFollowStrategy) {
+          finalUrl = requestLabelUrl
+        }
+
+        const isRedirected = !areLinksEqual(finalUrl, requestLabelUrl);
+        if (isRedirected) {
+          await requestQueue.addRequest({ url: finalUrl, label: finalUrl })
+        } else {
+          request.skipNavigation = false;
+        }
+      }
+    ],
     preNavigationHooks: isBasicAuth
       ? [
           async ({ page, request }) => {
-            request.url = encodeURI(request.url);
             await page.setExtraHTTPHeaders({
               Authorization: authHeader,
               ...extraHTTPHeaders,
@@ -417,7 +505,6 @@ const crawlDomain = async (
         ]
       : [
           async ({ request }) => {
-            request.url = encodeURI(request.url);
             preNavigationHooks(extraHTTPHeaders);
           },
         ],
@@ -637,6 +724,7 @@ const crawlDomain = async (
                 await requestQueue.addRequest({
                   url: interceptedRequestUrl,
                   skipNavigation: isUrlPdf(interceptedRequest.url()),
+                  label: interceptedRequestUrl,
                 });
                 return;
               }
