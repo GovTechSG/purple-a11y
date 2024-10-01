@@ -1,11 +1,10 @@
-import {createCrawleeSubFolders,} from './commonCrawlerFunc.js';
-import constants, { guiInfoStatusTypes, sitemapPaths} from '../constants/constants.js';
 import fs from 'fs';
-import {silentLogger, guiInfoLog } from '../logs.js';
-import crawlDomain from './crawlDomain.js'
-import crawlSitemap from './crawlSitemap.js'
-import {chromium} from 'playwright';
-
+import { chromium } from 'playwright';
+import { createCrawleeSubFolders } from './commonCrawlerFunc.js';
+import constants, { guiInfoStatusTypes, sitemapPaths } from '../constants/constants.js';
+import { silentLogger, guiInfoLog } from '../logs.js';
+import crawlDomain from './crawlDomain.js';
+import crawlSitemap from './crawlSitemap.js';
 
   const crawlIntelligentSitemap = async (
     url,

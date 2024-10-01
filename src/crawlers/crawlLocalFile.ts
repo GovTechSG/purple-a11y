@@ -1,28 +1,18 @@
-import crawlee, { Request, RequestList } from 'crawlee';
+import { Request, RequestList } from 'crawlee';
 import printMessage from 'print-message';
-import {
-  createCrawleeSubFolders,
-  preNavigationHooks,
-  runAxeScript,
-  failedRequestHandler,
-  isUrlPdf,
-} from './commonCrawlerFunc.js';
+import fs from 'fs';
+import path from 'path';
+import { createCrawleeSubFolders, runAxeScript, isUrlPdf } from './commonCrawlerFunc.js';
 import constants, { guiInfoStatusTypes, basicAuthRegex } from '../constants/constants.js';
 import {
-  getLinksFromSitemap,
   getPlaywrightLaunchOptions,
   messageOptions,
-  isSkippedUrl,
   isFilePath,
   convertLocalFileToPath,
   convertPathToLocalFile,
 } from '../constants/common.js';
-import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
-import { handlePdfDownload, runPdfScan, mapPdfScanResults, doPdfScreenshots } from './pdfScanFunc.js';
-import fs from 'fs';
+import { runPdfScan, mapPdfScanResults, doPdfScreenshots } from './pdfScanFunc.js';
 import { guiInfoLog } from '../logs.js';
-import playwright from 'playwright';
-import path from 'path';
 import crawlSitemap from './crawlSitemap.js';
 
 const crawlLocalFile = async (

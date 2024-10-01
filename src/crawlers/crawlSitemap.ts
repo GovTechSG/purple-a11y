@@ -1,14 +1,14 @@
 import crawlee, { Request, RequestList } from 'crawlee';
 import printMessage from 'print-message';
+import fs from 'fs';
 import {
   createCrawleeSubFolders,
   preNavigationHooks,
   runAxeScript,
-  failedRequestHandler,
   isUrlPdf,
 } from './commonCrawlerFunc.js';
 
-import constants, { guiInfoStatusTypes, basicAuthRegex } from '../constants/constants.js';
+import constants, { guiInfoStatusTypes } from '../constants/constants.js';
 import {
   getLinksFromSitemap,
   getPlaywrightLaunchOptions,
@@ -20,7 +20,6 @@ import {
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
-import fs from 'fs';
 import { guiInfoLog } from '../logs.js';
 
 const crawlSitemap = async (

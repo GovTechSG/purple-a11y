@@ -3,13 +3,13 @@
 /* eslint-disable no-param-reassign */
 import printMessage from 'print-message';
 import inquirer from 'inquirer';
+import { EnqueueStrategy } from 'crawlee';
 import {
   getVersion,
   cleanUp,
   setHeadlessMode,
   getUserDataTxt,
   writeToUserDataTxt,
-  getStoragePath,
 } from './utils.js';
 import {
   prepareData,
@@ -22,8 +22,7 @@ import {
 } from './constants/common.js';
 import questions from './constants/questions.js';
 import combineRun from './combine.js';
-import constants, { BrowserTypes, ScannerTypes } from './constants/constants.js';
-import { EnqueueStrategy } from 'crawlee';
+import { BrowserTypes, ScannerTypes } from './constants/constants.js';
 
 export type Answers = {
   headless: boolean;

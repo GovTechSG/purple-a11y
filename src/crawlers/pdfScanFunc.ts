@@ -1,15 +1,19 @@
-import constants, { getExecutablePath, guiInfoStatusTypes, UrlsCrawled } from '../constants/constants.js';
 import { spawnSync } from 'child_process';
-import { consoleLogger, guiInfoLog, silentLogger } from '../logs.js';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
 import { createRequire } from 'module';
 import os from 'os';
 import path from 'path';
-import { getPageFromContext, getPdfScreenshots } from '../screenshotFunc/pdfScreenshotFunc.js';
-import { isFilePath } from '../constants/common.js';
 import { ensureDirSync, ReadStream } from 'fs-extra';
 import { Request } from 'crawlee';
+import { getPageFromContext, getPdfScreenshots } from '../screenshotFunc/pdfScreenshotFunc.js';
+import { isFilePath } from '../constants/common.js';
+import { consoleLogger, guiInfoLog, silentLogger } from '../logs.js';
+import constants, {
+  getExecutablePath,
+  guiInfoStatusTypes,
+  UrlsCrawled,
+} from '../constants/constants.js';
 
 const require = createRequire(import.meta.url);
 

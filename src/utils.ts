@@ -1,13 +1,12 @@
 import { execSync, spawnSync } from 'child_process';
 import path from 'path';
 import os from 'os';
-import {
+import fs from 'fs-extra';
+import constants, {
   BrowserTypes,
   destinationPath,
   getIntermediateScreenshotsPath,
 } from './constants/constants.js';
-import fs from 'fs-extra';
-import constants from './constants/constants.js';
 import { silentLogger } from './logs.js';
 
 export const getVersion = () => {

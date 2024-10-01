@@ -1,8 +1,8 @@
 // import { JSDOM } from "jsdom";
-import { consoleLogger, silentLogger } from '../logs.js';
 import { createHash } from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import { consoleLogger } from '../logs.js';
 
 const screenshotMap = {}; // Map of screenshot hashkey to its buffer value and screenshot path
 

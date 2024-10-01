@@ -1,6 +1,6 @@
 import { Options } from 'yargs';
-import { BrowserTypes, ScannerTypes } from './constants.js';
 import printMessage from 'print-message';
+import { BrowserTypes, ScannerTypes } from './constants.js';
 
 export const messageOptions = {
   border: false,
