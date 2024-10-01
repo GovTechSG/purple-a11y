@@ -1401,9 +1401,11 @@ export const cloneChromeProfiles = (randomToken?: string): string => {
   }
 
   if (fs.existsSync(destDir)) {
-    process.env.PURPLE_A11Y_VERBOSE
-      ? deleteClonedChromeProfiles(randomToken)
-      : deleteClonedChromeProfiles();
+    if (process.env.PURPLE_A11Y_VERBOSE) {
+      deleteClonedChromeProfiles(randomToken);
+    } else {
+      deleteClonedChromeProfiles();
+    }
   }
 
   if (!fs.existsSync(destDir)) {
@@ -1470,9 +1472,11 @@ export const cloneEdgeProfiles = (randomToken?: string): string => {
   }
 
   if (fs.existsSync(destDir)) {
-    process.env.PURPLE_A11Y_VERBOSE
-      ? deleteClonedEdgeProfiles(randomToken)
-      : deleteClonedEdgeProfiles();
+    if (process.env.PURPLE_A11Y_VERBOSE) {
+      deleteClonedEdgeProfiles(randomToken);
+    } else {
+      deleteClonedEdgeProfiles();
+    }
   }
 
   if (!fs.existsSync(destDir)) {
@@ -1694,9 +1698,13 @@ export const submitFormViaPlaywright = async (
   } finally {
     await browserContext.close();
     if (proxy && browserToRun === BrowserTypes.EDGE) {
-      !process.env.PURPLE_A11Y_VERBOSE ? deleteClonedEdgeProfiles() : undefined;
+      if (!process.env.PURPLE_A11Y_VERBOSE) {
+        deleteClonedEdgeProfiles();
+      }
     } else if (proxy && browserToRun === BrowserTypes.CHROME) {
-      !process.env.PURPLE_A11Y_VERBOSE ? deleteClonedChromeProfiles() : undefined;
+      if (!process.env.PURPLE_A11Y_VERBOSE) {
+        deleteClonedChromeProfiles();
+      }
     }
   }
 };
