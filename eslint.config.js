@@ -33,6 +33,7 @@ export default tseslint.config(
       // disabling import/no-unresolved as typescript already checks this
       // https://typescript-eslint.io/troubleshooting/typed-linting/performance/#eslint-plugin-import
       'import/no-unresolved': 'off',
+      'lines-between-class-members': 'off',
     },
   },
 );
