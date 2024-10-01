@@ -239,29 +239,33 @@ const scanInit = async (argvs: Answers): Promise<string> => {
     updatedArgvs.header,
   );
   switch (res.status) {
-    case statuses.success.code:
+    case statuses.success.code: {
       updatedArgvs.finalUrl = res.url;
       if (process.env.VALIDATE_URL_PH_GUI) {
         console.log('Url is valid');
         process.exit(0);
       }
       break;
-    case statuses.unauthorised.code:
+    }
+    case statuses.unauthorised.code: {
       printMessage([statuses.unauthorised.message], messageOptions);
       process.exit(res.status);
       // eslint-disable-next-line no-unreachable
       break;
-    case statuses.cannotBeResolved.code:
+    }
+    case statuses.cannotBeResolved.code: {
       printMessage([statuses.cannotBeResolved.message], messageOptions);
       process.exit(res.status);
       // eslint-disable-next-line no-unreachable
       break;
-    case statuses.systemError.code:
+    }
+    case statuses.systemError.code: {
       printMessage([statuses.systemError.message], messageOptions);
       process.exit(res.status);
       // eslint-disable-next-line no-unreachable
       break;
-    case statuses.invalidUrl.code:
+    }
+    case statuses.invalidUrl.code: {
       if (
         updatedArgvs.scanner !== ScannerTypes.SITEMAP &&
         updatedArgvs.scanner !== ScannerTypes.LOCALFILE
@@ -269,9 +273,7 @@ const scanInit = async (argvs: Answers): Promise<string> => {
         printMessage([statuses.invalidUrl.message], messageOptions);
         process.exit(res.status);
       }
-      /* if sitemap scan is selected, treat this URL as a filepath
-          isFileSitemap will tell whether the filepath exists, and if it does, whether the
-          file is a sitemap */
+
       const finalFilePath = getFileSitemap(updatedArgvs.url);
       if (finalFilePath) {
         updatedArgvs.isLocalFileScan = true;
@@ -280,7 +282,6 @@ const scanInit = async (argvs: Answers): Promise<string> => {
           console.log('Url is valid');
           process.exit(0);
         }
-        break;
       } else if (updatedArgvs.scanner === ScannerTypes.LOCALFILE) {
         printMessage([statuses.notALocalFile.message], messageOptions);
         process.exit(statuses.notALocalFile.code);
@@ -289,21 +290,25 @@ const scanInit = async (argvs: Answers): Promise<string> => {
         process.exit(statuses.notASitemap.code);
       }
       break;
-    case statuses.notASitemap.code:
+    }
+    case statuses.notASitemap.code: {
       printMessage([statuses.notASitemap.message], messageOptions);
       process.exit(res.status);
       // eslint-disable-next-line no-unreachable
       break;
-    case statuses.notALocalFile.code:
+    }
+    case statuses.notALocalFile.code: {
       printMessage([statuses.notALocalFile.message], messageOptions);
       process.exit(res.status);
       // eslint-disable-next-line no-unreachable
       break;
-    case statuses.browserError.code:
+    }
+    case statuses.browserError.code: {
       printMessage([statuses.browserError.message], messageOptions);
       process.exit(res.status);
       // eslint-disable-next-line no-unreachable
       break;
+    }
     default:
       break;
   }
