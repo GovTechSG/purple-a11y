@@ -1,4 +1,5 @@
 import printMessage from 'print-message';
+import { pathToFileURL } from 'url';
 import crawlSitemap from './crawlers/crawlSitemap.js';
 import crawlDomain from './crawlers/crawlDomain.js';
 import crawlLocalFile from './crawlers/crawlLocalFile.js';
@@ -11,7 +12,6 @@ import { consoleLogger, silentLogger } from './logs.js';
 import runCustom from './crawlers/runCustom.js';
 import { alertMessageOptions } from './constants/cliFunctions.js';
 import { Data } from './index.js';
-import { pathToFileURL } from 'url';
 
 // Class exports
 export class ViewportSettingsClass {
