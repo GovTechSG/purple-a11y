@@ -80,7 +80,7 @@ const combineRun = async (details: Data, deviceToScan: string) => {
     ? urlWithoutAuth(url)
     : new URL(pathToFileURL(url));
 
-  //Use the string version of finalUrl to reduce logic at submitForm
+  // Use the string version of finalUrl to reduce logic at submitForm
   const finalUrlString = finalUrl.toString();
 
   const scanDetails = {
@@ -219,7 +219,7 @@ const combineRun = async (details: Data, deviceToScan: string) => {
         browser,
         userDataDirectory,
         url, // scannedUrl
-        new URL(finalUrlString).href, //entryUrl
+        new URL(finalUrlString).href, // entryUrl
         type,
         email,
         name,
