@@ -171,7 +171,7 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   .coerce('q', option => {
     try {
       JSON.parse(option);
-    } catch (e) {
+    } catch {
       // default to empty object
       return '{}';
     }
