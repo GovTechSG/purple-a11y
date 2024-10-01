@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import fs from 'fs-extra';
 import _yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import printMessage from 'print-message';
