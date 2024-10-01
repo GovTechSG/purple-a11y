@@ -128,15 +128,18 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return option;
   })
   .coerce('x', option => {
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename) + '/../'; // check in the parent of dist directory
+    const filename = fileURLToPath(import.meta.url);
+    const dirname = `${path.dirname(filename)}/../`; // check in the parent of dist directory
 
     try {
-      return validateFilePath(option, __dirname);
+      return validateFilePath(option, dirname);
     } catch (err) {
       printMessage([`Invalid blacklistedPatternsFilename file path. ${err}`], messageOptions);
       process.exit(1);
     }
+
+    // eslint-disable-next-line no-unreachable
+    return null;
   })
   .coerce('i', option => {
     const { choices } = cliOptions.i;
