@@ -9,7 +9,6 @@ import {
   setHeadlessMode,
   getUserDataTxt,
   writeToUserDataTxt,
-  getStoragePath,
 } from './utils.js';
 import {
   prepareData,
@@ -22,7 +21,7 @@ import {
 } from './constants/common.js';
 import questions from './constants/questions.js';
 import combineRun from './combine.js';
-import constants, { BrowserTypes, ScannerTypes } from './constants/constants.js';
+import { BrowserTypes, ScannerTypes } from './constants/constants.js';
 import { EnqueueStrategy } from 'crawlee';
 
 export type Answers = {
