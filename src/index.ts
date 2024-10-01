@@ -80,6 +80,8 @@ export type Data = {
   zip?: string;
 };
 
+const userData = getUserDataTxt();
+
 const runScan = async (answers: Answers) => {
   const screenToScan = getScreenToScan(
     answers.deviceChosen,
@@ -91,7 +93,7 @@ const runScan = async (answers: Answers) => {
     answers.customDevice,
     answers.viewportWidth,
   );
-  let { browserToRun } = getBrowserToRun(BrowserTypes.CHROME);
+  const { browserToRun } = getBrowserToRun(BrowserTypes.CHROME);
   deleteClonedProfiles(browserToRun);
   answers.browserToRun = browserToRun;
 
@@ -118,8 +120,6 @@ const runScan = async (answers: Answers) => {
 
   process.exit(0);
 };
-
-const userData = getUserDataTxt();
 
 if (userData) {
   printMessage(
