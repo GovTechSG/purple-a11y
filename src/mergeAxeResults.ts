@@ -121,7 +121,7 @@ const writeCsv = async (allIssues, storagePath) => {
       .filter(([category]) => category !== 'passed')
       .reduce((prev: [string, RuleInfo][], [category, value]) => {
         const rulesEntries = Object.entries(value.rules);
-        for (let [rule, ruleInfo] of rulesEntries) {
+        for (const [rule, ruleInfo] of rulesEntries) {
           prev.push([category, ruleInfo]);
         }
         return prev;
@@ -151,7 +151,7 @@ const writeCsv = async (allIssues, storagePath) => {
     pagesAffected.sort((a, b) => a.url.localeCompare(b.url));
     // format clauses as a string
     const wcagConformance = clausesArr.join(',');
-    for (let page of pagesAffected) {
+    for (const page of pagesAffected) {
       const { url, items } = page;
       items.forEach(item => {
         const { html, page, message, xpath } = item;
@@ -618,9 +618,9 @@ export const generateArtifacts = async (
   };
 
   if (process.env.PURPLE_A11Y_VERBOSE) {
-    let axeImpactCount = getAxeImpactCount(allIssues);
+    const axeImpactCount = getAxeImpactCount(allIssues);
 
-    let scanData = {
+    const scanData = {
       url: allIssues.urlScanned,
       startTime: formatDateTimeForMassScanner(allIssues.startTime),
       endTime: formatDateTimeForMassScanner(allIssues.endTime),
@@ -650,10 +650,10 @@ export const generateArtifacts = async (
       },
     };
 
-    let { items, startTime, endTime, ...rest } = allIssues;
-    let encodedScanItems = base64Encode(items);
-    let formattedStartTime = formatDateTimeForMassScanner(startTime);
-    let formattedEndTime = formatDateTimeForMassScanner(endTime);
+    const { items, startTime, endTime, ...rest } = allIssues;
+    const encodedScanItems = base64Encode(items);
+    const formattedStartTime = formatDateTimeForMassScanner(startTime);
+    const formattedEndTime = formatDateTimeForMassScanner(endTime);
     rest.critical = axeImpactCount.critical;
     rest.serious = axeImpactCount.serious;
     rest.moderate = axeImpactCount.moderate;
@@ -663,9 +663,9 @@ export const generateArtifacts = async (
     rest.formattedStartTime = formattedStartTime;
     rest.formattedEndTime = formattedEndTime;
 
-    let encodedScanData = base64Encode(rest);
+    const encodedScanData = base64Encode(rest);
 
-    let scanDetailsMessage = {
+    const scanDetailsMessage = {
       type: 'scanDetailsMessage',
       payload: { scanData: encodedScanData, scanItems: encodedScanItems },
     };
@@ -706,7 +706,7 @@ export const generateArtifacts = async (
       }
 
       if (process.send && process.env.PURPLE_A11Y_VERBOSE && process.env.REPORT_BREAKDOWN != '1') {
-        let zipFileNameMessage = {
+        const zipFileNameMessage = {
           type: 'zipFileName',
           payload: `${constants.cliZipFileName}`,
         };
