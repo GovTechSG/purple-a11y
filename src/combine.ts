@@ -39,7 +39,6 @@ const combineRun = async (details: Data, deviceToScan: string) => {
   const {
     type,
     url,
-    entryUrl,
     nameEmail,
     randomToken,
     deviceChosen,
@@ -47,7 +46,6 @@ const combineRun = async (details: Data, deviceToScan: string) => {
     viewportWidth,
     playwrightDeviceDetailsObject,
     maxRequestsPerCrawl,
-    isLocalFileScan,
     browser,
     userDataDirectory,
     strategy,

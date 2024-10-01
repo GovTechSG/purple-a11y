@@ -505,7 +505,7 @@ const crawlDomain = async (
     ],
     preNavigationHooks: isBasicAuth
       ? [
-          async ({ page, request }) => {
+          async ({ page }) => {
             await page.setExtraHTTPHeaders({
               Authorization: authHeader,
               ...extraHTTPHeaders,
@@ -513,7 +513,7 @@ const crawlDomain = async (
           },
         ]
       : [
-          async ({ request }) => {
+          async () => {
             preNavigationHooks(extraHTTPHeaders);
           },
         ],

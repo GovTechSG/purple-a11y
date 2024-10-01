@@ -124,7 +124,7 @@ export const getDefaultChromiumDataDir = () => {
 
       try {
         fs.mkdirSync(defaultChromiumDataDir, { recursive: true }); // Use { recursive: true } to create parent directories if they don't exist
-      } catch (error) {
+      } catch {
         defaultChromiumDataDir = '/tmp';
       }
 

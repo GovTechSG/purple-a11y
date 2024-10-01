@@ -60,7 +60,6 @@ export const init = async (
   let goodToFixIssues = 0;
 
   let isInstanceTerminated = false;
-  let numPagesScanned = 0;
 
   const throwErrorIfTerminated = () => {
     if (isInstanceTerminated) {

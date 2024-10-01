@@ -94,7 +94,7 @@ export const screenshotFullPage = async (page, screenshotsDir: string, screensho
     });
 
     if (originalSize) await page.setViewportSize(originalSize);
-  } catch (e) {
+  } catch {
     consoleLogger.error('Unable to take screenshot');
     // Do not return screenshot path if screenshot fails
     return '';
@@ -138,7 +138,7 @@ export const processPage = async (page, processPageParams) => {
 
   try {
     await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
-  } catch (e) {
+  } catch {
     consoleLogger.info('Unable to detect page load state');
   }
 
@@ -198,7 +198,7 @@ export const processPage = async (page, processPageParams) => {
     await page.evaluate(pos => {
       window.scrollTo(pos.x, pos.y);
     }, initialScrollPos);
-  } catch (e) {
+  } catch {
     consoleLogger.error(`Error in scanning page: ${pageUrl}`);
   }
 };
@@ -434,13 +434,13 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
         try {
           await handleOnScanClick();
           page.close();
-        } catch (e) {
+        } catch {
           consoleLogger.info(`Error in calling handleOnScanClick, isCypressTest: ${isCypressTest}`);
         }
       }
 
       consoleLogger.info(`Overlay state: ${existingOverlay}`);
-    } catch (e) {
+    } catch {
       consoleLogger.info('Error in adding overlay menu to page');
       silentLogger.info('Error in adding overlay menu to page');
     }
