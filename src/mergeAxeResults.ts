@@ -4,10 +4,13 @@ import os from 'os';
 import fs, { ensureDirSync } from 'fs-extra';
 import printMessage from 'print-message';
 import path from 'path';
+import ejs from 'ejs';
 import { fileURLToPath } from 'url';
+import { chromium } from 'playwright';
+import { createWriteStream } from 'fs';
+import { AsyncParser, ParserOptions } from '@json2csv/node';
 import constants, { ScannerTypes } from './constants/constants.js';
 import { urlWithoutAuth } from './constants/common.js';
-import ejs from 'ejs';
 import {
   createScreenshotsFolder,
   getStoragePath,
@@ -19,9 +22,6 @@ import {
 } from './utils.js';
 import { consoleLogger, silentLogger } from './logs.js';
 import itemTypeDescription from './constants/itemTypeDescription.js';
-import { chromium } from 'playwright';
-import { createWriteStream } from 'fs';
-import { AsyncParser, ParserOptions } from '@json2csv/node';
 import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
 
 type ItemsInfo = {
