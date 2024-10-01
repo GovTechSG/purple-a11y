@@ -1,4 +1,12 @@
 import crawlee, { EnqueueStrategy } from 'crawlee';
+import fs from 'fs';
+import type { BrowserContext, ElementHandle, Frame, Page } from 'playwright';
+import type { EnqueueLinksOptions, RequestOptions } from 'crawlee';
+import axios from 'axios';
+import { fileTypeFromBuffer } from 'file-type';
+import mime from 'mime-types';
+import https from 'https';
+import type { BatchAddRequestsResult } from '@crawlee/types';
 import {
   createCrawleeSubFolders,
   preNavigationHooks,
@@ -28,16 +36,8 @@ import {
   mapPdfScanResults,
   doPdfScreenshots,
 } from './pdfScanFunc.js';
-import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
-import type { BrowserContext, ElementHandle, Frame, Page } from 'playwright';
 import { ViewportSettingsClass } from '../combine.js';
-import type { EnqueueLinksOptions, RequestOptions } from 'crawlee';
-import type { BatchAddRequestsResult } from '@crawlee/types';
-import axios from 'axios';
-import { fileTypeFromBuffer } from 'file-type';
-import mime from 'mime-types';
-import https from 'https';
 
 const isBlacklisted = (url: string) => {
   const blacklistedPatterns = getBlackListedPatterns(null);

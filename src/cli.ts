@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-import fs from 'fs-extra';
 import _yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import printMessage from 'print-message';
 import { devices } from 'playwright';
-import { cleanUp, zipResults, setHeadlessMode, getVersion, getStoragePath } from './utils.js';
+import { fileURLToPath } from 'url';
+import path from 'path';
+import { cleanUp, setHeadlessMode, getVersion, getStoragePath } from './utils.js';
 import {
   checkUrl,
   prepareData,
@@ -24,8 +25,6 @@ import {
 import constants, { ScannerTypes } from './constants/constants.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
 import combineRun from './combine.js';
-import { fileURLToPath } from 'url';
-import path from 'path';
 import { Answers } from './index.js';
 
 const appVersion = getVersion();

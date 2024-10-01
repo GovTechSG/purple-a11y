@@ -10,13 +10,13 @@ import crawlee, { EnqueueStrategy, Request } from 'crawlee';
 import { parseString } from 'xml2js';
 import fs from 'fs';
 import path from 'path';
-import url from 'url';
+import url, { fileURLToPath, pathToFileURL } from 'url';
 import safe from 'safe-regex';
 import * as https from 'https';
 import os from 'os';
 import { minimatch } from 'minimatch';
 import { globSync } from 'glob';
-import { LaunchOptions, devices, request, webkit } from 'playwright';
+import { LaunchOptions, devices, webkit } from 'playwright';
 import printMessage from 'print-message';
 import constants, {
   getDefaultChromeDataDir,
@@ -31,7 +31,6 @@ import { silentLogger } from '../logs.js';
 import { isUrlPdf } from '../crawlers/commonCrawlerFunc.js';
 import { randomThreeDigitNumberString } from '../utils.js';
 import { Answers, Data } from '../index.js';
-import { fileURLToPath, pathToFileURL } from 'url';
 
 // validateDirPath validates a provided directory path
 // returns null if no error
