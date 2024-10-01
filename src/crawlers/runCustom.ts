@@ -28,7 +28,7 @@ export class ProcessPageParams{
     dataset: any,
     intermediateScreenshotsPath: string,
     urlsCrawled: UrlsCrawled,
-    randomToken: string
+    randomToken: string,
   ) {
     this.scannedIdx = scannedIdx;
     this.blacklistedPatterns = blacklistedPatterns;

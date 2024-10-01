@@ -259,7 +259,7 @@ const crawlDomain = async (
             await requestQueue.addRequest({
               url: newPageUrl,
               skipNavigation: isUrlPdf(newPage.url()),
-              label: newPageUrl
+              label: newPageUrl,
             });
           } else {
             try {
@@ -501,7 +501,7 @@ const crawlDomain = async (
         } else {
           request.skipNavigation = false;
         }
-      }
+      },
     ],
     preNavigationHooks: isBasicAuth
       ? [
