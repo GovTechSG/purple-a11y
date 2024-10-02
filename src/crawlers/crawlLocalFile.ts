@@ -80,9 +80,6 @@ const crawlLocalFile = async (
     linksFromSitemap = [new Request({ url: sitemapUrl })];
     // Non XML file
   } else {
-    const username = '';
-    const password = '';
-
     // Put it to crawlSitemap function to handle xml files
     const updatedUrlsCrawled = await crawlSitemap(
       sitemapUrl,
@@ -124,7 +121,7 @@ const crawlLocalFile = async (
     basicAuthPage = -2;
   }
 
-  let uuidToPdfMapping: Record<string, string> = {}; //key and value of string type
+  const uuidToPdfMapping: Record<string, string> = {}; // key and value of string type
   const isScanHtml: boolean = ['all', 'html-only'].includes(fileTypes);
 
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
