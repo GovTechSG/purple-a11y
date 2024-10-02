@@ -135,16 +135,17 @@ const crawlSitemap = async (
   });
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
 
+  let userDataDir = '';
+  if (userDataDirectory) {
+    userDataDir = process.env.CRAWLEE_HEADLESS !== '0' ? userDataDirectory : '';
+  }
+
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
       launcher: constants.launcher,
       launchOptions: getPlaywrightLaunchOptions(browser),
       // Bug in Chrome which causes browser pool crash when userDataDirectory is set in non-headless mode
-      userDataDir: userDataDirectory
-        ? process.env.CRAWLEE_HEADLESS !== '0'
-          ? userDataDirectory
-          : ''
-        : '',
+      userDataDir,
     },
     retryOnBlocked: true,
     browserPoolOptions: {
@@ -294,15 +295,14 @@ const crawlSitemap = async (
           urlScanned: request.url,
         });
 
-          isScanHtml && urlsCrawled.invalid.push(actualUrl);
+        if (isScanHtml) {
+          urlsCrawled.invalid.push(actualUrl);
         }
       }
     },
     failedRequestHandler: async ({ request }) => {
-      if (isBasicAuth) {
-        request.url
-          ? (request.url = `${request.url.split('://')[0]}://${request.url.split('@')[1]}`)
-          : null;
+      if (isBasicAuth && request.url) {
+        request.url = `${request.url.split('://')[0]}://${request.url.split('@')[1]}`;
       }
 
       // check if scanned pages have reached limit due to multi-instances of handler running
