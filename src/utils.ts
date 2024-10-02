@@ -295,7 +295,7 @@ export const areLinksEqual = (link1, link2) => {
     const arePathEqual = l1.pathname === l2.pathname;
 
     return areHostEqual && arePathEqual;
-  } catch (error) {
+  } catch {
     return link1 === link2;
   }
 };
