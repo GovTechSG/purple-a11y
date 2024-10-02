@@ -1110,7 +1110,7 @@ export const getBrowserToRun = (
     }
 
     if (isCli) {
-        printMessage(['Unable to use Chrome, falling back to Chromium browser...'], messageOptions);
+      printMessage(['Unable to use Chrome, falling back to Chromium browser...'], messageOptions);
     }
   } else if (preferredBrowser === BrowserTypes.EDGE) {
     const edgeData = getEdgeData();
