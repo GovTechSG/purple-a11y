@@ -109,13 +109,13 @@ export const writeToUserDataTxt = async (key, value) => {
   if (fs.existsSync(textFilePath)) {
     const userData = JSON.parse(fs.readFileSync(textFilePath, 'utf8'));
     userData[key] = value;
-    fs.writeFileSync(textFilePath, JSON.stringify(userData,null, 2));
+    fs.writeFileSync(textFilePath, JSON.stringify(userData, null, 2));
   } else {
     const textFilePathDir = path.dirname(textFilePath);
     if (!fs.existsSync(textFilePathDir)) {
       fs.mkdirSync(textFilePathDir, { recursive: true });
     }
-    fs.appendFileSync(textFilePath, JSON.stringify({ [key]: value },null, 2));
+    fs.appendFileSync(textFilePath, JSON.stringify({ [key]: value }, null, 2));
   }
 };
 
@@ -203,9 +203,8 @@ export const getWcagPassPercentage = (wcagViolations: any[]): string => {
   const passedChecks = totalChecks - wcagViolations.length;
   const passPercentage = (passedChecks / totalChecks) * 100;
   
-  return passPercentage.toFixed(2);  // toFixed returns a string, which is correct here
+  return passPercentage.toFixed(2); // toFixed returns a string, which is correct here
 };
-
 
 export const getFormattedTime = inputDate => {
   if (inputDate) {
