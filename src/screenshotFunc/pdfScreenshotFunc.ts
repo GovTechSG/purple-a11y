@@ -381,10 +381,10 @@ export const getBboxPage = (bbox, structure) => {
       const pageIndex = mcidData[0][1] as number;
       return pageIndex + 1;
     }
-      const bboxesFromLocation = bbox.location.includes('pages[')
-        ? calculateLocation(bbox.location)
-        : calculateLocationJSON(bbox.location);
-      return bboxesFromLocation.length ? bboxesFromLocation[0].page : 0;
+    const bboxesFromLocation = bbox.location.includes('pages[')
+      ? calculateLocation(bbox.location)
+      : calculateLocationJSON(bbox.location);
+    return bboxesFromLocation.length ? bboxesFromLocation[0].page : 0;
   } catch (e) {
     console.error(e);
     console.error(`Location not supported: ${bbox.location}`);
@@ -451,7 +451,7 @@ const calculateLocationJSON = location => {
 
 const getTagsFromErrorPlace = (context: string, structure: StructureTree) => {
   const defaultValue = [[[], -1, undefined]];
-  let selectedTag = convertContextToPath(context);
+  const selectedTag = convertContextToPath(context);
 
   if (_.isEmpty(selectedTag)) {
     return defaultValue;
@@ -497,14 +497,14 @@ const getTagsFromErrorPlace = (context: string, structure: StructureTree) => {
           nextStepObject = objectOfErrors;
         }
       } else if (objectOfErrors?.name === node[1] && index === 0) {
-          nextStepObject = objectOfErrors;
-        } else {
-          const clearedChildrenArray = [...objectOfErrors.children].filter(tag => !tag?.mcid);
-          nextStepObject = {
-            ...(clearedChildrenArray.length ? clearedChildrenArray : objectOfErrors.children)[
-              node[0]
-            ],
-          };
+        nextStepObject = objectOfErrors;
+      } else {
+        const clearedChildrenArray = [...objectOfErrors.children].filter(tag => !tag?.mcid);
+        nextStepObject = {
+          ...(clearedChildrenArray.length ? clearedChildrenArray : objectOfErrors.children)[
+            node[0]
+          ],
+        };
       }
       objectOfErrors = { ...nextStepObject };
     });
@@ -529,7 +529,7 @@ const convertContextToPath = (errorContext = ''): ConvertContextToPathReturn => 
     return arrayOfNodes;
   }
 
-  let contextString = errorContext;
+  const contextString = errorContext;
 
   try {
     if (contextString.includes('contentItem') && !contextString.includes('mcid')) {
@@ -579,7 +579,7 @@ const convertContextToPath = (errorContext = ''): ConvertContextToPathReturn => 
       return path;
     }
 
-    let contextStringArray: string[] = contextString.split('PDStructTreeRoot)/')[1].split('/'); // cut path before start of Document
+    const contextStringArray: string[] = contextString.split('PDStructTreeRoot)/')[1].split('/'); // cut path before start of Document
     contextStringArray.forEach(nodeString => {
       const nextIndex = parseInt(nodeString.split('](')[0].split('K[')[1], 10);
       let nextTag: string | string[] = nodeString.split('(')[1].split(')')[0].split(' ');

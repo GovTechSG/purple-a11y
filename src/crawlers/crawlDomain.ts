@@ -94,8 +94,8 @@ const crawlDomain = async (
     fs.mkdirSync(randomToken);
   }
 
-  let pdfDownloads = [];
-  let uuidToPdfMapping = {};
+  const pdfDownloads = [];
+  const uuidToPdfMapping = {};
   const isScanHtml = ['all', 'html-only'].includes(fileTypes);
   const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
   const { maxConcurrency } = constants;
@@ -297,7 +297,7 @@ const crawlDomain = async (
       page.on('popup', async (newPage: Page) => {
         try {
           if (newPage.url() != initialPageUrl && !isExcluded(newPage.url())) {
-            let newPageUrl: string = newPage.url().replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+            const newPageUrl: string = newPage.url().replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
             await requestQueue.addRequest({
               url: newPageUrl,
               skipNavigation: isUrlPdf(newPage.url()),
@@ -325,7 +325,7 @@ const crawlDomain = async (
             !isExcluded(newFrame.url()) &&
             !(newFrame.url() == 'about:blank')
           ) {
-            let newFrameUrl: string = newFrame.url().replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+            const newFrameUrl: string = newFrame.url().replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
             await requestQueue.addRequest({
               url: newFrameUrl,
               skipNavigation: isUrlPdf(newFrame.url()),
@@ -357,7 +357,7 @@ const crawlDomain = async (
           });
           setPageListeners(page);
         }
-        let selectedElementsString = cssQuerySelectors.join(', ');
+        const selectedElementsString = cssQuerySelectors.join(', ');
         const selectedElements: ElementHandle<SVGElement | HTMLElement>[] =
           await page.$$(selectedElementsString);
         // edge case where there might be elements on page that appears intermittently
@@ -368,7 +368,7 @@ const crawlDomain = async (
         if (currentElementIndex + 1 == selectedElements.length) {
           isAllElementsHandled = true;
         }
-        let element: ElementHandle<SVGElement | HTMLElement> =
+        const element: ElementHandle<SVGElement | HTMLElement> =
           selectedElements[currentElementIndex];
         currentElementIndex += 1;
         let newUrlFoundInElement: string = null;
@@ -402,7 +402,7 @@ const crawlDomain = async (
               }
             });
           if (newUrlFoundInElement && !isExcluded(newUrlFoundInElement)) {
-            let newUrlFoundInElementUrl: string = newUrlFoundInElement.replace(
+            const newUrlFoundInElementUrl: string = newUrlFoundInElement.replace(
               /(?<=&|\?)utm_.*?(&|$)/gim,
               '',
             );
@@ -523,7 +523,7 @@ const crawlDomain = async (
         });
 
         let finalUrl = page.url();
-        let requestLabelUrl = request.label;
+        const requestLabelUrl = request.label;
 
         // to handle scenario where the redirected link is not within the scanning website
         const isLoadedUrlFollowStrategy = isFollowStrategy(
@@ -777,7 +777,7 @@ const crawlDomain = async (
             await page.route('**/*', async route => {
               const interceptedRequest = route.request();
               if (interceptedRequest.resourceType() === 'document') {
-                let interceptedRequestUrl = interceptedRequest
+                const interceptedRequestUrl = interceptedRequest
                   .url()
                   .replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
                 await requestQueue.addRequest({
