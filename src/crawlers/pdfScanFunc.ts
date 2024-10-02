@@ -247,7 +247,7 @@ export const handlePdfDownload = (
   urlsCrawled: UrlsCrawled,
 ): { pdfFileName: string; url: string } => {
   const pdfFileName = randomUUID();
-  const url: string = request.url;
+  const { url } = request;
   const pageTitle = decodeURI(request.url).split('/').pop();
 
   pdfDownloads.push(
