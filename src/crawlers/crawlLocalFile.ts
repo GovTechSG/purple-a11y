@@ -80,9 +80,6 @@ const crawlLocalFile = async (
     linksFromSitemap = [new Request({ url: sitemapUrl })];
     // Non XML file
   } else {
-    const username = '';
-    const password = '';
-
     // Put it to crawlSitemap function to handle xml files
     const updatedUrlsCrawled = await crawlSitemap(
       sitemapUrl,
