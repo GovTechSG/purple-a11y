@@ -46,7 +46,7 @@ export const validateDirPath = (dirPath: string): string => {
     }
 
     return null;
-  } catch (error) {
+  } catch {
     return 'Please ensure path provided exists.';
   }
 };
@@ -114,7 +114,7 @@ export const validateFilePath = (filePath: string, cliDir: string) => {
     }
 
     return absolutePath;
-  } catch (error) {
+  } catch {
     throw new Error(`Please ensure path provided exists: ${absolutePath}`);
   }
 };
@@ -177,7 +177,7 @@ const queryCheck = (s: string) => document.createDocumentFragment().querySelecto
 export const isSelectorValid = (selector: string): boolean => {
   try {
     queryCheck(selector);
-  } catch (e) {
+  } catch {
     return false;
   }
   return true;
@@ -433,7 +433,7 @@ const checkUrlConnectivityWithBrowser = async (
 
       try {
         await page.waitForLoadState('networkidle', { timeout: 10000 });
-      } catch (e) {
+      } catch {
         silentLogger.info('Unable to detect networkidle');
       }
 
@@ -952,7 +952,7 @@ export const getLinksFromSitemap = async (
           });
           try {
             data = await (await instance.get(url, { timeout: 80000 })).data;
-          } catch (error) {
+          } catch {
             return; //to skip the error
           }
         } catch (error) {
