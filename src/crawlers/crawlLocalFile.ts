@@ -127,7 +127,7 @@ const crawlLocalFile = async (
 
   finalLinks = [...finalLinks, ...linksFromSitemap];
 
-  const requestList = await RequestList.open({
+  await RequestList.open({
     sources: finalLinks,
   });
 
