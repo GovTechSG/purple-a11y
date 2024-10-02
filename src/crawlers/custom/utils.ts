@@ -410,6 +410,27 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
     pagesDict[pageId] = { page };
   }
 
+  type handleOnScanClickFunction = () => void;
+
+  // Window functions exposed in browser
+  const handleOnScanClick: handleOnScanClickFunction = async () => {
+    log('Scan: click detected');
+    try {
+      await removeOverlayMenu(page);
+      await processPage(page, processPageParams);
+      log('Scan: success');
+      await addOverlayMenu(page, processPageParams.urlsCrawled, menuPos);
+
+      Object.keys(pagesDict)
+        .filter(k => k !== pageId)
+        .forEach(k => {
+          updateMenu(pagesDict[k].page, processPageParams.urlsCrawled);
+        });
+    } catch (error) {
+      log(`Scan failed ${error}`);
+    }
+  };
+
   // Detection of new url within page
   page.on('domcontentloaded', async () => {
     try {
@@ -446,26 +467,6 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
     }
   });
 
-  type handleOnScanClickFunction = () => void;
-
-  // Window functions exposed in browser
-  const handleOnScanClick: handleOnScanClickFunction = async () => {
-    log('Scan: click detected');
-    try {
-      await removeOverlayMenu(page);
-      await processPage(page, processPageParams);
-      log('Scan: success');
-      await addOverlayMenu(page, processPageParams.urlsCrawled, menuPos);
-
-      Object.keys(pagesDict)
-        .filter(k => k !== pageId)
-        .forEach(k => {
-          updateMenu(pagesDict[k].page, processPageParams.urlsCrawled);
-        });
-    } catch (error) {
-      log(`Scan failed ${error}`);
-    }
-  };
   await page.exposeFunction('handleOnScanClick', handleOnScanClick);
 
   type UpdateMenuPosFunction = (newPos: any) => void;
