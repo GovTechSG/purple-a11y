@@ -175,14 +175,14 @@ export const runAxeScript = async (
 ) => {
   // Checking for DOM mutations before proceeding to scan
   await page.evaluate(() => {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       let timeout;
       let mutationCount = 0;
       const MAX_MUTATIONS = 100;
       const MAX_SAME_MUTATION_LIMIT = 10;
       const mutationHash = {};
 
-      const observer = new MutationObserver((mutationsList) => {
+      const observer = new MutationObserver(mutationsList => {
         clearTimeout(timeout);
 
         mutationCount += 1;
@@ -193,7 +193,7 @@ export const runAxeScript = async (
         }
 
         // To handle scenario where DOM elements are constantly changing and unable to exit
-        mutationsList.forEach((mutation) => {
+        mutationsList.forEach(mutation => {
           let mutationKey;
 
           if (mutation.target instanceof Element) {
