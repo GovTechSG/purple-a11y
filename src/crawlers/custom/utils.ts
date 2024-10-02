@@ -126,10 +126,11 @@ export const processPage = async (page, processPageParams) => {
   // make sure to update processPageParams' scannedIdx
   processPageParams.scannedIdx += 1;
 
-  let {
+  let { includeScreenshots } = processPageParams;
+
+  const {
     scannedIdx,
     blacklistedPatterns,
-    includeScreenshots,
     dataset,
     intermediateScreenshotsPath,
     urlsCrawled,
