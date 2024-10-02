@@ -182,9 +182,7 @@ const crawlLocalFile = async (
 
     // get screenshots from pdf docs
     if (includeScreenshots) {
-      await Promise.all(
-        pdfResults.map(async result => await doPdfScreenshots(randomToken, result)),
-      );
+      await Promise.all(pdfResults.map(result => doPdfScreenshots(randomToken, result)));
     }
 
     // push results for each pdf document to key value store
