@@ -249,6 +249,7 @@ const crawlSitemap = async (
 
       if (basicAuthPage < 0) {
         basicAuthPage++;
+      } else if (isScanHtml && status === 200 && isWhitelistedContentType(contentType)) {
         const results = await runAxeScript(includeScreenshots, page, randomToken, null);
         guiInfoLog(guiInfoStatusTypes.SCANNED, {
           numScanned: urlsCrawled.scanned.length,
