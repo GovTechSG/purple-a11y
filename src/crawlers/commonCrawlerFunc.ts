@@ -204,7 +204,7 @@ export const runAxeScript = async (
                 if (!mutationHash[mutationKey]) {
                   mutationHash[mutationKey] = 1;
                 } else {
-                  mutationHash[mutationKey]++;
+                  mutationHash[mutationKey] += 1;
                 }
 
                 if (mutationHash[mutationKey] >= MAX_SAME_MUTATION_LIMIT) {
