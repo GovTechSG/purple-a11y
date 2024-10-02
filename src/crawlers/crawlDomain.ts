@@ -321,7 +321,7 @@ const crawlDomain = async (
           break;
         }
         // handle the last element in selectedElements
-        if (currentElementIndex + 1 == selectedElements.length) {
+        if (currentElementIndex + 1 === selectedElements.length) {
           isAllElementsHandled = true;
         }
         const element: ElementHandle<SVGElement | HTMLElement> =
