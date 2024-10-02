@@ -211,7 +211,7 @@ export const init = async (
         ...scanDetails.urlsCrawled.error,
         ...scanDetails.urlsCrawled.invalid,
       ];
-      scanAboutMetadata = {
+      const updatedScanAboutMetadata = {
         viewport: `${viewportSettings.width} x ${viewportSettings.height}`,
         ...scanAboutMetadata,
       };
@@ -219,11 +219,11 @@ export const init = async (
         randomToken,
         scanDetails.requestUrl,
         scanDetails.crawlType,
-        scanAboutMetadata.viewport,
+        updatedScanAboutMetadata.viewport,
         scanDetails.urlsCrawled.scanned,
         pagesNotScanned,
         testLabel,
-        scanAboutMetadata,
+        updatedScanAboutMetadata,
         scanDetails,
         zip,
       );
