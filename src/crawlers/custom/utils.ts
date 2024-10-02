@@ -434,7 +434,7 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
         try {
           await handleOnScanClick();
           page.close();
-        } catch (e) {
+        } catch {
           consoleLogger.info(`Error in calling handleOnScanClick, isCypressTest: ${isCypressTest}`);
         }
       }
