@@ -1,5 +1,5 @@
-import { Answers } from '../index.js';
 import { Question } from 'inquirer';
+import { Answers } from '../index.js';
 import { getUserDataTxt } from '../utils.js';
 import {
   checkUrl,
