@@ -269,9 +269,8 @@ export const sanitizeUrlInput = (url: string): { isValid: boolean; url: string }
   const sanitizeUrl = validator.blacklist(url, blackListCharacters);
   if (validator.isURL(sanitizeUrl, urlOptions)) {
     return { isValid: true, url: sanitizeUrl };
-  } else {
-    return { isValid: false, url: sanitizeUrl };
   }
+  return { isValid: false, url: sanitizeUrl };
 };
 
 const requestToUrl = async (
@@ -801,11 +800,11 @@ export const getLinksFromSitemap = async (
 
     if (normalizedSitemapUrl == normalizedUserUrlInput) {
       return 2;
-    } else if (normalizedSitemapUrl.startsWith(normalizedUserUrlInput)) {
-      return 1;
-    } else {
-      return 0;
     }
+    if (normalizedSitemapUrl.startsWith(normalizedUserUrlInput)) {
+      return 1;
+    }
+    return 0;
   };
   const processXmlSitemap = async ($, sitemapType, linkSelector, dateSelector, sectionSelector) => {
     const urlList = [];
@@ -1097,7 +1096,8 @@ export const getBrowserToRun = (
 
       constants.launcher = webkit;
       return { browserToRun: null, clonedBrowserDataDir: '' };
-    } else if (platform === 'win32') {
+    }
+    if (platform === 'win32') {
       if (isCli)
         printMessage(['Unable to use Chrome, falling back to Edge browser...'], messageOptions);
 
@@ -1107,9 +1107,9 @@ export const getBrowserToRun = (
       if (isCli)
         printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
       process.exit(constants.urlCheckStatuses.browserError.code);
-    } else {
-      // linux and other OS
-      if (isCli)
+    }
+
+    if (isCli) {
         printMessage(['Unable to use Chrome, falling back to Chromium browser...'], messageOptions);
     }
   } else if (preferredBrowser === BrowserTypes.EDGE) {
@@ -1131,7 +1131,8 @@ export const getBrowserToRun = (
 
       constants.launcher = webkit;
       return { browserToRun: null, clonedBrowserDataDir: '' };
-    } else if (platform === 'win32') {
+    }
+    if (platform === 'win32') {
       if (isCli)
         printMessage(['Unable to use both Edge and Chrome. Please try again.'], messageOptions);
       process.exit(constants.urlCheckStatuses.browserError.code);
@@ -1161,11 +1162,11 @@ export const getBrowserToRun = (
 export const getClonedProfilesWithRandomToken = (browser: string, randomToken: string): string => {
   if (browser === BrowserTypes.CHROME) {
     return cloneChromeProfiles(randomToken);
-  } else if (browser === BrowserTypes.EDGE) {
-    return cloneEdgeProfiles(randomToken);
-  } else {
-    return cloneChromiumProfiles(randomToken);
   }
+  if (browser === BrowserTypes.EDGE) {
+    return cloneEdgeProfiles(randomToken);
+  }
+  return cloneChromiumProfiles(randomToken);
 };
 
 export const getChromeData = () => {
@@ -1174,9 +1175,8 @@ export const getChromeData = () => {
   if (browserDataDir && clonedBrowserDataDir) {
     const browserToRun = BrowserTypes.CHROME;
     return { browserToRun, clonedBrowserDataDir };
-  } else {
-    return null;
   }
+  return null;
 };
 
 export const getEdgeData = () => {
@@ -1585,7 +1585,6 @@ export const deleteClonedEdgeProfiles = (randomToken?: string): void => {
         }
       }
     });
-    return;
   }
 };
 
@@ -1652,13 +1651,14 @@ export const getScreenToScan = (
 ): string => {
   if (deviceChosen) {
     return deviceChosen;
-  } else if (customDevice) {
-    return customDevice;
-  } else if (viewportWidth) {
-    return `CustomWidth_${viewportWidth}px`;
-  } else {
-    return 'Desktop';
   }
+  if (customDevice) {
+    return customDevice;
+  }
+  if (viewportWidth) {
+    return `CustomWidth_${viewportWidth}px`;
+  }
+  return 'Desktop';
 };
 
 export const submitFormViaPlaywright = async (
