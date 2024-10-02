@@ -48,7 +48,10 @@ NodeCanvasFactory.prototype = {
     canvasAndContext.canvas.height = height;
   },
 
-  destroy: function NodeCanvasFactory_destroy(canvasAndContext: { canvas: Canvas; context: SKRSContext2D }) {
+  destroy: function NodeCanvasFactory_destroy(canvasAndContext: {
+    canvas: Canvas;
+    context: SKRSContext2D;
+  }) {
     assert(canvasAndContext.canvas, 'Canvas is not specified');
 
     canvasAndContext.canvas = null;
@@ -58,7 +61,11 @@ NodeCanvasFactory.prototype = {
 
 const canvasFactory = new NodeCanvasFactory();
 
-export async function getPdfScreenshots(pdfFilePath: string, items: TransformedRuleObject["items"], screenshotPath: string) {
+export async function getPdfScreenshots(
+  pdfFilePath: string,
+  items: TransformedRuleObject['items'],
+  screenshotPath: string,
+) {
   const newItems = _.cloneDeep(items);
   const loadingTask = pdfjs.getDocument({
     url: pdfFilePath,
@@ -489,8 +496,7 @@ const getTagsFromErrorPlace = (context: string, structure: StructureTree) => {
         } else {
           nextStepObject = objectOfErrors;
         }
-      } else {
-        if (objectOfErrors?.name === node[1] && index === 0) {
+      } else if (objectOfErrors?.name === node[1] && index === 0) {
           nextStepObject = objectOfErrors;
         } else {
           const clearedChildrenArray = [...objectOfErrors.children].filter(tag => !tag?.mcid);
@@ -499,7 +505,6 @@ const getTagsFromErrorPlace = (context: string, structure: StructureTree) => {
               node[0]
             ],
           };
-        }
       }
       objectOfErrors = { ...nextStepObject };
     });
