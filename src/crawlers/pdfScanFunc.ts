@@ -297,12 +297,13 @@ export const handlePdfDownload = (randomToken: string, pdfDownloads: Promise<voi
 
 export const runPdfScan = async (randomToken: string) => {
   const execFile = getVeraExecutable();
-  const veraPdfExe = '"' + execFile + '"';
+  const veraPdfExe = `"${execFile}"`;
   // const veraPdfProfile = getVeraProfile();
-  const veraPdfProfile =
-    '"' +
-    path.join(execFile, '..', 'profiles/veraPDF-validation-profiles-rel-1.26/PDF_UA/WCAG-2-2.xml') +
-    '"';
+  const veraPdfProfile = `"${path.join(
+    execFile,
+    '..',
+    'profiles/veraPDF-validation-profiles-rel-1.26/PDF_UA/WCAG-2-2.xml',
+  )}"`;
   if (!veraPdfExe || !veraPdfProfile) {
     process.exit(1);
   }
@@ -414,7 +415,7 @@ const transformRule = async (
   transformed.totalItems = checks.length;
 
   if (specification === 'WCAG2.1') {
-    transformed.conformance = [clauseToLevel[clause], 'wcag' + clause.split('.').join('')];
+    transformed.conformance = [clauseToLevel[clause], `wcag${clause.split('.').join('')}`];
   } else {
     transformed.conformance = ['best-practice'];
   }
