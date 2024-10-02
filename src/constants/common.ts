@@ -527,7 +527,7 @@ export const checkUrl = async (
   return res;
 };
 
-const isEmptyObject = (obj: Object): boolean => !Object.keys(obj).length;
+const isEmptyObject = (obj: object): boolean => !Object.keys(obj).length;
 
 export const parseHeaders = (header?: string): Record<string, string> => {
   // parse HTTP headers from string
