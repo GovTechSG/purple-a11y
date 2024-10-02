@@ -35,10 +35,10 @@ export const getStoragePath = (randomToken: string): string => {
   if (constants.exportDirectory === process.cwd()) {
     return `results/${randomToken}`;
   }
-    if (!path.isAbsolute(constants.exportDirectory)) {
-      constants.exportDirectory = path.resolve(process.cwd(), constants.exportDirectory);
-    }
-    return `${constants.exportDirectory}/${randomToken}`;
+  if (!path.isAbsolute(constants.exportDirectory)) {
+    constants.exportDirectory = path.resolve(process.cwd(), constants.exportDirectory);
+  }
+  return `${constants.exportDirectory}/${randomToken}`;
 };
 
 export const createDetailsAndLogs = async randomToken => {
@@ -86,8 +86,8 @@ export const getUserDataFilePath = () => {
       'userData.txt',
     );
   }
-    // linux and other OS
-    return path.join(process.env.HOME, '.config', 'purple-a11y', 'userData.txt');
+  // linux and other OS
+  return path.join(process.env.HOME, '.config', 'purple-a11y', 'userData.txt');
 };
 
 export const getUserDataTxt = () => {
@@ -158,8 +158,8 @@ export const createScreenshotsFolder = randomToken => {
       if (!fs.existsSync(destinationPath(storagePath))) {
         try {
           fs.mkdirSync(destinationPath(storagePath), { recursive: true });
-        } catch (err) {
-          console.error('Screenshots folder was not created successfully:', err);
+        } catch (error) {
+          console.error('Screenshots folder was not created successfully:', error);
         }
       }
 
@@ -170,9 +170,9 @@ export const createScreenshotsFolder = randomToken => {
         );
       });
 
-      fs.rmdir(intermediateScreenshotsPath, err => {
-        if (err) {
-          console.log(err);
+      fs.rmdir(intermediateScreenshotsPath, rmdirErr => {
+        if (rmdirErr) {
+          console.log(rmdirErr);
         }
       });
     });
@@ -199,7 +199,7 @@ export const getWcagPassPercentage = (wcagViolations: any[]): string => {
   const totalChecks = Object.keys(constants.wcagLinks).length;
   const passedChecks = totalChecks - wcagViolations.length;
   const passPercentage = (passedChecks / totalChecks) * 100;
-  
+
   return passPercentage.toFixed(2); // toFixed returns a string, which is correct here
 };
 
@@ -214,15 +214,15 @@ export const getFormattedTime = inputDate => {
       minute: '2-digit',
     });
   }
-    return new Date().toLocaleTimeString('en-GB', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour12: false,
-      hour: 'numeric',
-      minute: '2-digit',
-      timeZoneName: 'longGeneric',
-    });
+  return new Date().toLocaleTimeString('en-GB', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour12: false,
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'longGeneric',
+  });
 };
 
 export const formatDateTimeForMassScanner = date => {
