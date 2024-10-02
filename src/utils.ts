@@ -10,7 +10,8 @@ import constants, {
 import { silentLogger } from './logs.js';
 
 export const getVersion = () => {
-  const loadJSON = path => JSON.parse(fs.readFileSync(new URL(path, import.meta.url)).toString());
+  const loadJSON = filePath =>
+    JSON.parse(fs.readFileSync(new URL(filePath, import.meta.url)).toString());
   const versionNum = loadJSON('../package.json').version;
 
   return versionNum;
