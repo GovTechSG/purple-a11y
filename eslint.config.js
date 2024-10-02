@@ -16,7 +16,14 @@ export default tseslint.config(
   },
   ...compat.extends('airbnb-base', 'plugin:prettier/recommended'),
   {
-    languageOptions: { globals: globals.node, ecmaVersion: 'latest', sourceType: 'module' },
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.browser,
+      },
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+    },
     plugins: {
       pluginImport,
       pluginPrettier,
