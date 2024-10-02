@@ -82,10 +82,10 @@ export const init = async (
         checks: [
           {
             id: 'oobee-confusing-alt-text',
-            evaluate: function(node: HTMLElement) {
+            evaluate(node: HTMLElement) {
               const altText = node.getAttribute('alt');
               const confusingTexts = ['img', 'image', 'picture', 'photo', 'graphic'];
-      
+
               if (altText) {
                 const trimmedAltText = altText.trim().toLowerCase();
                 // Check if the alt text exactly matches one of the confusingTexts
@@ -93,7 +93,7 @@ export const init = async (
                   return false; // Fail the check if the alt text is confusing or not useful
                 }
               }
-      
+
               return true; // Pass the check if the alt text seems appropriate
             },
             metadata: {
