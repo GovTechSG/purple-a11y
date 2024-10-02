@@ -373,12 +373,11 @@ export const getBboxPage = (bbox, structure) => {
       const mcidData = getTagsFromErrorPlace(bbox.location, structure);
       const pageIndex = mcidData[0][1] as number;
       return pageIndex + 1;
-    } else {
+    }
       const bboxesFromLocation = bbox.location.includes('pages[')
         ? calculateLocation(bbox.location)
         : calculateLocationJSON(bbox.location);
       return bboxesFromLocation.length ? bboxesFromLocation[0].page : 0;
-    }
   } catch (e) {
     console.error(e);
     console.error(`Location not supported: ${bbox.location}`);
@@ -465,9 +464,11 @@ const getTagsFromErrorPlace = (context: string, structure: StructureTree) => {
   if (isPathObject(selectedTag)) {
     if (selectedTag.hasOwnProperty('mcid') && selectedTag.hasOwnProperty('pageIndex')) {
       return [[[selectedTag.mcid], selectedTag.pageIndex]];
-    } else if (selectedTag.hasOwnProperty('annot') && selectedTag.hasOwnProperty('pageIndex')) {
+    }
+    if (selectedTag.hasOwnProperty('annot') && selectedTag.hasOwnProperty('pageIndex')) {
       return [[{ annot: selectedTag.annot }, selectedTag.pageIndex]];
-    } else if (selectedTag.hasOwnProperty('contentItems')) {
+    }
+    if (selectedTag.hasOwnProperty('contentItems')) {
       return [
         [
           undefined,
@@ -560,7 +561,8 @@ const convertContextToPath = (errorContext = ''): ConvertContextToPathReturn => 
         }
       });
       return path;
-    } else if (contextString.includes('annots')) {
+    }
+    if (contextString.includes('annots')) {
       let path: pathObject;
       contextString.split('/').forEach(nodeString => {
         if (nodeString.includes('page')) {

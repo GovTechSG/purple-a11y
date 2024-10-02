@@ -93,11 +93,11 @@ export const cliOptions: { [key: string]: Options } = {
     coerce: (value: string) => {
       if (value.toLowerCase() === 'yes') {
         return true;
-      } else if (value.toLowerCase() === 'no') {
-        return false;
-      } else {
-        throw new Error(`Invalid value "${value}" for -f, --safeMode. Use "yes" or "no".`);
       }
+      if (value.toLowerCase() === 'no') {
+        return false;
+      }
+      throw new Error(`Invalid value "${value}" for -f, --safeMode. Use "yes" or "no".`);
     },
   },
   h: {
@@ -110,11 +110,11 @@ export const cliOptions: { [key: string]: Options } = {
     coerce: (value: string) => {
       if (value.toLowerCase() === 'yes') {
         return true;
-      } else if (value.toLowerCase() === 'no') {
-        return false;
-      } else {
-        throw new Error(`Invalid value "${value}" for -h, --headless. Use "yes" or "no".`);
       }
+      if (value.toLowerCase() === 'no') {
+        return false;
+      }
+      throw new Error(`Invalid value "${value}" for -h, --headless. Use "yes" or "no".`);
     },
   },
   b: {
@@ -230,11 +230,11 @@ export const cliOptions: { [key: string]: Options } = {
     coerce: (value: string) => {
       if (value.toLowerCase() === 'yes') {
         return true;
-      } else if (value.toLowerCase() === 'no') {
-        return false;
-      } else {
-        throw new Error(`Invalid value "${value}" for -r, --followRobots. Use "yes" or "no".`);
       }
+      if (value.toLowerCase() === 'no') {
+        return false;
+      }
+      throw new Error(`Invalid value "${value}" for -r, --followRobots. Use "yes" or "no".`);
     },
   },
   m: {

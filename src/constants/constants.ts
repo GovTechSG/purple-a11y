@@ -63,9 +63,8 @@ export const getDefaultChromeDataDir = (): string => {
 
     if (defaultChromeDataDir && fs.existsSync(defaultChromeDataDir)) {
       return defaultChromeDataDir;
-    } else {
-      return null;
     }
+    return null;
   } catch (error) {
     console.error(`Error in getDefaultChromeDataDir(): ${error}`);
   }
@@ -98,9 +97,8 @@ export const getDefaultEdgeDataDir = (): string => {
 
     if (defaultEdgeDataDir && fs.existsSync(defaultEdgeDataDir)) {
       return defaultEdgeDataDir;
-    } else {
-      return null;
     }
+    return null;
   } catch (error) {
     console.error(`Error in getDefaultEdgeDataDir(): ${error}`);
   }
@@ -133,9 +131,8 @@ export const getDefaultChromiumDataDir = () => {
 
     if (defaultChromiumDataDir && fs.existsSync(defaultChromiumDataDir)) {
       return defaultChromiumDataDir;
-    } else {
-      return null;
     }
+    return null;
   } catch (error) {
     silentLogger.error(`Error in getDefaultChromiumDataDir(): ${error}`);
   }
@@ -158,20 +155,18 @@ export const getExecutablePath = function (dir: string, file: string): string {
 
     if (execInPATH) {
       return fs.realpathSync(execInPATH);
-    } else {
-      const splitPath =
-        os.platform() === 'win32' ? process.env.PATH.split(';') : process.env.PATH.split(':');
-
-      for (let path in splitPath) {
-        execPaths = globSync(path + '/' + file, { absolute: true, nodir: true });
-        if (execPaths.length !== 0) return fs.realpathSync(execPaths[0]);
-      }
-      return null;
     }
-  } else {
-    removeQuarantineFlag(execPaths[0]);
-    return execPaths[0];
+    const splitPath =
+      os.platform() === 'win32' ? process.env.PATH.split(';') : process.env.PATH.split(':');
+
+    for (const path in splitPath) {
+      execPaths = globSync(`${path}/${file}`, { absolute: true, nodir: true });
+      if (execPaths.length !== 0) return fs.realpathSync(execPaths[0]);
+    }
+    return null;
   }
+  removeQuarantineFlag(execPaths[0]);
+  return execPaths[0];
 };
 
 /**
@@ -251,15 +246,14 @@ export const getProxy = (): { type: string; url: string } | null => {
 
     if (getSettingValue('AutoConfigURL')) {
       return { type: 'autoConfig', url: getSettingValue('AutoConfigURL') };
-    } else if (getSettingValue('ProxyEnable') === '1') {
-      return { type: 'manualProxy', url: getSettingValue('ProxyServer') };
-    } else {
-      return null;
     }
-  } else {
-    // develop for mac
+    if (getSettingValue('ProxyEnable') === '1') {
+      return { type: 'manualProxy', url: getSettingValue('ProxyServer') };
+    }
     return null;
   }
+  // develop for mac
+  return null;
 };
 
 export const proxy = getProxy();
