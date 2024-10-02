@@ -427,7 +427,6 @@ const crawlDomain = async (
         // Handles browser page object been closed.
       }
     }
-    return;
   };
 
   let isAbortingScanNow = false;
@@ -781,7 +780,6 @@ const crawlDomain = async (
                   skipNavigation: isUrlPdf(interceptedRequest.url()),
                   label: interceptedRequestUrl,
                 });
-                return;
               }
             });
           }
