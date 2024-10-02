@@ -263,7 +263,7 @@ export const runAxeScript = async (
       });
 
       //removed needsReview condition
-      let defaultResultTypes: resultGroups[] = ['violations', 'passes', 'incomplete'];
+      const defaultResultTypes: resultGroups[] = ['violations', 'passes', 'incomplete'];
 
       return axe.run(selectors, {
         resultTypes: defaultResultTypes,

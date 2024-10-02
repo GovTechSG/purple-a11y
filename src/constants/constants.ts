@@ -32,8 +32,7 @@ export const blackListedFileExtensions = [
 
 export const getIntermediateScreenshotsPath = (datasetsPath: string): string =>
   `${datasetsPath}/screenshots`;
-export const destinationPath = (storagePath: string): string =>
-  `${storagePath}/screenshots`;
+export const destinationPath = (storagePath: string): string => `${storagePath}/screenshots`;
 
 /**  Get the path to Default Profile in the Chrome Data Directory
  * as per https://chromium.googlesource.com/chromium/src/+/master/docs/user_data_dir.md
@@ -140,7 +139,7 @@ export const getDefaultChromiumDataDir = () => {
 
 export const removeQuarantineFlag = function (searchPath: string) {
   if (os.platform() === 'darwin') {
-    let execPaths = globSync(searchPath, { absolute: true, nodir: true });
+    const execPaths = globSync(searchPath, { absolute: true, nodir: true });
     if (execPaths.length > 0) {
       execPaths.forEach(filePath => spawnSync('xattr', ['-d', 'com.apple.quarantine', filePath]));
     }
@@ -151,7 +150,7 @@ export const getExecutablePath = function (dir: string, file: string): string {
   let execPaths = globSync(`${dir}/${file}`, { absolute: true, nodir: true });
 
   if (execPaths.length === 0) {
-    let execInPATH = which.sync(file, { nothrow: true });
+    const execInPATH = which.sync(file, { nothrow: true });
 
     if (execInPATH) {
       return fs.realpathSync(execInPATH);

@@ -311,7 +311,7 @@ const requestToUrl = async (
       } else {
         console.log('Unsupported data type:', typeof response.data);
       }
-      let modifiedHTML = data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
+      const modifiedHTML = data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
 
       const metaRefreshMatch =
         /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?\s*url=(?:'([^']*)'|"([^"]*)"|([^>]*))"/i.exec(
@@ -653,8 +653,8 @@ export const getUrlsFromRobotsTxt = async (url: string, browserToRun: string): P
 
   const lines = robotsTxt.split(/\r?\n/);
   let shouldCapture = false;
-  let disallowedUrls = [],
-    allowedUrls = [];
+  const disallowedUrls = [];
+  const allowedUrls = [];
 
   const sanitisePattern = (pattern: string): string => {
     const directoryRegex = /^\/(?:[^?#/]+\/)*[^?#]*$/;
@@ -816,7 +816,7 @@ export const getLinksFromSitemap = async (
       } else {
         url = $(urlElement).find(linkSelector).text();
       }
-      let lastModified = $(urlElement).find(dateSelector).text();
+      const lastModified = $(urlElement).find(dateSelector).text();
       const lastModifiedDate = lastModified ? new Date(lastModified) : null;
 
       urlList.push({ url, lastModifiedDate });
