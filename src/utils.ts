@@ -152,7 +152,7 @@ export const createScreenshotsFolder = randomToken => {
   if (fs.existsSync(intermediateScreenshotsPath)) {
     fs.readdir(intermediateScreenshotsPath, (err, files) => {
       if (err) {
-        console.log('Screenshots were not moved successfully: ' + err.message);
+        console.log(`Screenshots were not moved successfully: ${err.message}`);
       }
 
       if (!fs.existsSync(destinationPath(storagePath))) {
@@ -228,10 +228,10 @@ export const getFormattedTime = inputDate => {
 export const formatDateTimeForMassScanner = date => {
   // Format date and time parts separately
   const year = date.getFullYear().toString().slice(-2); // Get the last two digits of the year
-  const month = ('0' + (date.getMonth() + 1)).slice(-2); // Month is zero-indexed
-  const day = ('0' + date.getDate()).slice(-2);
-  const hour = ('0' + date.getHours()).slice(-2);
-  const minute = ('0' + date.getMinutes()).slice(-2);
+  const month = `0${date.getMonth() + 1}`.slice(-2); // Month is zero-indexed
+  const day = `0${date.getDate()}`.slice(-2);
+  const hour = `0${date.getHours()}`.slice(-2);
+  const minute = `0${date.getMinutes()}`.slice(-2);
 
   // Combine formatted date and time with a slash
   const formattedDateTime = `${day}/${month}/${year} ${hour}:${minute}`;
