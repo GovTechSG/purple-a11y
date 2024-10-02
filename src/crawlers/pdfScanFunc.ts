@@ -225,7 +225,7 @@ const getVeraExecutable = () => {
     veraPdfExe = getExecutablePath('**/verapdf', 'verapdf');
   }
   if (!veraPdfExe) {
-    let veraPdfExeNotFoundError =
+    const veraPdfExeNotFoundError =
       'Could not find veraPDF executable.  Please ensure veraPDF is installed at current directory.';
     consoleLogger.error(veraPdfExeNotFoundError);
     silentLogger.error(veraPdfExeNotFoundError);
@@ -246,7 +246,7 @@ export const handlePdfDownload = (randomToken: string, pdfDownloads: Promise<voi
 
   pdfDownloads.push(
     new Promise<void>(async resolve => {
-      let bufs = [];
+      const bufs = [];
       let pdfResponse: ReadStream;
 
       if (isFilePath(url)) {
