@@ -234,7 +234,7 @@ export const getFileSitemap = (filePath: string): string | null => {
 
   const file = fs.readFileSync(filePath, 'utf8');
   const isLocalFileScan = isSitemapContent(file);
-  return isLocalFileScan || file != undefined ? filePath : null;
+  return isLocalFileScan || file !== undefined ? filePath : null;
 };
 
 export const getUrlMessage = (scanner: ScannerTypes): string => {
