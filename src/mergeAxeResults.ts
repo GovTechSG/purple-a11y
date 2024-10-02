@@ -121,9 +121,9 @@ const writeCsv = async (allIssues, storagePath) => {
       .filter(([category]) => category !== 'passed')
       .reduce((prev: [string, RuleInfo][], [category, value]) => {
         const rulesEntries = Object.entries(value.rules);
-        for (const [rule, ruleInfo] of rulesEntries) {
+        rulesEntries.forEach(([, ruleInfo]) => {
           prev.push([category, ruleInfo]);
-        }
+        });
         return prev;
       }, [])
       .sort((a, b) => {
@@ -151,13 +151,12 @@ const writeCsv = async (allIssues, storagePath) => {
     pagesAffected.sort((a, b) => a.url.localeCompare(b.url));
     // format clauses as a string
     const wcagConformance = clausesArr.join(',');
-    for (const page of pagesAffected) {
-      const { url, items } = page;
+    pagesAffected.forEach(affectedPage => {
+      const { url, items } = affectedPage;
       items.forEach(item => {
         const { html, page, message, xpath } = item;
         const howToFix = message.replace(/(\r\n|\n|\r)/g, ' '); // remove newlines
-        // page is a number, not string
-        const violation = html || formatPageViolation(page);
+        const violation = html || formatPageViolation(page); // page is a number, not a string
         const context = violation.replace(/(\r\n|\n|\r)/g, ''); // remove newlines
 
         results.push({
@@ -173,7 +172,7 @@ const writeCsv = async (allIssues, storagePath) => {
           learnMore,
         });
       });
-    }
+    });
     if (results.length === 0) return {};
     return results;
   };
