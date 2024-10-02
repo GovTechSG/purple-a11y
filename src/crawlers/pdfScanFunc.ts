@@ -276,7 +276,7 @@ export const handlePdfDownload = (randomToken: string, pdfDownloads: Promise<voi
             urlScanned: request.url,
           });
           urlsCrawled.scanned.push({
-            url: request.url, 
+            url: request.url,
             pageTitle,
             actualUrl: url,
           });
