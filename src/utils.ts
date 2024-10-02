@@ -34,12 +34,11 @@ export const getStoragePath = (randomToken: string): string => {
   }
   if (constants.exportDirectory === process.cwd()) {
     return `results/${randomToken}`;
-  } else {
+  }
     if (!path.isAbsolute(constants.exportDirectory)) {
       constants.exportDirectory = path.resolve(process.cwd(), constants.exportDirectory);
     }
     return `${constants.exportDirectory}/${randomToken}`;
-  }
 };
 
 export const createDetailsAndLogs = async (randomToken) => {
@@ -77,7 +76,8 @@ export const getUserDataFilePath = () => {
   const platform = os.platform();
   if (platform === 'win32') {
     return path.join(process.env.APPDATA, 'Purple A11y', 'userData.txt');
-  } else if (platform === 'darwin') {
+  }
+  if (platform === 'darwin') {
     return path.join(
       process.env.HOME,
       'Library',
@@ -85,10 +85,9 @@ export const getUserDataFilePath = () => {
       'Purple A11y',
       'userData.txt',
     );
-  } else {
+  }
     // linux and other OS
     return path.join(process.env.HOME, '.config', 'purple-a11y', 'userData.txt');
-  }
 };
 
 export const getUserDataTxt = () => {
@@ -216,7 +215,7 @@ export const getFormattedTime = inputDate => {
       hour: 'numeric',
       minute: '2-digit',
     });
-  } else {
+  }
     return new Date().toLocaleTimeString('en-GB', {
       year: 'numeric',
       month: 'short',
@@ -226,7 +225,6 @@ export const getFormattedTime = inputDate => {
       minute: '2-digit',
       timeZoneName: 'longGeneric',
     });
-  }
 };
 
 export const formatDateTimeForMassScanner = date => {
@@ -330,9 +328,8 @@ export const isFollowStrategy = (link1, link2, rule) => {
     const link1Domain = parsedLink1.hostname.split('.').slice(-2).join('.');
     const link2Domain = parsedLink2.hostname.split('.').slice(-2).join('.');
     return link1Domain === link2Domain;
-  } else {
-    return parsedLink1.hostname === parsedLink2.hostname;
   }
+  return parsedLink1.hostname === parsedLink2.hostname;
 };
 
 export const retryFunction = async (func, maxAttempt) => {
