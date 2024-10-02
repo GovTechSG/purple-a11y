@@ -199,7 +199,7 @@ export const runAxeScript = async (
           if (mutation.target instanceof Element) {
             Array.from(mutation.target.attributes).forEach(attr => {
               mutationKey = `${mutation.target.nodeName}-${attr.name}`;
-  
+
               if (mutationKey) {
                 if (!mutationHash[mutationKey]) {
                   mutationHash[mutationKey] = 1;
@@ -262,7 +262,7 @@ export const runAxeScript = async (
         rules: customAxeConfig.rules,
       });
 
-      //removed needsReview condition
+      // removed needsReview condition
       const defaultResultTypes: resultGroups[] = ['violations', 'passes', 'incomplete'];
 
       return axe.run(selectors, {
