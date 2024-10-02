@@ -113,7 +113,7 @@ export const purpleAiHtmlETL = htmlSnippet => {
   // For all attributes within mutedAttributeValues array
   // replace their values with "something" while maintaining the attribute
   const muteAttributeValues = html => {
-    const regex = new RegExp(`(\\s+)([\\w-]+)(\\s*=\\s*")([^"]*)(")`, `g`);
+    const regex = /(\s+)([\w-]+)(\s*=\s*")([^"]*)(")/g;
 
     // p1 is the whitespace before the attribute
     // p2 is the attribute name
