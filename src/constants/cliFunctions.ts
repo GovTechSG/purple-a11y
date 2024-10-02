@@ -21,14 +21,20 @@ export const cliOptions: { [key: string]: Options } = {
     requiresArg: true,
     coerce: option => {
       const choices = ['sitemap', 'website', 'custom', 'intelligent', 'localfile'];
+      let resolvedOption = option;
+
       if (typeof option === 'number') {
         // Will also allow integer choices
-        if (Number.isInteger(option) && option > 0 && option <= choices.length) {
-          option = choices[option - 1];
+        if (
+          Number.isInteger(resolvedOption) &&
+          resolvedOption > 0 &&
+          resolvedOption <= choices.length
+        ) {
+          resolvedOption = choices[resolvedOption - 1];
         }
       }
 
-      switch (option) {
+      switch (resolvedOption) {
         case 'sitemap':
           return ScannerTypes.SITEMAP;
         case 'website':
@@ -42,7 +48,7 @@ export const cliOptions: { [key: string]: Options } = {
         default:
           printMessage(
             [
-              `Invalid option: ${option}`,
+              `Invalid option: ${resolvedOption}`,
               `Please enter an integer (1 to ${choices.length}) or keywords (${choices.join(', ')}).`,
             ],
             messageOptions,
@@ -124,14 +130,19 @@ export const cliOptions: { [key: string]: Options } = {
     requiresArg: true,
     coerce: option => {
       const choices = ['chromium', 'chrome', 'edge'];
+      let resolvedOption = option;
       if (typeof option === 'number') {
         // Will also allow integer choices
-        if (Number.isInteger(option) && option > 0 && option <= choices.length) {
-          option = choices[option - 1];
+        if (
+          Number.isInteger(resolvedOption) &&
+          resolvedOption > 0 &&
+          resolvedOption <= choices.length
+        ) {
+          resolvedOption = choices[resolvedOption - 1];
         }
       }
 
-      switch (option) {
+      switch (resolvedOption) {
         case 'chromium':
           return BrowserTypes.CHROMIUM;
         case 'chrome':
@@ -141,7 +152,7 @@ export const cliOptions: { [key: string]: Options } = {
         default:
           printMessage(
             [
-              `Invalid option: ${option}`,
+              `Invalid option: ${resolvedOption}`,
               `Please enter an integer (1 to ${choices.length}) or keywords (${choices.join(', ')}).`,
             ],
             messageOptions,
