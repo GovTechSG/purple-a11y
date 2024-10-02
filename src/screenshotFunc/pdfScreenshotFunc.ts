@@ -9,8 +9,8 @@ import { silentLogger } from '../logs.js';
 import { TransformedRuleObject } from '../crawlers/pdfScanFunc.js';
 import { IBboxLocation, StructureTree, ViewportSize } from '../types/types.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const filename = fileURLToPath(import.meta.url);
+const dirname = path.dirname(filename);
 
 // CONSTANTS
 const BBOX_PADDING = 50;
@@ -69,7 +69,7 @@ export async function getPdfScreenshots(
   const newItems = _.cloneDeep(items);
   const loadingTask = pdfjs.getDocument({
     url: pdfFilePath,
-    standardFontDataUrl: path.join(__dirname, '../node_modules/pdfjs-dist/standard_fonts/'),
+    standardFontDataUrl: path.join(dirname, '../node_modules/pdfjs-dist/standard_fonts/'),
     disableFontFace: true,
     verbosity: 0,
   });
@@ -193,6 +193,137 @@ const annotateAndSave = (origCanvas: Canvas, screenshotPath: string, viewport: V
   };
 };
 
+export const rotateViewport = (rotateAngle, viewport) => {
+  if ([0, 180].includes(rotateAngle)) {
+    return viewport;
+  }
+  return [viewport[1], viewport[0], viewport[3], viewport[2]];
+};
+
+export const rotatePoint = (rotateAngle, point, viewport) => {
+  const rad = (rotateAngle * Math.PI) / 180;
+  let x = point[0] * Math.cos(rad) + point[1] * Math.sin(rad);
+  let y = -point[0] * Math.sin(rad) + point[1] * Math.cos(rad);
+  switch (rotateAngle) {
+    case 90:
+      y += viewport[2] + viewport[0];
+      break;
+    case 180:
+      x += viewport[2] + viewport[0];
+      y += viewport[3] + viewport[1];
+      break;
+    case 270:
+      x += viewport[3] + viewport[1];
+      break;
+    default:
+      break;
+  }
+  return [x, y];
+};
+
+export const rotateCoordinates = (coords, rotateAngle, viewport) => {
+  if (rotateAngle === 0) return coords;
+  const [x1, y1] = rotatePoint(rotateAngle, [coords[0], coords[1]], viewport);
+  const [x2, y2] = rotatePoint(
+    rotateAngle,
+    [coords[0] + coords[2], coords[1] + coords[3]],
+    viewport,
+  );
+  return [Math.min(x1, x2), Math.min(y1, y2), Math.abs(x1 - x2), Math.abs(y1 - y2)];
+};
+
+function concatBoundingBoxes(newBoundingBox, oldBoundingBox) {
+  if (_.isNil(oldBoundingBox) && _.isNil(newBoundingBox)) {
+    return {};
+  }
+
+  if (_.isNil(newBoundingBox)) {
+    return oldBoundingBox || {};
+  }
+  if (_.isNil(oldBoundingBox)) {
+    return _.cloneDeep(newBoundingBox);
+  }
+  return {
+    x: Math.min(newBoundingBox.x, oldBoundingBox.x),
+    y: Math.min(newBoundingBox.y, oldBoundingBox.y),
+    width:
+      Math.max(newBoundingBox.x + newBoundingBox.width, oldBoundingBox.x + oldBoundingBox.width) -
+      Math.min(newBoundingBox.x, oldBoundingBox.x),
+    height:
+      Math.max(newBoundingBox.y + newBoundingBox.height, oldBoundingBox.y + oldBoundingBox.height) -
+      Math.min(newBoundingBox.y, oldBoundingBox.y),
+  };
+}
+
+export const parseMcidToBbox = (listOfMcid, pageMap, annotations, viewport, rotateAngle) => {
+  type coordsObject = {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  let coords: coordsObject = { x: undefined, y: undefined, width: undefined, height: undefined };
+
+  if (listOfMcid instanceof Array) {
+    listOfMcid.forEach(mcid => {
+      const currentBbox = pageMap[mcid];
+      if (
+        !_.isNil(currentBbox) &&
+        !_.isNaN(currentBbox.x) &&
+        !_.isNaN(currentBbox.y) &&
+        !_.isNaN(currentBbox.width) &&
+        !_.isNaN(currentBbox.height)
+      ) {
+        coords = concatBoundingBoxes(currentBbox, coords.x ? coords : undefined);
+      }
+    });
+  } else if (Object.prototype.hasOwnProperty.call(listOfMcid, 'annot')) {
+    const rect = annotations[listOfMcid.annot]?.rect;
+    if (rect) {
+      coords = {
+        x: rect[0],
+        y: rect[1],
+        width: Math.abs(rect[0] - rect[2]),
+        height: Math.abs(rect[1] - rect[3]),
+      };
+    }
+  }
+  if (!coords) return [];
+  const coordsArray = rotateCoordinates(
+    [coords.x, coords.y, coords.width, coords.height],
+    rotateAngle,
+    viewport,
+  );
+  const rotatedViewport = rotateViewport(rotateAngle, viewport);
+  return [
+    coordsArray[0] - rotatedViewport[0],
+    coordsArray[1] - rotatedViewport[1],
+    coordsArray[2],
+    coordsArray[3],
+  ];
+};
+
+export const getBboxForGlyph = (
+  operatorIndex,
+  glyphIndex,
+  operationsList,
+  viewport,
+  rotateAngle,
+) => {
+  const bbox = operationsList[operatorIndex] ? operationsList[operatorIndex][glyphIndex] : null;
+  if (!bbox) {
+    return [];
+  }
+  const coordsArray = rotateCoordinates(bbox, rotateAngle, viewport);
+  const rotatedViewport = rotateViewport(rotateAngle, viewport);
+  return [
+    coordsArray[0] - rotatedViewport[0],
+    coordsArray[1] - rotatedViewport[1],
+    coordsArray[2],
+    coordsArray[3],
+  ];
+};
+
 // Below are methods adapted from
 // https://github.com/veraPDF/verapdf-js-viewer/blob/master/src/services/bboxService.ts
 // to determine the bounding box data of the violations from the context field
@@ -247,271 +378,36 @@ export const getBboxesList = (bboxList, page: PDFPageProxy) => {
   };
 };
 
-export const buildBboxMap = (bboxes: IBboxLocation[], structure: StructureTree) => {
-  const bboxMap = {};
-  bboxes.forEach((bbox, index) => {
-    try {
-      if (bbox.location.includes('contentStream') && bbox.location.includes('operators')) {
-        const bboxPosition = calculateLocationInStreamOperator(bbox.location);
-        if (!bboxPosition) {
-          return;
-        }
-        bboxMap[bboxPosition.pageIndex + 1] = [
-          ...(bboxMap[bboxPosition.pageIndex + 1] || []),
-          {
-            index,
-            operatorIndex: bboxPosition.operatorIndex,
-            glyphIndex: bboxPosition.glyphIndex,
-            bboxTitle: bbox.bboxTitle,
-          },
-        ];
-      } else if (
-        bbox.location.includes('StructTreeRoot') ||
-        bbox.location.includes('root/doc') ||
-        bbox.location === 'root'
-      ) {
-        const mcidData = getTagsFromErrorPlace(bbox.location, structure);
-        mcidData.forEach(([mcidList, pageIndex, contentItemPath]) => {
-          bboxMap[pageIndex + 1] = [
-            ...(bboxMap[pageIndex + 1] || []),
-            {
-              index,
-              mcidList,
-              contentItemPath,
-              groupId: bbox.groupId || undefined,
-              bboxTitle: bbox.bboxTitle,
-            },
-          ];
-        });
-      } else {
-        const bboxesFromLocation = bbox.location.includes('pages[')
-          ? calculateLocation(bbox.location)
-          : calculateLocationJSON(bbox.location);
-        bboxesFromLocation.forEach(bboxWithLocation => {
-          bboxMap[bboxWithLocation.page] = [
-            ...(bboxMap[bboxWithLocation.page] || []),
-            {
-              index,
-              location: bboxWithLocation.location,
-              groupId: bbox.groupId || undefined,
-              bboxTitle: bbox.bboxTitle,
-            },
-          ];
-        });
-      }
-    } catch (e) {
-      console.error(`Location not supported: ${bbox.location}`);
+/*
+ *  Going through object of tags from error placement and return array of its MCIDs
+ *
+ *  @param {Object} of tags
+ *
+ *  @return [[{Array}, {Number}]] - [[[array of mcids], page of error]]
+ */
+function findAllMcid(tagObject) {
+  const mcidMap = {};
+
+  function func(obj) {
+    if (!obj) return;
+    if (obj.mcid || obj.mcid === 0) {
+      if (!mcidMap[obj.pageIndex]) mcidMap[obj.pageIndex] = [];
+      mcidMap[obj.pageIndex].push(obj.mcid);
     }
-  });
-  return bboxMap;
-};
-
-export const calculateLocationInStreamOperator = location => {
-  const path = location.split('/');
-  let pageIndex = -1;
-  let operatorIndex = -1;
-  let glyphIndex = -1;
-  path.forEach(step => {
-    if (step.startsWith('pages')) {
-      pageIndex = parseInt(step.split(/[\[\]]/)[1]);
+    if (!obj.children) {
+      return;
     }
-    if (step.startsWith('operators')) {
-      operatorIndex = parseInt(step.split(/[\[\]]/)[1]);
+
+    if (!(obj.children instanceof Array)) {
+      func(obj.children);
+    } else {
+      [...obj.children].forEach(child => func(child));
     }
-    if (step.startsWith('usedGlyphs')) {
-      glyphIndex = parseInt(step.split(/[\[\]]/)[1]);
-    }
-  });
-  if (pageIndex === -1 || operatorIndex === -1 || glyphIndex === -1) {
-    return null;
-  }
-  return {
-    pageIndex,
-    operatorIndex,
-    glyphIndex,
-  };
-};
-
-export const getSelectedPageByLocation = bboxLocation => {
-  const location = bboxLocation;
-  const path = location.split('/');
-  let pageNumber = -1;
-  if (location?.includes('pages') && path[path.length - 1].startsWith('pages')) {
-    location.split('/').forEach(nodeString => {
-      if (nodeString.includes('pages')) {
-        pageNumber = parseInt(nodeString.split(/[[\]]/)[1], 10) + 1;
-      }
-    });
-  }
-  return pageNumber;
-};
-
-export const getPageFromContext = async (context: string, pdfFilePath: string): Promise<number> => {
-  try {
-    const loadingTask = pdfjs.getDocument({
-      url: pdfFilePath,
-      standardFontDataUrl: path.join(__dirname, '../../node_modules/pdfjs-dist/standard_fonts/'),
-      disableFontFace: true,
-      verbosity: 0,
-    });
-    const pdf = await loadingTask.promise;
-    const structureTree = await pdf._pdfInfo.structureTree;
-
-    const page = getBboxPage({ location: context }, structureTree);
-    return page;
-  } catch (error) {
-    // Error handling
-  }
-};
-
-export const getBboxPages = (bboxes, structure) => {
-  return bboxes.map(bbox => {
-    getBboxPage(bbox, structure);
-  });
-};
-
-export const getBboxPage = (bbox, structure) => {
-  try {
-    if (
-      bbox.location.includes('StructTreeRoot') ||
-      bbox.location.includes('root/doc') ||
-      bbox.location === 'root'
-    ) {
-      const mcidData = getTagsFromErrorPlace(bbox.location, structure);
-      const pageIndex = mcidData[0][1] as number;
-      return pageIndex + 1;
-    }
-    const bboxesFromLocation = bbox.location.includes('pages[')
-      ? calculateLocation(bbox.location)
-      : calculateLocationJSON(bbox.location);
-    return bboxesFromLocation.length ? bboxesFromLocation[0].page : 0;
-  } catch (e) {
-    console.error(e);
-    console.error(`Location not supported: ${bbox.location}`);
-    return -1;
-  }
-};
-
-const calculateLocation = location => {
-  const bboxes = [];
-  const [pages, boundingBox] = location.split('/');
-  const [start, end] = pages.replace('pages[', '').replace(']', '').split('-');
-  const [x, y, x1, y1] = boundingBox.replace('boundingBox[', '').replace(']', '').split(',');
-  const width = parseFloat(x1) - parseFloat(x);
-
-  if (end) {
-    for (let i = parseInt(start) + 1; i <= parseInt(end) + 1; i++) {
-      switch (i) {
-        case parseInt(start) + 1:
-          bboxes.push({
-            page: i,
-            location: [parseFloat(x), parseFloat(y1), width, 'bottom'],
-          });
-          break;
-        case parseInt(end) + 1:
-          bboxes.push({
-            page: i,
-            location: [parseFloat(x), parseFloat(y), width, 'top'],
-          });
-          break;
-        default:
-          bboxes.push({
-            page: i,
-            location: [parseFloat(x), 0, width, 'top'],
-          });
-          break;
-      }
-    }
-  } else {
-    const height = parseFloat(y1) - parseFloat(y);
-    bboxes.push({
-      page: parseInt(start) + 1,
-      location: [parseFloat(x), parseFloat(y), width, height],
-    });
   }
 
-  return bboxes;
-};
-
-const calculateLocationJSON = location => {
-  const bboxes = [];
-  const bboxMap = JSON.parse(location);
-
-  bboxMap.bbox.forEach(({ p, rect }) => {
-    const [x, y, x1, y1] = rect;
-    const width = parseFloat(x1) - parseFloat(x);
-    const height = parseFloat(y1) - parseFloat(y);
-    bboxes.push({
-      page: parseFloat(p) + 1,
-      location: [parseFloat(x), parseFloat(y), width, height],
-    });
-  });
-  return bboxes;
-};
-
-const getTagsFromErrorPlace = (context: string, structure: StructureTree) => {
-  const defaultValue = [[[], -1, undefined]];
-  const selectedTag = convertContextToPath(context);
-
-  if (_.isEmpty(selectedTag)) {
-    return defaultValue;
-  }
-  // Type guard function
-  function isPathObject(value: any): value is pathObject {
-    return (
-      value !== null &&
-      typeof value === 'object' &&
-      (value.hasOwnProperty('mcid') ||
-        value.hasOwnProperty('pageIndex') ||
-        value.hasOwnProperty('annot') ||
-        value.hasOwnProperty('contentItems'))
-    );
-  }
-
-  if (isPathObject(selectedTag)) {
-    if (selectedTag.hasOwnProperty('mcid') && selectedTag.hasOwnProperty('pageIndex')) {
-      return [[[selectedTag.mcid], selectedTag.pageIndex]];
-    }
-    if (selectedTag.hasOwnProperty('annot') && selectedTag.hasOwnProperty('pageIndex')) {
-      return [[{ annot: selectedTag.annot }, selectedTag.pageIndex]];
-    }
-    if (selectedTag.hasOwnProperty('contentItems')) {
-      return [
-        [
-          undefined,
-          selectedTag.pageIndex,
-          [selectedTag.contentStream, selectedTag.content, ...selectedTag.contentItems],
-        ],
-      ];
-    }
-  } else if (selectedTag instanceof Array) {
-    let objectOfErrors = { ...structure };
-    selectedTag.forEach((node, index) => {
-      let nextStepObject;
-      if (!objectOfErrors.children) {
-        nextStepObject = objectOfErrors[node[0]];
-      } else if (!(objectOfErrors.children instanceof Array)) {
-        if (objectOfErrors.children.name === node[1]) {
-          nextStepObject = objectOfErrors.children;
-        } else {
-          nextStepObject = objectOfErrors;
-        }
-      } else if (objectOfErrors?.name === node[1] && index === 0) {
-        nextStepObject = objectOfErrors;
-      } else {
-        const clearedChildrenArray = [...objectOfErrors.children].filter(tag => !tag?.mcid);
-        nextStepObject = {
-          ...(clearedChildrenArray.length ? clearedChildrenArray : objectOfErrors.children)[
-            node[0]
-          ],
-        };
-      }
-      objectOfErrors = { ...nextStepObject };
-    });
-    return findAllMcid(objectOfErrors);
-  }
-  return defaultValue;
-};
+  func(tagObject);
+  return _.map(mcidMap, (value, key) => [value, _.toNumber(key)]);
+}
 
 /*
  *  Convert returning from veraPDF api path to error in array of nodes
@@ -588,169 +484,279 @@ const convertContextToPath = (errorContext = ''): ConvertContextToPathReturn => 
       arrayOfNodes = [...arrayOfNodes, [nextIndex, nextTag]];
     });
     return arrayOfNodes;
-  } catch (e) {
+  } catch {
     return [];
   }
 };
 
-/*
- *  Going through object of tags from error placement and return array of its MCIDs
- *
- *  @param {Object} of tags
- *
- *  @return [[{Array}, {Number}]] - [[[array of mcids], page of error]]
- */
-function findAllMcid(tagObject) {
-  const mcidMap = {};
+const getTagsFromErrorPlace = (context: string, structure: StructureTree) => {
+  const defaultValue = [[[], -1, undefined]];
+  const selectedTag = convertContextToPath(context);
 
-  function func(obj) {
-    if (!obj) return;
-    if (obj.mcid || obj.mcid === 0) {
-      if (!mcidMap[obj.pageIndex]) mcidMap[obj.pageIndex] = [];
-      mcidMap[obj.pageIndex].push(obj.mcid);
-    }
-    if (!obj.children) {
-      return;
-    }
-
-    if (!(obj.children instanceof Array)) {
-      func(obj.children);
-    } else {
-      [...obj.children].forEach(child => func(child));
-    }
+  if (_.isEmpty(selectedTag)) {
+    return defaultValue;
+  }
+  // Type guard function
+  function isPathObject(value: any): value is pathObject {
+    return (
+      value !== null &&
+      typeof value === 'object' &&
+      (Object.prototype.hasOwnProperty.call(value, 'mcid') ||
+        Object.prototype.hasOwnProperty.call(value, 'pageIndex') ||
+        Object.prototype.hasOwnProperty.call(value, 'annot') ||
+        Object.prototype.hasOwnProperty.call(value, 'contentItems'))
+    );
   }
 
-  func(tagObject);
-  return _.map(mcidMap, (value, key) => [value, _.toNumber(key)]);
-}
-
-export const getBboxForGlyph = (
-  operatorIndex,
-  glyphIndex,
-  operationsList,
-  viewport,
-  rotateAngle,
-) => {
-  const bbox = operationsList[operatorIndex] ? operationsList[operatorIndex][glyphIndex] : null;
-  if (!bbox) {
-    return [];
-  }
-  const coordsArray = rotateCoordinates(bbox, rotateAngle, viewport);
-  const rotatedViewport = rotateViewport(rotateAngle, viewport);
-  return [
-    coordsArray[0] - rotatedViewport[0],
-    coordsArray[1] - rotatedViewport[1],
-    coordsArray[2],
-    coordsArray[3],
-  ];
-};
-
-export const parseMcidToBbox = (listOfMcid, pageMap, annotations, viewport, rotateAngle) => {
-  type coordsObject = {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
-  let coords: coordsObject = { x: undefined, y: undefined, width: undefined, height: undefined };
-
-  if (listOfMcid instanceof Array) {
-    listOfMcid.forEach(mcid => {
-      const currentBbox = pageMap[mcid];
-      if (
-        !_.isNil(currentBbox) &&
-        !_.isNaN(currentBbox.x) &&
-        !_.isNaN(currentBbox.y) &&
-        !_.isNaN(currentBbox.width) &&
-        !_.isNaN(currentBbox.height)
-      ) {
-        coords = concatBoundingBoxes(currentBbox, coords.x ? coords : undefined);
+  if (isPathObject(selectedTag)) {
+    if (
+      Object.prototype.hasOwnProperty.call(selectedTag, 'mcid') &&
+      Object.prototype.hasOwnProperty.call(selectedTag, 'pageIndex')
+    ) {
+      return [[[selectedTag.mcid], selectedTag.pageIndex]];
+    }
+    if (
+      Object.prototype.hasOwnProperty.call(selectedTag, 'annot') &&
+      Object.prototype.hasOwnProperty.call(selectedTag, 'pageIndex')
+    ) {
+      return [[{ annot: selectedTag.annot }, selectedTag.pageIndex]];
+    }
+    if (Object.prototype.hasOwnProperty.call(selectedTag, 'contentItems')) {
+      return [
+        [
+          undefined,
+          selectedTag.pageIndex,
+          [selectedTag.contentStream, selectedTag.content, ...selectedTag.contentItems],
+        ],
+      ];
+    }
+  } else if (selectedTag instanceof Array) {
+    let objectOfErrors = { ...structure };
+    selectedTag.forEach((node, index) => {
+      let nextStepObject;
+      if (!objectOfErrors.children) {
+        nextStepObject = objectOfErrors[node[0]];
+      } else if (!(objectOfErrors.children instanceof Array)) {
+        if (objectOfErrors.children.name === node[1]) {
+          nextStepObject = objectOfErrors.children;
+        } else {
+          nextStepObject = objectOfErrors;
+        }
+      } else if (objectOfErrors?.name === node[1] && index === 0) {
+        nextStepObject = objectOfErrors;
+      } else {
+        const clearedChildrenArray = [...objectOfErrors.children].filter(tag => !tag?.mcid);
+        nextStepObject = {
+          ...(clearedChildrenArray.length ? clearedChildrenArray : objectOfErrors.children)[
+            node[0]
+          ],
+        };
       }
+      objectOfErrors = { ...nextStepObject };
     });
-  } else if (listOfMcid.hasOwnProperty('annot')) {
-    const rect = annotations[listOfMcid.annot]?.rect;
-    if (rect) {
-      coords = {
-        x: rect[0],
-        y: rect[1],
-        width: Math.abs(rect[0] - rect[2]),
-        height: Math.abs(rect[1] - rect[3]),
-      };
+    return findAllMcid(objectOfErrors);
+  }
+  return defaultValue;
+};
+
+const calculateLocation = location => {
+  const bboxes = [];
+  const [pages, boundingBox] = location.split('/');
+  const [start, end] = pages.replace('pages[', '').replace(']', '').split('-');
+  const [x, y, x1, y1] = boundingBox.replace('boundingBox[', '').replace(']', '').split(',');
+  const width = parseFloat(x1) - parseFloat(x);
+
+  if (end) {
+    for (let i = parseInt(start) + 1; i <= parseInt(end) + 1; i++) {
+      switch (i) {
+        case parseInt(start) + 1:
+          bboxes.push({
+            page: i,
+            location: [parseFloat(x), parseFloat(y1), width, 'bottom'],
+          });
+          break;
+        case parseInt(end) + 1:
+          bboxes.push({
+            page: i,
+            location: [parseFloat(x), parseFloat(y), width, 'top'],
+          });
+          break;
+        default:
+          bboxes.push({
+            page: i,
+            location: [parseFloat(x), 0, width, 'top'],
+          });
+          break;
+      }
     }
+  } else {
+    const height = parseFloat(y1) - parseFloat(y);
+    bboxes.push({
+      page: parseInt(start) + 1,
+      location: [parseFloat(x), parseFloat(y), width, height],
+    });
   }
-  if (!coords) return [];
-  const coordsArray = rotateCoordinates(
-    [coords.x, coords.y, coords.width, coords.height],
-    rotateAngle,
-    viewport,
-  );
-  const rotatedViewport = rotateViewport(rotateAngle, viewport);
-  return [
-    coordsArray[0] - rotatedViewport[0],
-    coordsArray[1] - rotatedViewport[1],
-    coordsArray[2],
-    coordsArray[3],
-  ];
+
+  return bboxes;
 };
 
-export const rotateViewport = (rotateAngle, viewport) => {
-  if ([0, 180].includes(rotateAngle)) {
-    return viewport;
-  }
-  return [viewport[1], viewport[0], viewport[3], viewport[2]];
+const calculateLocationJSON = location => {
+  const bboxes = [];
+  const bboxMap = JSON.parse(location);
+
+  bboxMap.bbox.forEach(({ p, rect }) => {
+    const [x, y, x1, y1] = rect;
+    const width = parseFloat(x1) - parseFloat(x);
+    const height = parseFloat(y1) - parseFloat(y);
+    bboxes.push({
+      page: parseFloat(p) + 1,
+      location: [parseFloat(x), parseFloat(y), width, height],
+    });
+  });
+  return bboxes;
 };
 
-export const rotateCoordinates = (coords, rotateAngle, viewport) => {
-  if (rotateAngle === 0) return coords;
-  const [x1, y1] = rotatePoint(rotateAngle, [coords[0], coords[1]], viewport);
-  const [x2, y2] = rotatePoint(
-    rotateAngle,
-    [coords[0] + coords[2], coords[1] + coords[3]],
-    viewport,
-  );
-  return [Math.min(x1, x2), Math.min(y1, y2), Math.abs(x1 - x2), Math.abs(y1 - y2)];
-};
-
-export const rotatePoint = (rotateAngle, point, viewport) => {
-  const rad = (rotateAngle * Math.PI) / 180;
-  let x = point[0] * Math.cos(rad) + point[1] * Math.sin(rad);
-  let y = -point[0] * Math.sin(rad) + point[1] * Math.cos(rad);
-  switch (rotateAngle) {
-    case 90:
-      y += viewport[2] + viewport[0];
-      break;
-    case 180:
-      x += viewport[2] + viewport[0];
-      y += viewport[3] + viewport[1];
-      break;
-    case 270:
-      x += viewport[3] + viewport[1];
-      break;
-    default:
-      break;
-  }
-  return [x, y];
-};
-
-function concatBoundingBoxes(newBoundingBox, oldBoundingBox) {
-  if (_.isNil(oldBoundingBox) && _.isNil(newBoundingBox)) {
-    return {};
-  }
-
-  if (_.isNil(newBoundingBox)) {
-    return oldBoundingBox || {};
-  }
-  if (_.isNil(oldBoundingBox)) {
-    return _.cloneDeep(newBoundingBox);
+export const calculateLocationInStreamOperator = location => {
+  const path = location.split('/');
+  let pageIndex = -1;
+  let operatorIndex = -1;
+  let glyphIndex = -1;
+  path.forEach(step => {
+    if (step.startsWith('pages')) {
+      pageIndex = parseInt(step.split(/[\[\]]/)[1]);
+    }
+    if (step.startsWith('operators')) {
+      operatorIndex = parseInt(step.split(/[\[\]]/)[1]);
+    }
+    if (step.startsWith('usedGlyphs')) {
+      glyphIndex = parseInt(step.split(/[\[\]]/)[1]);
+    }
+  });
+  if (pageIndex === -1 || operatorIndex === -1 || glyphIndex === -1) {
+    return null;
   }
   return {
-    x: Math.min(newBoundingBox.x, oldBoundingBox.x),
-    y: Math.min(newBoundingBox.y, oldBoundingBox.y),
-    width:
-      Math.max(newBoundingBox.x + newBoundingBox.width, oldBoundingBox.x + oldBoundingBox.width) -
-      Math.min(newBoundingBox.x, oldBoundingBox.x),
-    height:
-      Math.max(newBoundingBox.y + newBoundingBox.height, oldBoundingBox.y + oldBoundingBox.height) -
-      Math.min(newBoundingBox.y, oldBoundingBox.y),
+    pageIndex,
+    operatorIndex,
+    glyphIndex,
   };
-}
+};
+
+export const buildBboxMap = (bboxes: IBboxLocation[], structure: StructureTree) => {
+  const bboxMap = {};
+  bboxes.forEach((bbox, index) => {
+    try {
+      if (bbox.location.includes('contentStream') && bbox.location.includes('operators')) {
+        const bboxPosition = calculateLocationInStreamOperator(bbox.location);
+        if (!bboxPosition) {
+          return;
+        }
+        bboxMap[bboxPosition.pageIndex + 1] = [
+          ...(bboxMap[bboxPosition.pageIndex + 1] || []),
+          {
+            index,
+            operatorIndex: bboxPosition.operatorIndex,
+            glyphIndex: bboxPosition.glyphIndex,
+            bboxTitle: bbox.bboxTitle,
+          },
+        ];
+      } else if (
+        bbox.location.includes('StructTreeRoot') ||
+        bbox.location.includes('root/doc') ||
+        bbox.location === 'root'
+      ) {
+        const mcidData = getTagsFromErrorPlace(bbox.location, structure);
+        mcidData.forEach(([mcidList, pageIndex, contentItemPath]) => {
+          bboxMap[pageIndex + 1] = [
+            ...(bboxMap[pageIndex + 1] || []),
+            {
+              index,
+              mcidList,
+              contentItemPath,
+              groupId: bbox.groupId || undefined,
+              bboxTitle: bbox.bboxTitle,
+            },
+          ];
+        });
+      } else {
+        const bboxesFromLocation = bbox.location.includes('pages[')
+          ? calculateLocation(bbox.location)
+          : calculateLocationJSON(bbox.location);
+        bboxesFromLocation.forEach(bboxWithLocation => {
+          bboxMap[bboxWithLocation.page] = [
+            ...(bboxMap[bboxWithLocation.page] || []),
+            {
+              index,
+              location: bboxWithLocation.location,
+              groupId: bbox.groupId || undefined,
+              bboxTitle: bbox.bboxTitle,
+            },
+          ];
+        });
+      }
+    } catch {
+      console.error(`Location not supported: ${bbox.location}`);
+    }
+  });
+  return bboxMap;
+};
+
+export const getSelectedPageByLocation = bboxLocation => {
+  const location = bboxLocation;
+  const path = location.split('/');
+  let pageNumber = -1;
+  if (location?.includes('pages') && path[path.length - 1].startsWith('pages')) {
+    location.split('/').forEach(nodeString => {
+      if (nodeString.includes('pages')) {
+        pageNumber = parseInt(nodeString.split(/[[\]]/)[1], 10) + 1;
+      }
+    });
+  }
+  return pageNumber;
+};
+
+export const getBboxPage = (bbox, structure) => {
+  try {
+    if (
+      bbox.location.includes('StructTreeRoot') ||
+      bbox.location.includes('root/doc') ||
+      bbox.location === 'root'
+    ) {
+      const mcidData = getTagsFromErrorPlace(bbox.location, structure);
+      const pageIndex = mcidData[0][1] as number;
+      return pageIndex + 1;
+    }
+    const bboxesFromLocation = bbox.location.includes('pages[')
+      ? calculateLocation(bbox.location)
+      : calculateLocationJSON(bbox.location);
+    return bboxesFromLocation.length ? bboxesFromLocation[0].page : 0;
+  } catch (e) {
+    console.error(e);
+    console.error(`Location not supported: ${bbox.location}`);
+    return -1;
+  }
+};
+
+export const getPageFromContext = async (context: string, pdfFilePath: string): Promise<number> => {
+  try {
+    const loadingTask = pdfjs.getDocument({
+      url: pdfFilePath,
+      standardFontDataUrl: path.join(dirname, '../../node_modules/pdfjs-dist/standard_fonts/'),
+      disableFontFace: true,
+      verbosity: 0,
+    });
+    const pdf = await loadingTask.promise;
+    const structureTree = await pdf._pdfInfo.structureTree;
+
+    const page = getBboxPage({ location: context }, structureTree);
+    return page;
+  } catch {
+    // Error handling
+  }
+};
+
+export const getBboxPages = (bboxes, structure) => {
+  return bboxes.map(bbox => {
+    getBboxPage(bbox, structure);
+  });
+};
