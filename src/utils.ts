@@ -41,7 +41,7 @@ export const getStoragePath = (randomToken: string): string => {
     return `${constants.exportDirectory}/${randomToken}`;
 };
 
-export const createDetailsAndLogs = async (randomToken) => {
+export const createDetailsAndLogs = async randomToken => {
   const storagePath = getStoragePath(randomToken);
   const logPath = `logs/${randomToken}`;
   try {
@@ -143,9 +143,7 @@ export const createAndUpdateResultsFolders = async randomToken => {
     }
   };
 
-  await Promise.all([
-    transferResults(intermediatePdfResultsPath, constants.pdfScanResultFileName),
-  ]);
+  await Promise.all([transferResults(intermediatePdfResultsPath, constants.pdfScanResultFileName)]);
 };
 
 export const createScreenshotsFolder = randomToken => {
