@@ -132,7 +132,7 @@ const writeCsv = async (allIssues, storagePath) => {
         return compareCategory === 0 ? a[1].rule.localeCompare(b[1].rule) : compareCategory;
       });
   };
-  //seems to go into
+  // seems to go into
   const flattenRule = catAndRule => {
     const [severity, rule] = catAndRule;
     const results = [];
@@ -394,7 +394,7 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
             items: [],
             ...(filePath && { filePath }),
           };
-          /*if (actualUrl) {
+          /* if (actualUrl) {
             currRuleFromAllIssues.pagesAffected[url].actualUrl = actualUrl;
             // Deduct duplication count from totalItems
             currRuleFromAllIssues.totalItems -= 1;
@@ -403,7 +403,7 @@ const pushResults = async (pageResults, allIssues, isCustomFlow) => {
             // Hence, start with negative offset, will add pagesAffected.length later
             currRuleFromAllIssues.numberOfPagesAffectedAfterRedirects -= 1;
             currCategoryFromAllIssues.totalItems -= 1;
-          }*/
+          } */
         }
 
         currRuleFromAllIssues.pagesAffected[url].items.push(...items);
@@ -425,10 +425,9 @@ const flattenAndSortResults = (allIssues: AllIssues, isCustomFlow: boolean) => {
             if (isCustomFlow) {
               const [pageIndex, pageInfo] = pageEntry as unknown as [number, PageInfo];
               return { pageIndex, ...pageInfo };
-            } else {
-              const [url, pageInfo] = pageEntry as unknown as [string, PageInfo];
-              return { url, ...pageInfo };
             }
+            const [url, pageInfo] = pageEntry as unknown as [string, PageInfo];
+            return { url, ...pageInfo };
           })
           .sort((page1, page2) => page2.items.length - page1.items.length);
         return { rule, ...ruleInfo };
@@ -485,7 +484,7 @@ export const generateArtifacts = async (
   customFlowLabel,
   cypressScanAboutMetadata,
   scanDetails,
-  zip = undefined, //optional
+  zip = undefined, // optional
 ) => {
   const intermediateDatasetsPath = `${randomToken}/datasets/${randomToken}`;
   const phAppVersion = getVersion();
@@ -514,7 +513,7 @@ export const generateArtifacts = async (
       .formatToParts(utcStartTimeDate)
       .find(part => part.type === 'timeZoneName').value;
 
-    //adding a breakline between the time and timezone so it looks neater on report
+    // adding a breakline between the time and timezone so it looks neater on report
     const timeColonIndex = formattedStartTime.lastIndexOf(':');
     const timePart = formattedStartTime.slice(0, timeColonIndex + 3);
     const timeZonePart = formattedStartTime.slice(timeColonIndex + 4);

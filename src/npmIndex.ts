@@ -118,7 +118,7 @@ export const init = async (
             metadata: {
               description: 'Ensures image alt text is clear and useful',
               help: 'Image alt text must not be vague or unhelpful',
-              helpUrl: 'https://www.deque.com/blog/great-alt-text-introduction/'
+              helpUrl: 'https://www.deque.com/blog/great-alt-text-introduction/',
             },
           },
         ],
@@ -214,7 +214,7 @@ export const init = async (
     // goodToFixIssues = 0;
 
     if (isThresholdExceeded) {
-      terminate(); //terminate if threshold exceeded
+      terminate(); // terminate if threshold exceeded
       throw new Error(thresholdFailMessage);
     }
   };
