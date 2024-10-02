@@ -195,30 +195,6 @@ export const init = async (
     };
   };
 
-  const testThresholds = () => {
-    // check against thresholds to fail tests
-    let isThresholdExceeded = false;
-    let thresholdFailMessage = 'Exceeded thresholds:\n';
-    if (mustFixThreshold !== undefined && mustFixIssues > mustFixThreshold) {
-      isThresholdExceeded = true;
-      thresholdFailMessage += `mustFix occurrences found: ${mustFixIssues} > ${mustFixThreshold}\n`;
-    }
-
-    if (goodToFixThreshold !== undefined && goodToFixIssues > goodToFixThreshold) {
-      isThresholdExceeded = true;
-      thresholdFailMessage += `goodToFix occurrences found: ${goodToFixIssues} > ${goodToFixThreshold}\n`;
-    }
-
-    // uncomment to reset counts if you do not want violations count to be cumulative across other pages
-    // mustFixIssues = 0;
-    // goodToFixIssues = 0;
-
-    if (isThresholdExceeded) {
-      terminate(); // terminate if threshold exceeded
-      throw new Error(thresholdFailMessage);
-    }
-  };
-
   const terminate = async () => {
     throwErrorIfTerminated();
     console.log('Stopping Purple A11y');
@@ -269,6 +245,30 @@ export const init = async (
     }
 
     return randomToken;
+  };
+
+  const testThresholds = () => {
+    // check against thresholds to fail tests
+    let isThresholdExceeded = false;
+    let thresholdFailMessage = 'Exceeded thresholds:\n';
+    if (mustFixThreshold !== undefined && mustFixIssues > mustFixThreshold) {
+      isThresholdExceeded = true;
+      thresholdFailMessage += `mustFix occurrences found: ${mustFixIssues} > ${mustFixThreshold}\n`;
+    }
+
+    if (goodToFixThreshold !== undefined && goodToFixIssues > goodToFixThreshold) {
+      isThresholdExceeded = true;
+      thresholdFailMessage += `goodToFix occurrences found: ${goodToFixIssues} > ${goodToFixThreshold}\n`;
+    }
+
+    // uncomment to reset counts if you do not want violations count to be cumulative across other pages
+    // mustFixIssues = 0;
+    // goodToFixIssues = 0;
+
+    if (isThresholdExceeded) {
+      terminate(); // terminate if threshold exceeded
+      throw new Error(thresholdFailMessage);
+    }
   };
 
   return {
