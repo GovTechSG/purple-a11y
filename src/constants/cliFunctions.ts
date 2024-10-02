@@ -54,7 +54,6 @@ export const cliOptions: { [key: string]: Options } = {
             messageOptions,
           );
           process.exit(1);
-          // eslint-disable-next-line no-unreachable
           return null;
       }
     },
@@ -160,7 +159,6 @@ export const cliOptions: { [key: string]: Options } = {
             messageOptions,
           );
           process.exit(1);
-          // eslint-disable-next-line no-unreachable
           return null;
       }
     },
