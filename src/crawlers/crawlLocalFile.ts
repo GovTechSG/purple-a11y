@@ -122,7 +122,6 @@ const crawlLocalFile = async (
   }
 
   const uuidToPdfMapping: Record<string, string> = {}; // key and value of string type
-  const isScanHtml: boolean = ['all', 'html-only'].includes(fileTypes);
 
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
 
