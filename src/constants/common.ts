@@ -16,7 +16,7 @@ import * as https from 'https';
 import os from 'os';
 import { minimatch } from 'minimatch';
 import { globSync } from 'glob';
-import { LaunchOptions, devices, request, webkit } from 'playwright';
+import { LaunchOptions, devices, webkit } from 'playwright';
 import printMessage from 'print-message';
 import constants, {
   getDefaultChromeDataDir,
