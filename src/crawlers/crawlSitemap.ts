@@ -43,7 +43,6 @@ const crawlSitemap = async (
 ) => {
   let dataset;
   let urlsCrawled;
-  let linksFromSitemap;
 
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth;
@@ -89,7 +88,7 @@ const crawlSitemap = async (
     }
   }
 
-  linksFromSitemap = await getLinksFromSitemap(
+  const linksFromSitemap = await getLinksFromSitemap(
     sitemapUrl,
     maxRequestsPerCrawl,
     browser,
