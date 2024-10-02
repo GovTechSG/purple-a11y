@@ -83,8 +83,8 @@ type AllIssues = {
   [key: string]: any;
 };
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const filename = fileURLToPath(import.meta.url);
+const dirname = path.dirname(filename);
 
 const extractFileNames = async (directory: string): Promise<string[]> => {
   ensureDirSync(directory);
@@ -198,18 +198,18 @@ const writeCsv = async (allIssues, storagePath) => {
 };
 
 const writeHTML = async (allIssues, storagePath, htmlFilename = 'report') => {
-  const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/report.ejs'), 'utf-8');
+  const ejsString = fs.readFileSync(path.join(dirname, './static/ejs/report.ejs'), 'utf-8');
   const template = ejs.compile(ejsString, {
-    filename: path.join(__dirname, './static/ejs/report.ejs'),
+    filename: path.join(dirname, './static/ejs/report.ejs'),
   });
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/${htmlFilename}.html`, html);
 };
 
 const writeSummaryHTML = async (allIssues, storagePath, htmlFilename = 'summary') => {
-  const ejsString = fs.readFileSync(path.join(__dirname, './static/ejs/summary.ejs'), 'utf-8');
+  const ejsString = fs.readFileSync(path.join(dirname, './static/ejs/summary.ejs'), 'utf-8');
   const template = ejs.compile(ejsString, {
-    filename: path.join(__dirname, './static/ejs/summary.ejs'),
+    filename: path.join(dirname, './static/ejs/summary.ejs'),
   });
   const html = template(allIssues);
   fs.writeFileSync(`${storagePath}/${htmlFilename}.html`, html);
