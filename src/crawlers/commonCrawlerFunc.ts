@@ -6,7 +6,7 @@ import { axeScript, guiInfoStatusTypes, saflyIconSelector } from '../constants/c
 import { guiInfoLog } from '../logs.js';
 import { takeScreenshotForHTMLElements } from '../screenshotFunc/htmlScreenshotFunc.js';
 import { isFilePath } from '../constants/common.js';
-import { customAxeConfig } from './customAxeFunctions.js';
+import customAxeConfig from './customAxeFunctions.js';
 
 // types
 type RuleDetails = {
