@@ -432,16 +432,17 @@ const crawlDomain = async (
 
   let isAbortingScanNow = false;
 
+  let userDataDir = '';
+  if (userDataDirectory) {
+    userDataDir = process.env.CRAWLEE_HEADLESS !== '0' ? userDataDirectory : '';
+  }
+
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
       launcher: constants.launcher,
       launchOptions: getPlaywrightLaunchOptions(browser),
       // Bug in Chrome which causes browser pool crash when userDataDirectory is set in non-headless mode
-      userDataDir: userDataDirectory
-        ? process.env.CRAWLEE_HEADLESS !== '0'
-          ? userDataDirectory
-          : ''
-        : '',
+      userDataDir,
     },
     retryOnBlocked: true,
     browserPoolOptions: {
@@ -525,11 +526,7 @@ const crawlDomain = async (
         const requestLabelUrl = request.label;
 
         // to handle scenario where the redirected link is not within the scanning website
-        const isLoadedUrlFollowStrategy = isFollowStrategy(
-          finalUrl,
-          requestLabelUrl,
-          strategy,
-        );
+        const isLoadedUrlFollowStrategy = isFollowStrategy(finalUrl, requestLabelUrl, strategy);
         if (!isLoadedUrlFollowStrategy) {
           finalUrl = requestLabelUrl;
         }
@@ -794,7 +791,9 @@ const crawlDomain = async (
 
         // when max pages have been scanned, scan will abort and all relevant pages still opened will close instantly.
         // a browser close error will then be flagged. Since this is an intended behaviour, this error will be excluded.
-        !isAbortingScanNow ? urlsCrawled.error.push({ url: request.url }) : undefined;
+        if (!isAbortingScanNow) {
+          urlsCrawled.error.push({ url: request.url });
+        }
       }
     },
     failedRequestHandler: async ({ request }) => {
