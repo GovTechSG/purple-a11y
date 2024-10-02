@@ -215,7 +215,7 @@ const crawlDomain = async (
             // playwright headless mode does not support navigation to pdf document
             req.skipNavigation = true;
           }
-          req.label = req.url
+          req.label = req.url;
 
           return req;
         },
