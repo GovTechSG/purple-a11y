@@ -196,7 +196,6 @@ const crawlDomain = async (
     browserContext: BrowserContext,
   ) => {
     try {
-
       await enqueueLinks({
         // set selector matches anchor elements with href but not contains # or starting with mailto:
         selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
@@ -302,7 +301,7 @@ const crawlDomain = async (
     let isAllElementsHandled: boolean = false;
     while (!isAllElementsHandled) {
       try {
-        //navigate back to initial page if clicking on a element previously caused it to navigate to a new url
+        // navigate back to initial page if clicking on a element previously caused it to navigate to a new url
         if (page.url() != initialPageUrl) {
           try {
             await page.close();
@@ -335,10 +334,10 @@ const crawlDomain = async (
           // Find url in html elements without clicking them
           await page
             .evaluate(element => {
-              //find href attribute
+              // find href attribute
               let hrefUrl: string = element.getAttribute('href');
 
-              //find url in datapath
+              // find url in datapath
               let dataPathUrl: string = element.getAttribute('data-path');
 
               return hrefUrl || dataPathUrl;
