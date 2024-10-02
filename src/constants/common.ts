@@ -774,7 +774,7 @@ export const getLinksFromSitemap = async (
 
     let request;
     try {
-      request = new Request({ url: url });
+      request = new Request({ url });
     } catch (e) {
       console.log('Error creating request', e);
     }
@@ -946,8 +946,8 @@ export const getLinksFromSitemap = async (
               keepAlive: true,
             }),
             auth: {
-              username: username,
-              password: password,
+              username,
+              password,
             },
           });
           try {

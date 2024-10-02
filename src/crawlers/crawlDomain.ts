@@ -145,7 +145,7 @@ const crawlDomain = async (
     });
   } else {
     await requestQueue.addRequest({
-      url: url,
+      url,
       skipNavigation: isUrlPdf(url),
       label: url,
     });

@@ -402,7 +402,7 @@ export default {
   maxConcurrency: 25,
   urlsCrawledObj,
   impactOrder,
-  launchOptionsArgs: launchOptionsArgs,
+  launchOptionsArgs,
   xmlSitemapTypes,
   urlCheckStatuses,
   launcher: chromium,
