@@ -230,7 +230,7 @@ const crawlDomain = async (
           silentLogger.info(e);
         }
       }
-    } catch (e) {
+    } catch {
       // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
       // Handles browser page object been closed.
     }
@@ -262,13 +262,12 @@ const crawlDomain = async (
           } else {
             try {
               await newPage.close();
-            } catch (e) {
+            } catch {
               // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
               // Handles browser page object been closed.
             }
           }
-          return;
-        } catch (e) {
+        } catch {
           // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
           // Handles browser page object been closed.
         }
@@ -289,8 +288,7 @@ const crawlDomain = async (
               label: newFrameUrl,
             });
           }
-          return;
-        } catch (e) {
+        } catch {
           // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
           // Handles browser page object been closed.
         }
@@ -305,7 +303,7 @@ const crawlDomain = async (
         if (page.url() != initialPageUrl) {
           try {
             await page.close();
-          } catch (e) {
+          } catch {
             // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
             // Handles browser page object been closed.
           }
@@ -375,13 +373,13 @@ const crawlDomain = async (
               // Find url in html elements by manually clicking them. New page navigation/popups will be handled by event listeners above
               await element.click({ force: true });
               await page.waitForTimeout(1000); // Add a delay of 1 second between each Element click
-            } catch (e) {
+            } catch {
               // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
               // Handles browser page object been closed.
             }
           }
         }
-      } catch (e) {
+      } catch {
         // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
         // Handles browser page object been closed.
       }
@@ -737,7 +735,7 @@ const crawlDomain = async (
               }
             });
           }
-        } catch (e) {
+        } catch {
           // Do nothing since the error will be pushed
         }
 
