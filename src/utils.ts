@@ -324,7 +324,7 @@ export const isFollowStrategy = (link1, link2, rule) => {
 export const retryFunction = async (func, maxAttempt) => {
   let attemptCount = 0;
   while (attemptCount < maxAttempt) {
-    attemptCount++;
+    attemptCount += 1;
     try {
       const result = await func();
       return result;
