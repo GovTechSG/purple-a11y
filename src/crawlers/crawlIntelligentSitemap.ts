@@ -37,8 +37,8 @@ const crawlIntelligentSitemap = async (
     fs.mkdirSync(randomToken);
   }
 
-  function getHomeUrl(url) {
-    const urlObject = new URL(url);
+  function getHomeUrl(parsedUrl) {
+    const urlObject = new URL(parsedUrl);
     if (urlObject.username !== '' && urlObject.password !== '') {
       return `${urlObject.protocol}//${urlObject.username}:${urlObject.password}@${urlObject.hostname}${urlObject.port ? `:${urlObject.port}` : ''}`;
     }
@@ -50,8 +50,8 @@ const crawlIntelligentSitemap = async (
     const homeUrl = getHomeUrl(link);
     let sitemapLinkFound = false;
     let sitemapLink = '';
-    const browser = await chromium.launch({ headless: true, channel: 'chrome' });
-    const page = await browser.newPage();
+    const chromiumBrowser = await chromium.launch({ headless: true, channel: 'chrome' });
+    const page = await chromiumBrowser.newPage();
     for (const path of sitemapPaths) {
       sitemapLink = homeUrl + path;
       sitemapLinkFound = await checkUrlExists(page, sitemapLink);
@@ -60,13 +60,13 @@ const crawlIntelligentSitemap = async (
         break;
       }
     }
-    await browser.close();
+    await chromiumBrowser.close();
     return sitemapExist ? sitemapLink : '';
   }
 
-  const checkUrlExists = async (page, url) => {
+  const checkUrlExists = async (page, parsedUrl) => {
     try {
-      const response = await page.goto(url);
+      const response = await page.goto(parsedUrl);
       if (response.ok()) {
         return true;
       }
