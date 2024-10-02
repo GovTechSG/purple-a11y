@@ -257,7 +257,7 @@ const crawlDomain = async (
             await requestQueue.addRequest({
               url: newPageUrl,
               skipNavigation: isUrlPdf(newPage.url()),
-              label: newPageUrl
+              label: newPageUrl,
             });
           } else {
             try {
