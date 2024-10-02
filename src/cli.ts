@@ -253,19 +253,16 @@ const scanInit = async (argvs: Answers): Promise<string> => {
     case statuses.unauthorised.code: {
       printMessage([statuses.unauthorised.message], messageOptions);
       process.exit(res.status);
-      // eslint-disable-next-line no-unreachable
       break;
     }
     case statuses.cannotBeResolved.code: {
       printMessage([statuses.cannotBeResolved.message], messageOptions);
       process.exit(res.status);
-      // eslint-disable-next-line no-unreachable
       break;
     }
     case statuses.systemError.code: {
       printMessage([statuses.systemError.message], messageOptions);
       process.exit(res.status);
-      // eslint-disable-next-line no-unreachable
       break;
     }
     case statuses.invalidUrl.code: {
@@ -297,19 +294,16 @@ const scanInit = async (argvs: Answers): Promise<string> => {
     case statuses.notASitemap.code: {
       printMessage([statuses.notASitemap.message], messageOptions);
       process.exit(res.status);
-      // eslint-disable-next-line no-unreachable
       break;
     }
     case statuses.notALocalFile.code: {
       printMessage([statuses.notALocalFile.message], messageOptions);
       process.exit(res.status);
-      // eslint-disable-next-line no-unreachable
       break;
     }
     case statuses.browserError.code: {
       printMessage([statuses.browserError.message], messageOptions);
       process.exit(res.status);
-      // eslint-disable-next-line no-unreachable
       break;
     }
     default:
