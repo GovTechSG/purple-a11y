@@ -333,10 +333,10 @@ const crawlDomain = async (
           await page
             .evaluate(element => {
               // find href attribute
-              let hrefUrl: string = element.getAttribute('href');
+              const hrefUrl: string = element.getAttribute('href');
 
               // find url in datapath
-              let dataPathUrl: string = element.getAttribute('data-path');
+              const dataPathUrl: string = element.getAttribute('data-path');
 
               return hrefUrl || dataPathUrl;
             }, element)

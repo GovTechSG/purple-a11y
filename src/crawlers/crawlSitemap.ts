@@ -119,8 +119,8 @@ const crawlSitemap = async (
     basicAuthPage = -2;
   }
 
-  let pdfDownloads = [];
-  let uuidToPdfMapping = {};
+  const pdfDownloads = [];
+  const uuidToPdfMapping = {};
   const isScanHtml = ['all', 'html-only'].includes(fileTypes);
   const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
   const { playwrightDeviceDetailsObject } = viewportSettings;
