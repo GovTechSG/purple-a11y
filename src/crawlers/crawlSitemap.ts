@@ -35,11 +35,11 @@ const crawlSitemap = async (
   blacklistedPatterns,
   includeScreenshots,
   extraHTTPHeaders,
-  fromCrawlIntelligentSitemap = false, //optional
-  userUrlInputFromIntelligent = null, //optional
-  datasetFromIntelligent = null, //optional
-  urlsCrawledFromIntelligent = null, //optional
-  crawledFromLocalFile = false, //optional
+  fromCrawlIntelligentSitemap = false, // optional
+  userUrlInputFromIntelligent = null, // optional
+  datasetFromIntelligent = null, // optional
+  urlsCrawledFromIntelligent = null, // optional
+  crawledFromLocalFile = false, // optional
 ) => {
   let dataset;
   let urlsCrawled;
@@ -173,7 +173,7 @@ const crawlSitemap = async (
       : [
           async ({ page, request }) => {
             preNavigationHooks(extraHTTPHeaders);
-            //insert other code here
+            // insert other code here
           },
         ],
     requestHandlerTimeoutSecs: 90,
@@ -248,53 +248,51 @@ const crawlSitemap = async (
 
       if (basicAuthPage < 0) {
         basicAuthPage++;
-      } else {
-        if (isScanHtml && status === 200 && isWhitelistedContentType(contentType)) {
-          const results = await runAxeScript(includeScreenshots, page, randomToken, null);
-          guiInfoLog(guiInfoStatusTypes.SCANNED, {
-            numScanned: urlsCrawled.scanned.length,
-            urlScanned: request.url,
-          });
+        const results = await runAxeScript(includeScreenshots, page, randomToken, null);
+        guiInfoLog(guiInfoStatusTypes.SCANNED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
 
-          const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
-          if (isRedirected) {
-            const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
-              item => (item.actualUrl || item.url.href) === request.loadedUrl,
-            );
+        const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
+        if (isRedirected) {
+          const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
+            item => (item.actualUrl || item.url.href) === request.loadedUrl,
+          );
 
-            if (isLoadedUrlInCrawledUrls) {
-              urlsCrawled.notScannedRedirects.push({
-                fromUrl: request.url,
-                toUrl: request.loadedUrl, // i.e. actualUrl
-              });
-              return;
-            }
-
-            urlsCrawled.scanned.push({
-              url: urlWithoutAuth(request.url),
-              pageTitle: results.pageTitle,
-              actualUrl: request.loadedUrl, // i.e. actualUrl
-            });
-
-            urlsCrawled.scannedRedirects.push({
-              fromUrl: urlWithoutAuth(request.url),
+          if (isLoadedUrlInCrawledUrls) {
+            urlsCrawled.notScannedRedirects.push({
+              fromUrl: request.url,
               toUrl: request.loadedUrl, // i.e. actualUrl
             });
-
-            results.url = request.url;
-            results.actualUrl = request.loadedUrl;
-          } else {
-            urlsCrawled.scanned.push({
-              url: urlWithoutAuth(request.url),
-              pageTitle: results.pageTitle,
-            });
+            return;
           }
-          await dataset.pushData(results);
-        } else {
-          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-            numScanned: urlsCrawled.scanned.length,
-            urlScanned: request.url,
+
+          urlsCrawled.scanned.push({
+            url: urlWithoutAuth(request.url),
+            pageTitle: results.pageTitle,
+            actualUrl: request.loadedUrl, // i.e. actualUrl
           });
+
+          urlsCrawled.scannedRedirects.push({
+            fromUrl: urlWithoutAuth(request.url),
+            toUrl: request.loadedUrl, // i.e. actualUrl
+          });
+
+          results.url = request.url;
+          results.actualUrl = request.loadedUrl;
+        } else {
+          urlsCrawled.scanned.push({
+            url: urlWithoutAuth(request.url),
+            pageTitle: results.pageTitle,
+          });
+        }
+        await dataset.pushData(results);
+      } else {
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
 
           isScanHtml && urlsCrawled.invalid.push(actualUrl);
         }
