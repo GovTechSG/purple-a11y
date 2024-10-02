@@ -198,6 +198,7 @@ export class UrlsCrawled {
 
 const urlsCrawledObj = new UrlsCrawled();
 
+/* eslint-disable no-unused-vars */
 export enum ScannerTypes {
   SITEMAP = 'Sitemap',
   WEBSITE = 'Website',
@@ -205,6 +206,7 @@ export enum ScannerTypes {
   INTELLIGENT = 'Intelligent',
   LOCALFILE = 'LocalFile',
 }
+/* eslint-enable no-unused-vars */
 
 export const guiInfoStatusTypes = {
   SCANNED: 'scanned',
@@ -354,11 +356,13 @@ const urlCheckStatuses = {
   notALocalFile: { code: 19, message: 'Provided filepath is not a local html or sitemap file.' },
 };
 
+/* eslint-disable no-unused-vars */
 export enum BrowserTypes {
   CHROMIUM = 'chromium',
   CHROME = 'chrome',
   EDGE = 'msedge',
 }
+/* eslint-enable no-unused-vars */
 
 const xmlSitemapTypes = {
   xml: 0,
