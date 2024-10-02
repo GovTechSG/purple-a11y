@@ -509,7 +509,7 @@ const crawlDomain = async (
           },
         ]
       : [
-          async ({ request }) => {
+          async () => {
             preNavigationHooks(extraHTTPHeaders);
           },
         ],
