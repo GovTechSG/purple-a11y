@@ -454,9 +454,9 @@ const checkUrlConnectivityWithBrowser = async (
 
       const contentType = response.headers()['content-type'];
       if (contentType.includes('xml')) {
-        const responseFromUrl = await requestToUrl(res.url, true, extraHTTPHeaders)
+        const responseFromUrl = await requestToUrl(res.url, true, extraHTTPHeaders);
 
-        res.content = responseFromUrl.content
+        res.content = responseFromUrl.content;
       }
     } catch (error) {
       silentLogger.error(error);
@@ -953,7 +953,7 @@ export const getLinksFromSitemap = async (
           try {
             data = await (await instance.get(url, { timeout: 80000 })).data;
           } catch {
-            return; //to skip the error
+            return; // to skip the error
           }
         } catch (error) {
           if (error.code === 'ECONNABORTED') {
@@ -1323,7 +1323,7 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
             } else {
               console.log(`An unexpected error occurred while copying the file: ${err.message}`);
             }
-            //printMessage([err], messageOptions);
+            // printMessage([err], messageOptions);
             success = false;
           }
         }
