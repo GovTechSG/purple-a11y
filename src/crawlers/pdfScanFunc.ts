@@ -239,7 +239,13 @@ const isPDF = (buffer: Buffer) => {
   );
 };
 
-export const handlePdfDownload = (randomToken: string, pdfDownloads: Promise<void>[], request: Request, sendRequest: any, urlsCrawled: UrlsCrawled): { pdfFileName: string; url: string } => {
+export const handlePdfDownload = (
+  randomToken: string,
+  pdfDownloads: Promise<void>[],
+  request: Request,
+  sendRequest: any,
+  urlsCrawled: UrlsCrawled,
+): { pdfFileName: string; url: string } => {
   const pdfFileName = randomUUID();
   const url: string = request.url;
   const pageTitle = decodeURI(request.url).split('/').pop();
