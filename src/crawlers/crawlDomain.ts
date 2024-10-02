@@ -497,7 +497,7 @@ const crawlDomain = async (
         } else {
           request.skipNavigation = false;
         }
-      }
+      },
     ],
     preNavigationHooks: isBasicAuth
       ? [
