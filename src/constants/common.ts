@@ -1686,7 +1686,7 @@ export const submitFormViaPlaywright = async (
 
     try {
       await page.waitForLoadState('networkidle', { timeout: 10000 });
-    } catch (e) {
+    } catch {
       silentLogger.info('Unable to detect networkidle');
     }
   } catch (error) {
