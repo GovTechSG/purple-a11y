@@ -327,7 +327,10 @@ export const runPdfScan = async (randomToken: string) => {
 };
 
 // transform results from veraPDF to desired format for report
-export const mapPdfScanResults = async (randomToken: string, uuidToUrlMapping: Record<string, string>) => {
+export const mapPdfScanResults = async (
+  randomToken: string,
+  uuidToUrlMapping: Record<string, string>,
+) => {
   const intermediateFolder = randomToken;
   const intermediateResultPath = `${intermediateFolder}/${constants.pdfScanResultFileName}`;
 
