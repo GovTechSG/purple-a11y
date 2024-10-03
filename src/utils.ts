@@ -196,7 +196,7 @@ export const cleanUp = async pathToDelete => {
 //     timeZoneName: "longGeneric",
 //   });
 
-export const getWcagPassPercentage = (wcagViolations: any[]): string => {
+export const getWcagPassPercentage = (wcagViolations: string[]): string => {
   const totalChecks = Object.keys(constants.wcagLinks).length;
   const passedChecks = totalChecks - wcagViolations.length;
   const passPercentage = (passedChecks / totalChecks) * 100;
