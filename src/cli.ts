@@ -397,4 +397,4 @@ const optionsAnswer: Answers = {
 await scanInit(optionsAnswer);
 process.exit(0);
 
-export { options };
+export default options;
