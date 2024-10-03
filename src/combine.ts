@@ -4,7 +4,7 @@ import crawlSitemap from './crawlers/crawlSitemap.js';
 import crawlDomain from './crawlers/crawlDomain.js';
 import crawlLocalFile from './crawlers/crawlLocalFile.js';
 import crawlIntelligentSitemap from './crawlers/crawlIntelligentSitemap.js';
-import { generateArtifacts } from './mergeAxeResults.js';
+import generateArtifacts from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
 import { ScannerTypes, UrlsCrawled } from './constants/constants.js';
 import { getBlackListedPatterns, submitForm, urlWithoutAuth } from './constants/common.js';

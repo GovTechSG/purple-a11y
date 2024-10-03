@@ -473,7 +473,7 @@ const moveElemScreenshots = (randomToken, storagePath) => {
   }
 };
 
-export const generateArtifacts = async (
+const generateArtifacts = async (
   randomToken,
   urlScanned,
   scanType,
@@ -720,3 +720,5 @@ export const generateArtifacts = async (
 
   return createRuleIdJson(allIssues);
 };
+
+export default generateArtifacts;
