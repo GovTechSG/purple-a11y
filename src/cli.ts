@@ -199,7 +199,7 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return true;
   })
   .conflicts('d', 'w')
-  .parse();
+  .parse() as unknown as Answers;
 
 const scanInit = async (argvs: Answers): Promise<string> => {
   let isCustomFlow = false;
@@ -368,31 +368,31 @@ const scanInit = async (argvs: Answers): Promise<string> => {
 };
 
 const optionsAnswer: Answers = {
-  scanner: options['scanner'],
-  header: options['header'],
-  browserToRun: options['browserToRun'],
-  zip: options['zip'],
-  url: options['url'],
-  finalUrl: options['finalUrl'],
-  headless: options['headless'],
-  maxpages: options['maxpages'],
-  metadata: options['metadata'],
-  safeMode: options['safeMode'],
-  strategy: options['strategy'],
-  fileTypes: options['fileTypes'],
-  nameEmail: options['nameEmail'],
-  additional: options['additional'],
-  customDevice: options['customDevice'],
-  deviceChosen: options['deviceChosen'],
-  followRobots: options['followRobots'],
-  customFlowLabel: options['customFlowLabel'],
-  viewportWidth: options['viewportWidth'],
-  isLocalFileScan: options['isLocalFileScan'],
-  exportDirectory: options['exportDirectory'],
-  clonedBrowserDataDir: options['clonedBrowserDataDir'],
-  specifiedMaxConcurrency: options['specifiedMaxConcurrency'],
-  blacklistedPatternsFilename: options['blacklistedPatternsFilename'],
-  playwrightDeviceDetailsObject: options['playwrightDeviceDetailsObject'],
+  scanner: options.scanner,
+  header: options.header,
+  browserToRun: options.browserToRun,
+  zip: options.zip,
+  url: options.url,
+  finalUrl: options.finalUrl,
+  headless: options.headless,
+  maxpages: options.maxpages,
+  metadata: options.metadata,
+  safeMode: options.safeMode,
+  strategy: options.strategy,
+  fileTypes: options.fileTypes,
+  nameEmail: options.nameEmail,
+  additional: options.additional,
+  customDevice: options.customDevice,
+  deviceChosen: options.deviceChosen,
+  followRobots: options.followRobots,
+  customFlowLabel: options.customFlowLabel,
+  viewportWidth: options.viewportWidth,
+  isLocalFileScan: options.isLocalFileScan,
+  exportDirectory: options.exportDirectory,
+  clonedBrowserDataDir: options.clonedBrowserDataDir,
+  specifiedMaxConcurrency: options.specifiedMaxConcurrency,
+  blacklistedPatternsFilename: options.blacklistedPatternsFilename,
+  playwrightDeviceDetailsObject: options.playwrightDeviceDetailsObject,
 };
 await scanInit(optionsAnswer);
 process.exit(0);
