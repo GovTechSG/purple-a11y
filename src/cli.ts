@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-import fs from 'fs-extra';
 import _yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import printMessage from 'print-message';
 import { devices } from 'playwright';
-import { cleanUp, zipResults, setHeadlessMode, getVersion, getStoragePath } from './utils.js';
+import { fileURLToPath } from 'url';
+import path from 'path';
+import { cleanUp, setHeadlessMode, getVersion, getStoragePath } from './utils.js';
 import {
   checkUrl,
   prepareData,
@@ -24,8 +25,6 @@ import {
 import constants, { ScannerTypes } from './constants/constants.js';
 import { cliOptions, messageOptions } from './constants/cliFunctions.js';
 import combineRun from './combine.js';
-import { fileURLToPath } from 'url';
-import path from 'path';
 import { Answers } from './index.js';
 
 const appVersion = getVersion();
@@ -129,15 +128,18 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return option;
   })
   .coerce('x', option => {
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename) + '/../'; // check in the parent of dist directory
+    const filename = fileURLToPath(import.meta.url);
+    const dirname = `${path.dirname(filename)}/../`; // check in the parent of dist directory
 
     try {
-      return validateFilePath(option, __dirname);
+      return validateFilePath(option, dirname);
     } catch (err) {
       printMessage([`Invalid blacklistedPatternsFilename file path. ${err}`], messageOptions);
       process.exit(1);
     }
+
+    // eslint-disable-next-line no-unreachable
+    return null;
   })
   .coerce('i', option => {
     const { choices } = cliOptions.i;
@@ -172,7 +174,7 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   .coerce('q', option => {
     try {
       JSON.parse(option);
-    } catch (e) {
+    } catch {
       // default to empty object
       return '{}';
     }
@@ -197,7 +199,7 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
     return true;
   })
   .conflicts('d', 'w')
-  .parse();
+  .parse() as unknown as Answers;
 
 const scanInit = async (argvs: Answers): Promise<string> => {
   let isCustomFlow = false;
@@ -205,110 +207,129 @@ const scanInit = async (argvs: Answers): Promise<string> => {
     isCustomFlow = true;
   }
 
+  const updatedArgvs = { ...argvs };
+
   // let chromeDataDir = null;
   // let edgeDataDir = null;
   // Empty string for profile directory will use incognito mode in playwright
   let clonedDataDir = '';
   const statuses = constants.urlCheckStatuses;
 
-  const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(argvs.browserToRun, true);
-  argvs.browserToRun = browserToRun;
+  const { browserToRun, clonedBrowserDataDir } = getBrowserToRun(updatedArgvs.browserToRun, true);
+  updatedArgvs.browserToRun = browserToRun;
   clonedDataDir = clonedBrowserDataDir;
 
-  if (argvs.customDevice === 'Desktop' || argvs.customDevice === 'Mobile') {
-    argvs.deviceChosen = argvs.customDevice;
-    delete argvs.customDevice;
+  if (updatedArgvs.customDevice === 'Desktop' || updatedArgvs.customDevice === 'Mobile') {
+    updatedArgvs.deviceChosen = argvs.customDevice;
+    delete updatedArgvs.customDevice;
   }
 
   // Creating the playwrightDeviceDetailObject
   // for use in crawlDomain & crawlSitemap's preLaunchHook
-  argvs.playwrightDeviceDetailsObject = getPlaywrightDeviceDetailsObject(
-    argvs.deviceChosen,
-    argvs.customDevice,
-    argvs.viewportWidth,
+  updatedArgvs.playwrightDeviceDetailsObject = getPlaywrightDeviceDetailsObject(
+    updatedArgvs.deviceChosen,
+    updatedArgvs.customDevice,
+    updatedArgvs.viewportWidth,
   );
 
   const res = await checkUrl(
-    argvs.scanner,
-    argvs.url,
-    argvs.browserToRun,
+    updatedArgvs.scanner,
+    updatedArgvs.url,
+    updatedArgvs.browserToRun,
     clonedDataDir,
-    argvs.playwrightDeviceDetailsObject,
+    updatedArgvs.playwrightDeviceDetailsObject,
     isCustomFlow,
-    argvs.header,
+    updatedArgvs.header,
   );
   switch (res.status) {
-    case statuses.success.code:
-      argvs.finalUrl = res.url;
+    case statuses.success.code: {
+      updatedArgvs.finalUrl = res.url;
       if (process.env.VALIDATE_URL_PH_GUI) {
         console.log('Url is valid');
         process.exit(0);
       }
       break;
-    case statuses.unauthorised.code:
+    }
+    case statuses.unauthorised.code: {
       printMessage([statuses.unauthorised.message], messageOptions);
       process.exit(res.status);
-    case statuses.cannotBeResolved.code:
+      break;
+    }
+    case statuses.cannotBeResolved.code: {
       printMessage([statuses.cannotBeResolved.message], messageOptions);
       process.exit(res.status);
-    case statuses.systemError.code:
+      break;
+    }
+    case statuses.systemError.code: {
       printMessage([statuses.systemError.message], messageOptions);
       process.exit(res.status);
-    case statuses.invalidUrl.code:
-      if (argvs.scanner !== ScannerTypes.SITEMAP && argvs.scanner !== ScannerTypes.LOCALFILE) {
+      break;
+    }
+    case statuses.invalidUrl.code: {
+      if (
+        updatedArgvs.scanner !== ScannerTypes.SITEMAP &&
+        updatedArgvs.scanner !== ScannerTypes.LOCALFILE
+      ) {
         printMessage([statuses.invalidUrl.message], messageOptions);
         process.exit(res.status);
       }
-      /* if sitemap scan is selected, treat this URL as a filepath
-          isFileSitemap will tell whether the filepath exists, and if it does, whether the
-          file is a sitemap */
-      const finalFilePath = getFileSitemap(argvs.url);
+
+      const finalFilePath = getFileSitemap(updatedArgvs.url);
       if (finalFilePath) {
-        argvs.isLocalFileScan = true;
-        argvs.finalUrl = finalFilePath;
+        updatedArgvs.isLocalFileScan = true;
+        updatedArgvs.finalUrl = finalFilePath;
         if (process.env.VALIDATE_URL_PH_GUI) {
           console.log('Url is valid');
           process.exit(0);
         }
-        break;
-      } else if (argvs.scanner === ScannerTypes.LOCALFILE) {
+      } else if (updatedArgvs.scanner === ScannerTypes.LOCALFILE) {
         printMessage([statuses.notALocalFile.message], messageOptions);
         process.exit(statuses.notALocalFile.code);
-      } else if (argvs.scanner !== ScannerTypes.SITEMAP) {
+      } else if (updatedArgvs.scanner !== ScannerTypes.SITEMAP) {
         printMessage([statuses.notASitemap.message], messageOptions);
         process.exit(statuses.notASitemap.code);
       }
-    case statuses.notASitemap.code:
+      break;
+    }
+    case statuses.notASitemap.code: {
       printMessage([statuses.notASitemap.message], messageOptions);
       process.exit(res.status);
-    case statuses.notALocalFile.code:
+      break;
+    }
+    case statuses.notALocalFile.code: {
       printMessage([statuses.notALocalFile.message], messageOptions);
       process.exit(res.status);
-    case statuses.browserError.code:
+      break;
+    }
+    case statuses.browserError.code: {
       printMessage([statuses.browserError.message], messageOptions);
       process.exit(res.status);
+      break;
+    }
     default:
       break;
   }
 
-  if (argvs.scanner === ScannerTypes.WEBSITE && !argvs.strategy) {
-    argvs.strategy = 'same-domain';
+  if (updatedArgvs.scanner === ScannerTypes.WEBSITE && !updatedArgvs.strategy) {
+    updatedArgvs.strategy = 'same-domain';
   }
 
-  const data = await prepareData(argvs);
+  const data = await prepareData(updatedArgvs);
 
   // File clean up after url check
   // files will clone a second time below if url check passes
-  process.env.PURPLE_A11Y_VERBOSE
-    ? deleteClonedProfiles(data.browser, data.randomToken)
-    : deleteClonedProfiles(data.browser); //first deletion
+  if (process.env.PURPLE_A11Y_VERBOSE) {
+    deleteClonedProfiles(data.browser, data.randomToken);
+  } else {
+    deleteClonedProfiles(data.browser); // first deletion
+  }
 
-  if (argvs.exportDirectory) {
-    constants.exportDirectory = argvs.exportDirectory;
+  if (updatedArgvs.exportDirectory) {
+    constants.exportDirectory = updatedArgvs.exportDirectory;
   }
 
   if (process.env.RUNNING_FROM_PH_GUI || process.env.PURPLE_A11Y_VERBOSE) {
-    let randomTokenMessage = {
+    const randomTokenMessage = {
       type: 'randomToken',
       payload: `${data.randomToken}`,
     };
@@ -319,7 +340,11 @@ const scanInit = async (argvs: Answers): Promise<string> => {
 
   setHeadlessMode(data.browser, data.isHeadless);
 
-  const screenToScan = getScreenToScan(argvs.deviceChosen, argvs.customDevice, argvs.viewportWidth);
+  const screenToScan = getScreenToScan(
+    updatedArgvs.deviceChosen,
+    updatedArgvs.customDevice,
+    updatedArgvs.viewportWidth,
+  );
 
   // Clone profiles a second time
   clonedDataDir = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
@@ -330,9 +355,11 @@ const scanInit = async (argvs: Answers): Promise<string> => {
   await combineRun(data, screenToScan);
 
   // Delete cloned directory
-  process.env.PURPLE_A11Y_VERBOSE
-    ? deleteClonedProfiles(data.browser, data.randomToken)
-    : deleteClonedProfiles(data.browser); //second deletion
+  if (process.env.PURPLE_A11Y_VERBOSE) {
+    deleteClonedProfiles(data.browser, data.randomToken);
+  } else {
+    deleteClonedProfiles(data.browser); // second deletion
+  }
 
   // Delete dataset and request queues
   await cleanUp(data.randomToken);
@@ -341,33 +368,33 @@ const scanInit = async (argvs: Answers): Promise<string> => {
 };
 
 const optionsAnswer: Answers = {
-  scanner: options['scanner'],
-  header: options['header'],
-  browserToRun: options['browserToRun'],
-  zip: options['zip'],
-  url: options['url'],
-  finalUrl: options['finalUrl'],
-  headless: options['headless'],
-  maxpages: options['maxpages'],
-  metadata: options['metadata'],
-  safeMode: options['safeMode'],
-  strategy: options['strategy'],
-  fileTypes: options['fileTypes'],
-  nameEmail: options['nameEmail'],
-  additional: options['additional'],
-  customDevice: options['customDevice'],
-  deviceChosen: options['deviceChosen'],
-  followRobots: options['followRobots'],
-  customFlowLabel: options['customFlowLabel'],
-  viewportWidth: options['viewportWidth'],
-  isLocalFileScan: options['isLocalFileScan'],
-  exportDirectory: options['exportDirectory'],
-  clonedBrowserDataDir: options['clonedBrowserDataDir'],
-  specifiedMaxConcurrency: options['specifiedMaxConcurrency'],
-  blacklistedPatternsFilename: options['blacklistedPatternsFilename'],
-  playwrightDeviceDetailsObject: options['playwrightDeviceDetailsObject'],
+  scanner: options.scanner,
+  header: options.header,
+  browserToRun: options.browserToRun,
+  zip: options.zip,
+  url: options.url,
+  finalUrl: options.finalUrl,
+  headless: options.headless,
+  maxpages: options.maxpages,
+  metadata: options.metadata,
+  safeMode: options.safeMode,
+  strategy: options.strategy,
+  fileTypes: options.fileTypes,
+  nameEmail: options.nameEmail,
+  additional: options.additional,
+  customDevice: options.customDevice,
+  deviceChosen: options.deviceChosen,
+  followRobots: options.followRobots,
+  customFlowLabel: options.customFlowLabel,
+  viewportWidth: options.viewportWidth,
+  isLocalFileScan: options.isLocalFileScan,
+  exportDirectory: options.exportDirectory,
+  clonedBrowserDataDir: options.clonedBrowserDataDir,
+  specifiedMaxConcurrency: options.specifiedMaxConcurrency,
+  blacklistedPatternsFilename: options.blacklistedPatternsFilename,
+  playwrightDeviceDetailsObject: options.playwrightDeviceDetailsObject,
 };
 await scanInit(optionsAnswer);
 process.exit(0);
 
-export { options };
+export default options;

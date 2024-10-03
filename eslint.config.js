@@ -12,11 +12,25 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: ['dist/'],
+    ignores: [
+      'dist/',
+      '__mocks__/',
+      '__tests__/',
+      '**/test.js',
+      'src/constants/__tests__/',
+      'src/crawlers/__tests__/',
+    ],
   },
   ...compat.extends('airbnb-base', 'plugin:prettier/recommended'),
   {
-    languageOptions: { globals: globals.node, ecmaVersion: 'latest', sourceType: 'module' },
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.browser,
+      },
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+    },
     plugins: {
       pluginImport,
       pluginPrettier,
@@ -33,6 +47,7 @@ export default tseslint.config(
       // disabling import/no-unresolved as typescript already checks this
       // https://typescript-eslint.io/troubleshooting/typed-linting/performance/#eslint-plugin-import
       'import/no-unresolved': 'off',
+      'lines-between-class-members': 'off',
     },
   },
 );

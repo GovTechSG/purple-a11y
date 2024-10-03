@@ -1,28 +1,18 @@
-import crawlee, { Request, RequestList } from 'crawlee';
+import { Request, RequestList } from 'crawlee';
 import printMessage from 'print-message';
-import {
-  createCrawleeSubFolders,
-  preNavigationHooks,
-  runAxeScript,
-  failedRequestHandler,
-  isUrlPdf,
-} from './commonCrawlerFunc.js';
+import fs from 'fs';
+import path from 'path';
+import { createCrawleeSubFolders, runAxeScript, isUrlPdf } from './commonCrawlerFunc.js';
 import constants, { guiInfoStatusTypes, basicAuthRegex } from '../constants/constants.js';
 import {
-  getLinksFromSitemap,
   getPlaywrightLaunchOptions,
   messageOptions,
-  isSkippedUrl,
   isFilePath,
   convertLocalFileToPath,
   convertPathToLocalFile,
 } from '../constants/common.js';
-import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
-import { handlePdfDownload, runPdfScan, mapPdfScanResults, doPdfScreenshots } from './pdfScanFunc.js';
-import fs from 'fs';
+import { runPdfScan, mapPdfScanResults, doPdfScreenshots } from './pdfScanFunc.js';
 import { guiInfoLog } from '../logs.js';
-import playwright from 'playwright';
-import path from 'path';
 import crawlSitemap from './crawlSitemap.js';
 
 const crawlLocalFile = async (
@@ -38,10 +28,10 @@ const crawlLocalFile = async (
   blacklistedPatterns: string[],
   includeScreenshots: boolean,
   extraHTTPHeaders: any,
-  fromCrawlIntelligentSitemap: boolean = false, //optional
-  userUrlInputFromIntelligent: any = null, //optional
-  datasetFromIntelligent: any = null, //optional
-  urlsCrawledFromIntelligent: any = null, //optional
+  fromCrawlIntelligentSitemap: boolean = false, // optional
+  userUrlInputFromIntelligent: any = null, // optional
+  datasetFromIntelligent: any = null, // optional
+  urlsCrawledFromIntelligent: any = null, // optional
 ) => {
   let dataset: any;
   let urlsCrawled: any;
@@ -66,10 +56,10 @@ const crawlLocalFile = async (
   }
 
   // Check if the sitemapUrl is a local file and if it exists
-  if (!(isFilePath(sitemapUrl)) || !fs.existsSync(sitemapUrl)) {
+  if (!isFilePath(sitemapUrl) || !fs.existsSync(sitemapUrl)) {
     // Convert to an absolute path
     let normalizedPath = path.resolve(sitemapUrl);
-    
+
     // Normalize the path to handle different path separators
     normalizedPath = path.normalize(normalizedPath);
 
@@ -77,11 +67,10 @@ const crawlLocalFile = async (
     if (!fs.existsSync(normalizedPath)) {
       return;
     }
-    
+
     // At this point, normalizedPath is a valid and existing file path
     sitemapUrl = normalizedPath;
   }
-
 
   // Checks if its in the right file format, and change it before placing into linksFromSitemap
   convertLocalFileToPath(sitemapUrl);
@@ -89,11 +78,8 @@ const crawlLocalFile = async (
   // XML Files
   if (!(sitemapUrl.match(/\.xml$/i) || sitemapUrl.match(/\.txt$/i))) {
     linksFromSitemap = [new Request({ url: sitemapUrl })];
-  // Non XML file
+    // Non XML file
   } else {
-    const username = '';
-    const password = '';
-
     // Put it to crawlSitemap function to handle xml files
     const updatedUrlsCrawled = await crawlSitemap(
       sitemapUrl,
@@ -108,13 +94,13 @@ const crawlLocalFile = async (
       blacklistedPatterns,
       includeScreenshots,
       extraHTTPHeaders,
-      (fromCrawlIntelligentSitemap = false), //optional
-      (userUrlInputFromIntelligent = null), //optional
-      (datasetFromIntelligent = null), //optional
-      (urlsCrawledFromIntelligent = null), //optional
+      (fromCrawlIntelligentSitemap = false), // optional
+      (userUrlInputFromIntelligent = null), // optional
+      (datasetFromIntelligent = null), // optional
+      (urlsCrawledFromIntelligent = null), // optional
       true,
     );
-    
+
     urlsCrawled = { ...urlsCrawled, ...updatedUrlsCrawled };
     return urlsCrawled;
   }
@@ -135,14 +121,13 @@ const crawlLocalFile = async (
     basicAuthPage = -2;
   }
 
-  let uuidToPdfMapping: Record<string, string> = {}; //key and value of string type
-  const isScanHtml: boolean = ['all', 'html-only'].includes(fileTypes);
+  const uuidToPdfMapping: Record<string, string> = {}; // key and value of string type
 
   printMessage(['Fetching URLs. This might take some time...'], { border: false });
 
   finalLinks = [...finalLinks, ...linksFromSitemap];
 
-  const requestList = await RequestList.open({
+  await RequestList.open({
     sources: finalLinks,
   });
 
@@ -162,12 +147,12 @@ const crawlLocalFile = async (
       ...getPlaywrightLaunchOptions(browser),
       ...playwrightDeviceDetailsObject,
     });
-  
+
     const page = await browserContext.newPage();
     request.url = convertPathToLocalFile(request.url);
     await page.goto(request.url);
     const results = await runAxeScript(includeScreenshots, page, randomToken, null);
-    
+
     guiInfoLog(guiInfoStatusTypes.SCANNED, {
       numScanned: urlsCrawled.scanned.length,
       urlScanned: request.url,
@@ -197,9 +182,7 @@ const crawlLocalFile = async (
 
     // get screenshots from pdf docs
     if (includeScreenshots) {
-      await Promise.all(
-        pdfResults.map(async result => await doPdfScreenshots(randomToken, result)),
-      );
+      await Promise.all(pdfResults.map(result => doPdfScreenshots(randomToken, result)));
     }
 
     // push results for each pdf document to key value store

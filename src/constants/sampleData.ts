@@ -137,7 +137,7 @@ export const sampleAtomFeedLinks = [
   'http://example.org/',
   'http://example.org/feed.atom',
   'http://example.org/2005/04/02/atom',
-  'http://example.org/audio/ph34r_my_podcast.mp3'
+  'http://example.org/audio/ph34r_my_podcast.mp3',
 ];
 
 // Following format stated in https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap#text

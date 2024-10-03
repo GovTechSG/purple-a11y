@@ -1,15 +1,19 @@
-import constants, { getExecutablePath, guiInfoStatusTypes, UrlsCrawled } from '../constants/constants.js';
 import { spawnSync } from 'child_process';
-import { consoleLogger, guiInfoLog, silentLogger } from '../logs.js';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
 import { createRequire } from 'module';
 import os from 'os';
 import path from 'path';
-import { getPageFromContext, getPdfScreenshots } from '../screenshotFunc/pdfScreenshotFunc.js';
-import { isFilePath } from '../constants/common.js';
 import { ensureDirSync, ReadStream } from 'fs-extra';
 import { Request } from 'crawlee';
+import { getPageFromContext, getPdfScreenshots } from '../screenshotFunc/pdfScreenshotFunc.js';
+import { isFilePath } from '../constants/common.js';
+import { consoleLogger, guiInfoLog, silentLogger } from '../logs.js';
+import constants, {
+  getExecutablePath,
+  guiInfoStatusTypes,
+  UrlsCrawled,
+} from '../constants/constants.js';
 
 const require = createRequire(import.meta.url);
 
@@ -221,7 +225,7 @@ const getVeraExecutable = () => {
     veraPdfExe = getExecutablePath('**/verapdf', 'verapdf');
   }
   if (!veraPdfExe) {
-    let veraPdfExeNotFoundError =
+    const veraPdfExeNotFoundError =
       'Could not find veraPDF executable.  Please ensure veraPDF is installed at current directory.';
     consoleLogger.error(veraPdfExeNotFoundError);
     silentLogger.error(veraPdfExeNotFoundError);
@@ -235,14 +239,20 @@ const isPDF = (buffer: Buffer) => {
   );
 };
 
-export const handlePdfDownload = (randomToken: string, pdfDownloads: Promise<void>[], request: Request, sendRequest: any, urlsCrawled: UrlsCrawled): { pdfFileName: string; url: string } => {
+export const handlePdfDownload = (
+  randomToken: string,
+  pdfDownloads: Promise<void>[],
+  request: Request,
+  sendRequest: any,
+  urlsCrawled: UrlsCrawled,
+): { pdfFileName: string; url: string } => {
   const pdfFileName = randomUUID();
-  const url: string = request.url;
+  const { url } = request;
   const pageTitle = decodeURI(request.url).split('/').pop();
 
   pdfDownloads.push(
     new Promise<void>(async resolve => {
-      let bufs = [];
+      const bufs = [];
       let pdfResponse: ReadStream;
 
       if (isFilePath(url)) {
@@ -272,7 +282,7 @@ export const handlePdfDownload = (randomToken: string, pdfDownloads: Promise<voi
             urlScanned: request.url,
           });
           urlsCrawled.scanned.push({
-            url: request.url, 
+            url: request.url,
             pageTitle,
             actualUrl: url,
           });
@@ -293,12 +303,13 @@ export const handlePdfDownload = (randomToken: string, pdfDownloads: Promise<voi
 
 export const runPdfScan = async (randomToken: string) => {
   const execFile = getVeraExecutable();
-  const veraPdfExe = '"' + execFile + '"';
+  const veraPdfExe = `"${execFile}"`;
   // const veraPdfProfile = getVeraProfile();
-  const veraPdfProfile =
-    '"' +
-    path.join(execFile, '..', 'profiles/veraPDF-validation-profiles-rel-1.26/PDF_UA/WCAG-2-2.xml') +
-    '"';
+  const veraPdfProfile = `"${path.join(
+    execFile,
+    '..',
+    'profiles/veraPDF-validation-profiles-rel-1.26/PDF_UA/WCAG-2-2.xml',
+  )}"`;
   if (!veraPdfExe || !veraPdfProfile) {
     process.exit(1);
   }
@@ -322,7 +333,10 @@ export const runPdfScan = async (randomToken: string) => {
 };
 
 // transform results from veraPDF to desired format for report
-export const mapPdfScanResults = async (randomToken: string, uuidToUrlMapping: Record<string, string>) => {
+export const mapPdfScanResults = async (
+  randomToken: string,
+  uuidToUrlMapping: Record<string, string>,
+) => {
   const intermediateFolder = randomToken;
   const intermediateResultPath = `${intermediateFolder}/${constants.pdfScanResultFileName}`;
 
@@ -410,7 +424,7 @@ const transformRule = async (
   transformed.totalItems = checks.length;
 
   if (specification === 'WCAG2.1') {
-    transformed.conformance = [clauseToLevel[clause], 'wcag' + clause.split('.').join('')];
+    transformed.conformance = [clauseToLevel[clause], `wcag${clause.split('.').join('')}`];
   } else {
     transformed.conformance = ['best-practice'];
   }

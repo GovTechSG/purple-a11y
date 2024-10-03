@@ -1,4 +1,8 @@
 import crawlee, { EnqueueStrategy } from 'crawlee';
+import fs from 'fs';
+import type { BrowserContext, ElementHandle, Frame, Page } from 'playwright';
+import type { EnqueueLinksOptions, RequestOptions } from 'crawlee';
+import type { BatchAddRequestsResult } from '@crawlee/types';
 import {
   createCrawleeSubFolders,
   preNavigationHooks,
@@ -28,13 +32,8 @@ import {
   mapPdfScanResults,
   doPdfScreenshots,
 } from './pdfScanFunc.js';
-import fs from 'fs';
 import { silentLogger, guiInfoLog } from '../logs.js';
-import type { BrowserContext, ElementHandle, Frame, Page } from 'playwright';
 import { ViewportSettingsClass } from '../combine.js';
-import type { EnqueueLinksOptions, RequestOptions } from 'crawlee';
-import type { BatchAddRequestsResult } from '@crawlee/types';
-import axios from 'axios';
 
 const isBlacklisted = (url: string) => {
   const blacklistedPatterns = getBlackListedPatterns(null);
@@ -91,8 +90,8 @@ const crawlDomain = async (
     fs.mkdirSync(randomToken);
   }
 
-  let pdfDownloads = [];
-  let uuidToPdfMapping = {};
+  const pdfDownloads = [];
+  const uuidToPdfMapping = {};
   const isScanHtml = ['all', 'html-only'].includes(fileTypes);
   const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
   const { maxConcurrency } = constants;
@@ -139,58 +138,57 @@ const crawlDomain = async (
     });
   } else {
     await requestQueue.addRequest({
-      url: url,
+      url,
       skipNavigation: isUrlPdf(url),
       label: url,
     });
   }
 
-  const httpHeadCache = new Map<string, boolean>();
-  const isProcessibleUrl = async (url: string): Promise<boolean> => {
-    if (httpHeadCache.has(url)) {
-      silentLogger.info('cache hit', url, httpHeadCache.get(url));
-      return false; // return false to avoid processing the url again
-    }
+  // const httpHeadCache = new Map<string, boolean>();
+  // const isProcessibleUrl = async (url: string): Promise<boolean> => {
+  //   if (httpHeadCache.has(url)) {
+  //     silentLogger.info('cache hit', url, httpHeadCache.get(url));
+  //     return false; // return false to avoid processing the url again
+  //   }
 
-    try {
-      const response = await axios.head(url, { headers: { Authorization: authHeader } });
-      const contentType = response.headers['content-type'] || '';
+  //   try {
+  //     const response = await axios.head(url, { headers: { Authorization: authHeader } });
+  //     const contentType = response.headers['content-type'] || '';
 
-      if (!contentType.includes('text/html') && !contentType.includes('application/pdf')) {
-        silentLogger.info(`Skipping MIME type ${contentType} at URL ${url}`);
-        httpHeadCache.set(url, false);
-        return false;
-      }
+  //     if (!contentType.includes('text/html') && !contentType.includes('application/pdf')) {
+  //       silentLogger.info(`Skipping MIME type ${contentType} at URL ${url}`);
+  //       httpHeadCache.set(url, false);
+  //       return false;
+  //     }
 
-      // further check for zip files where the url ends with .zip
-      if (url.endsWith('.zip')) {
-        silentLogger.info(`Checking for zip file magic number at URL ${url}`);
-        // download first 4 bytes of file to check the magic number
-        const response = await axios.get(url, {
-          headers: { Range: 'bytes=0-3', Authorization: authHeader },
-        });
-        // check using startsWith because some server does not handle Range header and returns the whole file
-        if (response.data.startsWith('PK\x03\x04')) {
-          // PK\x03\x04 is the magic number for zip files
-          silentLogger.info(`Skipping zip file at URL ${url}`);
-          httpHeadCache.set(url, false);
-          return false;
-        } else {
-          // print out the hex value of the first 4 bytes
-          silentLogger.info(
-            `Not skipping ${url} as it has magic number: ${response.data.slice(0, 4).toString('hex')}`,
-          );
-        }
-      }
-    } catch (e) {
-      silentLogger.error(`Error checking the MIME type of ${url}: ${e.message}`);
-      // when failing to check the MIME type (e.g. need to go through proxy), let crawlee handle the request
-      httpHeadCache.set(url, true);
-      return true;
-    }
-    httpHeadCache.set(url, true);
-    return true;
-  };
+  //     // further check for zip files where the url ends with .zip
+  //     if (url.endsWith('.zip')) {
+  //       silentLogger.info(`Checking for zip file magic number at URL ${url}`);
+  //       // download first 4 bytes of file to check the magic number
+  //       const response = await axios.get(url, {
+  //         headers: { Range: 'bytes=0-3', Authorization: authHeader },
+  //       });
+  //       // check using startsWith because some server does not handle Range header and returns the whole file
+  //       if (response.data.startsWith('PK\x03\x04')) {
+  //         // PK\x03\x04 is the magic number for zip files
+  //         silentLogger.info(`Skipping zip file at URL ${url}`);
+  //         httpHeadCache.set(url, false);
+  //         return false;
+  //       }
+  //       // print out the hex value of the first 4 bytes
+  //       silentLogger.info(
+  //         `Not skipping ${url} as it has magic number: ${response.data.slice(0, 4).toString('hex')}`,
+  //       );
+  //     }
+  //   } catch (e) {
+  //     silentLogger.error(`Error checking the MIME type of ${url}: ${e.message}`);
+  //     // when failing to check the MIME type (e.g. need to go through proxy), let crawlee handle the request
+  //     httpHeadCache.set(url, true);
+  //     return true;
+  //   }
+  //   httpHeadCache.set(url, true);
+  //   return true;
+  // };
 
   const enqueueProcess = async (
     page: Page,
@@ -198,7 +196,6 @@ const crawlDomain = async (
     browserContext: BrowserContext,
   ) => {
     try {
-
       await enqueueLinks({
         // set selector matches anchor elements with href but not contains # or starting with mailto:
         selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
@@ -218,7 +215,7 @@ const crawlDomain = async (
             // playwright headless mode does not support navigation to pdf document
             req.skipNavigation = true;
           }
-          req.label = req.url
+          req.label = req.url;
 
           return req;
         },
@@ -233,7 +230,7 @@ const crawlDomain = async (
           silentLogger.info(e);
         }
       }
-    } catch (e) {
+    } catch {
       // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
       // Handles browser page object been closed.
     }
@@ -256,22 +253,21 @@ const crawlDomain = async (
       page.on('popup', async (newPage: Page) => {
         try {
           if (newPage.url() != initialPageUrl && !isExcluded(newPage.url())) {
-            let newPageUrl: string = newPage.url().replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+            const newPageUrl: string = newPage.url().replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
             await requestQueue.addRequest({
               url: newPageUrl,
               skipNavigation: isUrlPdf(newPage.url()),
-              label: newPageUrl
+              label: newPageUrl,
             });
           } else {
             try {
               await newPage.close();
-            } catch (e) {
+            } catch {
               // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
               // Handles browser page object been closed.
             }
           }
-          return;
-        } catch (e) {
+        } catch {
           // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
           // Handles browser page object been closed.
         }
@@ -285,15 +281,14 @@ const crawlDomain = async (
             !isExcluded(newFrame.url()) &&
             !(newFrame.url() == 'about:blank')
           ) {
-            let newFrameUrl: string = newFrame.url().replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+            const newFrameUrl: string = newFrame.url().replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
             await requestQueue.addRequest({
               url: newFrameUrl,
               skipNavigation: isUrlPdf(newFrame.url()),
               label: newFrameUrl,
             });
           }
-          return;
-        } catch (e) {
+        } catch {
           // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
           // Handles browser page object been closed.
         }
@@ -304,11 +299,11 @@ const crawlDomain = async (
     let isAllElementsHandled: boolean = false;
     while (!isAllElementsHandled) {
       try {
-        //navigate back to initial page if clicking on a element previously caused it to navigate to a new url
+        // navigate back to initial page if clicking on a element previously caused it to navigate to a new url
         if (page.url() != initialPageUrl) {
           try {
             await page.close();
-          } catch (e) {
+          } catch {
             // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
             // Handles browser page object been closed.
           }
@@ -318,7 +313,7 @@ const crawlDomain = async (
           });
           setPageListeners(page);
         }
-        let selectedElementsString = cssQuerySelectors.join(', ');
+        const selectedElementsString = cssQuerySelectors.join(', ');
         const selectedElements: ElementHandle<SVGElement | HTMLElement>[] =
           await page.$$(selectedElementsString);
         // edge case where there might be elements on page that appears intermittently
@@ -326,10 +321,10 @@ const crawlDomain = async (
           break;
         }
         // handle the last element in selectedElements
-        if (currentElementIndex + 1 == selectedElements.length) {
+        if (currentElementIndex + 1 === selectedElements.length) {
           isAllElementsHandled = true;
         }
-        let element: ElementHandle<SVGElement | HTMLElement> =
+        const element: ElementHandle<SVGElement | HTMLElement> =
           selectedElements[currentElementIndex];
         currentElementIndex += 1;
         let newUrlFoundInElement: string = null;
@@ -337,11 +332,11 @@ const crawlDomain = async (
           // Find url in html elements without clicking them
           await page
             .evaluate(element => {
-              //find href attribute
-              let hrefUrl: string = element.getAttribute('href');
+              // find href attribute
+              const hrefUrl: string = element.getAttribute('href');
 
-              //find url in datapath
-              let dataPathUrl: string = element.getAttribute('data-path');
+              // find url in datapath
+              const dataPathUrl: string = element.getAttribute('data-path');
 
               return hrefUrl || dataPathUrl;
             }, element)
@@ -363,7 +358,7 @@ const crawlDomain = async (
               }
             });
           if (newUrlFoundInElement && !isExcluded(newUrlFoundInElement)) {
-            let newUrlFoundInElementUrl: string = newUrlFoundInElement.replace(
+            const newUrlFoundInElementUrl: string = newUrlFoundInElement.replace(
               /(?<=&|\?)utm_.*?(&|$)/gim,
               '',
             );
@@ -378,32 +373,32 @@ const crawlDomain = async (
               // Find url in html elements by manually clicking them. New page navigation/popups will be handled by event listeners above
               await element.click({ force: true });
               await page.waitForTimeout(1000); // Add a delay of 1 second between each Element click
-            } catch (e) {
+            } catch {
               // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
               // Handles browser page object been closed.
             }
           }
         }
-      } catch (e) {
+      } catch {
         // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
         // Handles browser page object been closed.
       }
     }
-    return;
   };
 
   let isAbortingScanNow = false;
+
+  let userDataDir = '';
+  if (userDataDirectory) {
+    userDataDir = process.env.CRAWLEE_HEADLESS !== '0' ? userDataDirectory : '';
+  }
 
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
       launcher: constants.launcher,
       launchOptions: getPlaywrightLaunchOptions(browser),
       // Bug in Chrome which causes browser pool crash when userDataDirectory is set in non-headless mode
-      userDataDir: userDataDirectory
-        ? process.env.CRAWLEE_HEADLESS !== '0'
-          ? userDataDirectory
-          : ''
-        : '',
+      userDataDir,
     },
     retryOnBlocked: true,
     browserPoolOptions: {
@@ -421,20 +416,20 @@ const crawlDomain = async (
     },
     requestQueue,
     postNavigationHooks: [
-      async (crawlingContext) => {
+      async crawlingContext => {
         const { page, request } = crawlingContext;
 
         request.skipNavigation = true;
 
         await page.evaluate(() => {
-          return new Promise((resolve) => {
+          return new Promise(resolve => {
             let timeout;
             let mutationCount = 0;
             const MAX_MUTATIONS = 100;
             const MAX_SAME_MUTATION_LIMIT = 10;
             const mutationHash = {};
 
-            const observer = new MutationObserver((mutationsList) => {
+            const observer = new MutationObserver(mutationsList => {
               clearTimeout(timeout);
 
               mutationCount += 1;
@@ -445,7 +440,7 @@ const crawlDomain = async (
               }
 
               // To handle scenario where DOM elements are constantly changing and unable to exit
-              mutationsList.forEach((mutation) => {
+              mutationsList.forEach(mutation => {
                 let mutationKey;
 
                 if (mutation.target instanceof Element) {
@@ -484,14 +479,10 @@ const crawlDomain = async (
         });
 
         let finalUrl = page.url();
-        let requestLabelUrl = request.label;
+        const requestLabelUrl = request.label;
 
         // to handle scenario where the redirected link is not within the scanning website
-        const isLoadedUrlFollowStrategy = isFollowStrategy(
-          finalUrl,
-          requestLabelUrl,
-          strategy,
-        );
+        const isLoadedUrlFollowStrategy = isFollowStrategy(finalUrl, requestLabelUrl, strategy);
         if (!isLoadedUrlFollowStrategy) {
           finalUrl = requestLabelUrl;
         }
@@ -502,11 +493,11 @@ const crawlDomain = async (
         } else {
           request.skipNavigation = false;
         }
-      }
+      },
     ],
     preNavigationHooks: isBasicAuth
       ? [
-          async ({ page, request }) => {
+          async ({ page }) => {
             await page.setExtraHTTPHeaders({
               Authorization: authHeader,
               ...extraHTTPHeaders,
@@ -514,7 +505,7 @@ const crawlDomain = async (
           },
         ]
       : [
-          async ({ request }) => {
+          async () => {
             preNavigationHooks(extraHTTPHeaders);
           },
         ],
@@ -728,7 +719,7 @@ const crawlDomain = async (
             await page.route('**/*', async route => {
               const interceptedRequest = route.request();
               if (interceptedRequest.resourceType() === 'document') {
-                let interceptedRequestUrl = interceptedRequest
+                const interceptedRequestUrl = interceptedRequest
                   .url()
                   .replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
                 await requestQueue.addRequest({
@@ -736,17 +727,18 @@ const crawlDomain = async (
                   skipNavigation: isUrlPdf(interceptedRequest.url()),
                   label: interceptedRequestUrl,
                 });
-                return;
               }
             });
           }
-        } catch (e) {
+        } catch {
           // Do nothing since the error will be pushed
         }
 
         // when max pages have been scanned, scan will abort and all relevant pages still opened will close instantly.
         // a browser close error will then be flagged. Since this is an intended behaviour, this error will be excluded.
-        !isAbortingScanNow ? urlsCrawled.error.push({ url: request.url }) : undefined;
+        if (!isAbortingScanNow) {
+          urlsCrawled.error.push({ url: request.url });
+        }
       }
     },
     failedRequestHandler: async ({ request }) => {

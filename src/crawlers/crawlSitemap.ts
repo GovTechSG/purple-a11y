@@ -1,14 +1,14 @@
 import crawlee, { Request, RequestList } from 'crawlee';
 import printMessage from 'print-message';
+import fs from 'fs';
 import {
   createCrawleeSubFolders,
   preNavigationHooks,
   runAxeScript,
-  failedRequestHandler,
   isUrlPdf,
 } from './commonCrawlerFunc.js';
 
-import constants, { guiInfoStatusTypes, basicAuthRegex } from '../constants/constants.js';
+import constants, { guiInfoStatusTypes } from '../constants/constants.js';
 import {
   getLinksFromSitemap,
   getPlaywrightLaunchOptions,
@@ -20,7 +20,6 @@ import {
 } from '../constants/common.js';
 import { areLinksEqual, isWhitelistedContentType } from '../utils.js';
 import { handlePdfDownload, runPdfScan, mapPdfScanResults } from './pdfScanFunc.js';
-import fs from 'fs';
 import { guiInfoLog } from '../logs.js';
 
 const crawlSitemap = async (
@@ -36,15 +35,14 @@ const crawlSitemap = async (
   blacklistedPatterns,
   includeScreenshots,
   extraHTTPHeaders,
-  fromCrawlIntelligentSitemap = false, //optional
-  userUrlInputFromIntelligent = null, //optional
-  datasetFromIntelligent = null, //optional
-  urlsCrawledFromIntelligent = null, //optional
-  crawledFromLocalFile = false, //optional
+  fromCrawlIntelligentSitemap = false, // optional
+  userUrlInputFromIntelligent = null, // optional
+  datasetFromIntelligent = null, // optional
+  urlsCrawledFromIntelligent = null, // optional
+  crawledFromLocalFile = false, // optional
 ) => {
   let dataset;
   let urlsCrawled;
-  let linksFromSitemap;
 
   // Boolean to omit axe scan for basic auth URL
   let isBasicAuth;
@@ -90,7 +88,7 @@ const crawlSitemap = async (
     }
   }
 
-  linksFromSitemap = await getLinksFromSitemap(
+  const linksFromSitemap = await getLinksFromSitemap(
     sitemapUrl,
     maxRequestsPerCrawl,
     browser,
@@ -120,8 +118,8 @@ const crawlSitemap = async (
     basicAuthPage = -2;
   }
 
-  let pdfDownloads = [];
-  let uuidToPdfMapping = {};
+  const pdfDownloads = [];
+  const uuidToPdfMapping = {};
   const isScanHtml = ['all', 'html-only'].includes(fileTypes);
   const isScanPdfs = ['all', 'pdf-only'].includes(fileTypes);
   const { playwrightDeviceDetailsObject } = viewportSettings;
@@ -136,16 +134,17 @@ const crawlSitemap = async (
   });
   printMessage(['Fetch URLs completed. Beginning scan'], messageOptions);
 
+  let userDataDir = '';
+  if (userDataDirectory) {
+    userDataDir = process.env.CRAWLEE_HEADLESS !== '0' ? userDataDirectory : '';
+  }
+
   const crawler = new crawlee.PlaywrightCrawler({
     launchContext: {
       launcher: constants.launcher,
       launchOptions: getPlaywrightLaunchOptions(browser),
       // Bug in Chrome which causes browser pool crash when userDataDirectory is set in non-headless mode
-      userDataDir: userDataDirectory
-        ? process.env.CRAWLEE_HEADLESS !== '0'
-          ? userDataDirectory
-          : ''
-        : '',
+      userDataDir,
     },
     retryOnBlocked: true,
     browserPoolOptions: {
@@ -164,7 +163,7 @@ const crawlSitemap = async (
     requestList,
     preNavigationHooks: isBasicAuth
       ? [
-          async ({ page, request }) => {
+          async ({ page }) => {
             await page.setExtraHTTPHeaders({
               Authorization: authHeader,
               ...extraHTTPHeaders,
@@ -172,9 +171,9 @@ const crawlSitemap = async (
           },
         ]
       : [
-          async ({ page, request }) => {
+          async () => {
             preNavigationHooks(extraHTTPHeaders);
-            //insert other code here
+            // insert other code here
           },
         ],
     requestHandlerTimeoutSecs: 90,
@@ -248,64 +247,62 @@ const crawlSitemap = async (
       }
 
       if (basicAuthPage < 0) {
-        basicAuthPage++;
-      } else {
-        if (isScanHtml && status === 200 && isWhitelistedContentType(contentType)) {
-          const results = await runAxeScript(includeScreenshots, page, randomToken, null);
-          guiInfoLog(guiInfoStatusTypes.SCANNED, {
-            numScanned: urlsCrawled.scanned.length,
-            urlScanned: request.url,
-          });
+        basicAuthPage += 1;
+      } else if (isScanHtml && status === 200 && isWhitelistedContentType(contentType)) {
+        const results = await runAxeScript(includeScreenshots, page, randomToken, null);
+        guiInfoLog(guiInfoStatusTypes.SCANNED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
 
-          const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
-          if (isRedirected) {
-            const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
-              item => (item.actualUrl || item.url.href) === request.loadedUrl,
-            );
+        const isRedirected = !areLinksEqual(request.loadedUrl, request.url);
+        if (isRedirected) {
+          const isLoadedUrlInCrawledUrls = urlsCrawled.scanned.some(
+            item => (item.actualUrl || item.url.href) === request.loadedUrl,
+          );
 
-            if (isLoadedUrlInCrawledUrls) {
-              urlsCrawled.notScannedRedirects.push({
-                fromUrl: request.url,
-                toUrl: request.loadedUrl, // i.e. actualUrl
-              });
-              return;
-            }
-
-            urlsCrawled.scanned.push({
-              url: urlWithoutAuth(request.url),
-              pageTitle: results.pageTitle,
-              actualUrl: request.loadedUrl, // i.e. actualUrl
-            });
-
-            urlsCrawled.scannedRedirects.push({
-              fromUrl: urlWithoutAuth(request.url),
+          if (isLoadedUrlInCrawledUrls) {
+            urlsCrawled.notScannedRedirects.push({
+              fromUrl: request.url,
               toUrl: request.loadedUrl, // i.e. actualUrl
             });
-
-            results.url = request.url;
-            results.actualUrl = request.loadedUrl;
-          } else {
-            urlsCrawled.scanned.push({
-              url: urlWithoutAuth(request.url),
-              pageTitle: results.pageTitle,
-            });
+            return;
           }
-          await dataset.pushData(results);
-        } else {
-          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-            numScanned: urlsCrawled.scanned.length,
-            urlScanned: request.url,
+
+          urlsCrawled.scanned.push({
+            url: urlWithoutAuth(request.url),
+            pageTitle: results.pageTitle,
+            actualUrl: request.loadedUrl, // i.e. actualUrl
           });
 
-          isScanHtml && urlsCrawled.invalid.push(actualUrl);
+          urlsCrawled.scannedRedirects.push({
+            fromUrl: urlWithoutAuth(request.url),
+            toUrl: request.loadedUrl, // i.e. actualUrl
+          });
+
+          results.url = request.url;
+          results.actualUrl = request.loadedUrl;
+        } else {
+          urlsCrawled.scanned.push({
+            url: urlWithoutAuth(request.url),
+            pageTitle: results.pageTitle,
+          });
+        }
+        await dataset.pushData(results);
+      } else {
+        guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
+        });
+
+        if (isScanHtml) {
+          urlsCrawled.invalid.push(actualUrl);
         }
       }
     },
     failedRequestHandler: async ({ request }) => {
-      if (isBasicAuth) {
-        request.url
-          ? (request.url = `${request.url.split('://')[0]}://${request.url.split('@')[1]}`)
-          : null;
+      if (isBasicAuth && request.url) {
+        request.url = `${request.url.split('://')[0]}://${request.url.split('@')[1]}`;
       }
 
       // check if scanned pages have reached limit due to multi-instances of handler running

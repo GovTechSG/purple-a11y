@@ -1,6 +1,6 @@
 import { Options } from 'yargs';
-import { BrowserTypes, ScannerTypes } from './constants.js';
 import printMessage from 'print-message';
+import { BrowserTypes, ScannerTypes } from './constants.js';
 
 export const messageOptions = {
   border: false,
@@ -16,18 +16,25 @@ export const alertMessageOptions = {
 export const cliOptions: { [key: string]: Options } = {
   c: {
     alias: 'scanner',
-    describe: 'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow, 4) intelligent 5) local file',
+    describe:
+      'Type of scan, 1) sitemap, 2) website crawl, 3) custom flow, 4) intelligent 5) local file',
     requiresArg: true,
     coerce: option => {
       const choices = ['sitemap', 'website', 'custom', 'intelligent', 'localfile'];
+      let resolvedOption = option;
+
       if (typeof option === 'number') {
         // Will also allow integer choices
-        if (Number.isInteger(option) && option > 0 && option <= choices.length) {
-          option = choices[option - 1];
+        if (
+          Number.isInteger(resolvedOption) &&
+          resolvedOption > 0 &&
+          resolvedOption <= choices.length
+        ) {
+          resolvedOption = choices[resolvedOption - 1];
         }
       }
 
-      switch (option) {
+      switch (resolvedOption) {
         case 'sitemap':
           return ScannerTypes.SITEMAP;
         case 'website':
@@ -41,12 +48,13 @@ export const cliOptions: { [key: string]: Options } = {
         default:
           printMessage(
             [
-              `Invalid option: ${option}`,
+              `Invalid option: ${resolvedOption}`,
               `Please enter an integer (1 to ${choices.length}) or keywords (${choices.join(', ')}).`,
             ],
             messageOptions,
           );
           process.exit(1);
+          return null;
       }
     },
     demandOption: true,
@@ -93,11 +101,11 @@ export const cliOptions: { [key: string]: Options } = {
     coerce: (value: string) => {
       if (value.toLowerCase() === 'yes') {
         return true;
-      } else if (value.toLowerCase() === 'no') {
-        return false;
-      } else {
-        throw new Error(`Invalid value "${value}" for -f, --safeMode. Use "yes" or "no".`);
       }
+      if (value.toLowerCase() === 'no') {
+        return false;
+      }
+      throw new Error(`Invalid value "${value}" for -f, --safeMode. Use "yes" or "no".`);
     },
   },
   h: {
@@ -110,11 +118,11 @@ export const cliOptions: { [key: string]: Options } = {
     coerce: (value: string) => {
       if (value.toLowerCase() === 'yes') {
         return true;
-      } else if (value.toLowerCase() === 'no') {
-        return false;
-      } else {
-        throw new Error(`Invalid value "${value}" for -h, --headless. Use "yes" or "no".`);
       }
+      if (value.toLowerCase() === 'no') {
+        return false;
+      }
+      throw new Error(`Invalid value "${value}" for -h, --headless. Use "yes" or "no".`);
     },
   },
   b: {
@@ -123,14 +131,19 @@ export const cliOptions: { [key: string]: Options } = {
     requiresArg: true,
     coerce: option => {
       const choices = ['chromium', 'chrome', 'edge'];
+      let resolvedOption = option;
       if (typeof option === 'number') {
         // Will also allow integer choices
-        if (Number.isInteger(option) && option > 0 && option <= choices.length) {
-          option = choices[option - 1];
+        if (
+          Number.isInteger(resolvedOption) &&
+          resolvedOption > 0 &&
+          resolvedOption <= choices.length
+        ) {
+          resolvedOption = choices[resolvedOption - 1];
         }
       }
 
-      switch (option) {
+      switch (resolvedOption) {
         case 'chromium':
           return BrowserTypes.CHROMIUM;
         case 'chrome':
@@ -140,12 +153,13 @@ export const cliOptions: { [key: string]: Options } = {
         default:
           printMessage(
             [
-              `Invalid option: ${option}`,
+              `Invalid option: ${resolvedOption}`,
               `Please enter an integer (1 to ${choices.length}) or keywords (${choices.join(', ')}).`,
             ],
             messageOptions,
           );
           process.exit(1);
+          return null;
       }
     },
     demandOption: false,
@@ -230,11 +244,11 @@ export const cliOptions: { [key: string]: Options } = {
     coerce: (value: string) => {
       if (value.toLowerCase() === 'yes') {
         return true;
-      } else if (value.toLowerCase() === 'no') {
-        return false;
-      } else {
-        throw new Error(`Invalid value "${value}" for -r, --followRobots. Use "yes" or "no".`);
       }
+      if (value.toLowerCase() === 'no') {
+        return false;
+      }
+      throw new Error(`Invalid value "${value}" for -r, --followRobots. Use "yes" or "no".`);
     },
   },
   m: {

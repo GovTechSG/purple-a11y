@@ -5,22 +5,22 @@ import { cleanUp } from '../utils.js';
 import constants, {
   getIntermediateScreenshotsPath,
   guiInfoStatusTypes,
+  UrlsCrawled,
 } from '../constants/constants.js';
 import { DEBUG, initNewPage, log } from './custom/utils.js';
 import { guiInfoLog } from '../logs.js';
-import {ViewportSettingsClass} from "../combine.js"
-import { UrlsCrawled } from '../constants/constants.js';
+import { ViewportSettingsClass } from '../combine.js';
 
 // Export of classes
 
-export class ProcessPageParams{
-  scannedIdx:number;
-  blacklistedPatterns:string[] | null;
-  includeScreenshots:boolean;
-  dataset:any;
-  intermediateScreenshotsPath:string;
-  urlsCrawled:UrlsCrawled;
-  randomToken:string;
+export class ProcessPageParams {
+  scannedIdx: number;
+  blacklistedPatterns: string[] | null;
+  includeScreenshots: boolean;
+  dataset: any;
+  intermediateScreenshotsPath: string;
+  urlsCrawled: UrlsCrawled;
+  randomToken: string;
   constructor(
     scannedIdx: number,
     blacklistedPatterns: string[] | null,
@@ -28,7 +28,7 @@ export class ProcessPageParams{
     dataset: any,
     intermediateScreenshotsPath: string,
     urlsCrawled: UrlsCrawled,
-    randomToken: string
+    randomToken: string,
   ) {
     this.scannedIdx = scannedIdx;
     this.blacklistedPatterns = blacklistedPatterns;
@@ -40,19 +40,18 @@ export class ProcessPageParams{
   }
 }
 
-
 const runCustom = async (
-  url:string,
-  randomToken:string,
-  viewportSettings:ViewportSettingsClass,
-  blacklistedPatterns:string[] | null,
+  url: string,
+  randomToken: string,
+  viewportSettings: ViewportSettingsClass,
+  blacklistedPatterns: string[] | null,
   includeScreenshots: boolean,
 ) => {
   // checks and delete datasets path if it already exists
   await cleanUp(randomToken);
   process.env.CRAWLEE_STORAGE_DIR = randomToken;
 
-  const urlsCrawled:UrlsCrawled = { ...constants.urlsCrawledObj };
+  const urlsCrawled: UrlsCrawled = { ...constants.urlsCrawledObj };
   const { dataset } = await createCrawleeSubFolders(randomToken);
   const intermediateScreenshotsPath = getIntermediateScreenshotsPath(randomToken);
   const processPageParams = new ProcessPageParams(
@@ -111,7 +110,7 @@ const runCustom = async (
     process.exit(1);
   }
 
-  guiInfoLog(guiInfoStatusTypes.COMPLETED,{});
+  guiInfoLog(guiInfoStatusTypes.COMPLETED, {});
   return urlsCrawled;
 };
 

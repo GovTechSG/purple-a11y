@@ -3,13 +3,13 @@
 /* eslint-disable no-param-reassign */
 import printMessage from 'print-message';
 import inquirer from 'inquirer';
+import { EnqueueStrategy } from 'crawlee';
 import {
   getVersion,
   cleanUp,
   setHeadlessMode,
   getUserDataTxt,
   writeToUserDataTxt,
-  getStoragePath,
 } from './utils.js';
 import {
   prepareData,
@@ -22,8 +22,7 @@ import {
 } from './constants/common.js';
 import questions from './constants/questions.js';
 import combineRun from './combine.js';
-import constants, { BrowserTypes, ScannerTypes } from './constants/constants.js';
-import { EnqueueStrategy } from 'crawlee';
+import { BrowserTypes, ScannerTypes } from './constants/constants.js';
 
 export type Answers = {
   headless: boolean;
@@ -34,7 +33,7 @@ export type Answers = {
   scanner: ScannerTypes;
   url: string;
   clonedBrowserDataDir: string;
-  playwrightDeviceDetailsObject: Object;
+  playwrightDeviceDetailsObject: object;
   nameEmail: string;
   fileTypes: string;
   metadata: string;
@@ -61,7 +60,7 @@ export type Data = {
   deviceChosen: string;
   customDevice: string;
   viewportWidth: number;
-  playwrightDeviceDetailsObject: Object;
+  playwrightDeviceDetailsObject: object;
   maxRequestsPerCrawl: number;
   strategy: EnqueueStrategy;
   isLocalFileScan: boolean;
@@ -81,6 +80,8 @@ export type Data = {
   zip?: string;
 };
 
+const userData = getUserDataTxt();
+
 const runScan = async (answers: Answers) => {
   const screenToScan = getScreenToScan(
     answers.deviceChosen,
@@ -92,7 +93,7 @@ const runScan = async (answers: Answers) => {
     answers.customDevice,
     answers.viewportWidth,
   );
-  let { browserToRun } = getBrowserToRun(BrowserTypes.CHROME);
+  const { browserToRun } = getBrowserToRun(BrowserTypes.CHROME);
   deleteClonedProfiles(browserToRun);
   answers.browserToRun = browserToRun;
 
@@ -103,14 +104,14 @@ const runScan = async (answers: Answers) => {
   answers.fileTypes = 'html-only';
   answers.metadata = '{}';
 
-  const data:Data = await prepareData(answers);
+  const data: Data = await prepareData(answers);
   data.userDataDirectory = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
 
   setHeadlessMode(data.browser, data.isHeadless);
   printMessage(['Scanning website...'], messageOptions);
 
   await combineRun(data, screenToScan);
-  
+
   // Delete cloned directory
   deleteClonedProfiles(data.browser);
 
@@ -119,8 +120,6 @@ const runScan = async (answers: Answers) => {
 
   process.exit(0);
 };
-
-const userData = getUserDataTxt();
 
 if (userData) {
   printMessage(

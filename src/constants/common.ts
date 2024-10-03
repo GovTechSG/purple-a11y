@@ -10,13 +10,13 @@ import crawlee, { EnqueueStrategy, Request } from 'crawlee';
 import { parseString } from 'xml2js';
 import fs from 'fs';
 import path from 'path';
-import url from 'url';
+import url, { fileURLToPath, pathToFileURL } from 'url';
 import safe from 'safe-regex';
 import * as https from 'https';
 import os from 'os';
 import { minimatch } from 'minimatch';
 import { globSync } from 'glob';
-import { LaunchOptions, devices, request, webkit } from 'playwright';
+import { LaunchOptions, devices, webkit } from 'playwright';
 import printMessage from 'print-message';
 import constants, {
   getDefaultChromeDataDir,
@@ -31,7 +31,6 @@ import { silentLogger } from '../logs.js';
 import { isUrlPdf } from '../crawlers/commonCrawlerFunc.js';
 import { randomThreeDigitNumberString } from '../utils.js';
 import { Answers, Data } from '../index.js';
-import { fileURLToPath, pathToFileURL } from 'url';
 
 // validateDirPath validates a provided directory path
 // returns null if no error
@@ -47,7 +46,7 @@ export const validateDirPath = (dirPath: string): string => {
     }
 
     return null;
-  } catch (error) {
+  } catch {
     return 'Please ensure path provided exists.';
   }
 };
@@ -115,7 +114,7 @@ export const validateFilePath = (filePath: string, cliDir: string) => {
     }
 
     return absolutePath;
-  } catch (error) {
+  } catch {
     throw new Error(`Please ensure path provided exists: ${absolutePath}`);
   }
 };
@@ -178,7 +177,7 @@ const queryCheck = (s: string) => document.createDocumentFragment().querySelecto
 export const isSelectorValid = (selector: string): boolean => {
   try {
     queryCheck(selector);
-  } catch (e) {
+  } catch {
     return false;
   }
   return true;
@@ -235,7 +234,7 @@ export const getFileSitemap = (filePath: string): string | null => {
 
   const file = fs.readFileSync(filePath, 'utf8');
   const isLocalFileScan = isSitemapContent(file);
-  return isLocalFileScan || file != undefined ? filePath : null;
+  return isLocalFileScan || file !== undefined ? filePath : null;
 };
 
 export const getUrlMessage = (scanner: ScannerTypes): string => {
@@ -270,9 +269,8 @@ export const sanitizeUrlInput = (url: string): { isValid: boolean; url: string }
   const sanitizeUrl = validator.blacklist(url, blackListCharacters);
   if (validator.isURL(sanitizeUrl, urlOptions)) {
     return { isValid: true, url: sanitizeUrl };
-  } else {
-    return { isValid: false, url: sanitizeUrl };
   }
+  return { isValid: false, url: sanitizeUrl };
 };
 
 const requestToUrl = async (
@@ -313,7 +311,7 @@ const requestToUrl = async (
       } else {
         console.log('Unsupported data type:', typeof response.data);
       }
-      let modifiedHTML = data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
+      const modifiedHTML = data.replace(/<noscript>[\s\S]*?<\/noscript>/gi, '');
 
       const metaRefreshMatch =
         /<meta\s+http-equiv="refresh"\s+content="(?:\d+;)?\s*url=(?:'([^']*)'|"([^"]*)"|([^>]*))"/i.exec(
@@ -435,7 +433,7 @@ const checkUrlConnectivityWithBrowser = async (
 
       try {
         await page.waitForLoadState('networkidle', { timeout: 10000 });
-      } catch (e) {
+      } catch {
         silentLogger.info('Unable to detect networkidle');
       }
 
@@ -456,9 +454,9 @@ const checkUrlConnectivityWithBrowser = async (
 
       const contentType = response.headers()['content-type'];
       if (contentType.includes('xml')) {
-        const responseFromUrl = await requestToUrl(res.url, true, extraHTTPHeaders)
+        const responseFromUrl = await requestToUrl(res.url, true, extraHTTPHeaders);
 
-        res.content = responseFromUrl.content
+        res.content = responseFromUrl.content;
       }
     } catch (error) {
       silentLogger.error(error);
@@ -529,7 +527,7 @@ export const checkUrl = async (
   return res;
 };
 
-const isEmptyObject = (obj: Object): boolean => !Object.keys(obj).length;
+const isEmptyObject = (obj: object): boolean => !Object.keys(obj).length;
 
 export const parseHeaders = (header?: string): Record<string, string> => {
   // parse HTTP headers from string
@@ -655,8 +653,8 @@ export const getUrlsFromRobotsTxt = async (url: string, browserToRun: string): P
 
   const lines = robotsTxt.split(/\r?\n/);
   let shouldCapture = false;
-  let disallowedUrls = [],
-    allowedUrls = [];
+  const disallowedUrls = [];
+  const allowedUrls = [];
 
   const sanitisePattern = (pattern: string): string => {
     const directoryRegex = /^\/(?:[^?#/]+\/)*[^?#]*$/;
@@ -776,7 +774,7 @@ export const getLinksFromSitemap = async (
 
     let request;
     try {
-      request = new Request({ url: url });
+      request = new Request({ url });
     } catch (e) {
       console.log('Error creating request', e);
     }
@@ -802,11 +800,11 @@ export const getLinksFromSitemap = async (
 
     if (normalizedSitemapUrl == normalizedUserUrlInput) {
       return 2;
-    } else if (normalizedSitemapUrl.startsWith(normalizedUserUrlInput)) {
-      return 1;
-    } else {
-      return 0;
     }
+    if (normalizedSitemapUrl.startsWith(normalizedUserUrlInput)) {
+      return 1;
+    }
+    return 0;
   };
   const processXmlSitemap = async ($, sitemapType, linkSelector, dateSelector, sectionSelector) => {
     const urlList = [];
@@ -818,7 +816,7 @@ export const getLinksFromSitemap = async (
       } else {
         url = $(urlElement).find(linkSelector).text();
       }
-      let lastModified = $(urlElement).find(dateSelector).text();
+      const lastModified = $(urlElement).find(dateSelector).text();
       const lastModifiedDate = lastModified ? new Date(lastModified) : null;
 
       urlList.push({ url, lastModifiedDate });
@@ -948,14 +946,14 @@ export const getLinksFromSitemap = async (
               keepAlive: true,
             }),
             auth: {
-              username: username,
-              password: password,
+              username,
+              password,
             },
           });
           try {
             data = await (await instance.get(url, { timeout: 80000 })).data;
-          } catch (error) {
-            return; //to skip the error
+          } catch {
+            return; // to skip the error
           }
         } catch (error) {
           if (error.code === 'ECONNABORTED') {
@@ -1098,7 +1096,8 @@ export const getBrowserToRun = (
 
       constants.launcher = webkit;
       return { browserToRun: null, clonedBrowserDataDir: '' };
-    } else if (platform === 'win32') {
+    }
+    if (platform === 'win32') {
       if (isCli)
         printMessage(['Unable to use Chrome, falling back to Edge browser...'], messageOptions);
 
@@ -1108,10 +1107,10 @@ export const getBrowserToRun = (
       if (isCli)
         printMessage(['Unable to use both Chrome and Edge. Please try again.'], messageOptions);
       process.exit(constants.urlCheckStatuses.browserError.code);
-    } else {
-      // linux and other OS
-      if (isCli)
-        printMessage(['Unable to use Chrome, falling back to Chromium browser...'], messageOptions);
+    }
+
+    if (isCli) {
+      printMessage(['Unable to use Chrome, falling back to Chromium browser...'], messageOptions);
     }
   } else if (preferredBrowser === BrowserTypes.EDGE) {
     const edgeData = getEdgeData();
@@ -1132,7 +1131,8 @@ export const getBrowserToRun = (
 
       constants.launcher = webkit;
       return { browserToRun: null, clonedBrowserDataDir: '' };
-    } else if (platform === 'win32') {
+    }
+    if (platform === 'win32') {
       if (isCli)
         printMessage(['Unable to use both Edge and Chrome. Please try again.'], messageOptions);
       process.exit(constants.urlCheckStatuses.browserError.code);
@@ -1162,11 +1162,11 @@ export const getBrowserToRun = (
 export const getClonedProfilesWithRandomToken = (browser: string, randomToken: string): string => {
   if (browser === BrowserTypes.CHROME) {
     return cloneChromeProfiles(randomToken);
-  } else if (browser === BrowserTypes.EDGE) {
-    return cloneEdgeProfiles(randomToken);
-  } else {
-    return cloneChromiumProfiles(randomToken);
   }
+  if (browser === BrowserTypes.EDGE) {
+    return cloneEdgeProfiles(randomToken);
+  }
+  return cloneChromiumProfiles(randomToken);
 };
 
 export const getChromeData = () => {
@@ -1175,9 +1175,8 @@ export const getChromeData = () => {
   if (browserDataDir && clonedBrowserDataDir) {
     const browserToRun = BrowserTypes.CHROME;
     return { browserToRun, clonedBrowserDataDir };
-  } else {
-    return null;
   }
+  return null;
 };
 
 export const getEdgeData = () => {
@@ -1324,7 +1323,7 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
             } else {
               console.log(`An unexpected error occurred while copying the file: ${err.message}`);
             }
-            //printMessage([err], messageOptions);
+            // printMessage([err], messageOptions);
             success = false;
           }
         }
@@ -1402,9 +1401,11 @@ export const cloneChromeProfiles = (randomToken?: string): string => {
   }
 
   if (fs.existsSync(destDir)) {
-    process.env.PURPLE_A11Y_VERBOSE
-      ? deleteClonedChromeProfiles(randomToken)
-      : deleteClonedChromeProfiles();
+    if (process.env.PURPLE_A11Y_VERBOSE) {
+      deleteClonedChromeProfiles(randomToken);
+    } else {
+      deleteClonedChromeProfiles();
+    }
   }
 
   if (!fs.existsSync(destDir)) {
@@ -1471,9 +1472,11 @@ export const cloneEdgeProfiles = (randomToken?: string): string => {
   }
 
   if (fs.existsSync(destDir)) {
-    process.env.PURPLE_A11Y_VERBOSE
-      ? deleteClonedEdgeProfiles(randomToken)
-      : deleteClonedEdgeProfiles();
+    if (process.env.PURPLE_A11Y_VERBOSE) {
+      deleteClonedEdgeProfiles(randomToken);
+    } else {
+      deleteClonedEdgeProfiles();
+    }
   }
 
   if (!fs.existsSync(destDir)) {
@@ -1582,7 +1585,6 @@ export const deleteClonedEdgeProfiles = (randomToken?: string): void => {
         }
       }
     });
-    return;
   }
 };
 
@@ -1649,13 +1651,14 @@ export const getScreenToScan = (
 ): string => {
   if (deviceChosen) {
     return deviceChosen;
-  } else if (customDevice) {
-    return customDevice;
-  } else if (viewportWidth) {
-    return `CustomWidth_${viewportWidth}px`;
-  } else {
-    return 'Desktop';
   }
+  if (customDevice) {
+    return customDevice;
+  }
+  if (viewportWidth) {
+    return `CustomWidth_${viewportWidth}px`;
+  }
+  return 'Desktop';
 };
 
 export const submitFormViaPlaywright = async (
@@ -1687,7 +1690,7 @@ export const submitFormViaPlaywright = async (
 
     try {
       await page.waitForLoadState('networkidle', { timeout: 10000 });
-    } catch (e) {
+    } catch {
       silentLogger.info('Unable to detect networkidle');
     }
   } catch (error) {
@@ -1695,9 +1698,13 @@ export const submitFormViaPlaywright = async (
   } finally {
     await browserContext.close();
     if (proxy && browserToRun === BrowserTypes.EDGE) {
-      !process.env.PURPLE_A11Y_VERBOSE ? deleteClonedEdgeProfiles() : undefined;
+      if (!process.env.PURPLE_A11Y_VERBOSE) {
+        deleteClonedEdgeProfiles();
+      }
     } else if (proxy && browserToRun === BrowserTypes.CHROME) {
-      !process.env.PURPLE_A11Y_VERBOSE ? deleteClonedChromeProfiles() : undefined;
+      if (!process.env.PURPLE_A11Y_VERBOSE) {
+        deleteClonedChromeProfiles();
+      }
     }
   }
 };

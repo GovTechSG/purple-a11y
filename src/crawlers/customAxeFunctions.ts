@@ -1,5 +1,5 @@
 // Custom Axe Functions for axe.config
-export const customAxeConfig = {
+const customAxeConfig = {
   branding: {
     application: 'purple-a11y',
   },
@@ -31,3 +31,5 @@ export const customAxeConfig = {
     },
   ],
 };
+
+export default customAxeConfig;

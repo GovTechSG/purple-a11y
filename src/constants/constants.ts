@@ -4,13 +4,12 @@ import fs from 'fs-extra';
 import { globSync } from 'glob';
 import which from 'which';
 import os from 'os';
-import { spawnSync } from 'child_process';
-import { silentLogger } from '../logs.js';
-import { execSync } from 'child_process';
+import { spawnSync, execSync } from 'child_process';
 import { chromium } from 'playwright';
+import { silentLogger } from '../logs.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const filename = fileURLToPath(import.meta.url);
+const dirname = path.dirname(filename);
 
 const maxRequestsPerCrawl = 100;
 
@@ -33,8 +32,7 @@ export const blackListedFileExtensions = [
 
 export const getIntermediateScreenshotsPath = (datasetsPath: string): string =>
   `${datasetsPath}/screenshots`;
-export const destinationPath = (storagePath: string): string =>
-  `${storagePath}/screenshots`;
+export const destinationPath = (storagePath: string): string => `${storagePath}/screenshots`;
 
 /**  Get the path to Default Profile in the Chrome Data Directory
  * as per https://chromium.googlesource.com/chromium/src/+/master/docs/user_data_dir.md
@@ -64,9 +62,8 @@ export const getDefaultChromeDataDir = (): string => {
 
     if (defaultChromeDataDir && fs.existsSync(defaultChromeDataDir)) {
       return defaultChromeDataDir;
-    } else {
-      return null;
     }
+    return null;
   } catch (error) {
     console.error(`Error in getDefaultChromeDataDir(): ${error}`);
   }
@@ -99,9 +96,8 @@ export const getDefaultEdgeDataDir = (): string => {
 
     if (defaultEdgeDataDir && fs.existsSync(defaultEdgeDataDir)) {
       return defaultEdgeDataDir;
-    } else {
-      return null;
     }
+    return null;
   } catch (error) {
     console.error(`Error in getDefaultEdgeDataDir(): ${error}`);
   }
@@ -125,7 +121,7 @@ export const getDefaultChromiumDataDir = () => {
 
       try {
         fs.mkdirSync(defaultChromiumDataDir, { recursive: true }); // Use { recursive: true } to create parent directories if they don't exist
-      } catch (error) {
+      } catch {
         defaultChromiumDataDir = '/tmp';
       }
 
@@ -134,9 +130,8 @@ export const getDefaultChromiumDataDir = () => {
 
     if (defaultChromiumDataDir && fs.existsSync(defaultChromiumDataDir)) {
       return defaultChromiumDataDir;
-    } else {
-      return null;
     }
+    return null;
   } catch (error) {
     silentLogger.error(`Error in getDefaultChromiumDataDir(): ${error}`);
   }
@@ -144,7 +139,7 @@ export const getDefaultChromiumDataDir = () => {
 
 export const removeQuarantineFlag = function (searchPath: string) {
   if (os.platform() === 'darwin') {
-    let execPaths = globSync(searchPath, { absolute: true, nodir: true });
+    const execPaths = globSync(searchPath, { absolute: true, nodir: true });
     if (execPaths.length > 0) {
       execPaths.forEach(filePath => spawnSync('xattr', ['-d', 'com.apple.quarantine', filePath]));
     }
@@ -152,27 +147,25 @@ export const removeQuarantineFlag = function (searchPath: string) {
 };
 
 export const getExecutablePath = function (dir: string, file: string): string {
-  let execPaths = globSync(dir + '/' + file, { absolute: true, nodir: true });
+  let execPaths = globSync(`${dir}/${file}`, { absolute: true, nodir: true });
 
   if (execPaths.length === 0) {
-    let execInPATH = which.sync(file, { nothrow: true });
+    const execInPATH = which.sync(file, { nothrow: true });
 
     if (execInPATH) {
       return fs.realpathSync(execInPATH);
-    } else {
-      const splitPath =
-        os.platform() === 'win32' ? process.env.PATH.split(';') : process.env.PATH.split(':');
-
-      for (let path in splitPath) {
-        execPaths = globSync(path + '/' + file, { absolute: true, nodir: true });
-        if (execPaths.length !== 0) return fs.realpathSync(execPaths[0]);
-      }
-      return null;
     }
-  } else {
-    removeQuarantineFlag(execPaths[0]);
-    return execPaths[0];
+    const splitPath =
+      os.platform() === 'win32' ? process.env.PATH.split(';') : process.env.PATH.split(':');
+
+    for (const path in splitPath) {
+      execPaths = globSync(`${path}/${file}`, { absolute: true, nodir: true });
+      if (execPaths.length !== 0) return fs.realpathSync(execPaths[0]);
+    }
+    return null;
   }
+  removeQuarantineFlag(execPaths[0]);
+  return execPaths[0];
 };
 
 /**
@@ -181,7 +174,7 @@ export const getExecutablePath = function (dir: string, file: string): string {
 export const basicAuthRegex = /^.*\/\/.*:.*@.*$/i;
 
 // for crawlers
-export const axeScript = path.join(__dirname, '../../node_modules/axe-core/axe.min.js');
+export const axeScript = path.join(dirname, '../../node_modules/axe-core/axe.min.js');
 export class UrlsCrawled {
   toScan: string[] = [];
   scanned: { url: string; actualUrl: string; pageTitle: string }[] = [];
@@ -205,6 +198,7 @@ export class UrlsCrawled {
 
 const urlsCrawledObj = new UrlsCrawled();
 
+/* eslint-disable no-unused-vars */
 export enum ScannerTypes {
   SITEMAP = 'Sitemap',
   WEBSITE = 'Website',
@@ -212,6 +206,7 @@ export enum ScannerTypes {
   INTELLIGENT = 'Intelligent',
   LOCALFILE = 'LocalFile',
 }
+/* eslint-enable no-unused-vars */
 
 export const guiInfoStatusTypes = {
   SCANNED: 'scanned',
@@ -252,15 +247,14 @@ export const getProxy = (): { type: string; url: string } | null => {
 
     if (getSettingValue('AutoConfigURL')) {
       return { type: 'autoConfig', url: getSettingValue('AutoConfigURL') };
-    } else if (getSettingValue('ProxyEnable') === '1') {
-      return { type: 'manualProxy', url: getSettingValue('ProxyServer') };
-    } else {
-      return null;
     }
-  } else {
-    // develop for mac
+    if (getSettingValue('ProxyEnable') === '1') {
+      return { type: 'manualProxy', url: getSettingValue('ProxyServer') };
+    }
     return null;
   }
+  // develop for mac
+  return null;
 };
 
 export const proxy = getProxy();
@@ -362,11 +356,13 @@ const urlCheckStatuses = {
   notALocalFile: { code: 19, message: 'Provided filepath is not a local html or sitemap file.' },
 };
 
+/* eslint-disable no-unused-vars */
 export enum BrowserTypes {
   CHROMIUM = 'chromium',
   CHROME = 'chrome',
   EDGE = 'msedge',
 }
+/* eslint-enable no-unused-vars */
 
 const xmlSitemapTypes = {
   xml: 0,
@@ -410,7 +406,7 @@ export default {
   maxConcurrency: 25,
   urlsCrawledObj,
   impactOrder,
-  launchOptionsArgs: launchOptionsArgs,
+  launchOptionsArgs,
   xmlSitemapTypes,
   urlCheckStatuses,
   launcher: chromium,
@@ -421,7 +417,7 @@ export default {
   robotsTxtUrls: null,
 };
 
-export const rootPath = __dirname;
+export const rootPath = dirname;
 export const wcagWebPage = 'https://www.w3.org/TR/WCAG21/';
 const latestAxeVersion = '4.9';
 export const axeVersion = latestAxeVersion;
