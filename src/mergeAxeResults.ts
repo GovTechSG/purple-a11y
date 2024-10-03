@@ -316,10 +316,14 @@ const writeSummaryPdf = async (storagePath, filename = 'summary') => {
   `,
   });
 
-  await page.close();
+  try {
+    await page.close();
 
-  await context.close();
-  await browser.close();
+    await context.close();
+    await browser.close();
+  } catch (error) {
+    console.log('error 111', error)
+  }
 
   fs.unlinkSync(htmlFilePath);
 };

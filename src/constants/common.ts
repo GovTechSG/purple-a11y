@@ -464,7 +464,11 @@ const checkUrlConnectivityWithBrowser = async (
       silentLogger.error(error);
       res.status = constants.urlCheckStatuses.systemError.code;
     } finally {
-      await browserContext.close();
+      try {
+        await browserContext.close();
+      } catch (error) {
+        console.log('error 333', error)
+      }
     }
   } else {
     // enters here if input is not a URL or not using http/https protocols
@@ -930,7 +934,11 @@ export const getLinksFromSitemap = async (
         }
       }
 
-      await browserContext.close();
+      try {
+        await browserContext.close();
+      } catch (error) {
+        console.log('error 444', error)
+      }
     };
 
     if (validator.isURL(url, urlOptions)) {
@@ -1693,7 +1701,11 @@ export const submitFormViaPlaywright = async (
   } catch (error) {
     silentLogger.error(error);
   } finally {
-    await browserContext.close();
+    try {
+      await browserContext.close();
+    } catch (error) {
+      console.log('error 555', error)
+    }
     if (proxy && browserToRun === BrowserTypes.EDGE) {
       !process.env.PURPLE_A11Y_VERBOSE ? deleteClonedEdgeProfiles() : undefined;
     } else if (proxy && browserToRun === BrowserTypes.CHROME) {

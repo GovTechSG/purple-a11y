@@ -171,7 +171,12 @@ export const init = async (
         3000,
       );
 
-      await browserContext.close();
+      try {
+        await browserContext.close();
+      } catch (error) {
+        console.log('error 222', error)
+      }
+
       deleteClonedProfiles(browserToRun);
     }
     const pageIndex = urlsCrawled.scanned.length + 1;

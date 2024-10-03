@@ -266,6 +266,7 @@ const crawlDomain = async (
             try {
               await newPage.close();
             } catch (e) {
+              console.log('errror 666', e)
               // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
               // Handles browser page object been closed.
             }
@@ -309,6 +310,7 @@ const crawlDomain = async (
           try {
             await page.close();
           } catch (e) {
+            console.log('errror 777', e)
             // No logging for this case as it is best effort to handle dynamic client-side JavaScript redirects and clicks.
             // Handles browser page object been closed.
           }
