@@ -160,7 +160,7 @@ const crawlDomain = async (
   
     try {
       // Send a HEAD request to check headers without downloading the file
-      const headResponse = await axios.head(url, { headers: { Authorization: authHeader } });
+      const headResponse = await axios.head(url, { headers: { Authorization: authHeader }, httpsAgent });
       const contentType = headResponse.headers['content-type'] || '';
       const contentDisposition = headResponse.headers['content-disposition'] || '';
   
