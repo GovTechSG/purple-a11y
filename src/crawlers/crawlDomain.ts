@@ -222,7 +222,7 @@ const crawlDomain = async (
       }
       
     } catch (e) {
-      silentLogger.error(`Error checking the MIME type of ${url}: ${e.message}`);
+      // silentLogger.error(`Error checking the MIME type of ${url}: ${e.message}`);
       // If an error occurs (e.g., a network issue), assume the URL is processible
       httpHeadCache.set(url, true);
       return true;
