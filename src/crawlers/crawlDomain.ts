@@ -37,6 +37,7 @@ import type { BatchAddRequestsResult } from '@crawlee/types';
 import axios from 'axios';
 import { fileTypeFromBuffer } from 'file-type';
 import mime from 'mime-types';
+import https from 'https';
 
 const isBlacklisted = (url: string) => {
   const blacklistedPatterns = getBlackListedPatterns(null);
@@ -100,6 +101,9 @@ const crawlDomain = async (
   const { maxConcurrency } = constants;
   const { playwrightDeviceDetailsObject } = viewportSettings;
   const isBlacklistedUrl = isBlacklisted(url);
+
+  const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+
 
   if (isBlacklistedUrl) {
     guiInfoLog(guiInfoStatusTypes.SKIPPED, {
@@ -205,7 +209,8 @@ const crawlDomain = async (
       // If you want more robust checks, you can download a portion of the content and use the file-type package to detect file types by content
       const response = await axios.get(url, {
         headers: { Range: 'bytes=0-4100', Authorization: authHeader },
-        responseType: 'arraybuffer'
+        responseType: 'arraybuffer',
+        httpsAgent
       });
   
       const fileType = await fileTypeFromBuffer(response.data);
