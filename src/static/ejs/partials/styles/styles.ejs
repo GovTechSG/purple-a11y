@@ -1,6 +1,8 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Viga&display=swap');
   @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Text:ital@0;1&display=swap" rel="stylesheet');
 
   /* Bootstrap CSS overrides */
   #accessibility-site-report:root {
@@ -52,11 +54,14 @@
   .h2,
   h1,
   .h1 {
-    color: unset;
+    /* color: unset; */
+    color: var(
+      --a11y-black-100
+    ); /* TODO: check that this doesn't affect strings in error messages */
   }
 
   #accessibility-site-report h1 {
-    font-family: 'Viga', 'Helvetica', sans-serif;
+    font-family: 'PT Sans';
     font-weight: 700;
     font-size: 2rem;
     margin-top: 0;
