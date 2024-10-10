@@ -1237,7 +1237,7 @@
   #expandedRuleCategoryContent .accordion-body .card .needsReview {
     color: var(--a11y-black-100);
     background-color: var(--a11y-black-5);
-    border-bottom: 1px solid #d1dbde;
+    border-bottom: 1px solid var(--a11y-black-25);
     padding: 0.5rem 1rem;
     display: flex;
     align-items: center;
@@ -1273,7 +1273,7 @@
   .ai-response-card {
     padding: 1rem;
     border: 1px solid var(--a11y-black-25);
-    background-color: #f7f6fe;
+    background-color: rgba(144, 33, 166, 0.05);
     border-radius: 4px;
   }
 
@@ -1476,8 +1476,8 @@
   }
 
   .aiGenerateResponseButton {
-    border: 1px solid #6e52ef;
-    color: #6e52ef;
+    border: 1px solid var(--a11y-purple-100-light);
+    color: var(--a11y-purple-100-light);
     background-color: var(--true-white);
     border-radius: 4px;
     padding: 0.5rem 1rem;
@@ -1489,15 +1489,15 @@
   }
 
   .aiGenerateResponseButton:hover:not(:disabled) {
-    background-color: #ebe8fd;
-    color: #5b3bed;
-    border-color: #5b3bed;
+    background-color: var(--a11y-purple-50);
+    color: var(--a11y-purple-100-light);
+    border-color: var(--a11y-purple-100-light);
   }
 
   .aiGenerateResponseButton:active:not(:disabled) {
-    background-color: #c0b4f8;
-    color: #472bc4;
-    border-color: #472bc4;
+    background-color: var(--a11y-purple-70);
+    color: var(--a11y-purple-150);
+    border-color: var(--a11y-purple-150);
   }
 
   .generateAiError {
@@ -1509,7 +1509,7 @@
     color: var(--a11y-black-100);
   }
 
-  .undoAiFeedback {
+  .undoAiFeedback:hover {
     text-decoration: underline !important;
   }
 
@@ -1521,8 +1521,8 @@
 
   .aiFeedbackButton {
     background-color: var(--true-white);
-    border: 1px solid #6e52ef;
-    color: #6e52ef;
+    border: 1px solid var(--a11y-purple-100-light);
+    color: var(--a11y-purple-100-light);
     border-radius: 4px;
     padding: 0.25rem 1rem;
     font-size: 0.875rem;
@@ -1533,15 +1533,15 @@
   }
 
   .aiFeedbackButton:hover {
-    background-color: #ebe8fd;
-    color: #5b3bed;
-    border-color: #5b3bed;
+    background-color: var(--a11y-purple-50);
+    color: var(--a11y-purple-100-light);
+    border-color: var(--a11y-purple-100-light);
   }
 
   .aiFeedbackButton:active {
-    background-color: #c0b4f8;
-    color: #472bc4;
-    border-color: #472bc4;
+    background-color: var(--a11y-purple-70);
+    color: var(--a11y-purple-150);
+    border-color: var(--a11y-purple-150);
   }
 
   .codeForAiResponse {
@@ -1558,7 +1558,7 @@
 
   #expandedRuleAiFeedback {
     margin-top: 2rem;
-    background-color: #f7f6fe;
+    background-color: rgba(144, 33, 166, 0.05);
     border: 1px solid var(--a11y-purple-100-light);
     border-radius: 4px;
     padding: 1rem;
