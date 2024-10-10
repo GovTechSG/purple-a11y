@@ -193,7 +193,8 @@ const crawlDomain = async (
         // Download the first few bytes of the file to check for the magic number
         const byteResponse = await axios.get(url, {
           headers: { Range: 'bytes=0-3', Authorization: authHeader },
-          responseType: 'arraybuffer'
+          responseType: 'arraybuffer',
+          httpsAgent
         });
   
         const magicNumber = byteResponse.data.toString('hex');
