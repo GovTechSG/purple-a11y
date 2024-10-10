@@ -310,8 +310,8 @@ const writeSummaryPdf = async (storagePath, filename = 'summary') => {
     format: 'A4',
     displayHeaderFooter: true,
     footerTemplate: `
-    <div style="margin-top:50px;color:#333333;font-family:Open Sans;text-align: center;width: 100%;font-weight:400">
-      <span style="color:#333333;font-size: 14px;font-weight:400">Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+    <div style="margin-top:50px;color:#26241b;font-family:Open Sans;text-align: center;width: 100%;font-weight:400">
+      <span style="color:#26241b;font-size: 14px;font-weight:400">Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
     </div>
   `,
   });

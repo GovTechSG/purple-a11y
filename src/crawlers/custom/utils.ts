@@ -320,7 +320,7 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
         }
         
         .purple-a11y-menu button {
-          background-color: #785ef0;
+          background-color: #9021a6;
           color: #fff;
           border: none;
           border-radius: 50rem;
