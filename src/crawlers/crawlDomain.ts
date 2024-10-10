@@ -35,6 +35,9 @@ import { ViewportSettingsClass } from '../combine.js';
 import type { EnqueueLinksOptions, RequestOptions } from 'crawlee';
 import type { BatchAddRequestsResult } from '@crawlee/types';
 import axios from 'axios';
+import { fileTypeFromBuffer } from 'file-type';
+import mime from 'mime-types';
+import https from 'https';
 
 const isBlacklisted = (url: string) => {
   const blacklistedPatterns = getBlackListedPatterns(null);
@@ -99,6 +102,9 @@ const crawlDomain = async (
   const { playwrightDeviceDetailsObject } = viewportSettings;
   const isBlacklistedUrl = isBlacklisted(url);
 
+  const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+
+
   if (isBlacklistedUrl) {
     guiInfoLog(guiInfoStatusTypes.SKIPPED, {
       numScanned: urlsCrawled.scanned.length,
@@ -151,43 +157,78 @@ const crawlDomain = async (
       silentLogger.info('cache hit', url, httpHeadCache.get(url));
       return false; // return false to avoid processing the url again
     }
-
+  
     try {
-      const response = await axios.head(url, { headers: { Authorization: authHeader } });
-      const contentType = response.headers['content-type'] || '';
-
-      if (!contentType.includes('text/html') && !contentType.includes('application/pdf')) {
-        silentLogger.info(`Skipping MIME type ${contentType} at URL ${url}`);
+      // Send a HEAD request to check headers without downloading the file
+      const headResponse = await axios.head(url, { headers: { Authorization: authHeader }, httpsAgent });
+      const contentType = headResponse.headers['content-type'] || '';
+      const contentDisposition = headResponse.headers['content-disposition'] || '';
+  
+      // Check if the response suggests it's a downloadable file based on Content-Disposition header
+      if (contentDisposition.includes('attachment')) {
+        silentLogger.info(`Skipping URL due to attachment header: ${url}`);
         httpHeadCache.set(url, false);
         return false;
       }
-
-      // further check for zip files where the url ends with .zip
+  
+      // Check if the MIME type suggests it's a downloadable file
+      if (contentType.startsWith('application/') || contentType.includes('octet-stream')) {
+        silentLogger.info(`Skipping potential downloadable file: ${contentType} at URL ${url}`);
+        httpHeadCache.set(url, false);
+        return false;
+      }
+  
+      // Use the mime-types library to ensure it's processible content (e.g., HTML or plain text)
+      const mimeType = mime.lookup(contentType);
+      if (mimeType && !mimeType.startsWith('text/html') && !mimeType.startsWith('text/')) {
+        silentLogger.info(`Detected non-processible MIME type: ${mimeType} at URL ${url}`);
+        httpHeadCache.set(url, false);
+        return false;
+      }
+  
+      // Additional check for zip files by their magic number (PK\x03\x04)
       if (url.endsWith('.zip')) {
         silentLogger.info(`Checking for zip file magic number at URL ${url}`);
-        // download first 4 bytes of file to check the magic number
-        const response = await axios.get(url, {
+  
+        // Download the first few bytes of the file to check for the magic number
+        const byteResponse = await axios.get(url, {
           headers: { Range: 'bytes=0-3', Authorization: authHeader },
+          responseType: 'arraybuffer',
+          httpsAgent
         });
-        // check using startsWith because some server does not handle Range header and returns the whole file
-        if (response.data.startsWith('PK\x03\x04')) {
-          // PK\x03\x04 is the magic number for zip files
+  
+        const magicNumber = byteResponse.data.toString('hex');
+        if (magicNumber === '504b0304') {
           silentLogger.info(`Skipping zip file at URL ${url}`);
           httpHeadCache.set(url, false);
           return false;
         } else {
-          // print out the hex value of the first 4 bytes
-          silentLogger.info(
-            `Not skipping ${url} as it has magic number: ${response.data.slice(0, 4).toString('hex')}`,
-          );
+          silentLogger.info(`Not skipping ${url}, magic number does not match ZIP file: ${magicNumber}`);
         }
       }
+  
+      // If you want more robust checks, you can download a portion of the content and use the file-type package to detect file types by content
+      const response = await axios.get(url, {
+        headers: { Range: 'bytes=0-4100', Authorization: authHeader },
+        responseType: 'arraybuffer',
+        httpsAgent
+      });
+  
+      const fileType = await fileTypeFromBuffer(response.data);
+      if (fileType && !fileType.mime.startsWith('text/html') && !fileType.mime.startsWith('text/')) {
+        silentLogger.info(`Detected downloadable file of type ${fileType.mime} at URL ${url}`);
+        httpHeadCache.set(url, false);
+        return false;
+      }
+      
     } catch (e) {
       silentLogger.error(`Error checking the MIME type of ${url}: ${e.message}`);
-      // when failing to check the MIME type (e.g. need to go through proxy), let crawlee handle the request
+      // If an error occurs (e.g., a network issue), assume the URL is processible
       httpHeadCache.set(url, true);
       return true;
     }
+  
+    // If none of the conditions to skip are met, allow processing of the URL
     httpHeadCache.set(url, true);
     return true;
   };
@@ -511,11 +552,21 @@ const crawlDomain = async (
               Authorization: authHeader,
               ...extraHTTPHeaders,
             });
+            const processible = await isProcessibleUrl(request.url);
+            if (!processible) {
+              request.skipNavigation = true;
+              return null;
+            }
           },
         ]
       : [
           async ({ request }) => {
             preNavigationHooks(extraHTTPHeaders);
+            const processible = await isProcessibleUrl(request.url);
+            if (!processible) {
+              request.skipNavigation = true;
+              return null;
+            }
           },
         ],
     requestHandlerTimeoutSecs: 90, // Allow each page to be processed by up from default 60 seconds
