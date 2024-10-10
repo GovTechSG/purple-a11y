@@ -5,7 +5,7 @@
         helpUrl = `<a href=${rule.helpUrl} target="_blank" class="help-link"></a>`;
         wcagLink =
           rule.conformance[0] === 'best-practice'
-            ? `<span style="color:#4A6168">Best practice</span>`
+            ? `<span style="color:#26241b">Best practice</span>`
             : generateWcagConformanceLinks(rule.conformance);
         description =
           `${rule.description}`.replace(/</g, '&lt;').replace(/>/g, '&gt;') + `\n${wcagLink}`;
