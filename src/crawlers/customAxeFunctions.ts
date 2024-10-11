@@ -1,5 +1,6 @@
+import { Spec } from "axe-core";
 // Custom Axe Functions for axe.config
-export const customAxeConfig = {
+export const customAxeConfig: Spec = {
   branding: {
     application: 'purple-a11y',
   },
