@@ -22,7 +22,7 @@ import itemTypeDescription from './constants/itemTypeDescription.js';
 import { chromium } from 'playwright';
 import { createWriteStream } from 'fs';
 import { AsyncParser, ParserOptions } from '@json2csv/node';
-import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
+import { oobeeAiHtmlETL, oobeeAiRules } from './constants/oobeeAi.js';
 
 type ItemsInfo = {
   html: string;
@@ -52,7 +52,7 @@ type RuleInfo = {
 
 type AllIssues = {
   storagePath: string;
-  purpleAi: {
+  oobeeAi: {
     htmlETL: any;
     rules: string[];
   };
@@ -446,11 +446,11 @@ const createRuleIdJson = allIssues => {
     const ruleId = rule.rule;
     let snippets = [];
 
-    if (purpleAiRules.includes(ruleId)) {
+    if (oobeeAiRules.includes(ruleId)) {
       const snippetsSet = new Set();
       rule.pagesAffected.forEach(page => {
         page.items.forEach(htmlItem => {
-          snippetsSet.add(purpleAiHtmlETL(htmlItem.html));
+          snippetsSet.add(oobeeAiHtmlETL(htmlItem.html));
         });
       });
       snippets = [...snippetsSet];
@@ -527,9 +527,9 @@ export const generateArtifacts = async (
 
   const allIssues: AllIssues = {
     storagePath,
-    purpleAi: {
-      htmlETL: purpleAiHtmlETL,
-      rules: purpleAiRules,
+    oobeeAi: {
+      htmlETL: oobeeAiHtmlETL,
+      rules: oobeeAiRules,
     },
     startTime: scanDetails.startTime ? scanDetails.startTime : new Date(),
     endTime: scanDetails.endTime ? scanDetails.endTime : new Date(),
@@ -617,7 +617,7 @@ export const generateArtifacts = async (
     return impactCount;
   };
 
-  if (process.env.PURPLE_A11Y_VERBOSE) {
+  if (process.env.OOBEE_VERBOSE) {
     let axeImpactCount = getAxeImpactCount(allIssues);
 
     let scanData = {
@@ -705,7 +705,7 @@ export const generateArtifacts = async (
         );
       }
 
-      if (process.send && process.env.PURPLE_A11Y_VERBOSE && process.env.REPORT_BREAKDOWN != '1') {
+      if (process.send && process.env.OOBEE_VERBOSE && process.env.REPORT_BREAKDOWN != '1') {
         let zipFileNameMessage = {
           type: 'zipFileName',
           payload: `${constants.cliZipFileName}`,

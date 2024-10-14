@@ -1,7 +1,7 @@
 // Custom Axe Functions for axe.config
 export const customAxeConfig = {
   branding: {
-    application: 'purple-a11y',
+    application: 'oobee',
   },
   checks: [
     {

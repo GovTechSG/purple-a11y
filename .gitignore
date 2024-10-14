@@ -1,7 +1,7 @@
 dist
 node_modules
 .vscode
-.a11y_storage
+.oobee_storage
 results/
 logs/
 debug*.txt
@@ -19,7 +19,7 @@ nodejs-*
 amazon-corretto-*
 verapdf*
 ms-playwright/
-a11y-scan-results*.zip
+oobee-scan-results*.zip
 PHScan_*/
 Upload Files/
 Chromium Support/

@@ -97,7 +97,7 @@ category summary is clicked %>
       `),
       );
 
-      if (purpleAiRules.includes(selectedRule.rule)) {
+      if (oobeeAiRules.includes(selectedRule.rule)) {
         document.querySelector('#expandedRuleAiFeedback').style.display = 'block';
       } else {
         document.querySelector('#expandedRuleAiFeedback').style.display = 'none';
@@ -535,10 +535,10 @@ category summary is clicked %>
           const buttonDivForAiFeedback = `${buttonAIId}-${index}`;
           const aiErrorDiv = `${errorAIId}-${index}`;
           let itemCard;
-          const isPurpleAiRule = purpleAiRules.includes(ruleInCategory.rule);
-          let purpleAiQueryLabel;
+          const isPurpleAiRule = oobeeAiRules.includes(ruleInCategory.rule);
+          let oobeeAiQueryLabel;
           if (isPurpleAiRule) {
-            purpleAiQueryLabel = await checkPurpleAiQueryLabel(ruleInCategory.rule, item.html);
+            oobeeAiQueryLabel = await checkPurpleAiQueryLabel(ruleInCategory.rule, item.html);
           }
 
           itemCard = createElementFromString(`
@@ -621,7 +621,7 @@ category summary is clicked %>
                   <div class="d-flex g-one">
                     <div class="fw-bold page-item-card-section-title">AI suggestion</div>
                     <div id="${accordionDivToAppendAI}" class="page-item-card-section-content">
-                      ${purpleAiQueryLabel.hasNetworkError ?
+                      ${oobeeAiQueryLabel.hasNetworkError ?
                         `<button
                           id=${buttonDivForAiFeedback}
                           class="aiGenerateResponseButton"
@@ -635,14 +635,14 @@ category summary is clicked %>
                             Generate response
                           </button>
                           <div id=${aiErrorDiv}></div>` :
-                          (purpleAiQueryLabel.label ?
+                          (oobeeAiQueryLabel.label ?
                             `<button
                             id=${buttonDivForAiFeedback}
                             class="aiGenerateResponseButton"
                             onClick="getPurpleAiAnswer(
                               '${ruleInCategory.rule}',
                               '${accordionDivToAppendAI}',
-                              '${purpleAiQueryLabel.label}',
+                              '${oobeeAiQueryLabel.label}',
                               '${buttonDivForAiFeedback}',
                               '${aiErrorDiv}')"
                             >

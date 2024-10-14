@@ -1,9 +1,8 @@
-# Purple A11y
+# Oobee
 
-[Purple A11y](https://go.gov.sg/purple-a11y-cli) is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).
+[Oobee](https://go.gov.sg/oobee-cli) is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).
 
-This is the engine and command-line interface (CLI) for Purple A11y.  For a desktop graphical user interface (GUI), check out [Purple A11y Desktop](https://go.gov.sg/purple-a11y). The official application can only be downloaded at [https://go.gov.sg/purple-a11y-cicd](https://go.gov.sg/purple-a11y-cicd). We recommend that you download the software only from the official link, as other sources and/or third party links may pose risks and/or compromise your system.
-
+This is the engine and command-line interface (CLI) for Oobee. For a desktop graphical user interface (GUI), check out [Oobee Desktop](https://go.gov.sg/oobee). The official application can only be downloaded at [https://go.gov.sg/oobee-cicd](https://go.gov.sg/oobee-cicd). We recommend that you download the software only from the official link, as other sources and/or third party links may pose risks and/or compromise your system.
 
 ## Technology Stack
 
@@ -15,27 +14,31 @@ This is the engine and command-line interface (CLI) for Purple A11y.  For a desk
 6. [Corretto](https://aws.amazon.com/corretto)
 7. [VeraPDF](https://github.com/veraPDF/veraPDF-apps)
 
-## Using Purple A11y as a NodeJS module
+## Using Oobee as a NodeJS module
 
-If you wish to use Purple A11y as a NodeJS module that can be integrated with end-to-end testing frameworks, refer to the [integration guide](./INTEGRATION.md) on how you can do so.
+If you wish to use Oobee as a NodeJS module that can be integrated with end-to-end testing frameworks, refer to the [integration guide](./INTEGRATION.md) on how you can do so.
 
 ## Prerequisites and Installations
 
-### Portable Purple A11y
+### Portable Oobee
 
-Portable Purple A11y is the recommended way to run Purple A11y as it reduces the difficulty for installation. Refer to [Installation Guide](./INSTALLATION.md) for step-by-step instructions for portable Purple A11y.
+Portable Oobee is the recommended way to run Oobee as it reduces the difficulty for installation. Refer to [Installation Guide](./INSTALLATION.md) for step-by-step instructions for portable Oobee.
 
 ### Manual Installation
 
 Please ensure the following requirements are met:
 
 #### Node.js
+
 - A Node distribution of 20 (LTS) or above.
 - To check your version of Node, go into terminal and paste the command bellow
+
 ```shell
 node -v
 ```
-- If you do not have node, or if there is a need to manage your node versions, you can consider using [Node Version Manager (NVM)](https://github.com/nvm-sh/nvm).  After NVM is installed, you can then install an LTS version of Node:
+
+- If you do not have node, or if there is a need to manage your node versions, you can consider using [Node Version Manager (NVM)](https://github.com/nvm-sh/nvm). After NVM is installed, you can then install an LTS version of Node:
+
 ```shell
 # Install NodeJS version with NVM
 nvm install --lts
@@ -43,20 +46,26 @@ nvm install --lts
 # For subsequent use, you will need to run the command below each time you open a new terminal
 nvm use --lts
 ```
+
 - Install the required NPM packages with `npm install`.
 - Build the project with `npm run build` before you try to run it with `npm start`.
 
 #### Java JRE/JDK
+
 - A JRE/JDK distribution of version 11 or above.
 - To check your version of Java, go into terminal and paste the command bellow
+
 ```shell
 java --version
 ```
+
 - If you do not have java, you can consider installing [Corretto](https://docs.aws.amazon.com/corretto/latest/corretto-11-ug/what-is-corretto-11.html) distribution of OpenJDK.
 
 #### VeraPDF
-- VeraPDF is used for scanning PDF files.  Install VeraPDF by following the [install guide](https://docs.verapdf.org/install/).  You may wish to use the Automated installation script provided on that page, and changing the XML installation script section `<installpath>/tmp/verapdf-test</installpath>` to a location of your choice.
+
+- VeraPDF is used for scanning PDF files. Install VeraPDF by following the [install guide](https://docs.verapdf.org/install/). You may wish to use the Automated installation script provided on that page, and changing the XML installation script section `<installpath>/tmp/verapdf-test</installpath>` to a location of your choice.
 - Ensure you have VeraPDF set in PATH then verify verapdf is installed correctly:
+
 ```shell
 # Invoke the VeraPDF installer
 # Windows users should use vera-install.bat instead of vera-install
@@ -77,21 +86,21 @@ Please refer to [Troubleshooting section](#troubleshooting) for more information
 
 ## Features
 
-Purple A11y can perform the following to scan the target URL.
+Oobee can perform the following to scan the target URL.
 
-- To **run** Purple A11y in **terminal**, run `npm start`. Questions will be prompted to assist you in providing the right inputs.
+- To **run** Oobee in **terminal**, run `npm start`. Questions will be prompted to assist you in providing the right inputs.
 - Results will be compiled in JSON format, followed by generating a HTML report.
 
 > NOTE: For your initial scan, there may be some loading time required before use. Purple-A11y will also ask for your name and email address and collect your app usage data to personalise your experience. Your information fully complies with [GovTech’s Privacy Policy](https://www.tech.gov.sg/privacy/).
 
 #### Delete/Edit Details
+
 > You may delete and edit your cached name and e-mail address by running the following command to delete `userData.txt`:
 
-> - Windows (PowerShell): `rm "$env:APPDATA\Purple A11y\userData.txt"`
-> - MacOS (Terminal): `rm "$HOME/Library/Application Support/Purple A11y/userData.txt"`
+> - Windows (PowerShell): `rm "$env:APPDATA\Oobee\userData.txt"`
+> - MacOS (Terminal): `rm "$HOME/Library/Application Support/Oobee/userData.txt"`
 
 If `userData.txt` does not exists just run `npm start`.
-
 
 ### Scan Selection
 
@@ -100,7 +109,7 @@ You can interact via your arrow keys.
 ```shell
 % npm start
 ┌────────────────────────────────────────────────────────────┐
-│  Purple A11y (ver      )                                   │
+│  Oobee (ver      )                                   │
 │  We recommend using Chrome browser for the best experience.│
 │                                                            │
 │ Welcome back User!                                       │
@@ -119,14 +128,14 @@ Headless mode would allow you to run the scan in the background. If you would li
 ```shell
  % npm start
 ┌────────────────────────────────────────────────────────────┐
-│ Purple A11y (ver      )                                    │
+│ Oobee (ver      )                                    │
 │ We recommend using Chrome browser for the best experience. │
 │                                                            │
 │ Welcome back User!                                         │
 │ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
 ? What would you like to scan? Sitemap
-? Do you want purple-a11y to run in the background? (Y/n) No
+? Do you want oobee to run in the background? (Y/n) No
 ```
 
 ### Sitemap Scan
@@ -134,14 +143,14 @@ Headless mode would allow you to run the scan in the background. If you would li
 ```shell
 % npm start
 ┌────────────────────────────────────────────────────────────┐
-│ Purple A11y (ver      )                                     │
+│ Oobee (ver      )                                     │
 │ We recommend using Chrome browser for the best experience. │
 │                                                            │
 │ Welcome back User!                                         │
 │ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
 ? What would you like to scan? Sitemap
-? Do you want purple-a11y to run in the background? No
+? Do you want oobee to run in the background? No
 ? Which screen size would you like to scan? (Use arrow keys) Desktop
 ? Please enter URL or file path to sitemap, or drag and drop a sitemap file here:  https://www.sitemaps.org/sitemap.xml
 
@@ -154,7 +163,7 @@ Headless mode would allow you to run the scan in the background. If you would li
 
 Scanning website...
 
-#purple-a11y will then start scraping from the file link provided above.
+#oobee will then start scraping from the file link provided above.
 #Console results
 
 ```
@@ -170,14 +179,14 @@ If the sitemap URL provided is invalid, an error message will be prompted for yo
 ```shell
 % npm start
 ┌────────────────────────────────────────────────────────────┐
-│ Purple A11y (ver      )                                    │
+│ Oobee (ver      )                                    │
 │ We recommend using Chrome browser for the best experience. │
 │                                                            │
 │ Welcome back User!                                         │
 │ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
 ? What would you like to scan? Website
-? Do you want purple-a11y to run in the background? Yes
+? Do you want oobee to run in the background? Yes
 ? Which screen size would you like to scan? (Use arrow keys) Desktop
 ? Please enter URL of website:  https://www.domain.org
 
@@ -191,19 +200,19 @@ If the website URL provided is invalid, an error message will be prompted for yo
 
 ### Customised Mobile Device Scan
 
-``` shell
+```shell
 % npm start
 ┌────────────────────────────────────────────────────────────┐
-│ Purple A11y (ver      )                                   │
+│ Oobee (ver      )                                   │
 │ We recommend using Chrome browser for the best experience. │
 │                                                            │
 │ Welcome back User!                                         │
 │ (Refer to readme.txt on how to change your profile)        │
 └────────────────────────────────────────────────────────────┘
 ? What would you like to scan? Website
-? Do you want purple-a11y to run in the background? No
+? Do you want oobee to run in the background? No
 ? Which screen size would you like to scan? (Use arrow keys) (Use arrow keys)
-❯ Desktop 
+❯ Desktop
   Mobile
   Custom
 ```
@@ -212,14 +221,14 @@ Choose `Mobile` for a default mobile screen size scan and `Custom` to choose a d
 
 ### Custom flow
 
-Custom flow allows you to specify a user journey by enabling you to click the scan button on each desired webpage on a browser to initiate scan.  This is useful to scan websites that require user and form input.
+Custom flow allows you to specify a user journey by enabling you to click the scan button on each desired webpage on a browser to initiate scan. This is useful to scan websites that require user and form input.
 
 1. Start by choosing the `Custom flow` in the menu selection.
 
 ```shell
 % npm start
 ┌────────────────────────────────────────────────────────────┐
-│ Purple A11y (ver      )                                   │
+│ Oobee (ver      )                                   │
 │ We recommend using Chrome browser for the best experience. │
 │                                                            │
 │ Welcome back User!                                         │
@@ -229,10 +238,10 @@ Custom flow allows you to specify a user journey by enabling you to click the sc
   Sitemap
   Website
 ❯ Custom
-  ```
+```
 
 1. Specify the URL of the starting page you wish to scan
-2. A Chrome window will appear.  Navigate through the pages and click on the **Scan this page** button at the top right of the broswer's page to conduct an accessibility scan on the current page.
+2. A Chrome window will appear. Navigate through the pages and click on the **Scan this page** button at the top right of the broswer's page to conduct an accessibility scan on the current page.
 3. You may drag the top black bar to the bottom of the page in the event it prevents you from viewing / blocking certain page elements.
 4. Close the Chrome window to end the scan.
 
@@ -240,10 +249,9 @@ Other options:
 
 - You can specify sites to exclude from accessibility scan (e.g. login page) by adding a pattern of the domain to `exclusions.txt`. An example of `exclusions.txt`:
 
-``` txt
+```txt
 \.*login.singpass.gov.sg\.*
 ```
-
 
 #### Known Issues
 
@@ -259,9 +267,8 @@ npx playwright@1.27.1 install
 
 ### CLI Mode
 
-CLI mode is designed to be run in continuous integration (CI) environment. 
- Run `npm run cli` for a set of command-line parameters available. 
-
+CLI mode is designed to be run in continuous integration (CI) environment.
+Run `npm run cli` for a set of command-line parameters available.
 
 ```shell
 Usage: npm run cli -- -c <crawler> -d <device> -w <view
@@ -467,33 +474,34 @@ Examples:
 
 </details>
 
-If the device name contains ```(``` and ```)```, wrap the device name in single quotes when entered into the CLI.
-Please note that ```-d``` and ```-w``` are mutually exclusive. If none are specified, the default device used for the CLI scan is Desktop.
+If the device name contains `(` and `)`, wrap the device name in single quotes when entered into the CLI.
+Please note that `-d` and `-w` are mutually exclusive. If none are specified, the default device used for the CLI scan is Desktop.
 
-For example, to conduct a website scan to the URL "http://localhost:8000" and write to "a11y-scan-results.zip" with an 'iPad (gen 7) landscape' screen, run
+For example, to conduct a website scan to the URL "http://localhost:8000" and write to "oobee-scan-results.zip" with an 'iPad (gen 7) landscape' screen, run
 
 ```shell
-npm run cli -- -c 2 -o a11y-scan-results.zip -u http://localhost:8000 -d 'iPad (gen 7) landscape'
+npm run cli -- -c 2 -o oobee-scan-results.zip -u http://localhost:8000 -d 'iPad (gen 7) landscape'
 ```
 
 If the site you want to scan has a query string wrap the link in single quotes when entered into the CLI.
 
-For example, to conduct a website scan to the URL "http://localhost:8000" and write to "a11y-scan-results.zip" with a custom screen width '360', run
+For example, to conduct a website scan to the URL "http://localhost:8000" and write to "oobee-scan-results.zip" with a custom screen width '360', run
 
 ```shell
-npm run cli -- -c 2 -o a11y-scan-results.zip -u "http://localhost:8000" -w 360
+npm run cli -- -c 2 -o oobee-scan-results.zip -u "http://localhost:8000" -w 360
 ```
 
 ## Report
-Once a scan of the site is completed. 
+
+Once a scan of the site is completed.
 
 A report will be downloaded into the current working directory.
 
 ## Accessibility Scan Results
 
-Each Issue has its own severity "Must Fix" / "Good to Fix" based on the [WCAG 2.2 Conformance](https://www.w3.org/TR/WCAG22/). 
+Each Issue has its own severity "Must Fix" / "Good to Fix" based on the [WCAG 2.2 Conformance](https://www.w3.org/TR/WCAG22/).
 
-For details on which accessibility scan results triggers a  "Must Fix" / "Good to Fix" findings, you may refer to [Scan Issue Details](./DETAILS.md).
+For details on which accessibility scan results triggers a "Must Fix" / "Good to Fix" findings, you may refer to [Scan Issue Details](./DETAILS.md).
 
 ## Troubleshooting
 
@@ -503,12 +511,12 @@ Please refer to the information below to assist in debugging. Most errors below 
 
 **Issue**: When your Node.js version is incompatible, you may face the following syntax error.
 
-
 ```shell
 const URL_NO_COMMAS_REGEX = RegExp('https?://(www\\.)?[\\p{L}0-9][-\\p{L}0-9@:%._\\+~#=]{0,254}[\\p{L}0-9]\\.[a-z]{2,63}(:\\d{1,5})?(/[-\\p{L}0-9@:%_\\+.~#?&//=\\(\\)]*)?', 'giu'); // eslint-disable-line
                             ^
 SyntaxError: Invalid regular expression: /https?://(www\.)?[\p{L}0-9][-\p{L}0-9@:%\._\+~#=]{0,254}[\p{L}0-9]\.[a-z]{2,63}(:\d{1,5})?(/[-\p{L}0-9@:%_\+.~#?&//=\(\)]*)?/: Invalid escape
 ```
+
 **Solution**: Install Node.js versions >= 20, i.e. Node.js v20 and above.
 
 ### Compiled against a different Node.js version
@@ -516,7 +524,7 @@ SyntaxError: Invalid regular expression: /https?://(www\.)?[\p{L}0-9][-\p{L}0-9@
 **Issue**: When you switch between different versions of Node.js in your environment, you may face the following error.
 
 ```shell
-<user_path>/purple-a11y/node_modules/bindings/bindings.js:91
+<user_path>/oobee/node_modules/bindings/bindings.js:91
         throw e
         ^
 
@@ -531,15 +539,15 @@ the module (for instance, using `npm rebuild` or `npm install`).
 
 ### dyld Error
 
-**Issue**: Not able to run Purple A11y due to the following error shown below
+**Issue**: Not able to run Oobee due to the following error shown below
 
 ```shell
 dyld: lazy symbol binding failed: Symbol not found: __ZN2v87Isolate37AdjustAmountOfExternalAllocatedMemoryEx
-  Referenced from: <user_path>/purple-a11y/node_modules/libxmljs/build/Release/xmljs.node
+  Referenced from: <user_path>/oobee/node_modules/libxmljs/build/Release/xmljs.node
   Expected in: flat namespace
 
 dyld: Symbol not found: __ZN2v87Isolate37AdjustAmountOfExternalAllocatedMemoryEx
-  Referenced from: <user_path>/PURPLE_A11y/purple-a11y/node_modules/libxmljs/build/Release/xmljs.node
+  Referenced from: <user_path>/PURPLE_A11y/oobee/node_modules/libxmljs/build/Release/xmljs.node
   Expected in: flat namespace
 
 zsh: abort      node index.js
@@ -554,7 +562,7 @@ zsh: abort      node index.js
 
 **Limitation**: Due to animations causing elements to shift out of the viewport after an Axe scan, there's a risk of element screenshots timing out within 5 seconds if the element is not found. This known issue is particularly prevalent in scenarios like carousels with interval-based transitions.
 
-## FAQ 
+## FAQ
 
 ### How do I limit number of pages scanned?
 
@@ -566,9 +574,8 @@ To do this, run CLI mode `npm run cli --` with the needed settings and specify `
 
 We recommend looking at our **Technology Stack** to understand the usage of each component. Take your time to understand.
 
-
 ## Additional Information on Data
 
-Purple A11y uses third-party open-source tools that may be downloaded over the Internet during the installation process of Purple A11y. Users should be aware of the libraries used by examining `package.json`.
+Oobee uses third-party open-source tools that may be downloaded over the Internet during the installation process of Oobee. Users should be aware of the libraries used by examining `package.json`.
 
-Purple A11y may send information to the website, URL and HTML code snippets where the user chooses to initiate a Purple A11y scan for telemetry purposes.
+Oobee may send information to the website, URL and HTML code snippets where the user chooses to initiate a Oobee scan for telemetry purposes.

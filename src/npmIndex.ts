@@ -32,7 +32,7 @@ export const init = async (
   scanAboutMetadata = undefined,
   zip = undefined,
 ) => {
-  console.log('Starting Purple A11y');
+  console.log('Starting Oobee');
 
   const [date, time] = new Date().toLocaleString('sv').replaceAll(/-|:/g, '').split(' ');
   const domain = new URL(entryUrl).hostname;
@@ -64,7 +64,7 @@ export const init = async (
 
   const throwErrorIfTerminated = () => {
     if (isInstanceTerminated) {
-      throw new Error('This instance of Purple A11y was terminated. Please start a new instance.');
+      throw new Error('This instance of Oobee was terminated. Please start a new instance.');
     }
   };
 
@@ -77,16 +77,16 @@ export const init = async (
     async function runA11yScan(elementsToScan = []) {
       axe.configure({
         branding: {
-          application: 'purple-a11y',
+          application: 'oobee',
         },
         // Add custom img alt text check
         checks: [
           {
             id: 'oobee-confusing-alt-text',
-            evaluate: function(node: HTMLElement) {
+            evaluate: function (node: HTMLElement) {
               const altText = node.getAttribute('alt');
               const confusingTexts = ['img', 'image', 'picture', 'photo', 'graphic'];
-      
+
               if (altText) {
                 const trimmedAltText = altText.trim().toLowerCase();
                 // Check if the alt text exactly matches one of the confusingTexts
@@ -94,17 +94,17 @@ export const init = async (
                   return false; // Fail the check if the alt text is confusing or not useful
                 }
               }
-      
+
               return true; // Pass the check if the alt text seems appropriate
             },
             metadata: {
               impact: 'serious', // Set the severity to serious
               messages: {
                 pass: 'The image alt text is probably useful',
-                fail: 'The image alt text set as \'img\', \'image\', \'picture\', \'photo\', or \'graphic\' is confusing or not useful',
-              }
-            }
-          }
+                fail: "The image alt text set as 'img', 'image', 'picture', 'photo', or 'graphic' is confusing or not useful",
+              },
+            },
+          },
         ],
         rules: [
           { id: 'target-size', enabled: true },
@@ -119,10 +119,10 @@ export const init = async (
             metadata: {
               description: 'Ensures image alt text is clear and useful',
               help: 'Image alt text must not be vague or unhelpful',
-              helpUrl: 'https://www.deque.com/blog/great-alt-text-introduction/'
-            }
-          }
-        ]
+              helpUrl: 'https://www.deque.com/blog/great-alt-text-introduction/',
+            },
+          },
+        ],
       });
       const axeScanResults = await axe.run(elementsToScan, {
         resultTypes: ['violations', 'passes', 'incomplete'],
@@ -222,7 +222,7 @@ export const init = async (
 
   const terminate = async () => {
     throwErrorIfTerminated();
-    console.log('Stopping Purple A11y');
+    console.log('Stopping Oobee');
     isInstanceTerminated = true;
     scanDetails.endTime = new Date();
     scanDetails.urlsCrawled = urlsCrawled;

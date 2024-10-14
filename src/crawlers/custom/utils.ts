@@ -212,9 +212,9 @@ export const updateMenu = async (page, urlsCrawled) => {
   log(`Overlay menu: updating: ${page.url()}`);
   await page.evaluate(
     vars => {
-      const shadowHost = document.querySelector('#purple-a11y-shadow-host');
+      const shadowHost = document.querySelector('#oobee-shadow-host');
       if (shadowHost) {
-        const p = shadowHost.shadowRoot.querySelector('#purple-a11y-p-pages-scanned');
+        const p = shadowHost.shadowRoot.querySelector('#oobee-p-pages-scanned');
         if (p) {
           p.textContent = `Pages Scanned: ${vars.urlsCrawled.scanned.length || 0}`;
         }
@@ -239,7 +239,7 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
     .evaluate(
       async vars => {
         const menu = document.createElement('div');
-        menu.className = 'purple-a11y-menu';
+        menu.className = 'oobee-menu';
         if (vars.menuPos === vars.MENU_POSITION.top) {
           menu.style.top = '0';
         } else {
@@ -290,7 +290,7 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
         });
 
         const p = document.createElement('p');
-        p.id = 'purple-a11y-p-pages-scanned';
+        p.id = 'oobee-p-pages-scanned';
         p.innerText = `Pages Scanned: ${vars.urlsCrawled.scanned.length || 0}`;
 
         const button = document.createElement('button');
@@ -305,7 +305,7 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
         const sheet = new CSSStyleSheet();
         // TODO: separate out into css file if this gets too big
         sheet.replaceSync(`
-        .purple-a11y-menu {
+        .oobee-menu {
           position: fixed;
           left: 0;
           width: 100%;
@@ -319,7 +319,7 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
           color: #fff;
         }
         
-        .purple-a11y-menu button {
+        .oobee-menu button {
           background-color: #9021a6;
           color: #fff;
           border: none;
@@ -331,7 +331,7 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
 
         // shadow dom used to avoid styling from page
         const shadowHost = document.createElement('div');
-        shadowHost.id = 'purple-a11y-shadow-host';
+        shadowHost.id = 'oobee-shadow-host';
         const shadowRoot = shadowHost.attachShadow({ mode: 'open' });
 
         shadowRoot.adoptedStyleSheets = [sheet];
@@ -375,7 +375,7 @@ export const addOverlayMenu = async (page, urlsCrawled, menuPos) => {
 export const removeOverlayMenu = async page => {
   await page
     .evaluate(() => {
-      const existingOverlay = document.querySelector('#purple-a11y-shadow-host');
+      const existingOverlay = document.querySelector('#oobee-shadow-host');
       if (existingOverlay) {
         existingOverlay.remove();
         return true;
@@ -414,7 +414,7 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
   page.on('domcontentloaded', async () => {
     try {
       const existingOverlay = await page.evaluate(() => {
-        return document.querySelector('#purple-a11y-shadow-host');
+        return document.querySelector('#oobee-shadow-host');
       });
 
       consoleLogger.info(`Overlay state: ${existingOverlay}`);

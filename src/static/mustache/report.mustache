@@ -314,11 +314,11 @@
           }
       }
 
-      #a11y-table {
+      #oobee-table {
           background-color: #fff;
           width: 100%;
       }
-      body.dark #a11y-table {
+      body.dark #oobee-table {
           background-color: #272727;
       }
       table.dataTable {
@@ -1481,7 +1481,7 @@
         
         <div class="row">
           <div class="col-12 pt-4 pb-4">
-            <table id="a11y-table" class="display" style="width:100%">
+            <table id="oobee-table" class="display" style="width:100%">
               <thead>
                 <tr>
                   <th>IMPACT</th>
@@ -1594,7 +1594,7 @@
     </script>
     <script>
       function addAriaPagination() {
-        $("#a11y-table_paginate .pagination .active").attr("aria-current", "page")
+        $("#oobee-table_paginate .pagination .active").attr("aria-current", "page")
 
         $('#bottom-pagination .dataTables_paginate ul li').each(function(){
             var pageNumber = $(this).text()
@@ -1608,7 +1608,7 @@
       }
 
       $(document).ready(function (){ 
-          var table = $('#a11y-table').DataTable({
+          var table = $('#oobee-table').DataTable({
           pageLength: 50,
           columnDefs:[
             { targets: [3, 4, 5], orderable: !1 },
@@ -1685,18 +1685,18 @@
           }
         });       
 
-        $("#a11y-table").on('draw.dt', function() {
+        $("#oobee-table").on('draw.dt', function() {
           addAriaPagination();
         })        
 
         /*DT pagination */
         var pagItems = document.querySelectorAll('.paginate_button');
 
-        $("#a11y-table_paginate").attr("aria-label", "Pagination navigation")
-        $("#a11y-table_first").attr("aria-label", "Go to first page")
-        $("#a11y-table_previous").attr("aria-label", "Go to previous page")
-        $("#a11y-table_next").attr("aria-label", "Go to next page")
-        $("#a11y-table_last").attr("aria-label", "Go to last page")
+        $("#oobee-table_paginate").attr("aria-label", "Pagination navigation")
+        $("#oobee-table_first").attr("aria-label", "Go to first page")
+        $("#oobee-table_previous").attr("aria-label", "Go to previous page")
+        $("#oobee-table_next").attr("aria-label", "Go to next page")
+        $("#oobee-table_last").attr("aria-label", "Go to last page")
 
         const domainUsed = `https://${$(".domainDetails").html()}`
         console.log("DOMAIN: ", domainUsed)

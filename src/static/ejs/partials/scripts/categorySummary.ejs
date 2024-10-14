@@ -51,8 +51,8 @@
 
     filteredItems[category].rules.forEach((rule, index) => {
       const buttonAriaLabel = `${rule.description}, ${rule.totalItems} occurrences`;
-      const purpleAiSvgId = `${category}-${rule.rule}-${index}`;
-      const isPurpleAiRule = purpleAiRules.includes(rule.rule);
+      const oobeeAiSvgId = `${category}-${rule.rule}-${index}`;
+      const isPurpleAiRule = oobeeAiRules.includes(rule.rule);
 
       // START new createElementFromString
       const ruleItem = createElementFromString(`
@@ -67,8 +67,8 @@
               ${
                 isPurpleAiRule
                   ? `aria-describedby="containsAISuggestions"
-                  onfocus="document.getElementById('${purpleAiSvgId}').dispatchEvent(new MouseEvent('mouseover'))"
-                  onblur="document.getElementById('${purpleAiSvgId}').dispatchEvent(new MouseEvent('mouseout'))"
+                  onfocus="document.getElementById('${oobeeAiSvgId}').dispatchEvent(new MouseEvent('mouseover'))"
+                  onblur="document.getElementById('${oobeeAiSvgId}').dispatchEvent(new MouseEvent('mouseout'))"
                   onmousedown="event.preventDefault()"`
                   : ``
               }
@@ -83,7 +83,7 @@
             ${htmlEscapeString(rule.description)}
             ${
               isPurpleAiRule
-                ? `<svg id="${purpleAiSvgId}"
+                ? `<svg id="${oobeeAiSvgId}"
                 tabindex="-1" class="ai-tooltip"
                 title="Contains AI suggestions." data-bs-toggle="tooltip" data-bs-placement="top"
                 width="16" height="16" viewBox="0 0 16 16" data-bs-toggle="tooltip" data-bs-placement="top" title="Contains AI suggestions." fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:9px" aria-label="Contains AI suggestions.">

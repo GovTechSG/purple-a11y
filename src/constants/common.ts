@@ -456,9 +456,9 @@ const checkUrlConnectivityWithBrowser = async (
 
       const contentType = response.headers()['content-type'];
       if (contentType.includes('xml')) {
-        const responseFromUrl = await requestToUrl(res.url, true, extraHTTPHeaders)
+        const responseFromUrl = await requestToUrl(res.url, true, extraHTTPHeaders);
 
-        res.content = responseFromUrl.content
+        res.content = responseFromUrl.content;
       }
     } catch (error) {
       silentLogger.error(error);
@@ -588,7 +588,7 @@ export const prepareData = async (argv: Answers): Promise<Data> => {
   const sanitisedLabel = customFlowLabel ? `_${customFlowLabel.replaceAll(' ', '_')}` : '';
   let resultFilename: string;
   const randomThreeDigitNumber = randomThreeDigitNumberString();
-  if (process.env.PURPLE_A11Y_VERBOSE) {
+  if (process.env.OOBEE_VERBOSE) {
     resultFilename = `${date}_${time}${sanitisedLabel}_${domain}_${randomThreeDigitNumber}`;
   } else {
     resultFilename = `${date}_${time}${sanitisedLabel}_${domain}`;
@@ -1396,13 +1396,13 @@ export const cloneChromeProfiles = (randomToken?: string): string => {
   let destDir;
 
   if (randomToken) {
-    destDir = path.join(baseDir, `purple-a11y-${randomToken}`);
+    destDir = path.join(baseDir, `oobee-${randomToken}`);
   } else {
-    destDir = path.join(baseDir, 'purple-a11y');
+    destDir = path.join(baseDir, 'oobee');
   }
 
   if (fs.existsSync(destDir)) {
-    process.env.PURPLE_A11Y_VERBOSE
+    process.env.OOBEE_VERBOSE
       ? deleteClonedChromeProfiles(randomToken)
       : deleteClonedChromeProfiles();
   }
@@ -1435,9 +1435,9 @@ export const cloneChromiumProfiles = (randomToken?: string): string => {
   let destDir: string;
 
   if (randomToken) {
-    destDir = path.join(baseDir, `purple-a11y-${randomToken}`);
+    destDir = path.join(baseDir, `oobee-${randomToken}`);
   } else {
-    destDir = path.join(baseDir, 'purple-a11y');
+    destDir = path.join(baseDir, 'oobee');
   }
 
   if (!fs.existsSync(destDir)) {
@@ -1465,15 +1465,13 @@ export const cloneEdgeProfiles = (randomToken?: string): string => {
   let destDir;
 
   if (randomToken) {
-    destDir = path.join(baseDir, `purple-a11y-${randomToken}`);
+    destDir = path.join(baseDir, `oobee-${randomToken}`);
   } else {
-    destDir = path.join(baseDir, 'purple-a11y');
+    destDir = path.join(baseDir, 'oobee');
   }
 
   if (fs.existsSync(destDir)) {
-    process.env.PURPLE_A11Y_VERBOSE
-      ? deleteClonedEdgeProfiles(randomToken)
-      : deleteClonedEdgeProfiles();
+    process.env.OOBEE_VERBOSE ? deleteClonedEdgeProfiles(randomToken) : deleteClonedEdgeProfiles();
   }
 
   if (!fs.existsSync(destDir)) {
@@ -1517,10 +1515,10 @@ export const deleteClonedChromeProfiles = (randomToken?: string): void => {
   }
   let destDir: string[];
   if (randomToken) {
-    destDir = [`${baseDir}/purple-a11y-${randomToken}`];
+    destDir = [`${baseDir}/oobee-${randomToken}`];
   } else {
     // Find all the Purple-A11y directories in the Chrome data directory
-    destDir = globSync('**/purple-a11y*', {
+    destDir = globSync('**/oobee*', {
       cwd: baseDir,
       absolute: true,
     });
@@ -1550,7 +1548,7 @@ export const deleteClonedChromeProfiles = (randomToken?: string): void => {
  * @returns null
  */
 export const deleteClonedEdgeProfiles = (randomToken?: string): void => {
-  if (process.env.PURPLE_A11Y_VERBOSE) {
+  if (process.env.OOBEE_VERBOSE) {
     return;
   }
   const baseDir = getDefaultEdgeDataDir();
@@ -1561,10 +1559,10 @@ export const deleteClonedEdgeProfiles = (randomToken?: string): void => {
   }
   let destDir: string[];
   if (randomToken) {
-    destDir = [`${baseDir}/purple-a11y-${randomToken}`];
+    destDir = [`${baseDir}/oobee-${randomToken}`];
   } else {
     // Find all the Purple-A11y directories in the Chrome data directory
-    destDir = globSync('**/purple-a11y*', {
+    destDir = globSync('**/oobee*', {
       cwd: baseDir,
       absolute: true,
     });
@@ -1594,10 +1592,10 @@ export const deleteClonedChromiumProfiles = (randomToken?: string): void => {
   }
   let destDir: string[];
   if (randomToken) {
-    destDir = [`${baseDir}/purple-a11y-${randomToken}`];
+    destDir = [`${baseDir}/oobee-${randomToken}`];
   } else {
     // Find all the Purple-A11y directories in the Chrome data directory
-    destDir = globSync('**/purple-a11y*', {
+    destDir = globSync('**/oobee*', {
       cwd: baseDir,
       absolute: true,
     });
@@ -1695,9 +1693,9 @@ export const submitFormViaPlaywright = async (
   } finally {
     await browserContext.close();
     if (proxy && browserToRun === BrowserTypes.EDGE) {
-      !process.env.PURPLE_A11Y_VERBOSE ? deleteClonedEdgeProfiles() : undefined;
+      !process.env.OOBEE_VERBOSE ? deleteClonedEdgeProfiles() : undefined;
     } else if (proxy && browserToRun === BrowserTypes.CHROME) {
-      !process.env.PURPLE_A11Y_VERBOSE ? deleteClonedChromeProfiles() : undefined;
+      !process.env.OOBEE_VERBOSE ? deleteClonedChromeProfiles() : undefined;
     }
   }
 };
