@@ -76,7 +76,7 @@ jobs:
           CERTIFICATE=$(security find-identity -v -p codesigning -s - | tail -n +2 | grep -o '"Developer ID Application:[^"]*"' | sed 's/"//g')
 
           # Paths to the binaries you want to sign only ending with .node
-          BINARIES=($(find . -type f -name "*.node" ! -path "*.framework/*" ! -path "*.dSYM/*"))
+          BINARIES=($(find . -type f \( -name "*.node" -o -name "*.sh" -o -name "*.command" \) ! -path "*.framework/*" ! -path "*.dSYM/*"))
 
           # Loop through the binary paths and sign each one with a secure timestamp
           for binary in "${BINARIES[@]}"; do
