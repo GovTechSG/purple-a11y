@@ -1,7 +1,7 @@
 {
-  "name": "@govtechsg/purple-hats",
+  "name": "@govtechsg/oobee",
   "main": "dist/npmIndex.js",
-  "version": "0.10.16",
+  "version": "0.10.17",
   "type": "module",
   "dependencies": {
     "@json2csv/node": "^7.0.3",
@@ -81,13 +81,13 @@
   },
   "author": "",
   "license": "MIT",
-  "description": "Purple A11y is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).",
+  "description": "Oobee is a customisable, automated accessibility testing tool that allows software development teams to assess whether their products are user-friendly to persons with disabilities (PWDs).",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/GovTechSG/purple-a11y.git"
+    "url": "git+https://github.com/GovTechSG/oobee.git"
   },
   "bugs": {
-    "url": "https://github.com/GovTechSG/purple-a11y/issues"
+    "url": "https://github.com/GovTechSG/oobee/issues"
   },
-  "homepage": "https://github.com/GovTechSG/purple-a11y#readme"
+  "homepage": "https://github.com/GovTechSG/oobee#readme"
 }

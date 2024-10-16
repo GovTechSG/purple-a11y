@@ -5,7 +5,7 @@ export const allIssues = [
     url: 'https://www.isomer.gov.sg/terms-of-use/',
     page: '/terms-of-use/',
     description: 'Buttons must have discernible text',
-    helpUrl: 'https://dequeuniversity.com/rules/axe/4.2/button-name?application=purple-hats',
+    helpUrl: 'https://dequeuniversity.com/rules/axe/4.2/button-name?application=oobee',
     htmlElement:
       "<button class='bp-button'><i class='sgds-icon sgds-icon-mail is-size-4'></i>/button>",
     order: 3,
@@ -17,7 +17,7 @@ export const allIssues = [
     url: 'https://www.isomer.gov.sg/terms-of-use/',
     page: '/terms-of-use/',
     description: 'Buttons must have discernible text',
-    helpUrl: 'https://dequeuniversity.com/rules/axe/4.2/button-name?application=purple-hats',
+    helpUrl: 'https://dequeuniversity.com/rules/axe/4.2/button-name?application=oobee',
     htmlElement:
       "<button class='bp-button'><i class='sgds-icon sgds-icon-mail is-size-4'></i>/button>",
     order: 3,
@@ -29,7 +29,7 @@ export const allIssues = [
     url: 'https://www.isomer.gov.sg/terms-of-use/',
     page: '/terms-of-use/',
     description: 'Buttons must have discernible text',
-    helpUrl: 'https://dequeuniversity.com/rules/axe/4.2/button-name?application=purple-hats',
+    helpUrl: 'https://dequeuniversity.com/rules/axe/4.2/button-name?application=oobee',
     htmlElement:
       "<button class='bp-button'><i class='sgds-icon sgds-icon-mail is-size-4'></i>/button>",
     order: 3,
@@ -41,7 +41,7 @@ export const allIssues = [
     url: 'https://www.isomer.gov.sg/terms-of-use/',
     page: '/terms-of-use/',
     description: 'Buttons must have discernible text',
-    helpUrl: 'https://dequeuniversity.com/rules/axe/4.2/button-name?application=purple-hats',
+    helpUrl: 'https://dequeuniversity.com/rules/axe/4.2/button-name?application=oobee',
     htmlElement:
       "<button class='bp-button'><i class='sgds-icon sgds-icon-mail is-size-4'></i>/button>",
     order: 3,
@@ -50,7 +50,6 @@ export const allIssues = [
     disabilities: ['disabilities'],
   },
 ];
-
 
 // All Except Target Warn Level Issues
 export const allExceptCritical = [allIssues[1], allIssues[2], allIssues[3]];

@@ -103,14 +103,14 @@ const runScan = async (answers: Answers) => {
   answers.fileTypes = 'html-only';
   answers.metadata = '{}';
 
-  const data:Data = await prepareData(answers);
+  const data: Data = await prepareData(answers);
   data.userDataDirectory = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
 
   setHeadlessMode(data.browser, data.isHeadless);
   printMessage(['Scanning website...'], messageOptions);
 
   await combineRun(data, screenToScan);
-  
+
   // Delete cloned directory
   deleteClonedProfiles(data.browser);
 
@@ -125,7 +125,7 @@ const userData = getUserDataTxt();
 if (userData) {
   printMessage(
     [
-      `Purple A11y (ver ${getVersion()})`,
+      `Oobee (ver ${getVersion()})`,
       'We recommend using Chrome browser for the best experience.',
       '',
       `Welcome back ${userData.name}!`,
@@ -143,10 +143,7 @@ if (userData) {
   });
 } else {
   printMessage(
-    [
-      `Purple A11y (ver ${getVersion()})`,
-      'We recommend using Chrome browser for the best experience.',
-    ],
+    [`Oobee (ver ${getVersion()})`, 'We recommend using Chrome browser for the best experience.'],
     {
       // Note that the color is based on kleur NPM package
       border: true,

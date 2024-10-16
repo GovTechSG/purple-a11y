@@ -1,7 +1,7 @@
 # Use Node LTS alpine distribution
 FROM node:lts-alpine3.18
 
-# Installation of packages for purple-a11y and chromium
+# Installation of packages for oobee and chromium
 RUN apk add build-base gcompat g++ make python3 zip bash git chromium openjdk11-jre
 
 # Installation of VeraPDF
@@ -22,13 +22,13 @@ RUN echo $'<?xml version="1.0" encoding="UTF-8" standalone="no"?> \n\
     <com.izforge.izpack.panels.finish.FinishPanel id="finish"/> \n\
 </AutomatedInstallation> ' >> /opt/verapdf-auto-install-docker.xml
 
-RUN wget "https://github.com/GovTechSG/purple-a11y/releases/download/cache/verapdf-installer.zip" -P /opt
+RUN wget "https://github.com/GovTechSG/oobee/releases/download/cache/verapdf-installer.zip" -P /opt
 RUN unzip /opt/verapdf-installer.zip -d /opt
 RUN latest_version=$(ls -d /opt/verapdf-greenfield-* | sort -V | tail -n 1) && [ -n "$latest_version" ] && \
     "$latest_version/verapdf-install" "/opt/verapdf-auto-install-docker.xml"
 RUN rm -rf /opt/verapdf-installer.zip /opt/verapdf-greenfield-*
 
-# Set purple-a11y directory
+# Set oobee directory
 WORKDIR /app
 
 # Copy package.json to working directory, perform npm install before copying the remaining files
@@ -47,11 +47,11 @@ RUN npm install --force --omit=dev
 RUN npx playwright install chromium webkit
 
 # Add non-privileged user
-RUN addgroup -S purple && adduser -S -G purple purple
-RUN chown -R purple:purple ./
+RUN addgroup -S oobee && adduser -S -G oobee oobee
+RUN chown -R oobee:oobee ./
 
 # Run everything after as non-privileged user.
-USER purple
+USER oobee
 
 # Copy application and support files
 COPY . .

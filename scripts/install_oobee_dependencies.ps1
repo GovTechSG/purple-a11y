@@ -40,7 +40,7 @@ if (-Not (Test-Path jre\bin\java.exe)) {
 # Install VeraPDF
 if (-Not (Test-Path verapdf\verapdf.bat)) {
     Write-Output "INFO: Downloading VeraPDF"
-    Invoke-WebRequest -o .\verapdf-installer.zip "https://github.com/GovTechSG/purple-a11y/releases/download/cache/verapdf-installer.zip"
+    Invoke-WebRequest -o .\verapdf-installer.zip "https://github.com/GovTechSG/oobee/releases/download/cache/verapdf-installer.zip"
     Expand-Archive .\verapdf-installer.zip -DestinationPath .
     Get-ChildItem ./verapdf-greenfield-* -Directory | Rename-Item -NewName verapdf-installer
 
@@ -62,24 +62,24 @@ if (Test-Path -Path .\jdk -PathType Container) {
 }
 
 # Install Node dependencies
-if (Test-Path purple-a11y) {
+if (Test-Path oobee) {
     Write-Output "Installing node dependencies"
-    & ".\a11y_shell_ps.ps1" "cd purple-a11y;npm install --force --omit=dev;cd .."
+    & ".\oobee_shell_ps.ps1" "cd oobee;npm install --force --omit=dev;cd .."
 
     # Omit installing Playwright browsers as it is not reuqired
     # Write-Output "Install Playwright browsers"
-    # & ".\a11y_shell_ps.ps1" "npx playwright install chromium"
+    # & ".\oobee_shell_ps.ps1" "npx playwright install chromium"
     
     try {
 	Write-Output "Building Typescript" 
-	& ".\a11y_shell_ps.ps1" "cd purple-a11y;npm run build" 
+	& ".\oobee_shell_ps.ps1" "cd oobee;npm run build" 
     } catch {
 	Write-Output "Build with some errors but continuing. $_.Exception.Message" 
     } 
     
-    if (Test-Path purple-a11y\.git) {
+    if (Test-Path oobee\.git) {
         Write-Output "Unhide .git folder"
-        attrib -s -h purple-a11y\.git
+        attrib -s -h oobee\.git
     }
 
 } else {
@@ -87,7 +87,7 @@ if (Test-Path purple-a11y) {
 
     if (Test-Path package.json) {
         Write-Output "Installing node dependencies"
-        & ".\a11y_shell_ps.ps1" "npm install --force --omit=dev" 
+        & ".\oobee_shell_ps.ps1" "npm install --force --omit=dev" 
 
         Write-Output "Install Playwright browsers"
         & "npx playwright install chromium"
@@ -105,6 +105,6 @@ if (Test-Path purple-a11y) {
 	} 
 
     } else {
-        Write-Output "Could not find purple-a11y"
+        Write-Output "Could not find oobee"
     }
 }

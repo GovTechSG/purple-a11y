@@ -34,7 +34,7 @@ const yargs = _yargs(hideBin(process.argv));
 const options = yargs
   .version(false)
   .usage(
-    `Purple A11y version: ${appVersion}
+    `Oobee version: ${appVersion}
 Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   )
   .strictOptions(true)
@@ -299,7 +299,7 @@ const scanInit = async (argvs: Answers): Promise<string> => {
 
   // File clean up after url check
   // files will clone a second time below if url check passes
-  process.env.PURPLE_A11Y_VERBOSE
+  process.env.OOBEE_VERBOSE
     ? deleteClonedProfiles(data.browser, data.randomToken)
     : deleteClonedProfiles(data.browser); //first deletion
 
@@ -307,7 +307,7 @@ const scanInit = async (argvs: Answers): Promise<string> => {
     constants.exportDirectory = argvs.exportDirectory;
   }
 
-  if (process.env.RUNNING_FROM_PH_GUI || process.env.PURPLE_A11Y_VERBOSE) {
+  if (process.env.RUNNING_FROM_PH_GUI || process.env.OOBEE_VERBOSE) {
     let randomTokenMessage = {
       type: 'randomToken',
       payload: `${data.randomToken}`,
@@ -325,12 +325,12 @@ const scanInit = async (argvs: Answers): Promise<string> => {
   clonedDataDir = getClonedProfilesWithRandomToken(data.browser, data.randomToken);
   data.userDataDirectory = clonedDataDir;
 
-  printMessage([`Purple A11y version: ${appVersion}`, 'Starting scan...'], messageOptions);
+  printMessage([`Oobee version: ${appVersion}`, 'Starting scan...'], messageOptions);
 
   await combineRun(data, screenToScan);
 
   // Delete cloned directory
-  process.env.PURPLE_A11Y_VERBOSE
+  process.env.OOBEE_VERBOSE
     ? deleteClonedProfiles(data.browser, data.randomToken)
     : deleteClonedProfiles(data.browser); //second deletion
 

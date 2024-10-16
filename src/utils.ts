@@ -30,8 +30,8 @@ export const isWhitelistedContentType = contentType => {
 };
 
 export const getStoragePath = (randomToken: string): string => {
-  if (process.env.PURPLE_A11Y_VERBOSE_STORAGE_PATH) {
-    return `${process.env.PURPLE_A11Y_VERBOSE_STORAGE_PATH}/${randomToken}`;
+  if (process.env.OOBEE_VERBOSE_STORAGE_PATH) {
+    return `${process.env.OOBEE_VERBOSE_STORAGE_PATH}/${randomToken}`;
   }
   if (constants.exportDirectory === process.cwd()) {
     return `results/${randomToken}`;
@@ -43,7 +43,7 @@ export const getStoragePath = (randomToken: string): string => {
   }
 };
 
-export const createDetailsAndLogs = async (randomToken) => {
+export const createDetailsAndLogs = async randomToken => {
   const storagePath = getStoragePath(randomToken);
   const logPath = `logs/${randomToken}`;
   try {
@@ -77,18 +77,12 @@ export const createDetailsAndLogs = async (randomToken) => {
 export const getUserDataFilePath = () => {
   const platform = os.platform();
   if (platform === 'win32') {
-    return path.join(process.env.APPDATA, 'Purple A11y', 'userData.txt');
+    return path.join(process.env.APPDATA, 'Oobee', 'userData.txt');
   } else if (platform === 'darwin') {
-    return path.join(
-      process.env.HOME,
-      'Library',
-      'Application Support',
-      'Purple A11y',
-      'userData.txt',
-    );
+    return path.join(process.env.HOME, 'Library', 'Application Support', 'Oobee', 'userData.txt');
   } else {
     // linux and other OS
-    return path.join(process.env.HOME, '.config', 'purple-a11y', 'userData.txt');
+    return path.join(process.env.HOME, '.config', 'oobee', 'userData.txt');
   }
 };
 
@@ -110,13 +104,13 @@ export const writeToUserDataTxt = async (key, value) => {
   if (fs.existsSync(textFilePath)) {
     const userData = JSON.parse(fs.readFileSync(textFilePath, 'utf8'));
     userData[key] = value;
-    fs.writeFileSync(textFilePath, JSON.stringify(userData,null, 2));
+    fs.writeFileSync(textFilePath, JSON.stringify(userData, null, 2));
   } else {
     const textFilePathDir = path.dirname(textFilePath);
     if (!fs.existsSync(textFilePathDir)) {
       fs.mkdirSync(textFilePathDir, { recursive: true });
     }
-    fs.appendFileSync(textFilePath, JSON.stringify({ [key]: value },null, 2));
+    fs.appendFileSync(textFilePath, JSON.stringify({ [key]: value }, null, 2));
   }
 };
 
@@ -145,9 +139,7 @@ export const createAndUpdateResultsFolders = async randomToken => {
     }
   };
 
-  await Promise.all([
-    transferResults(intermediatePdfResultsPath, constants.pdfScanResultFileName),
-  ]);
+  await Promise.all([transferResults(intermediatePdfResultsPath, constants.pdfScanResultFileName)]);
 };
 
 export const createScreenshotsFolder = randomToken => {
@@ -203,10 +195,9 @@ export const getWcagPassPercentage = (wcagViolations: any[]): string => {
   const totalChecks = Object.keys(constants.wcagLinks).length;
   const passedChecks = totalChecks - wcagViolations.length;
   const passPercentage = (passedChecks / totalChecks) * 100;
-  
-  return passPercentage.toFixed(2);  // toFixed returns a string, which is correct here
-};
 
+  return passPercentage.toFixed(2); // toFixed returns a string, which is correct here
+};
 
 export const getFormattedTime = inputDate => {
   if (inputDate) {
