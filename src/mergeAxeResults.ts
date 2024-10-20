@@ -24,11 +24,12 @@ import { createWriteStream } from 'fs';
 import { AsyncParser, ParserOptions } from '@json2csv/node';
 import { purpleAiHtmlETL, purpleAiRules } from './constants/purpleAi.js';
 
-type ItemsInfo = {
+export type ItemsInfo = {
   html: string;
   message: string;
   screenshotPath: string;
   xpath: string;
+  displayNeedsReview?: boolean;
 };
 
 type PageInfo = {
@@ -40,7 +41,7 @@ type PageInfo = {
   metadata: string;
 };
 
-type RuleInfo = {
+export type RuleInfo = {
   totalItems: number;
   pagesAffected: PageInfo[];
   rule: string;
