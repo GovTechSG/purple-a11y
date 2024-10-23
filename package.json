@@ -70,7 +70,7 @@
     "@napi-rs/canvas-win32-x64-msvc": "0.1.53"
   },
   "scripts": {
-    "build": "npm run copyfiles && npm run lint || true && tsc",
+    "build": "npm run copyfiles && tsc",
     "build:watch": "npm run build -- --watch",
     "copyfiles": "node ./scripts/copyFiles.js src/static/ejs dist/static && node ./scripts/copyFiles.js src/constants/errorMeta.json dist/constants && node ./scripts/copyFiles.js exclusions.txt dist",
     "start": "node --max-old-space-size=6144 dist/index.js",
