@@ -1,9 +1,10 @@
 import printMessage from 'print-message';
+import { pathToFileURL } from 'url';
 import crawlSitemap from './crawlers/crawlSitemap.js';
 import crawlDomain from './crawlers/crawlDomain.js';
 import crawlLocalFile from './crawlers/crawlLocalFile.js';
 import crawlIntelligentSitemap from './crawlers/crawlIntelligentSitemap.js';
-import { generateArtifacts } from './mergeAxeResults.js';
+import generateArtifacts from './mergeAxeResults.js';
 import { getHost, createAndUpdateResultsFolders, createDetailsAndLogs } from './utils.js';
 import { ScannerTypes, UrlsCrawled } from './constants/constants.js';
 import { getBlackListedPatterns, submitForm, urlWithoutAuth } from './constants/common.js';
@@ -11,7 +12,6 @@ import { consoleLogger, silentLogger } from './logs.js';
 import runCustom from './crawlers/runCustom.js';
 import { alertMessageOptions } from './constants/cliFunctions.js';
 import { Data } from './index.js';
-import { pathToFileURL } from 'url';
 
 // Class exports
 export class ViewportSettingsClass {
@@ -39,7 +39,6 @@ const combineRun = async (details: Data, deviceToScan: string) => {
   const {
     type,
     url,
-    entryUrl,
     nameEmail,
     randomToken,
     deviceChosen,
@@ -47,7 +46,6 @@ const combineRun = async (details: Data, deviceToScan: string) => {
     viewportWidth,
     playwrightDeviceDetailsObject,
     maxRequestsPerCrawl,
-    isLocalFileScan,
     browser,
     userDataDirectory,
     strategy,
@@ -78,12 +76,12 @@ const combineRun = async (details: Data, deviceToScan: string) => {
   }
 
   // remove basic-auth credentials from URL
-  let finalUrl = !(type === ScannerTypes.SITEMAP || type === ScannerTypes.LOCALFILE)
+  const finalUrl = !(type === ScannerTypes.SITEMAP || type === ScannerTypes.LOCALFILE)
     ? urlWithoutAuth(url)
     : new URL(pathToFileURL(url));
 
-  //Use the string version of finalUrl to reduce logic at submitForm
-  let finalUrlString = finalUrl.toString();
+  // Use the string version of finalUrl to reduce logic at submitForm
+  const finalUrlString = finalUrl.toString();
 
   const scanDetails = {
     startTime: new Date(),
@@ -221,7 +219,7 @@ const combineRun = async (details: Data, deviceToScan: string) => {
         browser,
         userDataDirectory,
         url, // scannedUrl
-        new URL(finalUrlString).href, //entryUrl
+        new URL(finalUrlString).href, // entryUrl
         type,
         email,
         name,

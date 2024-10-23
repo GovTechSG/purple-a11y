@@ -6,7 +6,7 @@ import { axeScript, guiInfoStatusTypes, saflyIconSelector } from '../constants/c
 import { guiInfoLog } from '../logs.js';
 import { takeScreenshotForHTMLElements } from '../screenshotFunc/htmlScreenshotFunc.js';
 import { isFilePath } from '../constants/common.js';
-import { customAxeConfig } from './customAxeFunctions.js';
+import customAxeConfig from './customAxeFunctions.js';
 
 // types
 type RuleDetails = {
@@ -63,7 +63,8 @@ export const filterAxeResults = (
       conformance.sort((a, b) => {
         if (levels.includes(a)) {
           return -1;
-        } else if (levels.includes(b)) {
+        }
+        if (levels.includes(b)) {
           return 1;
         }
 
@@ -174,14 +175,14 @@ export const runAxeScript = async (
 ) => {
   // Checking for DOM mutations before proceeding to scan
   await page.evaluate(() => {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       let timeout;
       let mutationCount = 0;
       const MAX_MUTATIONS = 100;
       const MAX_SAME_MUTATION_LIMIT = 10;
       const mutationHash = {};
 
-      const observer = new MutationObserver((mutationsList) => {
+      const observer = new MutationObserver(mutationsList => {
         clearTimeout(timeout);
 
         mutationCount += 1;
@@ -192,18 +193,18 @@ export const runAxeScript = async (
         }
 
         // To handle scenario where DOM elements are constantly changing and unable to exit
-        mutationsList.forEach((mutation) => {
+        mutationsList.forEach(mutation => {
           let mutationKey;
 
           if (mutation.target instanceof Element) {
             Array.from(mutation.target.attributes).forEach(attr => {
               mutationKey = `${mutation.target.nodeName}-${attr.name}`;
-  
+
               if (mutationKey) {
                 if (!mutationHash[mutationKey]) {
                   mutationHash[mutationKey] = 1;
                 } else {
-                  mutationHash[mutationKey]++;
+                  mutationHash[mutationKey] += 1;
                 }
 
                 if (mutationHash[mutationKey] >= MAX_SAME_MUTATION_LIMIT) {
@@ -261,8 +262,8 @@ export const runAxeScript = async (
         rules: customAxeConfig.rules,
       });
 
-      //removed needsReview condition
-      let defaultResultTypes: resultGroups[] = ['violations', 'passes', 'incomplete'];
+      // removed needsReview condition
+      const defaultResultTypes: resultGroups[] = ['violations', 'passes', 'incomplete'];
 
       return axe.run(selectors, {
         resultTypes: defaultResultTypes,
@@ -313,8 +314,7 @@ export const failedRequestHandler = async ({ request }) => {
 export const isUrlPdf = url => {
   if (isFilePath(url)) {
     return /\.pdf$/i.test(url);
-  } else {
-    const parsedUrl = new URL(url);
-    return /\.pdf($|\?|#)/i.test(parsedUrl.pathname) || /\.pdf($|\?|#)/i.test(parsedUrl.href);
   }
+  const parsedUrl = new URL(url);
+  return /\.pdf($|\?|#)/i.test(parsedUrl.pathname) || /\.pdf($|\?|#)/i.test(parsedUrl.href);
 };

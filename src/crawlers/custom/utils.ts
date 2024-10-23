@@ -94,7 +94,7 @@ export const screenshotFullPage = async (page, screenshotsDir: string, screensho
     });
 
     if (originalSize) await page.setViewportSize(originalSize);
-  } catch (e) {
+  } catch {
     consoleLogger.error('Unable to take screenshot');
     // Do not return screenshot path if screenshot fails
     return '';
@@ -126,10 +126,11 @@ export const processPage = async (page, processPageParams) => {
   // make sure to update processPageParams' scannedIdx
   processPageParams.scannedIdx += 1;
 
-  let {
+  let { includeScreenshots } = processPageParams;
+
+  const {
     scannedIdx,
     blacklistedPatterns,
-    includeScreenshots,
     dataset,
     intermediateScreenshotsPath,
     urlsCrawled,
@@ -138,7 +139,7 @@ export const processPage = async (page, processPageParams) => {
 
   try {
     await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
-  } catch (e) {
+  } catch {
     consoleLogger.info('Unable to detect page load state');
   }
 
@@ -198,7 +199,7 @@ export const processPage = async (page, processPageParams) => {
     await page.evaluate(pos => {
       window.scrollTo(pos.x, pos.y);
     }, initialScrollPos);
-  } catch (e) {
+  } catch {
     consoleLogger.error(`Error in scanning page: ${pageUrl}`);
   }
 };
@@ -410,6 +411,27 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
     pagesDict[pageId] = { page };
   }
 
+  type handleOnScanClickFunction = () => void;
+
+  // Window functions exposed in browser
+  const handleOnScanClick: handleOnScanClickFunction = async () => {
+    log('Scan: click detected');
+    try {
+      await removeOverlayMenu(page);
+      await processPage(page, processPageParams);
+      log('Scan: success');
+      await addOverlayMenu(page, processPageParams.urlsCrawled, menuPos);
+
+      Object.keys(pagesDict)
+        .filter(k => k !== pageId)
+        .forEach(k => {
+          updateMenu(pagesDict[k].page, processPageParams.urlsCrawled);
+        });
+    } catch (error) {
+      log(`Scan failed ${error}`);
+    }
+  };
+
   // Detection of new url within page
   page.on('domcontentloaded', async () => {
     try {
@@ -434,38 +456,18 @@ export const initNewPage = async (page, pageClosePromises, processPageParams, pa
         try {
           await handleOnScanClick();
           page.close();
-        } catch (e) {
+        } catch {
           consoleLogger.info(`Error in calling handleOnScanClick, isCypressTest: ${isCypressTest}`);
         }
       }
 
       consoleLogger.info(`Overlay state: ${existingOverlay}`);
-    } catch (e) {
+    } catch {
       consoleLogger.info('Error in adding overlay menu to page');
       silentLogger.info('Error in adding overlay menu to page');
     }
   });
 
-  type handleOnScanClickFunction = () => void;
-
-  // Window functions exposed in browser
-  const handleOnScanClick: handleOnScanClickFunction = async () => {
-    log('Scan: click detected');
-    try {
-      await removeOverlayMenu(page);
-      await processPage(page, processPageParams);
-      log('Scan: success');
-      await addOverlayMenu(page, processPageParams.urlsCrawled, menuPos);
-
-      Object.keys(pagesDict)
-        .filter(k => k !== pageId)
-        .forEach(k => {
-          updateMenu(pagesDict[k].page, processPageParams.urlsCrawled);
-        });
-    } catch (error) {
-      log(`Scan failed ${error}`);
-    }
-  };
   await page.exposeFunction('handleOnScanClick', handleOnScanClick);
 
   type UpdateMenuPosFunction = (newPos: any) => void;

@@ -1,5 +1,5 @@
-import { Answers } from '../index.js';
 import { Question } from 'inquirer';
+import { Answers } from '../index.js';
 import { getUserDataTxt } from '../utils.js';
 import {
   checkUrl,
@@ -117,11 +117,12 @@ const startScanQuestions = [
             answers.isLocalFileScan = true;
             answers.finalUrl = finalFilePath;
             return true;
-          } else if (answers.scanner === ScannerTypes.LOCALFILE) {
-            return statuses.notALocalFile.message;
-          } else {
-            return statuses.notASitemap.message;
           }
+          if (answers.scanner === ScannerTypes.LOCALFILE) {
+            return statuses.notALocalFile.message;
+          }
+          return statuses.notASitemap.message;
+
         case statuses.notASitemap.code:
           return statuses.notASitemap.message;
         case statuses.notALocalFile.code:
