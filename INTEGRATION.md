@@ -1,6 +1,6 @@
-## Integrating Purple A11y with end-to-end testing frameworks
+## Integrating Oobee with end-to-end testing frameworks
 
-Purple A11y provides functionalities that makes it possible to be integrated with end-to-end testing frameworks such as [Cypress](https://www.cypress.io/) and [Playwright](https://playwright.dev/).
+Oobee provides functionalities that makes it possible to be integrated with end-to-end testing frameworks such as [Cypress](https://www.cypress.io/) and [Playwright](https://playwright.dev/).
 
 ### Prerequisites
 
@@ -10,40 +10,40 @@ In order to use this functionality, the testing framework must support:
 - Injection of JavaScript into the document that is being tested.
 - Execution of JavaScript in the context of the document and retrieval of results back into the NodeJS environment after execution.
 
-### How to include Purple A11y in your project
+### How to include Oobee in your project
 
-1. Add Purple A11y to your project by running the following command:
+1. Add Oobee to your project by running the following command:
 
-   `npm install --save-dev @govtechsg/purple-hats`
+   `npm install --save-dev @govtechsg/oobee`
 
-2. In the file of choice, import Purple A11y using:
+2. In the file of choice, import Oobee using:
 
-   `import purpleA11yInit from '@govtechsg/purple-hats'`
+   `import oobeeA11yInit from '@govtechsg/oobee'`
 
-   Note that Purple A11y should be imported in a script that runs in a NodeJS environment.
+   Note that Oobee should be imported in a script that runs in a NodeJS environment.
 
-3. Create an instance of Purple A11y with:
+3. Create an instance of Oobee with:
 
-   `const purpleA11y = await purpleA11yInit(entryUrl)`
+   `const oobeeA11y = await oobeeA11yInit(entryUrl)`
 
-   `entryUrl` should be a valid URL referring to the domain of the website to be scanned with Purple A11y.
+   `entryUrl` should be a valid URL referring to the domain of the website to be scanned with Oobee.
 
 ### API Reference
 
-#### `async purpleA11yInit(entryUrl, testLabel, name, email, includeScreenshots, viewportSettings, thresholds, scanAboutMetadata)`
+#### `async oobeeA11yInit(entryUrl, testLabel, name, email, includeScreenshots, viewportSettings, thresholds, scanAboutMetadata)`
 
-Returns an instance of Purple A11y
+Returns an instance of Oobee
 
 ##### Parameters
 
 - `entryUrl`
-  - Initial URL to start the purple a11y scan
+  - Initial URL to start the oobee oobee scan
 - `testLabel`
   - Label for test in report
 - `name`
-  - For Purple A11y data collection purposes
+  - For Oobee data collection purposes
 - `email`
-  - For Purple A11y data collection purposes
+  - For Oobee data collection purposes
 - `includeScreenshots` (optional)
   - Include screenshots of affected elements in the report. Defaults to false.
 - `viewportSettings` (optional)
@@ -53,9 +53,9 @@ Returns an instance of Purple A11y
 - `scanAboutMetadata` (optional)
   - Include additional information in the Scan About section of the report by passing in a JSON object.
 - `zip` (optional)
-  - Name of the generated zip of Purple A11y results at the end of scan. Defaults to "a11y-scan-results".
+  - Name of the generated zip of Oobee results at the end of scan. Defaults to "oobee-scan-results".
 
-#### Purple A11y Instance
+#### Oobee Instance
 
 ##### Properties
 
@@ -109,28 +109,28 @@ Returns:
 
 Checks the accumulated issue occurrences count against the specified threshold.
 
-- Terminates purpleA11y instance and throws an error if the number of accumulated mustFix or goodToFix issue occurrences exceeds either of the specified thresholds.
+- Terminates oobeeA11y instance and throws an error if the number of accumulated mustFix or goodToFix issue occurrences exceeds either of the specified thresholds.
 
 `async terminate()`
 
-Stops the Purple A11y instance and generates the scan report and other scan result artifacts. Returns the name of the generated folder containing the results.
+Stops the Oobee instance and generates the scan report and other scan result artifacts. Returns the name of the generated folder containing the results.
 
 ### How to use
 
 Example usages for Cypress and Playwright can be found in [this section](#example-usages).
 
-With reference to an instance of Purple A11y as `purpleA11y`:
+With reference to an instance of Oobee as `oobeeA11y`:
 
-1. Fetch the necessary scripts needed to be injected to document to be scanned by executing `purpleA11y.getScripts()`. The scripts will be returned as a string.
+1. Fetch the necessary scripts needed to be injected to document to be scanned by executing `oobeeA11y.getScripts()`. The scripts will be returned as a string.
 2. Inject the scripts into the document to be scanned. The easiest way that this can be done is by using `eval()` in the document's environment.
    - Note that this step needs to be done for every page visited.
 3. Run a scan by executing `runA11yScan()` in the document's environment.
    - By default, the scan will be run for the entire page.
    - It is possible to run the scan for specific sections or elements in the page. One way to do this is to pass an array of CSS selectors of the elements to be scanned into `runA11yScan`. For example, `runA11yScan(['#my-component', 'button'])`. Other acceptable forms of argument can be found [here](https://github.com/dequelabs/axe-core/blob/develop/doc/API.md#context-parameter).
-4. Pass the scan results back into the NodeJS environment where `purpleA11y` is in.
-5. Push the results using `await purpleA11y.pushScanResults(scanResults)`.
+4. Pass the scan results back into the NodeJS environment where `oobeeA11y` is in.
+5. Push the results using `await oobeeA11y.pushScanResults(scanResults)`.
 6. Repeat steps 2-5 as many times as desired.
-7. Terminate Purple A11y by using `await purpleA11y.terminate()`. A folder containing the details and report of your scan will be created, under the directory `results` which can be found in your project's root directory.
+7. Terminate Oobee by using `await oobeeA11y.terminate()`. A folder containing the details and report of your scan will be created, under the directory `results` which can be found in your project's root directory.
 
 ### Example usages
 
@@ -153,11 +153,11 @@ Create a <code>package.json</code> by running <code>npm init</code> . Accept the
 
 Change the type of npm package to module by running <code>npm pkg set type="module"</code>
 
-Install the following node dependencies by running <code>npm install cypress @govtechsg/purple-hats --save-dev </code>
+Install the following node dependencies by running <code>npm install cypress @govtechsg/oobee --save-dev </code>
 
-Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> and <code>npm run build</code> within the folder to install remaining Purple A11y dependencies:
+Navigate to <code>node_modules/@govtechsg/oobee</code> and run <code>npm install</code> and <code>npm run build</code> within the folder to install remaining Oobee dependencies:
 
-    cd node_modules/@govtechsg/purple-hats
+    cd node_modules/@govtechsg/oobee
     npm install
     npm run build
     cd ../../..
@@ -165,7 +165,7 @@ Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm i
 Create <code>cypress.config.js</code> with the following contents, and change your Name, E-mail address, and boolean value for whether rule items requiring manual review in the report should be displayed below:
 
     import { defineConfig } from "cypress";
-    import purpleA11yInit from "@govtechsg/purple-hats";
+    import oobeeA11yInit from "@govtechsg/oobee";
 
     // viewport used in tests to optimise screenshots
     const viewportSettings = { width: 1920, height: 1040 };
@@ -174,9 +174,9 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
     // additional information to include in the "Scan About" section of the report
     const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
     // name of the generated zip of the results at the end of scan
-    const resultsZipName = "a11y-scan-results"
+    const resultsZipName = "oobee-scan-results"
 
-    const purpleA11y = await purpleA11yInit(
+    const oobeeA11y = await oobeeA11yInit(
         "https://govtechsg.github.io", // initial url to start scan
         "Demo Cypress Scan", // label for test
         "Your Name",
@@ -196,20 +196,20 @@ Create <code>cypress.config.js</code> with the following contents, and change yo
             setupNodeEvents(on, _config) {
                 on("task", {
                     getPurpleA11yScripts() {
-                        return purpleA11y.getScripts();
+                        return oobeeA11y.getScripts();
                     },
                     async pushPurpleA11yScanResults({res, metadata, elementsToClick}) {
-                        return await purpleA11y.pushScanResults(res, metadata, elementsToClick);
+                        return await oobeeA11y.pushScanResults(res, metadata, elementsToClick);
                     },
                     returnResultsDir() {
-                        return `results/${purpleA11y.randomToken}_${purpleA11y.scanDetails.urlsCrawled.scanned.length}pages/report.html`;
+                        return `results/${oobeeA11y.randomToken}_${oobeeA11y.scanDetails.urlsCrawled.scanned.length}pages/report.html`;
                     },
                     finishPurpleA11yTestCase() {
-                        purpleA11y.testThresholds();
+                        oobeeA11y.testThresholds();
                         return null;
                     },
                     async terminatePurpleA11y() {
-                        return await purpleA11y.terminate();
+                        return await oobeeA11y.terminate();
                     },
                 });
             },
@@ -231,7 +231,7 @@ Create a sub-folder and file <code>cypress/support/e2e.js</code> with the follow
             const { elementsToScan, elementsToClick, metadata } = items;
             const res = await win.runA11yScan(elementsToScan);
             cy.task("pushPurpleA11yScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
-            cy.task("finishPurpleA11yTestCase"); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate purpleA11y instance.
+            cy.task("finishPurpleA11yTestCase"); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate oobeeA11y instance.
         });
     });
 
@@ -242,9 +242,9 @@ Create a sub-folder and file <code>cypress/support/e2e.js</code> with the follow
 Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
 
     describe("template spec", () => {
-        it("should run purple A11y", () => {
+        it("should run oobee A11y", () => {
             cy.visit(
-                "https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm"
+                "https://govtechsg.github.io/purple-banner-embeds/oobee-integrated-scan-example.htm"
             );
             cy.injectPurpleA11yScripts();
             cy.runPurpleA11yScan();
@@ -261,7 +261,7 @@ Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
     });
 
 Run your test with <code>npx cypress run</code>.  
-You will see Purple A11y results generated in <code>results</code> folder.
+You will see Oobee results generated in <code>results</code> folder.
 
 </details>
 <details>
@@ -284,9 +284,10 @@ Create a <code>package.json</code> by running <code>npm init</code> . Accept the
 
 Change the type of npm package to module by running <code>npm pkg set type="module"</code>
 
-Install the following node dependencies by running <code>npm install cypress @types/cypress @govtechsg/purple-hats typescript --save-dev </code>
+Install the following node dependencies by running <code>npm install cypress @types/cypress @govtechsg/oobee typescript --save-dev </code>
 
 Create a <code>tsconfig.json</code> in the root directory and add the following:
+
 ```
 {
 "compilerOptions": {
@@ -302,9 +303,9 @@ Create a <code>tsconfig.json</code> in the root directory and add the following:
 }
 ```
 
-Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> and <code>npm run build</code> within the folder to install remaining Purple A11y dependencies:
+Navigate to <code>node_modules/@govtechsg/oobee</code> and run <code>npm install</code> and <code>npm run build</code> within the folder to install remaining Oobee dependencies:
 
-    cd node_modules/@govtechsg/purple-hats
+    cd node_modules/@govtechsg/oobee
     npm install
     npm run build
     cd ../../..
@@ -312,7 +313,7 @@ Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm i
 Create <code>cypress.config.ts</code> with the following contents, and change your Name, E-mail address, and boolean value for whether rule items requiring manual review in the report should be displayed below:
 
     import { defineConfig } from "cypress";
-    import purpleA11yInit from "@govtechsg/purple-hats";
+    import oobeeA11yInit from "@govtechsg/oobee";
 
     interface ViewportSettings {
         width: number;
@@ -335,9 +336,9 @@ Create <code>cypress.config.ts</code> with the following contents, and change yo
     // additional information to include in the "Scan About" section of the report
     const scanAboutMetadata: ScanAboutMetadata = { browser: 'Chrome (Desktop)' };
     // name of the generated zip of the results at the end of scan
-    const resultsZipName: string = "a11y-scan-results"
+    const resultsZipName: string = "oobee-scan-results"
 
-    const purpleA11y = await purpleA11yInit(
+    const oobeeA11y = await oobeeA11yInit(
         "https://govtechsg.github.io", // initial url to start scan
         "Demo Cypress Scan", // label for test
         "Your Name",
@@ -357,20 +358,20 @@ Create <code>cypress.config.ts</code> with the following contents, and change yo
             setupNodeEvents(on, _config) {
                 on("task", {
                     getPurpleA11yScripts(): string {
-                        return purpleA11y.getScripts();
+                        return oobeeA11y.getScripts();
                     },
                     async pushPurpleA11yScanResults({res, metadata, elementsToClick}: { res: any, metadata: any, elementsToClick: any[] }): Promise<{ mustFix: number, goodToFix: number }> {
-                        return await purpleA11y.pushScanResults(res, metadata, elementsToClick);
+                        return await oobeeA11y.pushScanResults(res, metadata, elementsToClick);
                     },
                     returnResultsDir(): string {
-                        return `results/${purpleA11y.randomToken}_${purpleA11y.scanDetails.urlsCrawled.scanned.length}pages/reports/report.html`;
+                        return `results/${oobeeA11y.randomToken}_${oobeeA11y.scanDetails.urlsCrawled.scanned.length}pages/reports/report.html`;
                     },
                     finishPurpleA11yTestCase(): null {
-                        purpleA11y.testThresholds();
+                        oobeeA11y.testThresholds();
                         return null;
                     },
                     async terminatePurpleA11y(): Promise<string> {
-                        return await purpleA11y.terminate();
+                        return await oobeeA11y.terminate();
                     },
                 });
             },
@@ -394,7 +395,7 @@ Create a sub-folder and file <code>src/cypress/support/e2e.ts</code> with the fo
             const { elementsToScan, elementsToClick, metadata } = items;
             const res = await win.runA11yScan(elementsToScan);
             cy.task("pushPurpleA11yScanResults", {res, metadata, elementsToClick}).then((count) => { return count });
-            cy.task("finishPurpleA11yTestCase"); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate purpleA11y instance.
+            cy.task("finishPurpleA11yTestCase"); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate oobeeA11y instance.
         });
     });
 
@@ -405,9 +406,9 @@ Create a sub-folder and file <code>src/cypress/support/e2e.ts</code> with the fo
 Create <code>src/cypress/e2e/spec.cy.ts</code> with the following contents:
 
     describe("template spec", () => {
-        it("should run purple A11y", () => {
+        it("should run oobee A11y", () => {
             cy.visit(
-                "https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm"
+                "https://govtechsg.github.io/purple-banner-embeds/oobee-integrated-scan-example.htm"
             );
             cy.injectPurpleA11yScripts();
             cy.runPurpleA11yScan();
@@ -424,6 +425,7 @@ Create <code>src/cypress/e2e/spec.cy.ts</code> with the following contents:
     });
 
 Create <code>cypress.d.ts</code> in the root directory with the following contents:
+
 ```
 declare namespace Cypress {
   interface Chainable<Subject> {
@@ -447,7 +449,7 @@ interface Window {
 Compile your typescript code with <code>npx tsc</code>.  
 Run your test with <code>npx cypress run</code>.
 
-You will see Purple A11y results generated in <code>results</code> folder.
+You will see Oobee results generated in <code>results</code> folder.
 
 </details>
 
@@ -460,19 +462,19 @@ Create a <code>package.json</code> by running <code>npm init</code> . Accept the
 
 Change the type of npm package to module by running <code>npm pkg set type="module"</code>
 
-Install the following node dependencies by running <code>npm install playwright @govtechsg/purple-hats --save-dev</code> and <code>npx playwright install</code>
+Install the following node dependencies by running <code>npm install playwright @govtechsg/oobee --save-dev</code> and <code>npx playwright install</code>
 
-Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> and <code>npm run build</code> within the folder to install remaining Purple A11y dependencies:
+Navigate to <code>node_modules/@govtechsg/oobee</code> and run <code>npm install</code> and <code>npm run build</code> within the folder to install remaining Oobee dependencies:
 
-    cd node_modules/@govtechsg/purple-hats
+    cd node_modules/@govtechsg/oobee
     npm install
     npm run build
     cd ../../..
 
-On your project's root folder, create a Playwright test file <code>purpleA11y-playwright-demo.js</code>:
+On your project's root folder, create a Playwright test file <code>oobeeA11y-playwright-demo.js</code>:
 
     import { chromium } from "playwright";
-    import purpleA11yInit from "@govtechsg/purple-hats";
+    import oobeeA11yInit from "@govtechsg/oobee";
 
     // viewport used in tests to optimise screenshots
     const viewportSettings = { width: 1920, height: 1040 };
@@ -481,7 +483,7 @@ On your project's root folder, create a Playwright test file <code>purpleA11y-pl
     // additional information to include in the "Scan About" section of the report
     const scanAboutMetadata = { browser: 'Chrome (Desktop)' };
 
-    const purpleA11y = await purpleA11yInit(
+    const oobeeA11y = await oobeeA11yInit(
         "https://govtechsg.github.io", // initial url to start scan
         "Demo Playwright Scan", // label for test
         "Your Name",
@@ -504,12 +506,12 @@ On your project's root folder, create a Playwright test file <code>purpleA11y-pl
                 async elementsToScan => await runA11yScan(elementsToScan),
                 elementsToScan,
             );
-            await purpleA11y.pushScanResults(scanRes);
-            purpleA11y.testThresholds(); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate purpleA11y instance.
+            await oobeeA11y.pushScanResults(scanRes);
+            oobeeA11y.testThresholds(); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate oobeeA11y instance.
         };
 
-        await page.goto('https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm');
-        await page.evaluate(purpleA11y.getScripts());
+        await page.goto('https://govtechsg.github.io/purple-banner-embeds/oobee-integrated-scan-example.htm');
+        await page.evaluate(oobeeA11y.getScripts());
         await runPurpleA11yScan();
 
         await page.getByRole('button', { name: 'Click Me' }).click();
@@ -520,12 +522,12 @@ On your project's root folder, create a Playwright test file <code>purpleA11y-pl
         // ---------------------
         await context.close();
         await browser.close();
-        await purpleA11y.terminate();
+        await oobeeA11y.terminate();
     })();
 
-Run your test with <code>node purpleA11y-playwright-demo.js</code> .
+Run your test with <code>node oobeeA11y-playwright-demo.js</code> .
 
-You will see Purple A11y results generated in <code>results</code> folder.
+You will see Oobee results generated in <code>results</code> folder.
 
 </details>
 <details>
@@ -535,9 +537,10 @@ Create a <code>package.json</code> by running <code>npm init</code> . Accept the
 
 Change the type of npm package to module by running <code>npm pkg set type="module"</code>
 
-Install the following node dependencies by running <code>npm install playwright @govtechsg/purple-hats typescript --save-dev</code> and <code>npx playwright install</code>
+Install the following node dependencies by running <code>npm install playwright @govtechsg/oobee typescript --save-dev</code> and <code>npx playwright install</code>
 
 Create a <code>tsconfig.json</code> in the root directory and add the following:
+
 ```
 {
 "compilerOptions": {
@@ -552,17 +555,17 @@ Create a <code>tsconfig.json</code> in the root directory and add the following:
 }
 ```
 
-Navigate to <code>node_modules/@govtechsg/purple-hats</code> and run <code>npm install</code> and <code>npm run build</code> within the folder to install remaining Purple A11y dependencies:
+Navigate to <code>node_modules/@govtechsg/oobee</code> and run <code>npm install</code> and <code>npm run build</code> within the folder to install remaining Oobee dependencies:
 
-    cd node_modules/@govtechsg/purple-hats
+    cd node_modules/@govtechsg/oobee
     npm install
     npm run build
     cd ../../..
 
-Create a sub-folder and Playwright test file <code>src/purpleA11y-playwright-demo.ts</code> with the following contents:
+Create a sub-folder and Playwright test file <code>src/oobeeA11y-playwright-demo.ts</code> with the following contents:
 
     import { Browser, BrowserContext, Page, chromium } from "playwright";
-    import purpleA11yInit from "@govtechsg/purple-hats";
+    import oobeeA11yInit from "@govtechsg/oobee";
 
     declare const runA11yScan: (elementsToScan?: string[]) => Promise<any>;
 
@@ -587,7 +590,7 @@ Create a sub-folder and Playwright test file <code>src/purpleA11y-playwright-dem
     // additional information to include in the "Scan About" section of the report
     const scanAboutMetadata: ScanAboutMetadata = { browser: 'Chrome (Desktop)' };
 
-    const purpleA11y = await purpleA11yInit(
+    const oobeeA11y = await oobeeA11yInit(
         "https://govtechsg.github.io", // initial url to start scan
         "Demo Playwright Scan", // label for test
         "Your Name",
@@ -610,12 +613,12 @@ Create a sub-folder and Playwright test file <code>src/purpleA11y-playwright-dem
                 async elementsToScan => await runA11yScan(elementsToScan),
                 elementsToScan,
             );
-            await purpleA11y.pushScanResults(scanRes);
-            purpleA11y.testThresholds(); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate purpleA11y instance.
+            await oobeeA11y.pushScanResults(scanRes);
+            oobeeA11y.testThresholds(); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate oobeeA11y instance.
         };
 
-        await page.goto('https://govtechsg.github.io/purple-banner-embeds/purple-integrated-scan-example.htm');
-        await page.evaluate(purpleA11y.getScripts());
+        await page.goto('https://govtechsg.github.io/purple-banner-embeds/oobee-integrated-scan-example.htm');
+        await page.evaluate(oobeeA11y.getScripts());
         await runPurpleA11yScan();
 
         await page.getByRole('button', { name: 'Click Me' }).click();
@@ -626,13 +629,13 @@ Create a sub-folder and Playwright test file <code>src/purpleA11y-playwright-dem
         // ---------------------
         await context.close();
         await browser.close();
-        await purpleA11y.terminate();
+        await oobeeA11y.terminate();
     })();
 
 Compile your typescript code with <code>npx tsc</code>.  
-Run your test with <code>node dist/purpleA11y-playwright-demo.js</code>.
+Run your test with <code>node dist/oobeeA11y-playwright-demo.js</code>.
 
-You will see Purple A11y results generated in <code>results</code> folder.
+You will see Oobee results generated in <code>results</code> folder.
 
 </details>
 
@@ -777,6 +780,6 @@ You will see Purple A11y results generated in <code>results</code> folder.
             });
     };
 
-    runScript();   
+    runScript();
 
 </details>
