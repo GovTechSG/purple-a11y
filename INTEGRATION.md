@@ -244,7 +244,7 @@ Create <code>cypress/e2e/spec.cy.js</code> with the following contents:
     describe("template spec", () => {
         it("should run oobee A11y", () => {
             cy.visit(
-                "https://govtechsg.github.io/oobee-banner-embeds/oobee-integrated-scan-example.htm"
+                "https://govtechsg.github.io/purple-banner-embeds/oobee-integrated-scan-example.htm"
             );
             cy.injectPurpleA11yScripts();
             cy.runPurpleA11yScan();
@@ -408,7 +408,7 @@ Create <code>src/cypress/e2e/spec.cy.ts</code> with the following contents:
     describe("template spec", () => {
         it("should run oobee A11y", () => {
             cy.visit(
-                "https://govtechsg.github.io/oobee-banner-embeds/oobee-integrated-scan-example.htm"
+                "https://govtechsg.github.io/purple-banner-embeds/oobee-integrated-scan-example.htm"
             );
             cy.injectPurpleA11yScripts();
             cy.runPurpleA11yScan();
@@ -510,7 +510,7 @@ On your project's root folder, create a Playwright test file <code>oobeeA11y-pla
             oobeeA11y.testThresholds(); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate oobeeA11y instance.
         };
 
-        await page.goto('https://govtechsg.github.io/oobee-banner-embeds/oobee-integrated-scan-example.htm');
+        await page.goto('https://govtechsg.github.io/purple-banner-embeds/oobee-integrated-scan-example.htm');
         await page.evaluate(oobeeA11y.getScripts());
         await runPurpleA11yScan();
 
@@ -617,7 +617,7 @@ Create a sub-folder and Playwright test file <code>src/oobeeA11y-playwright-demo
             oobeeA11y.testThresholds(); // test the accumulated number of issue occurrences against specified thresholds. If exceed, terminate oobeeA11y instance.
         };
 
-        await page.goto('https://govtechsg.github.io/oobee-banner-embeds/oobee-integrated-scan-example.htm');
+        await page.goto('https://govtechsg.github.io/purple-banner-embeds/oobee-integrated-scan-example.htm');
         await page.evaluate(oobeeA11y.getScripts());
         await runPurpleA11yScan();
 
