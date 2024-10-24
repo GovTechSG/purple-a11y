@@ -76,6 +76,7 @@ const crawlDomain = async (
   datasetFromIntelligent: crawlee.Dataset = null, // optional
   urlsCrawledFromIntelligent: UrlsCrawled = null, // optional
 ) => {
+  console.log('crawldomain 111');
   let dataset: crawlee.Dataset;
   let urlsCrawled: UrlsCrawled;
   let requestQueue: crawlee.RequestQueue;
@@ -103,7 +104,6 @@ const crawlDomain = async (
   const isBlacklistedUrl = isBlacklisted(url);
 
   const httpsAgent = new https.Agent({ rejectUnauthorized: false });
-
 
   if (isBlacklistedUrl) {
     guiInfoLog(guiInfoStatusTypes.SKIPPED, {
@@ -157,27 +157,30 @@ const crawlDomain = async (
       silentLogger.info('cache hit', url, httpHeadCache.get(url));
       return false; // return false to avoid processing the url again
     }
-  
+
     try {
       // Send a HEAD request to check headers without downloading the file
-      const headResponse = await axios.head(url, { headers: { Authorization: authHeader }, httpsAgent });
+      const headResponse = await axios.head(url, {
+        headers: { Authorization: authHeader },
+        httpsAgent,
+      });
       const contentType = headResponse.headers['content-type'] || '';
       const contentDisposition = headResponse.headers['content-disposition'] || '';
-  
+
       // Check if the response suggests it's a downloadable file based on Content-Disposition header
       if (contentDisposition.includes('attachment')) {
         silentLogger.info(`Skipping URL due to attachment header: ${url}`);
         httpHeadCache.set(url, false);
         return false;
       }
-  
+
       // Check if the MIME type suggests it's a downloadable file
       if (contentType.startsWith('application/') || contentType.includes('octet-stream')) {
         silentLogger.info(`Skipping potential downloadable file: ${contentType} at URL ${url}`);
         httpHeadCache.set(url, false);
         return false;
       }
-  
+
       // Use the mime-types library to ensure it's processible content (e.g., HTML or plain text)
       const mimeType = mime.lookup(contentType);
       if (mimeType && !mimeType.startsWith('text/html') && !mimeType.startsWith('text/')) {
@@ -185,49 +188,54 @@ const crawlDomain = async (
         httpHeadCache.set(url, false);
         return false;
       }
-  
+
       // Additional check for zip files by their magic number (PK\x03\x04)
       if (url.endsWith('.zip')) {
         silentLogger.info(`Checking for zip file magic number at URL ${url}`);
-  
+
         // Download the first few bytes of the file to check for the magic number
         const byteResponse = await axios.get(url, {
           headers: { Range: 'bytes=0-3', Authorization: authHeader },
           responseType: 'arraybuffer',
-          httpsAgent
+          httpsAgent,
         });
-  
+
         const magicNumber = byteResponse.data.toString('hex');
         if (magicNumber === '504b0304') {
           silentLogger.info(`Skipping zip file at URL ${url}`);
           httpHeadCache.set(url, false);
           return false;
         } else {
-          silentLogger.info(`Not skipping ${url}, magic number does not match ZIP file: ${magicNumber}`);
+          silentLogger.info(
+            `Not skipping ${url}, magic number does not match ZIP file: ${magicNumber}`,
+          );
         }
       }
-  
+
       // If you want more robust checks, you can download a portion of the content and use the file-type package to detect file types by content
       const response = await axios.get(url, {
         headers: { Range: 'bytes=0-4100', Authorization: authHeader },
         responseType: 'arraybuffer',
-        httpsAgent
+        httpsAgent,
       });
-  
+
       const fileType = await fileTypeFromBuffer(response.data);
-      if (fileType && !fileType.mime.startsWith('text/html') && !fileType.mime.startsWith('text/')) {
+      if (
+        fileType &&
+        !fileType.mime.startsWith('text/html') &&
+        !fileType.mime.startsWith('text/')
+      ) {
         silentLogger.info(`Detected downloadable file of type ${fileType.mime} at URL ${url}`);
         httpHeadCache.set(url, false);
         return false;
       }
-      
     } catch (e) {
       // silentLogger.error(`Error checking the MIME type of ${url}: ${e.message}`);
       // If an error occurs (e.g., a network issue), assume the URL is processible
       httpHeadCache.set(url, true);
       return true;
     }
-  
+
     // If none of the conditions to skip are met, allow processing of the URL
     httpHeadCache.set(url, true);
     return true;
@@ -239,7 +247,6 @@ const crawlDomain = async (
     browserContext: BrowserContext,
   ) => {
     try {
-
       await enqueueLinks({
         // set selector matches anchor elements with href but not contains # or starting with mailto:
         selector: 'a:not(a[href*="#"],a[href^="mailto:"])',
@@ -259,7 +266,7 @@ const crawlDomain = async (
             // playwright headless mode does not support navigation to pdf document
             req.skipNavigation = true;
           }
-          req.label = req.url
+          req.label = req.url;
 
           return req;
         },
@@ -301,7 +308,7 @@ const crawlDomain = async (
             await requestQueue.addRequest({
               url: newPageUrl,
               skipNavigation: isUrlPdf(newPage.url()),
-              label: newPageUrl
+              label: newPageUrl,
             });
           } else {
             try {
@@ -462,20 +469,20 @@ const crawlDomain = async (
     },
     requestQueue,
     postNavigationHooks: [
-      async (crawlingContext) => {
+      async crawlingContext => {
         const { page, request } = crawlingContext;
 
         request.skipNavigation = true;
 
         await page.evaluate(() => {
-          return new Promise((resolve) => {
+          return new Promise(resolve => {
             let timeout;
             let mutationCount = 0;
             const MAX_MUTATIONS = 100;
             const MAX_SAME_MUTATION_LIMIT = 10;
             const mutationHash = {};
 
-            const observer = new MutationObserver((mutationsList) => {
+            const observer = new MutationObserver(mutationsList => {
               clearTimeout(timeout);
 
               mutationCount += 1;
@@ -486,7 +493,7 @@ const crawlDomain = async (
               }
 
               // To handle scenario where DOM elements are constantly changing and unable to exit
-              mutationsList.forEach((mutation) => {
+              mutationsList.forEach(mutation => {
                 let mutationKey;
 
                 if (mutation.target instanceof Element) {
@@ -528,11 +535,7 @@ const crawlDomain = async (
         let requestLabelUrl = request.label;
 
         // to handle scenario where the redirected link is not within the scanning website
-        const isLoadedUrlFollowStrategy = isFollowStrategy(
-          finalUrl,
-          requestLabelUrl,
-          strategy,
-        );
+        const isLoadedUrlFollowStrategy = isFollowStrategy(finalUrl, requestLabelUrl, strategy);
         if (!isLoadedUrlFollowStrategy) {
           finalUrl = requestLabelUrl;
         }
@@ -543,7 +546,7 @@ const crawlDomain = async (
         } else {
           request.skipNavigation = false;
         }
-      }
+      },
     ],
     preNavigationHooks: isBasicAuth
       ? [
@@ -560,8 +563,19 @@ const crawlDomain = async (
           },
         ]
       : [
-          async ({ request }) => {
-            preNavigationHooks(extraHTTPHeaders);
+          async (crawlingContext, gotoOptions) => {
+            const { page, request } = crawlingContext;
+
+            await page.setExtraHTTPHeaders({
+              ...extraHTTPHeaders,
+            });
+
+            Object.assign(gotoOptions, {
+              waitUntil: 'networkidle',
+              timeout: 30000,
+            });
+
+            // Check if the URL is processible
             const processible = await isProcessibleUrl(request.url);
             if (!processible) {
               request.skipNavigation = true;

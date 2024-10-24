@@ -456,9 +456,9 @@ const checkUrlConnectivityWithBrowser = async (
 
       const contentType = response.headers()['content-type'];
       if (contentType.includes('xml')) {
-        const responseFromUrl = await requestToUrl(res.url, true, extraHTTPHeaders)
+        const responseFromUrl = await requestToUrl(res.url, true, extraHTTPHeaders);
 
-        res.content = responseFromUrl.content
+        res.content = responseFromUrl.content;
       }
     } catch (error) {
       silentLogger.error(error);
@@ -622,7 +622,10 @@ export const prepareData = async (argv: Answers): Promise<Data> => {
     includeScreenshots: !(additional === 'none'),
     metadata,
     followRobots,
-    extraHTTPHeaders: parseHeaders(header),
+    extraHTTPHeaders: {
+      cookie:
+        'authenticated=true; _cookie_auth_app_session=C3gFY4CHSfEIHu2H8nRNNK0KZ+D4Ot4J6YTxrTQxFG+E++mQoRkLJ7Ohd8Fo+3IfZ3wIyauiEVn9RZ6D8WMLsAb3JfAzAejx4SnD9hVpy7TFKKln+nsANE8O8gUiIuCbIRjiE2sxMww+SrXLyoQQPch1totjsW6Z4Cqoa8HpisH8G2h6ls3KkE96fcEPVv5Sx3ut7sN0pn2EM3S+doGS3lJh3L3CLYqrLESoL1UR6WqpVvh20uGx4ACR+flz6qPmupCkMl4dzj9UWuR0tldhLKwJe7rEI0Tv+qUh06r1xXA=--vmMPcugOAJgRr7y4--Y8aoMXH50ve6CP9ArM4OGQ==; auth=true',
+    },
     safeMode,
     zip,
   };
