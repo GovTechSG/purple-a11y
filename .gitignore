@@ -1,6 +1,8 @@
 dist
 node_modules
-.vscode
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 .a11y_storage
 results/
 logs/
