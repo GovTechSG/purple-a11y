@@ -18,8 +18,13 @@
  *                              OOBEE_SENTRY_DSN so the two telemetry streams
  *                              can route to different Sentry projects.
  *
- * Then in your HTML:
- *   <script src="oobee-client-scanner.js"></script>
+ * Then in your HTML (pin the version tag AND the SRI hash from the sidecar
+ * oobee-client-scanner.js.sha384 file emitted by this generator):
+ *   <script
+ *     src="https://cdn.jsdelivr.net/gh/GovTechSG/oobee@X.Y.Z/oobee-client-scanner.js"
+ *     integrity="sha384-…"
+ *     crossorigin="anonymous"
+ *   ></script>
  *   <script>
  *     window.oobee.scan({
  *       userInfo:       { email: 'you@example.com', name: 'Your Name' },
@@ -407,11 +412,24 @@ const sentryTelemetryScript = (
     try {
       var Sentry = await _oobeeLoadSentry();
 
-      // Initialise once per page load
+      // Initialise once per page load.
+      //
+      // We deliberately disable ALL default integrations and set
+      // tracesSampleRate: 0 so that this SDK only ships the single
+      // captureEvent() we invoke below. Without this, Sentry.init would
+      // install window.onerror / onunhandledrejection handlers, wrap
+      // setTimeout/setInterval/addEventListener callbacks, record
+      // console/fetch/XHR/DOM breadcrumbs, and forward host-page
+      // exceptions + performance traces to this project — none of which
+      // the embedder consented to.
       if (!_oobeeSentryInitialized) {
         Sentry.init({
-          dsn:                _oobeeSentryDsn,
-          tracesSampleRate:   1.0,
+          dsn:                 _oobeeSentryDsn,
+          defaultIntegrations: false,
+          integrations:        [],
+          tracesSampleRate:    0,
+          sendDefaultPii:      false,
+          autoSessionTracking: false,
         });
         _oobeeSentryInitialized = true;
       }
@@ -452,6 +470,16 @@ const sentryTelemetryScript = (
       tags['WCAG-NeedsReview-Occurrences'] = String(results.needsReview ? results.needsReview.totalItems : 0);
       tags['Pages-Scanned-Count']          = '1';
 
+      // Strip query string and fragment so tokens / session IDs / PII
+      // embedded in URL params never leave the browser. Only origin +
+      // pathname is sent as entryUrl.
+      var _oobeeSafeEntryUrl;
+      try {
+        _oobeeSafeEntryUrl = window.location.origin + window.location.pathname;
+      } catch (e) {
+        _oobeeSafeEntryUrl = '';
+      }
+
       // ── Capture event ───────────────────────────────────────────────────
       Sentry.captureEvent({
         message: 'Accessibility Scan Page',
@@ -460,7 +488,7 @@ const sentryTelemetryScript = (
           event_type: 'accessibility_scan',
           scanType:   'browser',
           browser:    'browser',
-          entryUrl:   window.location.href,
+          entryUrl:   _oobeeSafeEntryUrl,
         }),
         extra: {
           wcagBreakdown: wcagCriteriaBreakdown,
@@ -686,12 +714,25 @@ const outputPath = outputArg
       `value to pin it explicitly.`,
     );
   }
-  writeFileSync(outputPath, generateClientBundle(sentrySdkSri), 'utf-8');
+  const bundleSource = generateClientBundle(sentrySdkSri);
+  writeFileSync(outputPath, bundleSource, 'utf-8');
+
+  // Compute the SHA-384 of the bundle we just wrote so consumers can pin the
+  // <script src="…oobee-client-scanner.js"> tag with a matching integrity
+  // attribute. The hash is embedder-facing (SRI is defence against a
+  // compromised jsDelivr / MITM against the embedder's users) and does not
+  // itself affect the generated bundle.
+  const bundleSri = `sha384-${createHash('sha384')
+    .update(Buffer.from(bundleSource, 'utf-8'))
+    .digest('base64')}`;
+  writeFileSync(`${outputPath}.sha384`, `${bundleSri}\n`, 'utf-8');
+
   console.log(`Generated: ${outputPath}`);
   console.log(`  App version  : ${APP_VERSION}`);
   console.log(`  Sentry DSN   : ${SENTRY_DSN.slice(0, 40)}…`);
   console.log(`  Sentry SDK   : @sentry/browser ${SENTRY_NODE_VERSION} (CDN)`);
   console.log(`  Sentry SRI   : ${sentrySdkSri || '(none — bundle loads without integrity)'}`);
+  console.log(`  Bundle SRI   : ${bundleSri}  (also written to ${outputPath}.sha384)`);
 })().catch((err) => {
   console.error('[generateOobeeClientScanner] failed:', err);
   process.exit(1);

@@ -35112,11 +35112,24 @@
     try {
       var Sentry = await _oobeeLoadSentry();
 
-      // Initialise once per page load
+      // Initialise once per page load.
+      //
+      // We deliberately disable ALL default integrations and set
+      // tracesSampleRate: 0 so that this SDK only ships the single
+      // captureEvent() we invoke below. Without this, Sentry.init would
+      // install window.onerror / onunhandledrejection handlers, wrap
+      // setTimeout/setInterval/addEventListener callbacks, record
+      // console/fetch/XHR/DOM breadcrumbs, and forward host-page
+      // exceptions + performance traces to this project — none of which
+      // the embedder consented to.
       if (!_oobeeSentryInitialized) {
         Sentry.init({
-          dsn:                _oobeeSentryDsn,
-          tracesSampleRate:   1.0,
+          dsn:                 _oobeeSentryDsn,
+          defaultIntegrations: false,
+          integrations:        [],
+          tracesSampleRate:    0,
+          sendDefaultPii:      false,
+          autoSessionTracking: false,
         });
         _oobeeSentryInitialized = true;
       }
@@ -35157,6 +35170,16 @@
       tags['WCAG-NeedsReview-Occurrences'] = String(results.needsReview ? results.needsReview.totalItems : 0);
       tags['Pages-Scanned-Count']          = '1';
 
+      // Strip query string and fragment so tokens / session IDs / PII
+      // embedded in URL params never leave the browser. Only origin +
+      // pathname is sent as entryUrl.
+      var _oobeeSafeEntryUrl;
+      try {
+        _oobeeSafeEntryUrl = window.location.origin + window.location.pathname;
+      } catch (e) {
+        _oobeeSafeEntryUrl = '';
+      }
+
       // ── Capture event ───────────────────────────────────────────────────
       Sentry.captureEvent({
         message: 'Accessibility Scan Page',
@@ -35165,7 +35188,7 @@
           event_type: 'accessibility_scan',
           scanType:   'browser',
           browser:    'browser',
-          entryUrl:   window.location.href,
+          entryUrl:   _oobeeSafeEntryUrl,
         }),
         extra: {
           wcagBreakdown: wcagCriteriaBreakdown,

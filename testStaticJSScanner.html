@@ -185,10 +185,20 @@
     <ol>
       <li>
         <strong>Add the script</strong> — include the scanner before your closing
-        <code>&lt;/body&gt;</code> tag:
-        <pre>&lt;script src="https://cdn.jsdelivr.net/gh/GovTechSG/oobee@0.10.86/oobee-client-scanner.js"&gt;&lt;/script&gt;</pre>
-        
-        <br>This points to the <code>v0.10.86</code> release. Update the version tag as needed for newer releases.
+        <code>&lt;/body&gt;</code> tag. Pin it to a specific release tag AND supply a
+        <code>Subresource Integrity</code> hash so a compromised jsDelivr response
+        (or a MITM against your users) cannot swap in modified JavaScript:
+        <pre>&lt;script
+  src="https://cdn.jsdelivr.net/gh/GovTechSG/oobee@0.11.17/oobee-client-scanner.js"
+  integrity="sha384-REPLACE_WITH_HASH_FROM_RELEASE_NOTES"
+  crossorigin="anonymous"
+&gt;&lt;/script&gt;</pre>
+
+        <br>The SHA-384 for each release is published alongside the tag in the
+        GitHub release notes and in the sidecar file
+        <code>oobee-client-scanner.js.sha384</code> at the repo root. Update the
+        version tag <em>and</em> the integrity hash together whenever you upgrade.
+        Never use <code>@latest</code> — a floating tag defeats SRI.
       </li>
       <li>
         <strong>Run the scan</strong> — call <code>window.oobee.scan()</code> in your own script,
