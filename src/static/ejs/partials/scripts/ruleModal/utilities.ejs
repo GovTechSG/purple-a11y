@@ -266,7 +266,15 @@
           ? 'Unable to connect to AI service. Please ensure the wcag-eval API is running on port 5000.'
           : `Failed to generate fix suggestion: ${error.message}`;
 
-        errorContainer.innerHTML = `<div class="generateAiError">${errorMessage}</div>`;
+        // Render error text as a text node (asgard-0006): error.message can
+        // contain attacker-influenced content when the external AI service
+        // reflects submitted HTML back in its error field. The success path
+        // (formatFixSuggestionResponse) already escapes every field before
+        // innerHTML; do the same here.
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'generateAiError';
+        errorDiv.textContent = errorMessage;
+        errorContainer.replaceChildren(errorDiv);
       }
     }
   };

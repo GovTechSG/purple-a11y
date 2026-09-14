@@ -31,6 +31,8 @@ import {
   isDisallowedInRobotsTxt,
   getUrlsFromRobotsTxt,
   waitForPageLoaded,
+  isInternalOrLoopbackUrl,
+  isInternalRemoteIp,
 } from '../constants/common.js';
 import { areLinksEqual, isFollowStrategy, isSameHostname, normUrl, register } from '../utils.js';
 import {
@@ -474,6 +476,18 @@ const crawlDomain = async ({
             const ext = parsed.pathname.toLowerCase().split('.').pop();
             if (ext && blackListedFileExtensions.includes(ext)) {
               request.skipNavigation = true;
+              return;
+            }
+            // SSRF defence: block navigation to loopback / link-local /
+            // RFC1918 / cloud-metadata destinations (asgard-0004). An
+            // attacker-controlled same-registrable-domain subdomain can
+            // otherwise resolve to 169.254.169.254 / 127.0.0.1 / an
+            // internal RFC1918 host and be fetched by the crawler.
+            if (await isInternalOrLoopbackUrl(request.url)) {
+              consoleLogger.warn(
+                `Refusing to navigate to internal/loopback address for ${request.url}`,
+              );
+              request.skipNavigation = true;
             }
           } catch {
             request.skipNavigation = true;
@@ -482,7 +496,33 @@ const crawlDomain = async ({
       ],
       postNavigationHooks: [
         async crawlingContext => {
-          const { page, request } = crawlingContext;
+          const { page, request, response } = crawlingContext as PlaywrightCrawlingContext;
+
+          // DNS-rebinding defence (asgard-0004): a hostile authoritative
+          // DNS can return a public IP to isInternalOrLoopbackUrl() and a
+          // private IP to the browser milliseconds later. Verify the
+          // remote address the browser actually connected to falls outside
+          // internal ranges before axe/capturePageData runs over the body.
+          if (response) {
+            try {
+              const serverAddr = await response.serverAddr();
+              if (isInternalRemoteIp(serverAddr?.ipAddress)) {
+                consoleLogger.warn(
+                  `Refusing response from internal address ${serverAddr?.ipAddress} for ${request.url}`,
+                );
+                request.skipNavigation = true;
+                try {
+                  await page.goto('about:blank', { timeout: 5000 });
+                } catch {
+                  // best-effort — the request handler will already skip.
+                }
+                return;
+              }
+            } catch {
+              // serverAddr() is best-effort — Chromium may not report it
+              // for service-worker/cached responses.
+            }
+          }
 
           try {
             await page.evaluate(() => {

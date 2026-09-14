@@ -44,24 +44,60 @@ jobs:
         run: node dist/generateOobeeClientScanner.js
 
       - name: Create branch and commit changes
+        env:
+          NEW_VERSION: ${{ steps.bump.outputs.version }}
+          CURRENT_VERSION: ${{ steps.current.outputs.version }}
         run: |
-          BRANCH="bump/version-${{ steps.bump.outputs.version }}"
+          # Validate versions to a strict allowlist before use in shell.
+          case "$NEW_VERSION" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            [0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "Unexpected NEW_VERSION: $NEW_VERSION" >&2; exit 1 ;;
+          esac
+          case "$CURRENT_VERSION" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            [0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "Unexpected CURRENT_VERSION: $CURRENT_VERSION" >&2; exit 1 ;;
+          esac
+          BRANCH="bump/version-$NEW_VERSION"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"
           git add package.json package-lock.json oobee-client-scanner.js oobee-client-scanner.js.sha384
-          git commit -m "chore: bump version ${{ steps.current.outputs.version }} → ${{ steps.bump.outputs.version }}"
+          git commit -m "chore: bump version $CURRENT_VERSION → $NEW_VERSION"
           git push origin "$BRANCH"
-          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+          echo "BRANCH=$BRANCH" >> "$GITHUB_ENV"
 
       - name: Authenticate GitHub CLI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+          echo "$GH_TOKEN" | gh auth login --with-token
 
       - name: Create pull request
+        env:
+          NEW_VERSION: ${{ steps.bump.outputs.version }}
+          CURRENT_VERSION: ${{ steps.current.outputs.version }}
+          BASE_REF: ${{ github.ref_name }}
         run: |
+          # Re-validate here since env vars are scoped per step.
+          case "$NEW_VERSION" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            [0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "Unexpected NEW_VERSION: $NEW_VERSION" >&2; exit 1 ;;
+          esac
+          case "$CURRENT_VERSION" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            [0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "Unexpected CURRENT_VERSION: $CURRENT_VERSION" >&2; exit 1 ;;
+          esac
+          # Restrict base ref to safe characters (letters, digits, dot, underscore, dash, slash).
+          case "$BASE_REF" in
+            *[!A-Za-z0-9._/-]*) echo "Unsafe BASE_REF: $BASE_REF" >&2; exit 1 ;;
+            "") echo "Empty BASE_REF" >&2; exit 1 ;;
+          esac
           gh pr create \
-            --title "chore: bump version to ${{ steps.bump.outputs.version }}" \
-            --body "Automated version bump from ${{ steps.current.outputs.version }} to ${{ steps.bump.outputs.version }}." \
+            --title "chore: bump version to $NEW_VERSION" \
+            --body "Automated version bump from $CURRENT_VERSION to $NEW_VERSION." \
             --head "$BRANCH" \
-            --base "${{ github.ref_name }}"
+            --base "$BASE_REF"

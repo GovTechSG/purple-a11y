@@ -327,6 +327,24 @@ export const checkUrlConnectivityWithBrowser = async (
   let contentType = '';
   const protocol = new URL(url).protocol;
 
+  // SSRF defence (asgard-0004): opt-in block of seed URLs that resolve to
+  // loopback/link-local/RFC1918/CGNAT/metadata addresses. Off by default
+  // so CLI users can continue to scan localhost / staging targets on
+  // purpose; hosted deployments that accept unauthenticated caller-
+  // supplied URLs should set OOBEE_BLOCK_INTERNAL_TARGETS=1. Discovered
+  // links inside the crawl are always filtered — see the preNavigation
+  // hook in crawlDomain.ts, which closes the primary vector (attacker
+  // subdomains resolving to internal IPs on scanned third-party sites).
+  if (
+    (protocol === 'http:' || protocol === 'https:') &&
+    /^(1|true|yes)$/i.test(process.env.OOBEE_BLOCK_INTERNAL_TARGETS ?? '')
+  ) {
+    if (await isInternalOrLoopbackUrl(url)) {
+      res.status = constants.urlCheckStatuses.invalidUrl.code;
+      return res;
+    }
+  }
+
   if (protocol !== 'http:' && protocol !== 'https:') {
     try {
       const filePath = fileURLToPath(url);
@@ -1083,7 +1101,26 @@ const ipv4InRange = (ip: string, cidr: string): boolean => {
 };
 const isInternalIpv4 = (ip: string): boolean =>
   INTERNAL_ADDR_RANGES.some(r => ipv4InRange(ip, r));
-async function isInternalOrLoopbackUrl(candidate: string): Promise<boolean> {
+// Returns true when the given remote IP (as reported by
+// Playwright's Response.serverAddr().ipAddress) falls in a loopback,
+// link-local, RFC1918, CGNAT, or metadata-service range. Used as a
+// post-navigation DNS-rebinding check alongside the pre-navigation
+// isInternalOrLoopbackUrl() host filter.
+export const isInternalRemoteIp = (remoteIp: string | undefined | null): boolean => {
+  if (!remoteIp) return false;
+  const bare = remoteIp.replace(/^\[|\]$/g, '').toLowerCase();
+  return (
+    (isIpv4Literal(bare) && isInternalIpv4(bare)) ||
+    bare === '::1' ||
+    bare.startsWith('fe8') || bare.startsWith('fe9') ||
+    bare.startsWith('fea') || bare.startsWith('feb') ||
+    bare.startsWith('fc') || bare.startsWith('fd') ||
+    bare.startsWith('::ffff:127.') || bare.startsWith('::ffff:10.') ||
+    bare.startsWith('::ffff:169.254.') || bare.startsWith('::ffff:192.168.')
+  );
+};
+
+export async function isInternalOrLoopbackUrl(candidate: string): Promise<boolean> {
   let host: string;
   try {
     host = new URL(candidate).hostname;

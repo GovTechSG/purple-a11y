@@ -150,18 +150,18 @@ const crawlSitemap = async ({
   const { maxConcurrency } = constants;
   // Bind Basic-auth credentials to the entry URL's origin so Playwright
   // won't auto-attach them after a cross-origin redirect (credential leak).
-  const { nonAuthHeaders, httpCredentials } = splitAuthHeaders(
+  const { authHeader, nonAuthHeaders, httpCredentials } = splitAuthHeaders(
     extraHTTPHeaders,
     userUrl || sitemapUrl,
   );
 
   // Never send caller-supplied credentials to a server whose certificate
-  // couldn't be validated (asgard-0006). Matches the runCustom /
+  // couldn't be validated (asgard-0006 / asgard-0005). Matches the runCustom /
   // launchPersistentSafeContext safe pattern: hold TLS validation ON whenever
-  // credentials are attached, and require an explicit opt-in env var for
-  // credential-less scans that legitimately need to reach hosts with broken
-  // certs.
-  const hasCredentials = !!httpCredentials;
+  // ANY auth material is attached — not only Basic (which becomes
+  // httpCredentials), but also Bearer / custom Authorization schemes that
+  // splitAuthHeaders leaves in authHeader/extraHTTPHeaders.
+  const hasCredentials = !!authHeader || !!httpCredentials;
   const allowInsecureTls =
     !hasCredentials &&
     ['1', 'true', 'yes'].includes(
