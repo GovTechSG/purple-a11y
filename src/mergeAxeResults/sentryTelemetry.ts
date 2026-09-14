@@ -31,6 +31,13 @@ const sendWcagBreakdownToSentry = async (
   allIssues?: AllIssues,
   pagesScannedCount: number = 0,
 ) => {
+  // Honor the OOBEE_DISABLE_TELEMETRY opt-out (asgard-0007). The parallel
+  // Google-Sheets submission in constants/common.ts's submitForm() checks the
+  // same flag; without this guard, PII (email, name, entry URL) is still sent
+  // to Sentry even when the user has explicitly opted out.
+  if (/^(1|true|yes)$/i.test(process.env.OOBEE_DISABLE_TELEMETRY ?? '')) {
+    return;
+  }
   try {
     // Initialize Sentry
     Sentry.init(sentryConfig);

@@ -49,7 +49,20 @@ export PLAYWRIGHT_BROWSERS_PATH="$PWD/ms-playwright"
 export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD="true"
 
 echo "INFO: Removing com.apple.quarantine attributes for required binaries to run"
-xattr -rd com.apple.quarantine . &>/dev/null
+# Only strip Gatekeeper quarantine from the specific tool trees that oobee
+# itself just installed and verified — not the whole working directory, which
+# would also unquarantine any attacker-planted files that happened to land
+# alongside them (part of the asgard-0003 hardening).
+for _oobee_quarantine_dir in \
+  "$PWD/nodejs-mac-arm64" \
+  "$PWD/nodejs-mac-x64" \
+  "$PWD/jre" \
+  "$PWD/verapdf"; do
+  if [ -e "$_oobee_quarantine_dir" ]; then
+    xattr -rd com.apple.quarantine "$_oobee_quarantine_dir" &>/dev/null || true
+  fi
+done
+unset _oobee_quarantine_dir
 
 cd "$ORIGINAL_DIR"
 $@

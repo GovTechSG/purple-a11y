@@ -22,13 +22,44 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 #   Chrome .deb packages are available for amd64 (x86_64) and arm64 (aarch64).
 #   Other architectures will skip this step and Safe Browsing will not be available.
 #
+# INTEGRITY (asgard-0009): We no longer download the "current" .deb directly
+# from dl.google.com, which had no independent integrity check. Instead we
+# register Google's signed apt repository with the Linux signing key, and
+# install google-chrome-stable via apt so every package is verified
+# against Google's release signature by apt itself. Applies uniformly to
+# amd64 and arm64 (Google ships both from the same signed repo).
+# Optionally set --build-arg GOOGLE_CHROME_SIGNING_KEY_SHA256=<sha256> to
+# additionally pin the fetched signing key against a known SHA-256; the
+# default (empty) trusts TLS to dl.google.com for the key itself and lets
+# apt's GPG verification catch package tampering.
+#
 # TO ENABLE: Set env var GOOGLE_SAFE_BROWSING=1 when running the container.
 # =============================================================================
+ARG GOOGLE_CHROME_SIGNING_KEY_SHA256=
 RUN ARCH="$(dpkg --print-architecture)"; \
     if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "arm64" ]; then \
-      wget -q -O /tmp/chrome.deb "https://dl.google.com/linux/direct/google-chrome-stable_current_${ARCH}.deb" && \
-      apt-get update && apt-get install -y --no-install-recommends /tmp/chrome.deb && \
-      rm -f /tmp/chrome.deb && rm -rf /var/lib/apt/lists/*; \
+      set -e; \
+      TMPKEY="$(mktemp)"; \
+      wget -q -O "$TMPKEY" https://dl.google.com/linux/linux_signing_key.pub; \
+      if [ -n "$GOOGLE_CHROME_SIGNING_KEY_SHA256" ]; then \
+        ACTUAL_KEY_SHA256="$(sha256sum "$TMPKEY" | awk '{print $1}')"; \
+        if [ "$ACTUAL_KEY_SHA256" != "$GOOGLE_CHROME_SIGNING_KEY_SHA256" ]; then \
+          echo "ERROR: Google Chrome signing key SHA-256 mismatch"; \
+          echo "  expected: $GOOGLE_CHROME_SIGNING_KEY_SHA256"; \
+          echo "  actual:   $ACTUAL_KEY_SHA256"; \
+          rm -f "$TMPKEY"; \
+          exit 1; \
+        fi; \
+      fi; \
+      install -d -m 0755 /usr/share/keyrings; \
+      install -m 0644 "$TMPKEY" /usr/share/keyrings/google-chrome.asc; \
+      rm -f "$TMPKEY"; \
+      echo "deb [arch=${ARCH} signed-by=/usr/share/keyrings/google-chrome.asc] https://dl.google.com/linux/chrome/deb/ stable main" \
+        > /etc/apt/sources.list.d/google-chrome.list; \
+      apt-get update && \
+      apt-get install -y --no-install-recommends google-chrome-stable && \
+      apt-mark hold google-chrome-stable && \
+      rm -rf /var/lib/apt/lists/*; \
     else \
       echo "NOTICE: Skipping Chrome install (Safe Browsing unavailable on $ARCH)"; \
     fi

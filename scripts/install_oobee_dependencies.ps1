@@ -93,8 +93,27 @@ if (-Not (Test-Path verapdf\verapdf.bat)) {
     $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 
     Write-Output "INFO: Installing VeraPDF"
-    .\verapdf-installer\verapdf-install "$PWD\verapdf-auto-install-windows.xml"
-    Move-Item -Path C:\Windows\Temp\verapdf -Destination verapdf
+    # Stage the veraPDF install into a per-user, non-predictable directory
+    # under $env:TEMP rather than C:\Windows\Temp (world-writable on standard
+    # Windows configs — asgard-0002). Rewrite the automated-install XML on
+    # the fly so izpack writes into the private path.
+    $veraStageRoot = Join-Path $env:TEMP ([System.IO.Path]::GetRandomFileName())
+    New-Item -ItemType Directory -Path $veraStageRoot | Out-Null
+    $veraStageDir = Join-Path $veraStageRoot "verapdf"
+    $veraAutoXml  = Join-Path $veraStageRoot "verapdf-auto-install-windows.xml"
+    try {
+        (Get-Content -Raw -LiteralPath "$PWD\verapdf-auto-install-windows.xml") `
+            -replace [regex]::Escape('@INSTALLPATH@'), $veraStageDir `
+            | Set-Content -LiteralPath $veraAutoXml -Encoding UTF8
+        .\verapdf-installer\verapdf-install $veraAutoXml
+        if (-not (Test-Path $veraStageDir)) {
+            Write-Error "veraPDF install did not produce expected output at $veraStageDir"
+            exit 1
+        }
+        Move-Item -Path $veraStageDir -Destination verapdf
+    } finally {
+        Remove-Item -Force -Recurse -ErrorAction SilentlyContinue $veraStageRoot
+    }
     Remove-Item -Force -Path .\verapdf-installer.zip
     Remove-Item -Force -Path .\verapdf-installer -recurse
 }

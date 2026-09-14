@@ -142,9 +142,30 @@ if ! [ -f verapdf/verapdf ]; then
   curl -fSL -o ./verapdf-installer.zip https://github.com/GovTechSG/oobee/releases/download/cache/verapdf-installer.zip
   verify_sha256 ./verapdf-installer.zip "$VERAPDF_SHA256" "veraPDF installer"
   unzip -j ./verapdf-installer.zip -d ./verapdf-installer
-  ./verapdf-installer/verapdf-install "${__dir}/verapdf-auto-install-macos.xml"
-  cp -r /tmp/verapdf .
-  rm -rf ./verapdf-installer.zip ./verapdf-installer /tmp/verapdf
+
+  # Stage the veraPDF install into a private per-run directory (mode 0700)
+  # rather than the shared, predictable /tmp/verapdf path — a co-located
+  # local user could otherwise pre-plant or symlink /tmp/verapdf and get
+  # their code copied into oobee's PATH (asgard-0003).
+  VERAPDF_STAGE_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/oobee-verapdf.XXXXXXXXXX")"
+  chmod 700 "$VERAPDF_STAGE_ROOT"
+  cleanup_verapdf_stage() { rm -rf "$VERAPDF_STAGE_ROOT"; }
+  trap cleanup_verapdf_stage EXIT
+  VERAPDF_STAGE_DIR="$VERAPDF_STAGE_ROOT/verapdf"
+  VERAPDF_AUTO_XML="$VERAPDF_STAGE_ROOT/verapdf-auto-install-macos.xml"
+  # sed -e with a placeholder token avoids embedding user-derived paths as
+  # regex or replacement metacharacters.
+  awk -v repl="$VERAPDF_STAGE_DIR" '{ gsub(/@INSTALLPATH@/, repl); print }' \
+    "${__dir}/verapdf-auto-install-macos.xml" > "$VERAPDF_AUTO_XML"
+  ./verapdf-installer/verapdf-install "$VERAPDF_AUTO_XML"
+  if [ ! -d "$VERAPDF_STAGE_DIR" ]; then
+    echo "ERROR: veraPDF install did not produce expected output at $VERAPDF_STAGE_DIR" >&2
+    exit 1
+  fi
+  cp -r "$VERAPDF_STAGE_DIR" .
+  cleanup_verapdf_stage
+  trap - EXIT
+  rm -rf ./verapdf-installer.zip ./verapdf-installer
 
 fi
 
