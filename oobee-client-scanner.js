@@ -4,7 +4,7 @@
  *
  * Embedded at generation time:
  *   App version : 0.11.17
- *   Sentry DSN  : (from OOBEE_SENTRY_DSN env var or constants.ts default)
+ *   Sentry DSN  : (from OOBEE_CLIENT_SENTRY_DSN env var or constants.ts default)
  *   Sentry SDK  : @sentry/browser 10.58.0 (loaded from CDN at runtime)
  *
  * Usage:
@@ -34098,6 +34098,7 @@
     }
     function flagElements() {
         const currentFlaggedElementsByDocument = {}; // Temporary object to hold current flagged elements
+        const MAX_TRAVERSAL_ELEMENTS = 50000;
         /*
             Collects all the elements and places then into an array
             Then places the array in the correct frame
@@ -34106,7 +34107,7 @@
         const currentFlaggedElements = [];
         const allElements = Array.from(document.querySelectorAll('*'));
         let indexofAllElements = 0;
-        while (indexofAllElements < allElements.length) {
+        while (indexofAllElements < allElements.length && indexofAllElements < MAX_TRAVERSAL_ELEMENTS) {
             const element = allElements[indexofAllElements];
             // if it selects a frameset
             if (shouldFlagElement(element, allowNonClickableFlagging) ||
@@ -34115,10 +34116,13 @@
                 currentFlaggedElements.push(element);
             }
             // If the element has a shadowRoot, add its children
-            if (element.shadowRoot) {
+            if (element.shadowRoot && allElements.length < MAX_TRAVERSAL_ELEMENTS) {
                 allElements.push(...Array.from(element.shadowRoot.querySelectorAll('*')));
             }
             indexofAllElements++;
+        }
+        if (indexofAllElements >= MAX_TRAVERSAL_ELEMENTS) {
+            customConsoleWarn(`Reached MAX_TRAVERSAL_ELEMENTS (${MAX_TRAVERSAL_ELEMENTS}) on main document; halting further traversal.`);
         }
         currentFlaggedElementsByDocument[''] = currentFlaggedElements; // Key "" represents the main document
         // Process iframes
@@ -34131,7 +34135,7 @@
                     const iframeFlaggedElements = [];
                     const iframeElements = Array.from(iframeDocument.querySelectorAll('*'));
                     let indexOfIframeElements = 0;
-                    while (indexOfIframeElements < iframeElements.length) {
+                    while (indexOfIframeElements < iframeElements.length && indexOfIframeElements < MAX_TRAVERSAL_ELEMENTS) {
                         const element = iframeElements[indexOfIframeElements];
                         if (shouldFlagElement(element, allowNonClickableFlagging) ||
                             element.dataset.flagged === 'true') {
@@ -34139,10 +34143,13 @@
                             iframeFlaggedElements.push(element);
                         }
                         // If the element has a shadowRoot, add its children
-                        if (element.shadowRoot) {
+                        if (element.shadowRoot && iframeElements.length < MAX_TRAVERSAL_ELEMENTS) {
                             iframeElements.push(...Array.from(element.shadowRoot.querySelectorAll('*')));
                         }
                         indexOfIframeElements++;
+                    }
+                    if (indexOfIframeElements >= MAX_TRAVERSAL_ELEMENTS) {
+                        customConsoleWarn(`Reached MAX_TRAVERSAL_ELEMENTS (${MAX_TRAVERSAL_ELEMENTS}) on iframe ${index}; halting further traversal.`);
                     }
                     const iframeXPath = getXPath(iframe);
                     currentFlaggedElementsByDocument[iframeXPath] = iframeFlaggedElements;
@@ -34162,7 +34169,7 @@
                     const iframeFlaggedElements = [];
                     const iframeElements = Array.from(iframeDocument.querySelectorAll('*'));
                     let indexOfIframeElements = 0;
-                    while (indexOfIframeElements < iframeElements.length) {
+                    while (indexOfIframeElements < iframeElements.length && indexOfIframeElements < MAX_TRAVERSAL_ELEMENTS) {
                         const element = iframeElements[indexOfIframeElements];
                         if (shouldFlagElement(element, allowNonClickableFlagging) ||
                             element.dataset.flagged === 'true') {
@@ -34170,10 +34177,13 @@
                             iframeFlaggedElements.push(element);
                         }
                         // If the element has a shadowRoot, add its children
-                        if (element.shadowRoot) {
+                        if (element.shadowRoot && iframeElements.length < MAX_TRAVERSAL_ELEMENTS) {
                             iframeElements.push(...Array.from(element.shadowRoot.querySelectorAll('*')));
                         }
                         indexOfIframeElements++;
+                    }
+                    if (indexOfIframeElements >= MAX_TRAVERSAL_ELEMENTS) {
+                        customConsoleWarn(`Reached MAX_TRAVERSAL_ELEMENTS (${MAX_TRAVERSAL_ELEMENTS}) on frame ${index}; halting further traversal.`);
                     }
                     const iframeXPath = getXPath(frame);
                     currentFlaggedElementsByDocument[iframeXPath] = iframeFlaggedElements;
@@ -34991,7 +35001,7 @@
 
   // ── Sentry browser telemetry (Sentry JS SDK, loaded from CDN) ────────────
   
-  var _oobeeSentryDsn          = "https://3b8c7ee46b06f33815a1301b6713ebc3@o4509047624761344.ingest.us.sentry.io/4509327783559168";
+  var _oobeeSentryDsn          = "https://82bc6c2052e64ef3d0b0e394fbda4602@o4509047624761344.ingest.us.sentry.io/4512082239094784";
   var _oobeeAppVersion         = "0.11.17";
   var _oobeeSentryVersion      = "10.58.0";
   // Subresource Integrity hash for the Sentry SDK bundle. Public integrity
@@ -35102,11 +35112,24 @@
     try {
       var Sentry = await _oobeeLoadSentry();
 
-      // Initialise once per page load
+      // Initialise once per page load.
+      //
+      // We deliberately disable ALL default integrations and set
+      // tracesSampleRate: 0 so that this SDK only ships the single
+      // captureEvent() we invoke below. Without this, Sentry.init would
+      // install window.onerror / onunhandledrejection handlers, wrap
+      // setTimeout/setInterval/addEventListener callbacks, record
+      // console/fetch/XHR/DOM breadcrumbs, and forward host-page
+      // exceptions + performance traces to this project — none of which
+      // the embedder consented to.
       if (!_oobeeSentryInitialized) {
         Sentry.init({
-          dsn:                _oobeeSentryDsn,
-          tracesSampleRate:   1.0,
+          dsn:                 _oobeeSentryDsn,
+          defaultIntegrations: false,
+          integrations:        [],
+          tracesSampleRate:    0,
+          sendDefaultPii:      false,
+          autoSessionTracking: false,
         });
         _oobeeSentryInitialized = true;
       }
@@ -35147,6 +35170,16 @@
       tags['WCAG-NeedsReview-Occurrences'] = String(results.needsReview ? results.needsReview.totalItems : 0);
       tags['Pages-Scanned-Count']          = '1';
 
+      // Strip query string and fragment so tokens / session IDs / PII
+      // embedded in URL params never leave the browser. Only origin +
+      // pathname is sent as entryUrl.
+      var _oobeeSafeEntryUrl;
+      try {
+        _oobeeSafeEntryUrl = window.location.origin + window.location.pathname;
+      } catch (e) {
+        _oobeeSafeEntryUrl = '';
+      }
+
       // ── Capture event ───────────────────────────────────────────────────
       Sentry.captureEvent({
         message: 'Accessibility Scan Page',
@@ -35155,7 +35188,7 @@
           event_type: 'accessibility_scan',
           scanType:   'browser',
           browser:    'browser',
-          entryUrl:   window.location.href,
+          entryUrl:   _oobeeSafeEntryUrl,
         }),
         extra: {
           wcagBreakdown: wcagCriteriaBreakdown,
