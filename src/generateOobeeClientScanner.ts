@@ -12,8 +12,11 @@
  * Default output: ./oobee-client-scanner.js (relative to cwd)
  *
  * Environment variables read at generation time:
- *   OOBEE_SENTRY_DSN  — Sentry DSN to embed in the bundle (falls back to the
- *                        default DSN in constants.ts if not set)
+ *   OOBEE_CLIENT_SENTRY_DSN — Sentry DSN to embed in the client bundle (falls
+ *                              back to clientSentryConfig.dsn in constants.ts
+ *                              if not set). Kept separate from the Node-side
+ *                              OOBEE_SENTRY_DSN so the two telemetry streams
+ *                              can route to different Sentry projects.
  *
  * Then in your HTML:
  *   <script src="oobee-client-scanner.js"></script>
@@ -42,7 +45,7 @@ import {
   a11yRuleShortDescriptionMap,
   a11yRuleLongDescriptionMap,
   a11yRuleStepByStepGuide,
-  sentryConfig,
+  clientSentryConfig,
   wcagCriteriaLabels,
   formatWcagId,
 } from './constants/constants.js';
@@ -56,7 +59,7 @@ const _dirname  = path.dirname(_filename);
 // ---------------------------------------------------------------------------
 // Sentry config — DSN is read from process.env at generation time
 // ---------------------------------------------------------------------------
-const SENTRY_DSN: string     = sentryConfig.dsn;               // already resolves OOBEE_SENTRY_DSN || default
+const SENTRY_DSN: string     = clientSentryConfig.dsn;         // resolves OOBEE_CLIENT_SENTRY_DSN || default
 const APP_VERSION: string    = getVersion();
 const SENTRY_NODE_VERSION: string = (() => {
   try {
@@ -622,7 +625,7 @@ function generateClientBundle(sentrySdkSri: string | null): string {
  *
  * Embedded at generation time:
  *   App version : ${APP_VERSION}
- *   Sentry DSN  : (from OOBEE_SENTRY_DSN env var or constants.ts default)
+ *   Sentry DSN  : (from OOBEE_CLIENT_SENTRY_DSN env var or constants.ts default)
  *   Sentry SDK  : @sentry/browser ${SENTRY_NODE_VERSION} (loaded from CDN at runtime)
  *
  * Usage:
