@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/node';
-import { sentryConfig, setSentryUser } from '../constants/constants.js';
+import { sentryConfig, setSentryUser, INSPECT_PRESET_SCAN_PRODUCT } from '../constants/constants.js';
 import { categorizeWcagCriteria, getUserDataTxt, getWcagCriteriaMap } from '../utils.js';
+import { resolveInspectPresetScanEnabled } from '../inspectPresetScan.js';
 import type { AllIssues } from './types.js';
 
 // Format WCAG tag in requested format: wcag111a_Occurrences
@@ -46,7 +47,9 @@ const sendWcagBreakdownToSentry = async (
 
     // Tag app version
     tags.version = appVersion;
-    const scanProduct = scanInfo.scanSource?.trim() || process.env.OOBEE_SCAN_PRODUCT;
+    const scanProduct = resolveInspectPresetScanEnabled()
+      ? INSPECT_PRESET_SCAN_PRODUCT
+      : scanInfo.scanSource?.trim() || process.env.OOBEE_SCAN_PRODUCT;
 
     // Get dynamic WCAG criteria map once
     const wcagCriteriaMap = await getWcagCriteriaMap();
