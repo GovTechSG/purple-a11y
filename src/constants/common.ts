@@ -2310,7 +2310,11 @@ export const submitForm = async (
       params.set(formDataFields.redirectUrlField, String(scannedUrl ?? ''));
     }
 
-    await axios.get(`${formDataFields.formUrl}?${params.toString()}`, { timeout: 2000 });
+    // Submit as a POST body rather than a GET query string so that PII
+    // (name, email) and scan-result content are not recorded in the
+    // receiving server's access logs, intermediary/proxy logs, or
+    // referrer/history mechanisms (asgard-0013).
+    await axios.post(formDataFields.formUrl, params, { timeout: 2000 });
   } catch (error) {
     // Never rethrow. Previously a timeout here would launch a second browser to
     // retry the request, which could throw "Executable doesn't exist" on
