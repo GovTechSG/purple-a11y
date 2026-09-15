@@ -195,8 +195,12 @@ const crawlSitemap = async ({
   // 403 rate-limit retry, and enqueueLinks for intelligent sitemap discovery.
   const { requestQueue } = await createCrawleeSubFolders(randomToken, requestQueueName);
 
+  // Shared with handlePdfDownload so PDFs stream through the same client the crawler uses.
+  const httpClient = new crawlee.GotScrapingHttpClient();
+
   const crawler = register(
     new crawlee.PlaywrightCrawler({
+      httpClient,
       launchContext: {
         launcher: constants.launcher,
         launchOptions: getPlaywrightLaunchOptions(browser),
@@ -309,7 +313,7 @@ const crawlSitemap = async ({
         }
       },
       requestHandlerTimeoutSecs: 90,
-      requestHandler: async ({ page, request, response, sendRequest, enqueueLinks }) => {
+      requestHandler: async ({ page, request, response, enqueueLinks }) => {
         // Log documents that are not supported
         if (request.userData?.isNotSupportedDocument) {
           guiInfoLog(guiInfoStatusTypes.SKIPPED, {
@@ -374,7 +378,7 @@ const crawlSitemap = async ({
                 randomToken,
                 pdfDownloads,
                 request,
-                sendRequest,
+                httpClient,
                 urlsCrawled,
               );
 

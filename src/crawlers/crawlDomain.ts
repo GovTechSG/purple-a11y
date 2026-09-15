@@ -438,8 +438,12 @@ const crawlDomain = async ({
     );
   }
 
+  // Shared with handlePdfDownload so PDFs stream through the same client the crawler uses.
+  const httpClient = new crawlee.GotScrapingHttpClient();
+
   const crawler = register(
     new crawlee.PlaywrightCrawler({
+      httpClient,
       launchContext: {
         launcher: constants.launcher,
         launchOptions: getPlaywrightLaunchOptions(browser),
@@ -579,7 +583,6 @@ const crawlDomain = async ({
         request,
         response,
         crawler: activeCrawler,
-        sendRequest,
         enqueueLinks,
       }) => {
         const browserContext: BrowserContext = page.context();
@@ -669,7 +672,7 @@ const crawlDomain = async ({
               randomToken,
               pdfDownloads,
               request,
-              sendRequest,
+              httpClient,
               urlsCrawled,
             );
 

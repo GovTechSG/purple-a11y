@@ -4,10 +4,13 @@ import { randomUUID } from 'crypto';
 import { createRequire } from 'module';
 import os from 'os';
 import path from 'path';
+import { pipeline } from 'stream/promises';
+import type { FileHandle } from 'fs/promises';
 import { ensureDirSync, ReadStream } from 'fs-extra';
 import { Request } from 'crawlee';
+import type { BaseHttpClient, StreamingHttpResponse } from 'crawlee';
 import { getPageFromContext, getPdfScreenshots } from '../screenshotFunc/pdfScreenshotFunc.js';
-import { isFilePath } from '../constants/common.js';
+import type { PageInfo } from '../mergeAxeResults.js';
 import { consoleLogger, guiInfoLog, silentLogger } from '../logs.js';
 import constants, {
   getExecutablePath,
@@ -240,81 +243,167 @@ const getVeraExecutable = () => {
   return veraPdfExe;
 };
 
-const isPDF = (buffer: Buffer) => {
-  return (
-    Buffer.isBuffer(buffer) && buffer.lastIndexOf('%PDF-') === 0 && buffer.lastIndexOf('%%EOF') > -1
-  );
+const PDF_MAGIC = Buffer.from('%PDF-');
+
+// PDF 1.7 §7.5.5 requires %%EOF to be the last line of the file; allow for trailing
+// whitespace and the byte-offset slack that real-world writers introduce.
+const PDF_EOF_SEARCH_WINDOW = 1024;
+
+// Checked against the file on disk rather than an in-memory buffer so that arbitrarily
+// large PDFs never have to be fully resident.
+const isPdfFile = async (filePath: string): Promise<boolean> => {
+  let handle: FileHandle | undefined;
+  try {
+    handle = await fs.promises.open(filePath, 'r');
+    const { size } = await handle.stat();
+    if (size < PDF_MAGIC.length) return false;
+
+    const head = Buffer.alloc(PDF_MAGIC.length);
+    await handle.read(head, 0, head.length, 0);
+    if (!head.equals(PDF_MAGIC)) return false;
+
+    const tailLength = Math.min(PDF_EOF_SEARCH_WINDOW, size);
+    const tail = Buffer.alloc(tailLength);
+    await handle.read(tail, 0, tailLength, size - tailLength);
+    return tail.includes('%%EOF');
+  } catch (e) {
+    consoleLogger.error(`Unable to verify PDF at ${filePath}: ${e}`);
+    return false;
+  } finally {
+    await handle?.close();
+  }
+};
+
+// Downloads are kicked off from the request handler and only awaited once the crawl has
+// finished, so Crawlee's autoscaled pool does not throttle them. Without a cap, a
+// PDF-heavy site opens one socket per PDF link found. Shared across crawlers so an
+// intelligent scan running crawlSitemap then crawlDomain stays under one budget.
+const MAX_CONCURRENT_PDF_DOWNLOADS = 4;
+
+let inFlightPdfDownloads = 0;
+const waitingPdfDownloads: (() => void)[] = [];
+
+const acquirePdfDownloadSlot = (): Promise<void> => {
+  if (inFlightPdfDownloads < MAX_CONCURRENT_PDF_DOWNLOADS) {
+    inFlightPdfDownloads += 1;
+    return Promise.resolve();
+  }
+  return new Promise<void>(resolve => waitingPdfDownloads.push(resolve));
+};
+
+const releasePdfDownloadSlot = () => {
+  const next = waitingPdfDownloads.shift();
+  if (next) {
+    // Hand the slot straight over so the in-flight count never dips and lets an
+    // unrelated caller slip past the cap.
+    next();
+    return;
+  }
+  inFlightPdfDownloads -= 1;
 };
 
 export const handlePdfDownload = (
   randomToken: string,
   pdfDownloads: Promise<void>[],
   request: Request,
-  sendRequest: any,
+  httpClient: BaseHttpClient,
   urlsCrawled: UrlsCrawled,
 ): { pdfFileName: string; url: string } => {
   const pdfFileName = randomUUID();
   const { url } = request;
-  const pageTitle = decodeURI(request.url).split('/').pop();
+  const pageTitle = decodeURI(request.url).split('/').pop() || request.url;
+  const pdfFilePath = `${getPdfStoragePath(randomToken)}/${pdfFileName}.pdf`;
+
+  const recordNotScanned = (bucket: PageInfo[], metadata: string, httpStatusCode: number) => {
+    guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+      numScanned: urlsCrawled.scanned.length,
+      urlScanned: request.url,
+    });
+    bucket.push({
+      url: request.url,
+      pageTitle: request.url,
+      actualUrl: request.url, // because about:blank is not useful
+      metadata,
+      httpStatusCode,
+    });
+  };
 
   pdfDownloads.push(
-    new Promise<void>(async resolve => {
-      let buf: Buffer;
+    (async () => {
+      // Only http(s) is fetched here. A file:// PDF is already on disk — crawlLocalFile
+      // copies it into the scan folder directly — and got has no file:// handler, so a
+      // local-sitemap entry reaching this point would otherwise throw.
+      let protocol = '';
+      try {
+        protocol = new URL(url).protocol;
+      } catch {
+        protocol = '';
+      }
+      if (protocol !== 'http:' && protocol !== 'https:') {
+        consoleLogger.info(`Skipping PDF with non-http(s) scheme: ${url}`);
+        recordNotScanned(urlsCrawled.userExcluded, STATUS_CODE_METADATA[1], 1);
+        return;
+      }
 
-        // Download from remote URL
-        const response = await sendRequest({ responseType: 'buffer' });
-        if (response.statusCode !== 200) {
-            guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-              numScanned: urlsCrawled.scanned.length,
-              urlScanned: request.url,
-            });
-            urlsCrawled.userExcluded.push({
-              url: request.url,
-              pageTitle: request.url,
-              actualUrl: request.url, // because about:blank is not useful
-              metadata: STATUS_CODE_METADATA[response.statusCode] || STATUS_CODE_METADATA[1],
-              httpStatusCode: 0,
-            });
-
-          resolve();
+      await acquirePdfDownloadSlot();
+      try {
+        let response: StreamingHttpResponse;
+        try {
+          response = await httpClient.stream({ url, method: 'GET', headers: request.headers });
+        } catch (e) {
+          consoleLogger.error(`Unable to request PDF at ${url}: ${e}`);
+          recordNotScanned(urlsCrawled.error, STATUS_CODE_METADATA[2], 2);
           return;
         }
 
-        buf = Buffer.isBuffer(response) ? response : response.body;
+        if (response.statusCode !== 200) {
+          response.stream.destroy();
+          recordNotScanned(
+            urlsCrawled.userExcluded,
+            STATUS_CODE_METADATA[response.statusCode] || STATUS_CODE_METADATA[1],
+            0,
+          );
+          return;
+        }
 
-        const downloadFile = fs.createWriteStream(`${getPdfStoragePath(randomToken)}/${pdfFileName}.pdf`, {
-          flags: 'w',
+        try {
+          await pipeline(response.stream, fs.createWriteStream(pdfFilePath, { flags: 'w' }));
+        } catch (e) {
+          consoleLogger.error(`Unable to save PDF at ${url}: ${e}`);
+          await fs.promises.rm(pdfFilePath, { force: true });
+          recordNotScanned(urlsCrawled.error, STATUS_CODE_METADATA[2], 2);
+          return;
+        }
+      } finally {
+        releasePdfDownloadSlot();
+      }
+
+      if (await isPdfFile(pdfFilePath)) {
+        guiInfoLog(guiInfoStatusTypes.SCANNED, {
+          numScanned: urlsCrawled.scanned.length,
+          urlScanned: request.url,
         });
-        downloadFile.write(buf, 'binary');
-        downloadFile.end();
-
-        downloadFile.on('finish', () => {
-          if (isPDF(buf)) {
-            guiInfoLog(guiInfoStatusTypes.SCANNED, {
-              numScanned: urlsCrawled.scanned.length,
-              urlScanned: request.url,
-            });
-            urlsCrawled.scanned.push({
-              url: request.url,
-              pageTitle,
-              actualUrl: url,
-            });
-          } else {
-            guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-              numScanned: urlsCrawled.scanned.length,
-              urlScanned: request.url,
-            });
-            urlsCrawled.invalid.push({
-              url: request.url,
-              pageTitle: url,
-              actualUrl: url,
-              metadata: STATUS_CODE_METADATA[1],
-            });
-          }
-          resolve();
+        urlsCrawled.scanned.push({
+          url: request.url,
+          pageTitle,
+          actualUrl: url,
         });
+        return;
+      }
 
-    }),
+      // Keep non-PDF payloads out of the folder veraPDF is pointed at.
+      await fs.promises.rm(pdfFilePath, { force: true });
+      guiInfoLog(guiInfoStatusTypes.SKIPPED, {
+        numScanned: urlsCrawled.scanned.length,
+        urlScanned: request.url,
+      });
+      urlsCrawled.invalid.push({
+        url: request.url,
+        pageTitle: url,
+        actualUrl: url,
+        metadata: STATUS_CODE_METADATA[1],
+      });
+    })(),
   );
 
   return { pdfFileName, url };
