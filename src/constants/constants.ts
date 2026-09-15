@@ -330,7 +330,7 @@ export enum FileTypes {
 }
 
 // Sentry scanProduct tag value when OOBEE_INSPECT_PRESET_SCAN is enabled
-export const INSPECT_PRESET_SCAN_PRODUCT = 'inspect_preset';
+export const INSPECT_PRESET_SCAN_PRODUCT = 'Inspect Preset';
 
 export function getEnumKey<E extends Record<string, string>>(
   enumObj: E,
