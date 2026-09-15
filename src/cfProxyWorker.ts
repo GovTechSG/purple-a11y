@@ -198,6 +198,7 @@ const INTERNAL_IP_RANGES: string[] = [
   '169.254.0.0/16',     // link-local + AWS/GCP/Azure metadata (169.254.169.254)
   '100.64.0.0/10',      // CGNAT
   '0.0.0.0/8',          // this-network
+  '192.0.0.0/24',       // IETF protocol assignments + Oracle Cloud legacy metadata (192.0.0.192)
   '::/128',             // IPv6 unspecified — routes to loopback on common OS stacks (asgard-0011)
   '::1/128',            // IPv6 loopback
   'fc00::/7',           // IPv6 ULA
@@ -206,6 +207,7 @@ const INTERNAL_IP_RANGES: string[] = [
   '::ffff:10.0.0.0/104',
   '::ffff:169.254.0.0/112',
   '::ffff:192.168.0.0/112',
+  '::ffff:192.0.0.0/120', // IPv4-mapped Oracle Cloud legacy metadata block
 ];
 
 // asgard-0011: some IPv6 encodings embed an IPv4 destination that our IPv4
