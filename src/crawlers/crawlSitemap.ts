@@ -9,6 +9,7 @@ import {
   runAxeScript,
   isUrlPdf,
   splitAuthHeaders,
+  addAuthRouteHandler,
 } from './commonCrawlerFunc.js';
 
 import constants, {
@@ -155,6 +156,15 @@ const crawlSitemap = async ({
     userUrl || sitemapUrl,
   );
 
+  // Opt-in: origin-scope operator-supplied non-Authorization headers (Cookie,
+  // X-Api-Key, ...) so they only reach the entry origin instead of every
+  // origin the scanned page contacts (asgard-0004). Off by default so scans
+  // that rely on these headers being sent context-wide are unchanged.
+  const scopeHeadersToOrigin = /^(1|true|yes)$/i.test(
+    process.env.OOBEE_SCOPE_HEADERS_TO_ORIGIN ?? '',
+  );
+  const headerScopedContexts = new WeakSet<object>();
+
   // Never send caller-supplied credentials to a server whose certificate
   // couldn't be validated (asgard-0006). Matches the runCustom /
   // launchPersistentSafeContext safe pattern: hold TLS validation ON whenever
@@ -219,7 +229,7 @@ const crawlSitemap = async ({
               ...playwrightDeviceDetailsObject,
               ...(process.env.OOBEE_USER_AGENT && { userAgent: process.env.OOBEE_USER_AGENT }),
               ...(process.env.OOBEE_DISABLE_BROWSER_DOWNLOAD && { acceptDownloads: false }),
-              ...(nonAuthHeaders && { extraHTTPHeaders: nonAuthHeaders }),
+              ...(!scopeHeadersToOrigin && nonAuthHeaders && { extraHTTPHeaders: nonAuthHeaders }),
               ...(httpCredentials && { httpCredentials }),
             };
           },
@@ -282,6 +292,16 @@ const crawlSitemap = async ({
       ],
       preNavigationHooks: [
         ...preNavigationHooks(extraHTTPHeaders, userUrl || sitemapUrl),
+        // asgard-0004: when origin-scoping is enabled, send non-Authorization
+        // operator headers only to the entry origin via a same-origin route
+        // handler instead of the context-wide extraHTTPHeaders above.
+        async ({ page }) => {
+          if (!scopeHeadersToOrigin || !nonAuthHeaders) return;
+          const ctx = page.context();
+          if (headerScopedContexts.has(ctx)) return;
+          headerScopedContexts.add(ctx);
+          await addAuthRouteHandler(ctx, userUrl || sitemapUrl, null, nonAuthHeaders);
+        },
         async ({ request, page }, gotoOptions) => {
           const url = request.url.toLowerCase();
 
