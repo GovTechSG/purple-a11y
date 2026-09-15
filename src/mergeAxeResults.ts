@@ -36,6 +36,7 @@ import { buildHtmlGroups, convertItemsToReferences } from './mergeAxeResults/ite
 import {
   formatInspectPresetScanDate,
   resolveInspectPresetScanEnabled,
+  resolveInspectPresetMetadata,
 } from './inspectPresetScan.js';
 import { ItemsStore } from './mergeAxeResults/itemsStore.js';
 import {
@@ -820,6 +821,9 @@ const generateArtifacts = async (
   const intermediateDatasetsPath = `${storagePath}/datasets/crawlee`;
   const oobeeAppVersion = getVersion();
   const isCustomFlow = scanType === ScannerTypes.CUSTOM;
+  const isInspectPresetScan = resolveInspectPresetScanEnabled();
+  const inspectPresetMetadata = resolveInspectPresetMetadata();
+  const resolvedUrlScanned = inspectPresetMetadata?.siteUrl || urlScanned;
 
   const allIssues: AllIssues = {
     storagePath,
@@ -842,7 +846,7 @@ const generateArtifacts = async (
     })(),
     startTime: scanDetails.startTime ? scanDetails.startTime : new Date(),
     endTime: scanDetails.endTime ? scanDetails.endTime : new Date(),
-    urlScanned,
+    urlScanned: resolvedUrlScanned,
     scanType,
     totalLinksFetchedFromSitemaps: constants.sitemapFetchedLinks?.totalLinksFetchedFromSitemaps ?? 0,
     fetchedSitemaps: constants.sitemapFetchedLinks?.fetchedSitemaps ?? [],
@@ -860,7 +864,7 @@ const generateArtifacts = async (
     topTenIssues: [],
     wcagViolations: [],
     customFlowLabel,
-    isInspectPresetScan: resolveInspectPresetScanEnabled(),
+    isInspectPresetScan,
     inspectPresetScanDate: formatInspectPresetScanDate(scanDetails.endTime),
     oobeeAppVersion,
     items: {
