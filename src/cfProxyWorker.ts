@@ -225,7 +225,13 @@ function isInternalIp(ip: string): boolean {
     const isNat64 =
       bytes[0] === 0x00 && bytes[1] === 0x64 && bytes[2] === 0xff && bytes[3] === 0x9b &&
       bytes.slice(4, 12).every((b) => b === 0);
-    if (isMapped || isNat64) {
+    // asgard-0010: deprecated IPv4-compatible IPv6 (::a.b.c.d, RFC 4291
+    // §2.5.5.1): high 96 bits zero but *without* the ::ffff mapped-address
+    // marker in bytes[10..11]. Still normalise the embedded IPv4 and refuse
+    // if it lands in an internal range, closing the allowlist gap on
+    // network stacks that continue to route these legacy addresses.
+    const isCompat = bytes.slice(0, 12).every((b) => b === 0);
+    if (isMapped || isNat64 || isCompat) {
       const embedded = bytes.slice(12).join('.');
       if (ipInRanges(embedded, INTERNAL_IP_RANGES)) return true;
     }
