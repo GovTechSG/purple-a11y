@@ -1074,7 +1074,7 @@ const ipv4InRange = (ip: string, cidr: string): boolean => {
 };
 const isInternalIpv4 = (ip: string): boolean =>
   INTERNAL_ADDR_RANGES.some(r => ipv4InRange(ip, r));
-async function isInternalOrLoopbackUrl(candidate: string): Promise<boolean> {
+export async function isInternalOrLoopbackUrl(candidate: string): Promise<boolean> {
   let host: string;
   try {
     host = new URL(candidate).hostname;
