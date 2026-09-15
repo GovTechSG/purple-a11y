@@ -24,6 +24,13 @@ import { createReadStream, createWriteStream } from 'fs';
 export const isTelemetryDisabled = (): boolean =>
   /^(1|true|yes)$/i.test(process.env.OOBEE_DISABLE_TELEMETRY ?? '');
 
+// Explicit opt-in required before any personally-identifiable information
+// (email, name, persistent userId) is attached to telemetry events. This is
+// intentionally opt-in (default false) so that a default installation never
+// ships PII off-device, even when telemetry itself is enabled.
+export const isTelemetryPiiConsentGiven = (): boolean =>
+  /^(1|true|yes)$/i.test(process.env.OOBEE_TELEMETRY_ALLOW_PII ?? '');
+
 export const getVersion = () => {
   const loadJSON = (filePath: string): { version: string } =>
     JSON.parse(fs.readFileSync(new URL(filePath, import.meta.url)).toString());
