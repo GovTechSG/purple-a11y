@@ -584,6 +584,7 @@ const crawlDomain = async ({
         response,
         crawler: activeCrawler,
         enqueueLinks,
+        session,
       }) => {
         const browserContext: BrowserContext = page.context();
         try {
@@ -674,6 +675,7 @@ const crawlDomain = async ({
               request,
               httpClient,
               urlsCrawled,
+              session,
             );
 
             uuidToPdfMapping[pdfFileName] = downloadedPdfUrl;

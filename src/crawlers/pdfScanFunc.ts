@@ -8,7 +8,7 @@ import { pipeline } from 'stream/promises';
 import type { FileHandle } from 'fs/promises';
 import { ensureDirSync, ReadStream } from 'fs-extra';
 import { Request } from 'crawlee';
-import type { BaseHttpClient, StreamingHttpResponse } from 'crawlee';
+import type { BaseHttpClient, Session, StreamingHttpResponse } from 'crawlee';
 import { getPageFromContext, getPdfScreenshots } from '../screenshotFunc/pdfScreenshotFunc.js';
 import type { PageInfo } from '../mergeAxeResults.js';
 import { consoleLogger, guiInfoLog, silentLogger } from '../logs.js';
@@ -308,6 +308,7 @@ export const handlePdfDownload = (
   request: Request,
   httpClient: BaseHttpClient,
   urlsCrawled: UrlsCrawled,
+  session?: Session,
 ): { pdfFileName: string; url: string } => {
   const pdfFileName = randomUUID();
   const { url } = request;
@@ -349,7 +350,22 @@ export const handlePdfDownload = (
       try {
         let response: StreamingHttpResponse;
         try {
-          response = await httpClient.stream({ url, method: 'GET', headers: request.headers });
+          // This fetch bypasses the browser, so it inherits none of the cookies the
+          // crawl has already earned (login, consent gate, WAF clearance). Crawlee's
+          // `sendRequest` used to inject the session cookie jar for us, but
+          // `GotScrapingHttpClient.stream()` discards `cookieJar` outright — the
+          // cookies have to travel as a plain header instead. Without this, PDFs on
+          // an authenticated or challenge-gated origin come back 403 and get filed
+          // as skipped rather than scanned.
+          const cookieHeader = session?.getCookieString(url);
+          response = await httpClient.stream({
+            url,
+            method: 'GET',
+            headers: { ...request.headers, ...(cookieHeader ? { Cookie: cookieHeader } : {}) },
+            // Keeps got-scraping's generated TLS/header fingerprint stable per
+            // session, matching what the browser already presented to this origin.
+            sessionToken: session,
+          });
         } catch (e) {
           consoleLogger.error(`Unable to request PDF at ${url}: ${e}`);
           recordNotScanned(urlsCrawled.error, STATUS_CODE_METADATA[2], 2);

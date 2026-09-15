@@ -333,7 +333,7 @@ const crawlSitemap = async ({
         }
       },
       requestHandlerTimeoutSecs: 90,
-      requestHandler: async ({ page, request, response, enqueueLinks }) => {
+      requestHandler: async ({ page, request, response, enqueueLinks, session }) => {
         // Log documents that are not supported
         if (request.userData?.isNotSupportedDocument) {
           guiInfoLog(guiInfoStatusTypes.SKIPPED, {
@@ -400,6 +400,7 @@ const crawlSitemap = async ({
                 request,
                 httpClient,
                 urlsCrawled,
+                session,
               );
 
               uuidToPdfMapping[pdfFileName] = url;
