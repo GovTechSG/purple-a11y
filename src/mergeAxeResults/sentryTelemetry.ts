@@ -1,7 +1,13 @@
 import * as Sentry from '@sentry/node';
 import { sentryConfig, setSentryUser, INSPECT_PRESET_SCAN_PRODUCT } from '../constants/constants.js';
-import { categorizeWcagCriteria, getUserDataTxt, getWcagCriteriaMap } from '../utils.js';
+import {
+  categorizeWcagCriteria,
+  getUserDataTxt,
+  getWcagCriteriaMap,
+  isTelemetryDisabled,
+} from '../utils.js';
 import { resolveInspectPresetScanEnabled } from '../inspectPresetScan.js';
+import { consoleLogger } from '../logs.js';
 import type { AllIssues } from './types.js';
 
 // Format WCAG tag in requested format: wcag111a_Occurrences
@@ -32,6 +38,13 @@ const sendWcagBreakdownToSentry = async (
   allIssues?: AllIssues,
   pagesScannedCount: number = 0,
 ) => {
+  // Opt-out: OOBEE_DISABLE_TELEMETRY=1 skips Sentry telemetry entirely so
+  // PII (email, name, entry URL, userId) is never sent off-device
+  // (asgard-0007 / asgard-0008). Mirrors the opt-out honoured by submitForm.
+  if (isTelemetryDisabled()) {
+    consoleLogger.info('Skipping Sentry telemetry submission: OOBEE_DISABLE_TELEMETRY is set');
+    return;
+  }
   try {
     // Initialize Sentry
     Sentry.init(sentryConfig);

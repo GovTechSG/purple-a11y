@@ -418,6 +418,26 @@ const crawlDomain = async ({
   // won't auto-attach them after a cross-origin redirect (credential leak).
   const { nonAuthHeaders, httpCredentials } = splitAuthHeaders(extraHTTPHeaders, url);
 
+  // Never send caller-supplied credentials to a server whose certificate
+  // couldn't be validated (asgard-0004). Matches the crawlSitemap /
+  // runCustom / launchPersistentSafeContext safe pattern: hold TLS validation
+  // ON whenever credentials are attached, and require an explicit opt-in env
+  // var for credential-less scans that legitimately need to reach hosts with
+  // broken certs.
+  const hasCredentials =
+    !!httpCredentials ||
+    Object.keys(extraHTTPHeaders || {}).some(k => k.toLowerCase() === 'authorization');
+  const allowInsecureTls =
+    !hasCredentials &&
+    ['1', 'true', 'yes'].includes(
+      String(process.env.OOBEE_ALLOW_INSECURE_TLS || '').toLowerCase(),
+    );
+  if (hasCredentials) {
+    consoleLogger.info(
+      '[crawlDomain] Credentials detected — enforcing TLS certificate validation for this scan',
+    );
+  }
+
   const crawler = register(
     new crawlee.PlaywrightCrawler({
       launchContext: {
@@ -435,7 +455,7 @@ const crawlDomain = async ({
             // eslint-disable-next-line no-param-reassign
             launchContext.launchOptions = {
               ...launchContext.launchOptions,
-              ignoreHTTPSErrors: true,
+              ignoreHTTPSErrors: allowInsecureTls,
               ...playwrightDeviceDetailsObject,
               ...(process.env.OOBEE_USER_AGENT && { userAgent: process.env.OOBEE_USER_AGENT }),
               ...(process.env.OOBEE_DISABLE_BROWSER_DOWNLOAD && { acceptDownloads: false }),

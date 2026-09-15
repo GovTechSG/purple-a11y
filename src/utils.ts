@@ -18,6 +18,12 @@ import { getAxeConfiguration } from './crawlers/custom/getAxeConfiguration.js';
 import JSZip from 'jszip';
 import { createReadStream, createWriteStream } from 'fs';
 
+// Shared telemetry opt-out check: OOBEE_DISABLE_TELEMETRY=1 (or true/yes)
+// disables all telemetry paths (Google Form submission, Sentry) so that
+// PII (email, name, entry URL, userId) is never sent off-device.
+export const isTelemetryDisabled = (): boolean =>
+  /^(1|true|yes)$/i.test(process.env.OOBEE_DISABLE_TELEMETRY ?? '');
+
 export const getVersion = () => {
   const loadJSON = (filePath: string): { version: string } =>
     JSON.parse(fs.readFileSync(new URL(filePath, import.meta.url)).toString());

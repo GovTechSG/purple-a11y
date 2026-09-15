@@ -32,8 +32,14 @@ import constants, {
   getEnumKey,
 } from './constants.js';
 import { consoleLogger } from '../logs.js';
-import { isUrlPdf } from '../crawlers/commonCrawlerFunc.js';
-import { cleanUpAndExit, isFollowStrategy, randomThreeDigitNumberString, register } from '../utils.js';
+import { isUrlPdf, splitAuthHeaders, addAuthRouteHandler } from '../crawlers/commonCrawlerFunc.js';
+import {
+  cleanUpAndExit,
+  isFollowStrategy,
+  isTelemetryDisabled,
+  randomThreeDigitNumberString,
+  register,
+} from '../utils.js';
 import { Answers, Data } from '../index.js';
 import { DeviceDescriptor } from '../types/types.js';
 import { getProxyInfo, proxyInfoToResolution, ProxySettings } from '../proxyService.js';
@@ -381,26 +387,24 @@ export const checkUrlConnectivityWithBrowser = async (
   } = rawDevice;
 
   const launchOptions = getPlaywrightLaunchOptions(browserToRun);
-  
-  const { Authorization, ...nonAuthHeaders } = localHeaders || {};
-  let httpCredentials = undefined;
-  if (Authorization?.startsWith('Basic ')) {
-    const decoded = Buffer.from(Authorization.slice(6), 'base64').toString();
-    const colonIdx = decoded.indexOf(':');
-    if (colonIdx > 0) {
-      httpCredentials = { username: decoded.slice(0, colonIdx), password: decoded.slice(colonIdx + 1) };
-    }
-  }
 
-  // Never forward Basic credentials over a session that ignores TLS validation:
-  // a MITM presenting any cert would receive the decoded username/password.
-  // When creds are attached we verify TLS; scans without creds keep the
-  // legacy permissive default so self-signed / staging hosts still work.
-  const ignoreHTTPSErrors = !httpCredentials;
+  const { authHeader, nonAuthHeaders, httpCredentials } = splitAuthHeaders(localHeaders, url);
+
+  // Never send caller-supplied credentials — Basic or any other Authorization
+  // header (e.g. Bearer tokens) — over a session that ignores TLS validation:
+  // an on-path attacker could present any certificate, complete the TLS
+  // handshake, and capture the configured secret. Hold TLS validation ON
+  // whenever the context carries credentials of any kind; credential-less
+  // scans only get the permissive default if the operator explicitly opts
+  // in via OOBEE_ALLOW_INSECURE_TLS.
+  const hasCredentials = !!authHeader || !!httpCredentials;
+  const ignoreHTTPSErrors =
+    !hasCredentials &&
+    ['1', 'true', 'yes'].includes(String(process.env.OOBEE_ALLOW_INSECURE_TLS || '').toLowerCase());
 
   const contextOptions: Record<string, unknown> = {
     ...restDevice,
-    ...(Object.keys(nonAuthHeaders).length > 0 && { extraHTTPHeaders: nonAuthHeaders }),
+    ...(nonAuthHeaders && { extraHTTPHeaders: nonAuthHeaders }),
     ...(httpCredentials && { httpCredentials }),
     ignoreHTTPSErrors,
     ...(process.env.OOBEE_DISABLE_BROWSER_DOWNLOAD && { acceptDownloads: false }),
@@ -447,24 +451,11 @@ export const checkUrlConnectivityWithBrowser = async (
   }
 
   try {
-    // Only enable generic Authorization header routing interception broadly if 
-    // a non-Basic Bearer auth string is heavily relied upon, thereby bypassing 
+    // Only enable generic Authorization header routing interception broadly if
+    // a non-Basic Bearer auth string is heavily relied upon, thereby bypassing
     // performance warnings inside the check checkUrl phase for typical public scans
-    if (Object.keys(localHeaders).length > 0) {
-      if (Authorization && !httpCredentials) {
-        const entryOrigin = new URL(url).origin;
-        await browserContext.route('**/*', async (route: any, request: any) => {
-          try {
-            if (new URL(request.url()).origin === entryOrigin) {
-              await route.continue({ headers: { ...request.headers(), Authorization } });
-            } else {
-              await route.continue();
-            }
-          } catch {
-            await route.continue();
-          }
-        });
-      }
+    if (authHeader && !httpCredentials) {
+      await addAuthRouteHandler(browserContext, url, authHeader);
     }
 
     const page = await browserContext.newPage();
@@ -1269,7 +1260,21 @@ export const getLinksFromSitemap = async (
         return;
       }
     } else if (isValidHttpUrl(url)) {
-      // Do nothing, url is valid
+      // asgard-0009: every remote sitemap URL reaches page.goto() below,
+      // including the entry sitemap URL itself (e.g. one taken verbatim from
+      // a hostile target's robots.txt Sitemap: directive). Apply the same
+      // crawl-scope and internal/loopback checks used for recursively-
+      // discovered child sitemaps here so the entry request is covered too —
+      // otherwise a hostile robots.txt could point the scanner's browser at
+      // internal or link-local/cloud-metadata endpoints (blind SSRF).
+      if (userUrl && !isFollowStrategy(url, userUrl, strategy)) {
+        consoleLogger.info(`Skipping off-strategy sitemap: ${url}`);
+        return;
+      }
+      if (await isInternalOrLoopbackUrl(url)) {
+        consoleLogger.warn(`Refusing to fetch sitemap targeting internal address: ${url}`);
+        return;
+      }
     } else {
       printMessage([`Invalid Url/Filepath: ${url}`], messageOptions);
       return;
@@ -2275,9 +2280,10 @@ export const submitForm = async (
   // network call (e.g. encodeURIComponent raises URIError on lone surrogates,
   // which can appear in scanned page content).
   // Opt-out: OOBEE_DISABLE_TELEMETRY=1 skips this submission entirely so
-  // PII (email, name, entry URL) is never sent off-device.
-  const telemetryOptOut = /^(1|true|yes)$/i.test(process.env.OOBEE_DISABLE_TELEMETRY ?? '');
-  if (telemetryOptOut) {
+  // PII (email, name, entry URL) is never sent off-device. Shared with the
+  // Sentry telemetry path via isTelemetryDisabled() so a single env var
+  // covers both paths (asgard-0008).
+  if (isTelemetryDisabled()) {
     consoleLogger.info('Skipping telemetry submission: OOBEE_DISABLE_TELEMETRY is set');
     return;
   }
