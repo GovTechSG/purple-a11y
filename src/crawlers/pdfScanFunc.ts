@@ -5,6 +5,7 @@ import { createRequire } from 'module';
 import os from 'os';
 import path from 'path';
 import { pipeline } from 'stream/promises';
+import { Transform } from 'stream';
 import type { FileHandle } from 'fs/promises';
 import { ensureDirSync, ReadStream } from 'fs-extra';
 import { Request } from 'crawlee';
@@ -280,6 +281,14 @@ const isPdfFile = async (filePath: string): Promise<boolean> => {
 // intelligent scan running crawlSitemap then crawlDomain stays under one budget.
 const MAX_CONCURRENT_PDF_DOWNLOADS = 4;
 
+// Hard cap on a single PDF download (asgard-0008). Streaming keeps memory flat
+// but leaves disk unbounded without this — enforced via a Content-Length
+// pre-check plus a running byte counter that aborts the stream.
+const MAX_PDF_DOWNLOAD_BYTES = (() => {
+  const v = parseInt(process.env.OOBEE_PDF_MAX_DOWNLOAD_BYTES ?? '', 10);
+  return Number.isFinite(v) && v > 0 ? v : 100 * 1024 * 1024; // default 100 MB
+})();
+
 let inFlightPdfDownloads = 0;
 const waitingPdfDownloads: (() => void)[] = [];
 
@@ -342,7 +351,7 @@ export const handlePdfDownload = (
       }
       if (protocol !== 'http:' && protocol !== 'https:') {
         consoleLogger.info(`Skipping PDF with non-http(s) scheme: ${url}`);
-        recordNotScanned(urlsCrawled.userExcluded, STATUS_CODE_METADATA[1], 1);
+        recordNotScanned(urlsCrawled.userExcluded, STATUS_CODE_METADATA[1], 0);
         return;
       }
 
@@ -368,7 +377,7 @@ export const handlePdfDownload = (
           });
         } catch (e) {
           consoleLogger.error(`Unable to request PDF at ${url}: ${e}`);
-          recordNotScanned(urlsCrawled.error, STATUS_CODE_METADATA[2], 2);
+          recordNotScanned(urlsCrawled.error, STATUS_CODE_METADATA[2], 0);
           return;
         }
 
@@ -382,12 +391,33 @@ export const handlePdfDownload = (
           return;
         }
 
+        // Reject before streaming when the server advertises an oversized body.
+        const declaredLength = Number(response.headers?.['content-length']);
+        if (Number.isFinite(declaredLength) && declaredLength > MAX_PDF_DOWNLOAD_BYTES) {
+          response.stream.destroy();
+          recordNotScanned(urlsCrawled.userExcluded, STATUS_CODE_METADATA[1], 0);
+          return;
+        }
+
         try {
-          await pipeline(response.stream, fs.createWriteStream(pdfFilePath, { flags: 'w' }));
+          // Abort mid-stream once the running byte count exceeds the cap, so a
+          // server that lies about (or omits) Content-Length still can't fill disk.
+          let downloadedBytes = 0;
+          const enforceSizeCap = new Transform({
+            transform(chunk, _encoding, callback) {
+              downloadedBytes += chunk.length;
+              if (downloadedBytes > MAX_PDF_DOWNLOAD_BYTES) {
+                callback(new Error(`PDF at ${url} exceeds ${MAX_PDF_DOWNLOAD_BYTES}-byte download cap`));
+                return;
+              }
+              callback(null, chunk);
+            },
+          });
+          await pipeline(response.stream, enforceSizeCap, fs.createWriteStream(pdfFilePath, { flags: 'w' }));
         } catch (e) {
           consoleLogger.error(`Unable to save PDF at ${url}: ${e}`);
           await fs.promises.rm(pdfFilePath, { force: true });
-          recordNotScanned(urlsCrawled.error, STATUS_CODE_METADATA[2], 2);
+          recordNotScanned(urlsCrawled.error, STATUS_CODE_METADATA[2], 0);
           return;
         }
       } finally {
