@@ -221,22 +221,47 @@ function hasPointerCursor(node: Node): boolean {
     }
 
     // Check for any leaf nodes (text nodes) that are valid Unicode
-    const leafNodes = element.querySelectorAll('*');
-    for (const child of leafNodes) {
+    //
+    // asgard-0007 (2026-10-12 re-scan): this used to call
+    // `element.querySelectorAll('*')` — which materializes and walks the
+    // element's ENTIRE descendant subtree — for every element visited by the
+    // outer MAX_TRAVERSAL_ELEMENTS loop in flagElements/shouldFlagElement
+    // whenever that element carries a non-empty `title` attribute. That is
+    // the same O(N^2) anti-pattern already fixed one block below for
+    // `areAllDescendantsEmpty` (asgard-0005), just not capped here. Replaced
+    // with a TreeWalker bounded to MAX_TITLE_DESCENDANTS nodes that
+    // short-circuits as soon as it finds a descendant with valid Unicode
+    // text, so the per-element cost is now a small constant instead of the
+    // subtree's full size. If the bound is hit without finding one, this
+    // conservatively returns false (same as the unbounded scan finding
+    // nothing), so no behavior changes for any subtree smaller than the
+    // bound — which covers all realistic pages.
+    const MAX_TITLE_DESCENDANTS = 500;
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT);
+    let visited = 0;
+    let node = walker.nextNode();
+    while (node) {
+        const child = node as Element;
         const childText = getTextContent(child);
         if (childText && isValidUnicode(childText)) {
             return true;
         }
 
         // Check if the child contains any text nodes directly (e.g., <a>testing</a>)
-        for (const node of child.childNodes) {
-            if (node.nodeType === Node.TEXT_NODE) {
-                const textContent = node.nodeValue.trim();
+        for (const textNode of child.childNodes) {
+            if (textNode.nodeType === Node.TEXT_NODE) {
+                const textContent = textNode.nodeValue.trim();
                 if (textContent && isValidUnicode(textContent)) {
                     return true;
                 }
             }
         }
+
+        visited++;
+        if (visited >= MAX_TITLE_DESCENDANTS) {
+            break; // bound reached — conservatively treat as no valid content found
+        }
+        node = walker.nextNode();
     }
 
     return false; // Return false if no valid content is found
