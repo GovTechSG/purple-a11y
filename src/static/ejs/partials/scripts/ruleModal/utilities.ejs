@@ -316,18 +316,60 @@
     // pattern only matched literal `//` or `http(s)://`, so any backslash
     // variant sailed through unsanitized.
     //
-    // Check the RAW value's backslash-normalised form first: decodeCssEscapes
-    // treats any `\X` as a generic CSS escape and strips the backslash
-    // (`\.(.)` -> `$1`), so running it before backslash->slash substitution
-    // destroys exactly the backslashes we need to detect. Only fall back to
-    // the CSS-hex-escape-decoded check (asgard-0009, e.g. `\68ttps://`) for
-    // values that aren't already caught by the raw check.
+    // asgard-0007 (2026-10-12 re-scan, rescan-5): the regex approach above was
+    // still incomplete even after the backslash fix — it required a literal
+    // `//` somewhere in the value, so single-slash/no-slash special-scheme
+    // forms like `https:/evil.com/x`, `http:/evil.com/x`, `https:evil.com/x`
+    // and `http:evil.com/x` never matched, even though the WHATWG URL parser
+    // (and therefore every browser) normalizes all of them to a fully
+    // qualified `https://evil.com/x` / `http://evil.com/x`. Rather than
+    // growing the denylist regex again for the next slash-count variant,
+    // resolve the (CSS-escape-decoded, backslash-normalised) candidate against
+    // the document's own base URL with the `URL` constructor and classify by
+    // the *resolved* protocol+host — this is what a browser actually does, so
+    // it can't be bypassed by a slash-counting trick. Falls back to the
+    // previous regex-based check only if URL parsing itself throws (e.g. a
+    // value that isn't a URL at all), to fail closed rather than open.
     const raw = String(value || '');
     const rawNormalized = raw.replace(/\\/g, '/');
+    const decodedNormalized = decodeCssEscapes(raw).replace(/\\/g, '/');
+    const base = (typeof document !== 'undefined' && document.baseURI) || 'http://localhost/';
+    for (const candidate of [rawNormalized, decodedNormalized]) {
+      // Try an ABSOLUTE parse first (no base). This is what correctly
+      // classifies `http:/evil.example/x` / `https:evil.example/x` as
+      // external: with a base URL, the WHATWG algorithm treats a
+      // same-scheme-as-base single-slash value as a *relative* reference and
+      // resolves it against the base's own host, masking the bypass. An
+      // absolute parse has no such ambiguity — any candidate that parses
+      // without a base genuinely specifies its own scheme and host.
+      try {
+        const absolute = new URL(candidate);
+        if (absolute.protocol === 'http:' || absolute.protocol === 'https:') {
+          return true;
+        }
+        // Parsed to a non-http(s) absolute URL (e.g. data:, javascript:) —
+        // not an external http(s) fetch target, keep checking other forms.
+        continue;
+      } catch {
+        // Not parseable as an absolute URL — it's relative or malformed.
+        // Fall through to resolve it against the document base below.
+      }
+      try {
+        const resolved = new URL(candidate, base);
+        if (resolved.protocol === 'http:' || resolved.protocol === 'https:') {
+          const baseUrl = new URL(base);
+          if (resolved.host !== baseUrl.host) {
+            return true;
+          }
+        }
+      } catch {
+        // Not parseable even against the base — fall through to the regex
+        // check below for this candidate.
+      }
+    }
     if (/^\s*(https?:)?\/\//i.test(rawNormalized)) {
       return true;
     }
-    const decodedNormalized = decodeCssEscapes(raw).replace(/\\/g, '/');
     return /^\s*(https?:)?\/\//i.test(decodedNormalized);
   }
 

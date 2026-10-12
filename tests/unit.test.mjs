@@ -331,6 +331,26 @@ describe('Gen AI suggest-fix sanitizer', () => {
     assert.equal(el.getAttribute('href'), null);
   });
 
+  // asgard-0007 (2026-10-12 re-scan, rescan-5): isExternalUrlValue's regex
+  // required a literal `//` somewhere in the value, so special-scheme forms
+  // missing the second slash (which the WHATWG URL parser — and therefore
+  // every browser — still resolves to a fully-qualified external URL) sailed
+  // through unsanitized. Negative control: this test fails against the old
+  // regex-only implementation and passes against the URL-resolution fix.
+  test('single-slash and no-slash external URL forms are stripped', () => {
+    for (const style of [
+      'background:url(https:/evil.example/a.png)',
+      'background:url(http:/evil.example/a.png)',
+      'background:url(https:evil.example/a.png)',
+      'background:url(http:evil.example/a.png)',
+    ]) {
+      const el = run(`<div style="${style.replace(/"/g, '&quot;')}">x</div>`);
+      const out = el.getAttribute('style');
+      assert.ok(!/evil\.example/.test(out), out);
+      assert.match(out, /background:\s*none/);
+    }
+  });
+
   // asgard-0007 (2026-10-10 re-scan): image-set()/-webkit-image-set() and
   // cross-fade() take their own URL candidate list, not wrapped in
   // url(...), so the url()-only regex previously let these through intact.
