@@ -330,7 +330,28 @@ describe('Gen AI suggest-fix sanitizer', () => {
     const el = run('<a href="\\6a\\61\\76\\61script:alert(1)">x</a>');
     assert.equal(el.getAttribute('href'), null);
   });
+
+  // asgard-0007 (2026-10-10 re-scan): image-set()/-webkit-image-set() and
+  // cross-fade() take their own URL candidate list, not wrapped in
+  // url(...), so the url()-only regex previously let these through intact.
+  test('external image-set() candidate is stripped', () => {
+    for (const style of [
+      'background:image-set("https://evil.example/a.png" 1x, "https://evil.example/a-2x.png" 2x)',
+      "background:-webkit-image-set(url('https://evil.example/a.png') 1x)",
+      'background-image:cross-fade(url(https://evil.example/a.png) 50%, url(b.png) 50%)',
+    ]) {
+      const el = run(`<div style="${style.replace(/"/g, '&quot;')}">x</div>`);
+      const out = el.getAttribute('style');
+      assert.ok(!/evil\.example/.test(out), out);
+    }
+  });
+
+  test('local image-set() with only relative/data candidates is left alone', () => {
+    const el = run('<div style="background:image-set(url(a.png) 1x, url(b.png) 2x)">x</div>');
+    assert.match(el.getAttribute('style'), /image-set\(url\(a\.png\) 1x, url\(b\.png\) 2x\)/);
+  });
 });
+
 
 describe('scanCustomFlow entry URL', () => {
   test('metadata entry URL is refused before any browser launches', async () => {

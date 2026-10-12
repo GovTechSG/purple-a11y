@@ -284,6 +284,21 @@ const crawlDomain = async ({
             // Handles browser page object been closed.
           }
           workingPage = await browserContext.newPage();
+          // asgard-0003 (2026-10-10 re-scan): Crawlee's egress checks
+          // (isRefusedEgressUrl / preNavigationHooks) only run for
+          // navigations Crawlee itself drives from the request queue. This
+          // goto() is a manual re-navigation back to the already-approved
+          // initialPageUrl, so it's not re-fetching a new attacker-supplied
+          // target — but guard it anyway in case initialPageUrl has since
+          // been rebound to something unsafe by an in-page redirect that
+          // slipped past isExcluded. addUrlGuardScript only enforces the
+          // scheme allowlist, not internal/loopback/metadata classification.
+          if (await isRefusedEgressUrl(initialPageUrl, {})) {
+            consoleLogger.warn(
+              `Refusing click-discovery re-navigation to internal/metadata address: ${initialPageUrl}`,
+            );
+            break;
+          }
           await workingPage.goto(initialPageUrl, {
             waitUntil: 'domcontentloaded',
           });
@@ -1119,23 +1134,35 @@ const crawlDomain = async ({
               });
 
               recoveryPage = await browserContext.newPage();
-              await recoveryPage.goto(request.url);
+              // asgard-0003 (2026-10-10 re-scan): this error-recovery
+              // navigation re-requests request.url outside Crawlee's
+              // request-queue-driven navigation path, so preNavigationHooks'
+              // isRefusedEgressUrl check never runs for it. Apply the same
+              // egress policy here before navigating.
+              if (await isRefusedEgressUrl(request.url, request)) {
+                consoleLogger.warn(
+                  `Refusing error-recovery navigation to internal/metadata address: ${request.url}`,
+                );
+              } else {
+                await recoveryPage.goto(request.url);
 
-              await recoveryPage.route('**/*', async route => {
-                const interceptedRequest = route.request();
-                if (interceptedRequest.resourceType() === 'document') {
-                  const interceptedRequestUrl = interceptedRequest
-                    .url()
-                    .replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
-                  if (!isExcludedFromEnqueue(interceptedRequestUrl)) {
-                    await enqueueUniqueRequest({
-                      url: interceptedRequestUrl,
-                      skipNavigation: isUrlPdf(interceptedRequest.url()),
-                      label: interceptedRequestUrl,
-                    });
+                await recoveryPage.route('**/*', async route => {
+                  const interceptedRequest = route.request();
+                  if (interceptedRequest.resourceType() === 'document') {
+                    const interceptedRequestUrl = interceptedRequest
+                      .url()
+                      .replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
+                    if (!isExcludedFromEnqueue(interceptedRequestUrl)) {
+                      await enqueueUniqueRequest({
+                        url: interceptedRequestUrl,
+                        skipNavigation: isUrlPdf(interceptedRequest.url()),
+                        label: interceptedRequestUrl,
+                      });
+                    }
                   }
-                }
-              });
+                });
+              }
+
             }
           } catch {
             // Recovery failed; Crawlee will retry the request automatically

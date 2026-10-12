@@ -105,14 +105,24 @@ export const uploadFileToS3 = async (
   s3Key: string,
   metadata?: Record<string, string>,
 ): Promise<string> => {
-  const fileStream = fs.readFileSync(localFilePath);
+  // asgard-0008 (2026-10-10 re-scan): fs.readFileSync loaded the entire file
+  // into memory before upload. Report artifacts (summary.html, report.csv,
+  // zip bundles) can be large, and with `uploadFolderToS3` previously firing
+  // every file upload concurrently via Promise.all, a scan with many/large
+  // files could hold several full file buffers in memory simultaneously.
+  // Stream the file instead — @aws-sdk/client-s3's PutObjectCommand accepts
+  // a Node Readable as Body and streams it to S3 without buffering the
+  // whole file in process memory.
+  const fileStream = fs.createReadStream(localFilePath);
   const contentType = mime.lookup(localFilePath) || 'application/octet-stream';
+  const { size: contentLength } = fs.statSync(localFilePath);
 
   const uploadParams: PutObjectCommandInput = {
     Bucket: process.env.S3_BUCKET_NAME,
     Key: s3Key,
     Body: fileStream,
     ContentType: contentType,
+    ContentLength: contentLength,
     ...(metadata && { Metadata: metadata }),
   };
 
@@ -125,6 +135,7 @@ export const uploadFileToS3 = async (
 
   return uploadedUrl;
 };
+
 
 function getAllFiles(dir: string, rootDir: string): string[] {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -179,7 +190,16 @@ export const uploadFolderToS3 = async (
 
   consoleLogger.info(`Uploading ${files.length} files to S3...`);
 
-  const uploadPromises = files.map(async relativePath => {
+  // asgard-0008 (2026-10-10 re-scan): files.map(...) + Promise.all fired every
+  // file's upload concurrently with no cap. Scans producing hundreds of
+  // screenshots/DOM captures could open hundreds of simultaneous S3 PUT
+  // streams, exhausting file descriptors and outbound connections. Upload in
+  // bounded-size batches instead; each batch completes before the next
+  // starts, same as pdfScanFunc's chunked `pMap`-style processing elsewhere
+  // in this codebase.
+  const S3_UPLOAD_CONCURRENCY = 5;
+
+  const uploadOne = async (relativePath: string): Promise<UploadedFileInfo | null> => {
     const fullPath = path.join(localFolderPath, relativePath);
     const s3Path = `${s3Prefix}/${relativePath.replace(/\\/g, '/')}`;
 
@@ -201,15 +221,20 @@ export const uploadFolderToS3 = async (
       consoleLogger.error(`Failed to upload ${relativePath}: ${e.message}`);
       throw new Error(`Failed to upload files to S3: ${e.message}`);
     }
-  });
+  };
 
-  const results = await Promise.all(uploadPromises);
-  uploadedFiles.push(...results.filter((file): file is UploadedFileInfo => file !== null));
+  for (let i = 0; i < files.length; i += S3_UPLOAD_CONCURRENCY) {
+    const batch = files.slice(i, i + S3_UPLOAD_CONCURRENCY);
+    // eslint-disable-next-line no-await-in-loop
+    const results = await Promise.all(batch.map(uploadOne));
+    uploadedFiles.push(...results.filter((file): file is UploadedFileInfo => file !== null));
+  }
 
   consoleLogger.info(`Successfully uploaded ${uploadedFiles.length} files to S3 at ${s3Prefix}`);
 
   return uploadedFiles;
 };
+
 
 export const isS3UploadEnabled = (): boolean => {
   return !!(

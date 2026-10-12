@@ -316,6 +316,20 @@
   // with String.replace (never .test), so the /g flag's lastIndex state
   // cannot make a later check skip a match.
   const CSS_URL_TOKEN_RE = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*))\s*\)/gi;
+  // asgard-0007 (2026-10-10 re-scan): url(...) is not the only CSS syntax
+  // that fetches a resource. image-set()/-webkit-image-set() (and
+  // cross-fade()/-webkit-cross-fade()) take one or more quoted/bare URLs as
+  // their own argument list, not wrapped in url(...), so the url()-only
+  // regex above never matched them and an external image-set() reference
+  // survived sanitization intact. Match the whole function-call token
+  // (including nested url(...) args some engines also accept inside
+  // image-set()) so every comma-separated candidate can be classified.
+  const CSS_IMAGE_SET_TOKEN_RE =
+    /(?:-webkit-)?(?:image-set|cross-fade)\(\s*((?:[^()]|\([^()]*\))*)\)/gi;
+  // A single candidate inside image-set()'s argument list, e.g.
+  // `"https://evil/x" 1x` or `url(https://evil/x) 2x`.
+  const CSS_IMAGE_SET_CANDIDATE_RE = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*))\s*\)|"([^"]*)"|'([^']*)'/gi;
+
 
   function sanitizeElementForContext(rootElement) {
     const DANGEROUS_TAGS = ['script', 'iframe', 'object', 'embed', 'link', 'meta', 'base', 'form', 'style'];
@@ -368,9 +382,28 @@
           // wherever an image url() is) and keep the rest of the
           // declaration block intact, since extractElementContext below
           // reports element.style.cssText back to the caller.
-          const cleaned = value.replace(CSS_URL_TOKEN_RE, (match, dq, sq, bare) => {
+          let cleaned = value.replace(CSS_URL_TOKEN_RE, (match, dq, sq, bare) => {
             const raw = dq !== undefined ? dq : sq !== undefined ? sq : bare;
             return isExternalUrlValue(raw) ? 'none' : match;
+          });
+          // asgard-0007 (2026-10-10 re-scan): image-set()/-webkit-image-set()
+          // and cross-fade()/-webkit-cross-fade() carry their own list of
+          // quoted/bare URL candidates (optionally wrapped in url(...)),
+          // separate from the plain url(...) syntax handled above. Drop the
+          // whole function call to `none` if any candidate is external.
+          cleaned = cleaned.replace(CSS_IMAGE_SET_TOKEN_RE, (match, args) => {
+            let hasExternal = false;
+            let m;
+            CSS_IMAGE_SET_CANDIDATE_RE.lastIndex = 0;
+            // eslint-disable-next-line no-cond-assign
+            while ((m = CSS_IMAGE_SET_CANDIDATE_RE.exec(args)) !== null) {
+              const raw = m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5] ?? '';
+              if (isExternalUrlValue(raw)) {
+                hasExternal = true;
+                break;
+              }
+            }
+            return hasExternal ? 'none' : match;
           });
           if (cleaned !== value) el.setAttribute('style', cleaned);
         }
