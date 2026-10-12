@@ -109,12 +109,10 @@ describe('getLinksFromSitemap (local files, no browser)', () => {
     ['rssfeed.xml', 'RSS <item><link>, duplicates once', sample.sampleRssFeed, ['http://www.feedforall.com', 'http://www.feedforall.com/feedforall-partners.htm']],
     ['atomfeed.xml', 'Atom <entry> first <link href>', sample.sampleAtomFeed, ['http://example.org/2005/04/02/atom']],
     ['sitemap.txt', 'plain txt', sample.sampleTxtSitemap, sample.sampleTxtSitemapLinks],
-    // Known gap: the unknown-format fallback regex is line-anchored (^http), so
-    // indented URLs inside unrecognised XML are not found.
-    ['weird.xml', 'non-standard XML', sample.sampleNonStandardXmlSitemap, sample.sampleNonStandardXmlSitemapLinks, 'fallback regex is line-anchored'],
+    ['weird.xml', 'non-standard XML', sample.sampleNonStandardXmlSitemap, sample.sampleNonStandardXmlSitemapLinks],
   ];
-  for (const [file, name, body, want, todo] of cases) {
-    test(name, { todo }, async () => {
+  for (const [file, name, body, want] of cases) {
+    test(name, async () => {
       const p = path.join(tmp, file);
       fs.writeFileSync(p, body);
       const reqs = await getLinksFromSitemap(p, 100, 'chrome', '', p, false, {});
