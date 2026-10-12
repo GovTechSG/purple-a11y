@@ -55,7 +55,6 @@ jobs:
             -e GOOGLE_SAFE_BROWSING=1 \
             -e OOBEE_FAST_CRAWLER=1 \
             -e OOBEE_DISABLE_TELEMETRY=1 \
-            -e DISABLE_OOBEE_TELEMETRY=1 \
             oobee-container npm run cli -- \
               -u "$OOBEE_SCAN_URL" -c intelligent \
               -p "$OOBEE_SCAN_MAX_NUM_PAGES" \
@@ -80,7 +79,6 @@ jobs:
             -e GOOGLE_SAFE_BROWSING=1 \
             -e OOBEE_FAST_CRAWLER=1 \
             -e OOBEE_DISABLE_TELEMETRY=1 \
-            -e DISABLE_OOBEE_TELEMETRY=1 \
             -e FAMILY_DNS=1 \
             oobee-container npm run cli -- \
               -u "$OOBEE_SCAN_URL" -c intelligent \
@@ -106,7 +104,6 @@ jobs:
             -e GOOGLE_SAFE_BROWSING=1 \
             -e OOBEE_FAST_CRAWLER=1 \
             -e OOBEE_DISABLE_TELEMETRY=1 \
-            -e DISABLE_OOBEE_TELEMETRY=1 \
             -e OOBEE_SAVE_DOM=1 \
             -e OOBEE_SAVE_PAGE_SCREENSHOT=1 \
             oobee-container npm run cli -- \
