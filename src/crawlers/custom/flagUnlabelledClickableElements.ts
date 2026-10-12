@@ -1065,7 +1065,39 @@ function hasPointerCursor(node: Node): boolean {
     }
 
     // Additional check to skip divs with empty children or child-child elements
-    const areAllDescendantsEmpty = Array.from(element.querySelectorAll('*')).every(child => getTextContent(child).trim().length === 0 && !hasAccessibleLabel(child));
+    //
+    // asgard-0005 (2026-10-12 re-scan): the previous implementation called
+    // `element.querySelectorAll('*')` here — which materializes every node in
+    // the element's ENTIRE subtree regardless of how quickly `.every()` could
+    // short-circuit — for every element visited by the outer MAX_TRAVERSAL_ELEMENTS
+    // loop. For a deeply nested DOM of N elements that's O(N^2) total work
+    // across the loop, independent of the 50000-element outer cap (a single
+    // call can itself scan tens of thousands of descendants). Replace with a
+    // TreeWalker that visits at most MAX_DESCENDANTS_PER_SUBTREE_CHECK nodes
+    // and bails out (short-circuits) the moment it finds a descendant with
+    // non-empty text or an accessible label, so the per-element cost is now
+    // bounded by a small constant instead of the subtree's full size. If the
+    // bound is hit without finding one, the element is conservatively treated
+    // as NOT all-empty (i.e. it falls through to the remaining checks rather
+    // than being silently skipped), matching the safer default for a huge
+    // unknown subtree.
+    const MAX_DESCENDANTS_PER_SUBTREE_CHECK = 500;
+    const areAllDescendantsEmpty = (() => {
+        const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT);
+        let visited = 0;
+        let node = walker.nextNode();
+        while (node) {
+            if (getTextContent(node as Element).trim().length !== 0 || hasAccessibleLabel(node as Element)) {
+                return false;
+            }
+            visited++;
+            if (visited >= MAX_DESCENDANTS_PER_SUBTREE_CHECK) {
+                return false; // bound reached — treat conservatively as not empty
+            }
+            node = walker.nextNode();
+        }
+        return true;
+    })();
     if (element.nodeName.toLowerCase() === 'div' && areAllDescendantsEmpty) {
         customConsoleWarn("Div with empty descendants, skipping flagging.");
         return false;

@@ -308,7 +308,27 @@
   }
 
   function isExternalUrlValue(value) {
-    return /^\s*(https?:)?\/\//i.test(decodeCssEscapes(value || ''));
+    // asgard-0011 (2026-10-12 re-scan): browsers (and the WHATWG URL parser)
+    // treat backslash as equivalent to forward-slash for special schemes, so
+    // `/\evil.com/x`, `\\evil.com/x` and `\/evil.com/x` all resolve to a
+    // network-path reference (`//evil.com/x`) exactly like the
+    // forward-slash-only forms this regex already caught. The previous
+    // pattern only matched literal `//` or `http(s)://`, so any backslash
+    // variant sailed through unsanitized.
+    //
+    // Check the RAW value's backslash-normalised form first: decodeCssEscapes
+    // treats any `\X` as a generic CSS escape and strips the backslash
+    // (`\.(.)` -> `$1`), so running it before backslash->slash substitution
+    // destroys exactly the backslashes we need to detect. Only fall back to
+    // the CSS-hex-escape-decoded check (asgard-0009, e.g. `\68ttps://`) for
+    // values that aren't already caught by the raw check.
+    const raw = String(value || '');
+    const rawNormalized = raw.replace(/\\/g, '/');
+    if (/^\s*(https?:)?\/\//i.test(rawNormalized)) {
+      return true;
+    }
+    const decodedNormalized = decodeCssEscapes(raw).replace(/\\/g, '/');
+    return /^\s*(https?:)?\/\//i.test(decodedNormalized);
   }
 
   // Matches ANY url(...) token (any scheme, including CSS-escaped ones) so

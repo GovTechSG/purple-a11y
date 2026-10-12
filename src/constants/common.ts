@@ -636,7 +636,18 @@ export const isSitemapContent = (content: string) => {
   }
 
   const regexForHtml = new RegExp('<(?:!doctype html|html|head|body)+?>', 'gmi');
-  const regexForXmlSitemap = new RegExp('<(?:urlset|sitemapindex|feed|rss)+?.*>', 'gmi');
+  // asgard-0010 (2026-10-12 re-scan): the previous pattern
+  // `<(?:urlset|sitemapindex|feed|rss)+?.*>` combines a lazy one-or-more
+  // group with a trailing `.*>` — on a long run of
+  // urlset/sitemapindex/feed/rss tokens with no closing `>`, the engine
+  // expands the group one repetition at a time and re-scans `.*` on every
+  // attempt, which is O(n^2) on attacker-sized malformed input (content here
+  // is unvalidated — validateXML already returned isValid=false by this
+  // point). Rewritten as a possessive-style check: match the literal open
+  // tag once (no repeated alternation group) and allow at most a bounded run
+  // of non-'>' characters before the closing bracket, so there is no
+  // backtracking group left to blow up regardless of input length.
+  const regexForXmlSitemap = new RegExp('<(?:urlset|sitemapindex|feed|rss)\\b[^>]{0,2000}>', 'gmi');
   if (content.match(regexForHtml) && content.match(regexForXmlSitemap)) {
     // is an XML sitemap wrapped in a HTML document
     return true;
@@ -1520,11 +1531,38 @@ export const getLinksFromSitemap = async (
   const scannedSitemaps = new Set<string>();
   const sitemapLinkCounts: Record<string, number> = {};
   const allUrls = new Set<string>(); // all discovered URLs (lightweight strings)
+  // asgard-0006 (2026-10-12 re-scan): _maxLinksCount (the crawl's
+  // maxRequestsPerCrawl) was accepted as a parameter but never read anywhere
+  // in this function — every <loc> found while walking a sitemap/sitemap-index,
+  // including recursive descent into child sitemaps, was pushed into allUrls
+  // with no size limit, so a hostile in-scope sitemap listing millions of URLs
+  // could exhaust memory before the crawler ever got a chance to apply its own
+  // maxRequestsPerCrawl (which only bounds successfully SCANNED pages, not
+  // discovery). Cap the discovery set here too. maxRequestsPerCrawl can
+  // legitimately be Infinity (operator asked for an unlimited scan), so apply
+  // a generous multiple of it as headroom for de-dup/strategy-filter slack
+  // when finite, and otherwise fall back to a fixed hard ceiling so discovery
+  // itself can never grow unbounded even when page-count is uncapped.
+  const SITEMAP_DISCOVERY_HARD_CEILING = 200_000;
+  const maxLinksToDiscover =
+    Number.isFinite(_maxLinksCount) && _maxLinksCount > 0
+      ? Math.min(Math.max(_maxLinksCount * 10, 1000), SITEMAP_DISCOVERY_HARD_CEILING)
+      : SITEMAP_DISCOVERY_HARD_CEILING;
+  let discoveryCapWarningLogged = false;
   const isImageSitemapUrl = (candidateUrl: string) =>
     /(^|\/)image-sitemap(?:-index)?(?:-\d+)?\.xml(?:$|[?#])/i.test(candidateUrl);
 
   const addToUrlList = (url: string) => {
     if (!url) return;
+    if (allUrls.size >= maxLinksToDiscover) {
+      if (!discoveryCapWarningLogged) {
+        consoleLogger.warn(
+          `Sitemap discovery cap (${maxLinksToDiscover} URLs) reached; ignoring further discovered URLs.`,
+        );
+        discoveryCapWarningLogged = true;
+      }
+      return;
+    }
     if (isDisallowedInRobotsTxt(url)) return;
     if (!isFilePath(userUrl) && !isFollowStrategy(url, userUrl, strategy)) return;
 

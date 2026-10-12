@@ -252,9 +252,34 @@ function isInternalIp(ip: string): boolean {
     // if it lands in an internal range, closing the allowlist gap on
     // network stacks that continue to route these legacy addresses.
     const isCompat = bytes.slice(0, 12).every((b) => b === 0);
+    // asgard-0012 (2026-10-12 re-scan): 6to4 (2002::/16, RFC 3056) and
+    // Teredo (2001:0000::/32, RFC 4380) are IPv6 transition mechanisms that
+    // embed an IPv4 address directly in the address bits — a host with
+    // 6to4/Teredo routing configured will tunnel traffic to that embedded
+    // IPv4 destination exactly like the already-handled mapped/NAT64/compat
+    // forms. The previous checks only covered ::ffff:/64:ff9b::/:: forms, so
+    // `2002:7f00:0001::` (embeds 127.0.0.1) or a Teredo address embedding an
+    // internal server's IPv4 sailed through unrecognised. 6to4 embeds the
+    // IPv4 directly in bytes[2..5] (immediately after the 2002:: prefix);
+    // Teredo XORs the embedded "mapped client IPv4" (bytes[12..15]) with
+    // 0xffffffff per RFC 4380 (and the server IPv4 in bytes[4..7] is NOT
+    // obfuscated, so check that too).
+    const is6to4 = bytes[0] === 0x20 && bytes[1] === 0x02;
+    const isTeredo =
+      bytes[0] === 0x20 && bytes[1] === 0x01 && bytes[2] === 0x00 && bytes[3] === 0x00;
     if (isMapped || isNat64 || isCompat) {
       const embedded = bytes.slice(12).join('.');
       if (ipInRanges(embedded, INTERNAL_IP_RANGES)) return true;
+    }
+    if (is6to4) {
+      const embedded = bytes.slice(2, 6).join('.');
+      if (ipInRanges(embedded, INTERNAL_IP_RANGES)) return true;
+    }
+    if (isTeredo) {
+      const teredoServer = bytes.slice(4, 8).join('.');
+      const teredoClient = bytes.slice(12, 16).map((b) => (b ^ 0xff) & 0xff).join('.');
+      if (ipInRanges(teredoServer, INTERNAL_IP_RANGES)) return true;
+      if (ipInRanges(teredoClient, INTERNAL_IP_RANGES)) return true;
     }
   }
   return false;

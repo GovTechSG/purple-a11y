@@ -341,25 +341,23 @@ function parseMacScutil(): ProxyInfo | null {
 // (the real C:\Windows, discovered independently via GetWindowsDirectory-
 // equivalent env candidates and known-fixed fallback), not just under
 // whatever SystemRoot happens to say right now.
+//
+// asgard-0001 (2026-10-12 re-scan): the previous version of this guard
+// pushed fs.realpathSync(process.env.SystemRoot) into candidateRoots, which
+// made the "trusted root" set itself derived from the attacker-controlled
+// env var — defeating the whole point. If SystemRoot pointed at an
+// attacker-writable directory, realpathSync would resolve it to that same
+// directory, the containment check would trivially pass, and a planted
+// System32\reg.exe would be accepted. Do NOT widen the trusted-root set with
+// SystemRoot at all; only ever trust the hardcoded, literal Windows system
+// directories below. This still finds the real reg.exe on every standard
+// Windows install (the system drive is always C: in practice for this
+// check), and correctly refuses a SystemRoot pointed anywhere else.
 const TRUSTED_WINDOWS_ROOTS = ['C:\\Windows', 'C:\\WINDOWS', 'c:\\windows'];
 
 function isUnderTrustedWindowsRoot(realPath: string): boolean {
   const lower = realPath.toLowerCase();
-  // Trust SystemRoot too, but only once resolved to a real, existing path —
-  // this still allows non-default Windows install drives/dirs while
-  // requiring the final candidate's realpath to sit under one of the known
-  // system directories rather than an attacker-writable location the env
-  // var could otherwise point anywhere to.
-  const candidateRoots = [...TRUSTED_WINDOWS_ROOTS];
-  try {
-    if (process.env.SystemRoot) {
-      const realRoot = fs.realpathSync(process.env.SystemRoot);
-      candidateRoots.push(realRoot);
-    }
-  } catch {
-    // SystemRoot unresolvable; fall back to the hardcoded trusted roots only
-  }
-  return candidateRoots.some(root => lower.startsWith(`${root.toLowerCase()}\\`));
+  return TRUSTED_WINDOWS_ROOTS.some(root => lower.startsWith(`${root.toLowerCase()}\\`));
 }
 
 function regExeCandidates(): string[] {
@@ -374,7 +372,8 @@ function regExeCandidates(): string[] {
       const real = fs.realpathSync(p);
       // Must resolve to a file literally named reg.exe (case-insensitive) —
       // guards against a symlink/junction swapping the binary — and must
-      // live under a trusted Windows system directory.
+      // live under a trusted, hardcoded Windows system directory (never
+      // widened by SystemRoot — see asgard-0001 note above).
       return path.basename(real).toLowerCase() === 'reg.exe' && isUnderTrustedWindowsRoot(real);
     } catch {
       return false;

@@ -24,6 +24,20 @@ export const oobeeAiRules = [
   'autocomplete-valid',
 ];
 
+// asgard-0003 (2026-10-12 re-scan): dropAllExceptWhitelisted and
+// muteAttributeValues below both run a global regex anchored on a leading
+// `\s+` group. A global regex restarts its match attempt at every position
+// it fails from, so a long run of whitespace in the attacker-controlled
+// scanned-page HTML (item.html, taken verbatim from the page's outerHTML)
+// makes the combined passes run in O(n^2) on that run's length — tens of
+// thousands of spaces inside/around an element the AI rules flag (e.g.
+// `label`) can pin a CPU core for seconds. Collapse any run of 2+ whitespace
+// characters down to a single space before either regex runs: this bounds
+// the longest whitespace run each regex ever has to re-scan to O(1),
+// eliminating the quadratic blowup regardless of overall input length, while
+// leaving single-space-separated attributes/text completely unaffected.
+const collapseLongWhitespaceRuns = (html: string) => html.replace(/\s{2,}/g, ' ');
+
 export const oobeeAiHtmlETL = (htmlSnippet: string) => {
   // Whitelisted attributes (to not drop)
   // i.e. any other attribute will be dropped
@@ -137,5 +151,7 @@ export const oobeeAiHtmlETL = (htmlSnippet: string) => {
     return html.replace(regex, ``);
   };
 
-  return sortAlphaAttributes(muteAttributeValues(dropAllExceptWhitelisted(htmlSnippet)));
+  return sortAlphaAttributes(
+    muteAttributeValues(dropAllExceptWhitelisted(collapseLongWhitespaceRuns(htmlSnippet))),
+  );
 };
