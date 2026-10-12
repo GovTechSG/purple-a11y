@@ -29,6 +29,24 @@ export async function flagUnlabelledClickableElements() {
   let previousFlaggedXPathsByDocument = {}; // Object to hold previous flagged XPaths
   const previousAllFlaggedElementsXPaths : {xpath: string, code: string }[] = []; // Array to store all flagged XPaths
 
+  // asgard-0001 (2026-10-12 re-scan): hasChildNotANewInteractWithAccessibleText(parent) is
+  // called once per element visited by the outer MAX_TRAVERSAL_ELEMENTS traversal loop in
+  // flagElements/shouldFlagElement, but many visited elements share the same immediate
+  // parent, and each call independently re-walks that parent's entire children list plus a
+  // full getTextContent() subtree recursion for each candidate child. That makes the total
+  // cost O(N^2) over a DOM of N elements. The DOM subtree being scanned is not mutated
+  // between these calls (the only mutation flagElements performs is setting
+  // `element.dataset.flagged` on the element being flagged itself, which doesn't change any
+  // other element's text/label content), and the whole script runs synchronously in one
+  // page.evaluate invocation, so memoizing per-element results for the lifetime of this one
+  // flagUnlabelledClickableElements() call is a pure, value-preserving optimization: the
+  // cached answer is byte-for-byte the same DOM query result that would have been
+  // recomputed, not an approximation or depth/node cap, so there is no change in which
+  // elements get flagged (no accessibility false-negatives/false-positives, and no
+  // behavioral difference between runs). This turns the dominant O(N^2) cost into O(N).
+  const accessibleChildTextCache = new WeakMap<Element, boolean>();
+  const textContentCache = new WeakMap<Element, string>();
+
   function getXPath(element: Node): string {
     if (!element) return null;
     if (element instanceof HTMLElement && element.id) {
@@ -358,6 +376,16 @@ function hasPointerCursor(node: Node): boolean {
   }
 
   function hasChildNotANewInteractWithAccessibleText(element: Element) {
+    // asgard-0001: memoize per-parent result for the lifetime of this scan (see cache
+    // declaration comment above) — this function is called once per element visited by the
+    // outer traversal loop, on that element's *parent*, so without caching the same parent's
+    // full children list + getTextContent() subtree walk gets redone once per sibling,
+    // producing O(N^2) total work. The underlying DOM is not mutated between these calls, so
+    // the cached boolean is exactly the value a fresh computation would return.
+    const cachedResult = accessibleChildTextCache.get(element);
+    if (cachedResult !== undefined) {
+      return cachedResult;
+    }
 
    // Helper function to check if the element is a link or button
     const isBuildInInteractable = (child: Element) => {
@@ -417,8 +445,11 @@ function hasPointerCursor(node: Node): boolean {
         return false;
     });
 
-    return hasAccessibleChildElement || hasDirectAccessibleText;
+    const hasChildAccessibleResult = hasAccessibleChildElement || hasDirectAccessibleText;
+    accessibleChildTextCache.set(element, hasChildAccessibleResult);
+    return hasChildAccessibleResult;
   }
+
 
   function hasChildWhichIsVisibleFocusable(element:Element) {
     if (!element || !element.children) {
@@ -526,6 +557,14 @@ function hasPointerCursor(node: Node): boolean {
       return element.nodeValue.trim(); // Return the text directly if it's a TEXT_NODE
     }
 
+    // asgard-0001: memoize per-element results (see comment at declaration site above) —
+    // the DOM subtree is not mutated between calls within a single scan, so this is a pure
+    // cache of the exact same value that would otherwise be recomputed every time.
+    const cached = textContentCache.get(element as Element);
+    if (cached !== undefined) {
+      return cached;
+    }
+
     let textContent = '';
 
     for (let node of element.childNodes) {
@@ -537,7 +576,9 @@ function hasPointerCursor(node: Node): boolean {
             if (elementNode.tagName.toLowerCase() === 'svg') {
                 const titleElement = elementNode.querySelector('title');
                 if (titleElement && isVisibleFocusAble(elementNode)) {
-                    return titleElement.textContent.trim(); // Return the title text if valid
+                    const svgTitleText = titleElement.textContent.trim();
+                    textContentCache.set(element as Element, svgTitleText);
+                    return svgTitleText; // Return the title text if valid
                 }
             }
             // Recursively check child elements if it's an element node
@@ -550,7 +591,9 @@ function hasPointerCursor(node: Node): boolean {
         }
     }
 
-    return textContent.trim(); // Return the combined text content
+    const result = textContent.trim(); // Return the combined text content
+    textContentCache.set(element as Element, result);
+    return result;
   }
 
   const style = document.createElement('style');

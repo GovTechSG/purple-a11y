@@ -33234,6 +33234,23 @@
     const loggingEnabled = false; // Set to true to enable console warnings
     let previousFlaggedXPathsByDocument = {}; // Object to hold previous flagged XPaths
     const previousAllFlaggedElementsXPaths = []; // Array to store all flagged XPaths
+    // asgard-0001 (2026-10-12 re-scan): hasChildNotANewInteractWithAccessibleText(parent) is
+    // called once per element visited by the outer MAX_TRAVERSAL_ELEMENTS traversal loop in
+    // flagElements/shouldFlagElement, but many visited elements share the same immediate
+    // parent, and each call independently re-walks that parent's entire children list plus a
+    // full getTextContent() subtree recursion for each candidate child. That makes the total
+    // cost O(N^2) over a DOM of N elements. The DOM subtree being scanned is not mutated
+    // between these calls (the only mutation flagElements performs is setting
+    // `element.dataset.flagged` on the element being flagged itself, which doesn't change any
+    // other element's text/label content), and the whole script runs synchronously in one
+    // page.evaluate invocation, so memoizing per-element results for the lifetime of this one
+    // flagUnlabelledClickableElements() call is a pure, value-preserving optimization: the
+    // cached answer is byte-for-byte the same DOM query result that would have been
+    // recomputed, not an approximation or depth/node cap, so there is no change in which
+    // elements get flagged (no accessibility false-negatives/false-positives, and no
+    // behavioral difference between runs). This turns the dominant O(N^2) cost into O(N).
+    const accessibleChildTextCache = new WeakMap();
+    const textContentCache = new WeakMap();
     function getXPath(element) {
         if (!element)
             return null;
@@ -33515,6 +33532,16 @@
         return false;
     }
     function hasChildNotANewInteractWithAccessibleText(element) {
+        // asgard-0001: memoize per-parent result for the lifetime of this scan (see cache
+        // declaration comment above) — this function is called once per element visited by the
+        // outer traversal loop, on that element's *parent*, so without caching the same parent's
+        // full children list + getTextContent() subtree walk gets redone once per sibling,
+        // producing O(N^2) total work. The underlying DOM is not mutated between these calls, so
+        // the cached boolean is exactly the value a fresh computation would return.
+        const cachedResult = accessibleChildTextCache.get(element);
+        if (cachedResult !== undefined) {
+            return cachedResult;
+        }
         // Helper function to check if the element is a link or button
         const isBuildInInteractable = (child) => {
             return child.nodeName.toLowerCase() === "a" || child.nodeName.toLowerCase() === "button" || child.nodeName.toLowerCase() === "input" ||
@@ -33563,7 +33590,9 @@
             }
             return false;
         });
-        return hasAccessibleChildElement || hasDirectAccessibleText;
+        const hasChildAccessibleResult = hasAccessibleChildElement || hasDirectAccessibleText;
+        accessibleChildTextCache.set(element, hasChildAccessibleResult);
+        return hasChildAccessibleResult;
     }
     function hasChildWhichIsVisibleFocusable(element) {
         if (!element || !element.children) {
@@ -33653,6 +33682,13 @@
         if (element.nodeType === Node.TEXT_NODE) {
             return element.nodeValue.trim(); // Return the text directly if it's a TEXT_NODE
         }
+        // asgard-0001: memoize per-element results (see comment at declaration site above) —
+        // the DOM subtree is not mutated between calls within a single scan, so this is a pure
+        // cache of the exact same value that would otherwise be recomputed every time.
+        const cached = textContentCache.get(element);
+        if (cached !== undefined) {
+            return cached;
+        }
         let textContent = '';
         for (let node of element.childNodes) {
             if (node.nodeType === Node.TEXT_NODE) {
@@ -33664,7 +33700,9 @@
                 if (elementNode.tagName.toLowerCase() === 'svg') {
                     const titleElement = elementNode.querySelector('title');
                     if (titleElement && isVisibleFocusAble(elementNode)) {
-                        return titleElement.textContent.trim(); // Return the title text if valid
+                        const svgTitleText = titleElement.textContent.trim();
+                        textContentCache.set(element, svgTitleText);
+                        return svgTitleText; // Return the title text if valid
                     }
                 }
                 // Recursively check child elements if it's an element node
@@ -33676,7 +33714,9 @@
                 }
             }
         }
-        return textContent.trim(); // Return the combined text content
+        const result = textContent.trim(); // Return the combined text content
+        textContentCache.set(element, result);
+        return result;
     }
     const style = document.createElement('style');
     style.innerHTML = `
@@ -34084,7 +34124,39 @@
             }
         }
         // Additional check to skip divs with empty children or child-child elements
-        const areAllDescendantsEmpty = Array.from(element.querySelectorAll('*')).every(child => getTextContent(child).trim().length === 0 && !hasAccessibleLabel(child));
+        //
+        // asgard-0005 (2026-10-12 re-scan): the previous implementation called
+        // `element.querySelectorAll('*')` here — which materializes every node in
+        // the element's ENTIRE subtree regardless of how quickly `.every()` could
+        // short-circuit — for every element visited by the outer MAX_TRAVERSAL_ELEMENTS
+        // loop. For a deeply nested DOM of N elements that's O(N^2) total work
+        // across the loop, independent of the 50000-element outer cap (a single
+        // call can itself scan tens of thousands of descendants). Replace with a
+        // TreeWalker that visits at most MAX_DESCENDANTS_PER_SUBTREE_CHECK nodes
+        // and bails out (short-circuits) the moment it finds a descendant with
+        // non-empty text or an accessible label, so the per-element cost is now
+        // bounded by a small constant instead of the subtree's full size. If the
+        // bound is hit without finding one, the element is conservatively treated
+        // as NOT all-empty (i.e. it falls through to the remaining checks rather
+        // than being silently skipped), matching the safer default for a huge
+        // unknown subtree.
+        const MAX_DESCENDANTS_PER_SUBTREE_CHECK = 500;
+        const areAllDescendantsEmpty = (() => {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT);
+            let visited = 0;
+            let node = walker.nextNode();
+            while (node) {
+                if (getTextContent(node).trim().length !== 0 || hasAccessibleLabel(node)) {
+                    return false;
+                }
+                visited++;
+                if (visited >= MAX_DESCENDANTS_PER_SUBTREE_CHECK) {
+                    return false; // bound reached — treat conservatively as not empty
+                }
+                node = walker.nextNode();
+            }
+            return true;
+        })();
         if (element.nodeName.toLowerCase() === 'div' && areAllDescendantsEmpty) {
             customConsoleWarn("Div with empty descendants, skipping flagging.");
             return false;
@@ -34273,9 +34345,20 @@
         }
         if (frameset) {
             doc = frameset;
-            iframeSelector = iframeSelector.split('body >')[1].trim();
+            // asgard-0011 (2026-10-09 scan): a selector without "body >" made
+            // split()[1] undefined and threw, aborting the whole page scan on
+            // frameset pages. Keep the selector as-is when the delimiter is absent.
+            const afterBody = iframeSelector.split('body >')[1];
+            if (afterBody !== undefined)
+                iframeSelector = afterBody.trim();
         }
-        targetIframe = doc.querySelector(iframeSelector);
+        try {
+            targetIframe = doc.querySelector(iframeSelector);
+        }
+        catch {
+            // Invalid selector for this document: fall back to the original selector.
+            return { doc: document, remainingSelector: cssSelector };
+        }
         if (targetIframe && targetIframe.contentDocument) {
             // Update the document to the iframe's contentDocument
             doc = targetIframe.contentDocument;
@@ -34490,19 +34573,53 @@
         // Extract text content from all specified elements (e.g., paragraphs)
         const elements = document.querySelectorAll('p'); // Adjust selector as needed
         const extractedSentences = [];
+        // asgard-0005: bound the text returned to Node. Same value as
+        // MAX_READABILITY_TEXT_CHARS in gradeReadability.ts, which grades at most
+        // this much anyway, so stopping here changes no score. Must stay inline:
+        // this function is serialised via toString() and runs in the page.
+        const maxChars = 1_000_000;
+        // asgard-0004 (2026-10-09 re-scan): bound each paragraph BEFORE the
+        // terminator scan / match() below. Without this, a single huge <p> (tens
+        // of MB) forced an O(paragraph-size) match() allocation per paragraph,
+        // regardless of maxChars — that only bounds total pushed OUTPUT, checked
+        // after match() already ran. No real paragraph approaches this size.
+        const maxParagraphChars = maxChars;
+        let totalChars = 0;
+        let stop = false;
         elements.forEach(element => {
-            const text = element.innerText.trim();
+            if (stop)
+                return;
+            const rawText = element.innerText.trim().slice(0, maxParagraphChars);
+            // Drop the trailing run after the last terminator: it can never match, and it is
+            // the only input on which the regex below backtracks quadratically.
+            // Kept inline since this function is serialised via toString().
+            let lastTerminator = -1;
+            for (let j = rawText.length - 1; j >= 0; j -= 1) {
+                const c = rawText[j];
+                if (c === '.' || c === '!' || c === '?') {
+                    lastTerminator = j;
+                    break;
+                }
+            }
+            if (lastTerminator < 0)
+                return;
+            const text = rawText.slice(0, lastTerminator + 1);
             // Split the text into individual sentences
             const sentencePattern = /[^.!?]*[.!?]+/g; // Match sentences ending with ., !, or ?
             const matches = text.match(sentencePattern);
             if (matches) {
                 // Add only sentences that end with punctuation
-                matches.forEach(sentence => {
+                for (const sentence of matches) {
                     const trimmedSentence = sentence.trim(); // Trim whitespace from each sentence
-                    if (trimmedSentence.length > 0) {
-                        extractedSentences.push(trimmedSentence);
+                    if (trimmedSentence.length === 0)
+                        continue;
+                    if (totalChars + trimmedSentence.length > maxChars) {
+                        stop = true;
+                        break;
                     }
-                });
+                    extractedSentences.push(trimmedSentence);
+                    totalChars += trimmedSentence.length + 1; // +1 for gradeReadability's join separator
+                }
             }
         });
         return extractedSentences;
@@ -35025,15 +35142,21 @@
         resolve(window.Sentry);
         return;
       }
+      // asgard-0007: never inject the CDN script without an integrity pin.
+      // The generator refuses to emit a bundle without one; this is defence
+      // in depth for a hand-edited or older bundle. Telemetry is skipped,
+      // the scan itself is unaffected.
+      if (!_oobeeSentrySdkSri) {
+        reject(new Error('[oobee] No SRI pin for the Sentry SDK; refusing to load it.'));
+        return;
+      }
       var script = document.createElement('script');
       script.src = 'https://browser.sentry-cdn.com/' + _oobeeSentryVersion + '/bundle.min.js';
       script.crossOrigin = 'anonymous';
-      if (_oobeeSentrySdkSri) {
-        // Pin the CDN response with Subresource Integrity so the browser
-        // refuses to execute a tampered Sentry bundle even if the CDN
-        // (or a MITM against a scanned page) serves modified code.
-        script.integrity = _oobeeSentrySdkSri;
-      }
+      // Pin the CDN response with Subresource Integrity so the browser
+      // refuses to execute a tampered Sentry bundle even if the CDN
+      // (or a MITM against a scanned page) serves modified code.
+      script.integrity = _oobeeSentrySdkSri;
       script.onload = function() {
         if (window.Sentry && typeof window.Sentry.init === 'function') {
           resolve(window.Sentry);
