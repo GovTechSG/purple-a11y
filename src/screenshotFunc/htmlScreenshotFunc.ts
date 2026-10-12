@@ -120,7 +120,21 @@ export const takeScreenshotForHTMLElements = async (
 
     const newViolationNodes: NodeResultWithScreenshot[] = [];
     for (const node of violation.nodes) {
+      // asgard-0005 (2026-10-10 re-scan): the outer-loop check above only
+      // gated which VIOLATION we start processing; a single violation with a
+      // huge `nodes` array (one axe-core rule matching thousands of elements
+      // on a crafted page) blew straight through maxScreenshots because this
+      // inner loop never re-checked the count. Re-check per node so the cap
+      // bounds total screenshots across all violations and nodes combined,
+      // matching the intent already applied to the PDF screenshot path
+      // (OOBEE_PDF_MAX_SCREENSHOTS in pdfScreenshotFunc.ts).
+      if (screenshotCount >= maxScreenshots) {
+        newViolationNodes.push(node);
+        // eslint-disable-next-line no-continue
+        continue;
+      }
       const nodeWithScreenshotPath: NodeResultWithScreenshot = node;
+
       const { target } = node;
       const hasValidSelector = target.length === 1 && typeof target[0] === 'string';
       const selector = hasValidSelector ? (target[0] as string) : null;

@@ -19,6 +19,68 @@ const sanitizeS3MetadataValue = (value: string): string => {
     .trim(); // e.g. " Homepage | Community Chest " -> "Homepage | Community Chest"
 };
 
+// asgard-0013 (2026-10-09 scan): siteName is the scanned page's <title>, so it
+// is attacker-controlled. Drop HTML metacharacters and cap the length, so a
+// consumer that renders S3 metadata without escaping can't be handed markup.
+// "&" becomes "and" to keep titles like "Arts & Culture" readable.
+//
+// asgard-0007 (2026-10-09 re-scan): normalize BEFORE stripping metacharacters.
+// NFKD decomposes fullwidth/compatibility Unicode (e.g. "＜" U+FF1C -> "<",
+// "＞" U+FF1E -> ">", "＂" U+FF02 -> '"') into their ASCII equivalents. The
+// previous order stripped <>"'` first, then normalized — so a title using
+// fullwidth variants sailed through the strip untouched and only became a
+// literal <script> etc. afterward, inside sanitizeS3MetadataValue. Running
+// sanitizeS3MetadataValue (which normalizes) first means every ASCII
+// metacharacter, including ones produced by decomposition, is stripped by
+// the second pass below.
+const stripSiteNameMetachars = (value: string): string =>
+  value
+    .replace(/&/g, ' and ')
+    .replace(/[<>"'`]/g, '')
+    .replace(/\s+/g, ' ') // collapse whitespace introduced by " and " / the strip above
+    .trim();
+
+// Max UTF-8 bytes of a non-Latin site name before base64 (~400 ASCII chars
+// after encoding), keeping well inside S3's 2 KB total user-metadata limit.
+const SITE_NAME_MAX_UTF8_BYTES = 300;
+
+const truncateUtf8 = (value: string, maxBytes: number): string => {
+  let out = '';
+  let bytes = 0;
+  for (const ch of value) {
+    // iterate by code point so a multi-byte char is never split
+    const len = Buffer.byteLength(ch, 'utf8');
+    if (bytes + len > maxBytes) break;
+    out += ch;
+    bytes += len;
+  }
+  return out;
+};
+
+// Titles in non-Latin scripts (CJK, Thai, Devanagari, Tamil, Arabic, ...) have
+// no ASCII transliteration and would collapse to empty under the ASCII-only
+// sanitizer. For those, emit an RFC 2047 encoded-word (=?UTF-8?B?<base64>?=):
+// pure ASCII (header-safe, no HTML metacharacters possible), and the same
+// format S3 itself uses when returning non-ASCII metadata, so consumers can
+// decode it with any standard MIME header decoder.
+export const sanitizeSiteNameMetadata = (value: string): string => {
+  const raw = String(value ?? '');
+  const ascii = stripSiteNameMetachars(sanitizeS3MetadataValue(raw)).slice(0, 256);
+
+  const decomposed = raw.normalize('NFKD').replace(/\p{M}/gu, '');
+  const losesLettersInAscii = /[^\x00-\x7F]/.test(decomposed.replace(/[^\p{L}\p{N}]/gu, ''));
+  if (!losesLettersInAscii) return ascii;
+
+  // NFKC folds fullwidth "＜" etc. to ASCII before the metachar strip
+  // (asgard-0007), while keeping CJK and other scripts composed.
+  const unicode = truncateUtf8(
+    stripSiteNameMetachars(raw.normalize('NFKC').replace(/[\p{C}]/gu, ' ')),
+    SITE_NAME_MAX_UTF8_BYTES,
+  );
+  if (!unicode) return ascii;
+  return `=?UTF-8?B?${Buffer.from(unicode, 'utf8').toString('base64')}?=`;
+};
+
 export interface UploadedFileInfo {
   filename: string;
   s3Path: string;
@@ -43,14 +105,24 @@ export const uploadFileToS3 = async (
   s3Key: string,
   metadata?: Record<string, string>,
 ): Promise<string> => {
-  const fileStream = fs.readFileSync(localFilePath);
+  // asgard-0008 (2026-10-10 re-scan): fs.readFileSync loaded the entire file
+  // into memory before upload. Report artifacts (summary.html, report.csv,
+  // zip bundles) can be large, and with `uploadFolderToS3` previously firing
+  // every file upload concurrently via Promise.all, a scan with many/large
+  // files could hold several full file buffers in memory simultaneously.
+  // Stream the file instead — @aws-sdk/client-s3's PutObjectCommand accepts
+  // a Node Readable as Body and streams it to S3 without buffering the
+  // whole file in process memory.
+  const fileStream = fs.createReadStream(localFilePath);
   const contentType = mime.lookup(localFilePath) || 'application/octet-stream';
+  const { size: contentLength } = fs.statSync(localFilePath);
 
   const uploadParams: PutObjectCommandInput = {
     Bucket: process.env.S3_BUCKET_NAME,
     Key: s3Key,
     Body: fileStream,
     ContentType: contentType,
+    ContentLength: contentLength,
     ...(metadata && { Metadata: metadata }),
   };
 
@@ -63,6 +135,7 @@ export const uploadFileToS3 = async (
 
   return uploadedUrl;
 };
+
 
 function getAllFiles(dir: string, rootDir: string): string[] {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -109,7 +182,7 @@ export const uploadFolderToS3 = async (
     metadata.userrole = sanitizeS3MetadataValue(scanMetadata.userRole);
   }
   if (scanMetadata.siteName) {
-    metadata.sitename = sanitizeS3MetadataValue(scanMetadata.siteName);
+    metadata.sitename = sanitizeSiteNameMetadata(scanMetadata.siteName);
   }
   if (scanMetadata.durationExceeded !== undefined) {
     metadata.durationexceeded = sanitizeS3MetadataValue(scanMetadata.durationExceeded);
@@ -117,7 +190,16 @@ export const uploadFolderToS3 = async (
 
   consoleLogger.info(`Uploading ${files.length} files to S3...`);
 
-  const uploadPromises = files.map(async relativePath => {
+  // asgard-0008 (2026-10-10 re-scan): files.map(...) + Promise.all fired every
+  // file's upload concurrently with no cap. Scans producing hundreds of
+  // screenshots/DOM captures could open hundreds of simultaneous S3 PUT
+  // streams, exhausting file descriptors and outbound connections. Upload in
+  // bounded-size batches instead; each batch completes before the next
+  // starts, same as pdfScanFunc's chunked `pMap`-style processing elsewhere
+  // in this codebase.
+  const S3_UPLOAD_CONCURRENCY = 5;
+
+  const uploadOne = async (relativePath: string): Promise<UploadedFileInfo | null> => {
     const fullPath = path.join(localFolderPath, relativePath);
     const s3Path = `${s3Prefix}/${relativePath.replace(/\\/g, '/')}`;
 
@@ -139,15 +221,20 @@ export const uploadFolderToS3 = async (
       consoleLogger.error(`Failed to upload ${relativePath}: ${e.message}`);
       throw new Error(`Failed to upload files to S3: ${e.message}`);
     }
-  });
+  };
 
-  const results = await Promise.all(uploadPromises);
-  uploadedFiles.push(...results.filter((file): file is UploadedFileInfo => file !== null));
+  for (let i = 0; i < files.length; i += S3_UPLOAD_CONCURRENCY) {
+    const batch = files.slice(i, i + S3_UPLOAD_CONCURRENCY);
+    // eslint-disable-next-line no-await-in-loop
+    const results = await Promise.all(batch.map(uploadOne));
+    uploadedFiles.push(...results.filter((file): file is UploadedFileInfo => file !== null));
+  }
 
   consoleLogger.info(`Successfully uploaded ${uploadedFiles.length} files to S3 at ${s3Prefix}`);
 
   return uploadedFiles;
 };
+
 
 export const isS3UploadEnabled = (): boolean => {
   return !!(

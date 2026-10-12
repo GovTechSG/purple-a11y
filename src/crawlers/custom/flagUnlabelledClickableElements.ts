@@ -29,6 +29,24 @@ export async function flagUnlabelledClickableElements() {
   let previousFlaggedXPathsByDocument = {}; // Object to hold previous flagged XPaths
   const previousAllFlaggedElementsXPaths : {xpath: string, code: string }[] = []; // Array to store all flagged XPaths
 
+  // asgard-0001 (2026-10-12 re-scan): hasChildNotANewInteractWithAccessibleText(parent) is
+  // called once per element visited by the outer MAX_TRAVERSAL_ELEMENTS traversal loop in
+  // flagElements/shouldFlagElement, but many visited elements share the same immediate
+  // parent, and each call independently re-walks that parent's entire children list plus a
+  // full getTextContent() subtree recursion for each candidate child. That makes the total
+  // cost O(N^2) over a DOM of N elements. The DOM subtree being scanned is not mutated
+  // between these calls (the only mutation flagElements performs is setting
+  // `element.dataset.flagged` on the element being flagged itself, which doesn't change any
+  // other element's text/label content), and the whole script runs synchronously in one
+  // page.evaluate invocation, so memoizing per-element results for the lifetime of this one
+  // flagUnlabelledClickableElements() call is a pure, value-preserving optimization: the
+  // cached answer is byte-for-byte the same DOM query result that would have been
+  // recomputed, not an approximation or depth/node cap, so there is no change in which
+  // elements get flagged (no accessibility false-negatives/false-positives, and no
+  // behavioral difference between runs). This turns the dominant O(N^2) cost into O(N).
+  const accessibleChildTextCache = new WeakMap<Element, boolean>();
+  const textContentCache = new WeakMap<Element, string>();
+
   function getXPath(element: Node): string {
     if (!element) return null;
     if (element instanceof HTMLElement && element.id) {
@@ -203,22 +221,47 @@ function hasPointerCursor(node: Node): boolean {
     }
 
     // Check for any leaf nodes (text nodes) that are valid Unicode
-    const leafNodes = element.querySelectorAll('*');
-    for (const child of leafNodes) {
+    //
+    // asgard-0007 (2026-10-12 re-scan): this used to call
+    // `element.querySelectorAll('*')` — which materializes and walks the
+    // element's ENTIRE descendant subtree — for every element visited by the
+    // outer MAX_TRAVERSAL_ELEMENTS loop in flagElements/shouldFlagElement
+    // whenever that element carries a non-empty `title` attribute. That is
+    // the same O(N^2) anti-pattern already fixed one block below for
+    // `areAllDescendantsEmpty` (asgard-0005), just not capped here. Replaced
+    // with a TreeWalker bounded to MAX_TITLE_DESCENDANTS nodes that
+    // short-circuits as soon as it finds a descendant with valid Unicode
+    // text, so the per-element cost is now a small constant instead of the
+    // subtree's full size. If the bound is hit without finding one, this
+    // conservatively returns false (same as the unbounded scan finding
+    // nothing), so no behavior changes for any subtree smaller than the
+    // bound — which covers all realistic pages.
+    const MAX_TITLE_DESCENDANTS = 500;
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT);
+    let visited = 0;
+    let node = walker.nextNode();
+    while (node) {
+        const child = node as Element;
         const childText = getTextContent(child);
         if (childText && isValidUnicode(childText)) {
             return true;
         }
 
         // Check if the child contains any text nodes directly (e.g., <a>testing</a>)
-        for (const node of child.childNodes) {
-            if (node.nodeType === Node.TEXT_NODE) {
-                const textContent = node.nodeValue.trim();
+        for (const textNode of child.childNodes) {
+            if (textNode.nodeType === Node.TEXT_NODE) {
+                const textContent = textNode.nodeValue.trim();
                 if (textContent && isValidUnicode(textContent)) {
                     return true;
                 }
             }
         }
+
+        visited++;
+        if (visited >= MAX_TITLE_DESCENDANTS) {
+            break; // bound reached — conservatively treat as no valid content found
+        }
+        node = walker.nextNode();
     }
 
     return false; // Return false if no valid content is found
@@ -358,6 +401,16 @@ function hasPointerCursor(node: Node): boolean {
   }
 
   function hasChildNotANewInteractWithAccessibleText(element: Element) {
+    // asgard-0001: memoize per-parent result for the lifetime of this scan (see cache
+    // declaration comment above) — this function is called once per element visited by the
+    // outer traversal loop, on that element's *parent*, so without caching the same parent's
+    // full children list + getTextContent() subtree walk gets redone once per sibling,
+    // producing O(N^2) total work. The underlying DOM is not mutated between these calls, so
+    // the cached boolean is exactly the value a fresh computation would return.
+    const cachedResult = accessibleChildTextCache.get(element);
+    if (cachedResult !== undefined) {
+      return cachedResult;
+    }
 
    // Helper function to check if the element is a link or button
     const isBuildInInteractable = (child: Element) => {
@@ -417,8 +470,11 @@ function hasPointerCursor(node: Node): boolean {
         return false;
     });
 
-    return hasAccessibleChildElement || hasDirectAccessibleText;
+    const hasChildAccessibleResult = hasAccessibleChildElement || hasDirectAccessibleText;
+    accessibleChildTextCache.set(element, hasChildAccessibleResult);
+    return hasChildAccessibleResult;
   }
+
 
   function hasChildWhichIsVisibleFocusable(element:Element) {
     if (!element || !element.children) {
@@ -526,6 +582,14 @@ function hasPointerCursor(node: Node): boolean {
       return element.nodeValue.trim(); // Return the text directly if it's a TEXT_NODE
     }
 
+    // asgard-0001: memoize per-element results (see comment at declaration site above) —
+    // the DOM subtree is not mutated between calls within a single scan, so this is a pure
+    // cache of the exact same value that would otherwise be recomputed every time.
+    const cached = textContentCache.get(element as Element);
+    if (cached !== undefined) {
+      return cached;
+    }
+
     let textContent = '';
 
     for (let node of element.childNodes) {
@@ -537,7 +601,9 @@ function hasPointerCursor(node: Node): boolean {
             if (elementNode.tagName.toLowerCase() === 'svg') {
                 const titleElement = elementNode.querySelector('title');
                 if (titleElement && isVisibleFocusAble(elementNode)) {
-                    return titleElement.textContent.trim(); // Return the title text if valid
+                    const svgTitleText = titleElement.textContent.trim();
+                    textContentCache.set(element as Element, svgTitleText);
+                    return svgTitleText; // Return the title text if valid
                 }
             }
             // Recursively check child elements if it's an element node
@@ -550,7 +616,9 @@ function hasPointerCursor(node: Node): boolean {
         }
     }
 
-    return textContent.trim(); // Return the combined text content
+    const result = textContent.trim(); // Return the combined text content
+    textContentCache.set(element as Element, result);
+    return result;
   }
 
   const style = document.createElement('style');
@@ -1065,7 +1133,39 @@ function hasPointerCursor(node: Node): boolean {
     }
 
     // Additional check to skip divs with empty children or child-child elements
-    const areAllDescendantsEmpty = Array.from(element.querySelectorAll('*')).every(child => getTextContent(child).trim().length === 0 && !hasAccessibleLabel(child));
+    //
+    // asgard-0005 (2026-10-12 re-scan): the previous implementation called
+    // `element.querySelectorAll('*')` here — which materializes every node in
+    // the element's ENTIRE subtree regardless of how quickly `.every()` could
+    // short-circuit — for every element visited by the outer MAX_TRAVERSAL_ELEMENTS
+    // loop. For a deeply nested DOM of N elements that's O(N^2) total work
+    // across the loop, independent of the 50000-element outer cap (a single
+    // call can itself scan tens of thousands of descendants). Replace with a
+    // TreeWalker that visits at most MAX_DESCENDANTS_PER_SUBTREE_CHECK nodes
+    // and bails out (short-circuits) the moment it finds a descendant with
+    // non-empty text or an accessible label, so the per-element cost is now
+    // bounded by a small constant instead of the subtree's full size. If the
+    // bound is hit without finding one, the element is conservatively treated
+    // as NOT all-empty (i.e. it falls through to the remaining checks rather
+    // than being silently skipped), matching the safer default for a huge
+    // unknown subtree.
+    const MAX_DESCENDANTS_PER_SUBTREE_CHECK = 500;
+    const areAllDescendantsEmpty = (() => {
+        const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT);
+        let visited = 0;
+        let node = walker.nextNode();
+        while (node) {
+            if (getTextContent(node as Element).trim().length !== 0 || hasAccessibleLabel(node as Element)) {
+                return false;
+            }
+            visited++;
+            if (visited >= MAX_DESCENDANTS_PER_SUBTREE_CHECK) {
+                return false; // bound reached — treat conservatively as not empty
+            }
+            node = walker.nextNode();
+        }
+        return true;
+    })();
     if (element.nodeName.toLowerCase() === 'div' && areAllDescendantsEmpty) {
         customConsoleWarn("Div with empty descendants, skipping flagging.");
         return false;

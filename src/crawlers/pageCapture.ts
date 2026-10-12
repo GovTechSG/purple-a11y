@@ -290,6 +290,16 @@ export const getCaptureMaxStylesBytes = (): number =>
   positiveIntFromEnv('OOBEE_CAPTURE_MAX_STYLES_BYTES', 100 * 1024 * 1024);
 export const getCaptureMaxDomBytes = (): number =>
   positiveIntFromEnv('OOBEE_CAPTURE_MAX_DOM_BYTES', 100 * 1024 * 1024);
+// asgard-0006 (2026-10-10 re-scan): full-page screenshots of scanned
+// (attacker-controlled) pages had no size bound, unlike the DOM/computed-
+// styles captures above. page.screenshot({ fullPage: true }) renders and
+// encodes the entire document height, so a page that stretches its scroll
+// height to an extreme value (e.g. via huge absolutely-positioned elements)
+// can force a very large, slow full-page render and PNG encode. Cap by
+// approximate pixel area (scrollWidth * scrollHeight) before capturing,
+// mirroring readBoundedDom's pre-check-then-capture pattern.
+export const getCaptureMaxScreenshotPixels = (): number =>
+  positiveIntFromEnv('OOBEE_CAPTURE_MAX_SCREENSHOT_PIXELS', 500_000_000);
 
 // Elements that never contribute to visible page state — no point capturing
 // their computed styles. Skipping these keeps the output file size in check.
@@ -659,6 +669,30 @@ export async function readBoundedDom(page: Page): Promise<string> {
   return content;
 }
 
+// asgard-0006: same pre-check-then-capture shape as readBoundedDom — measure
+// the page's scrollable area first (cheap) and refuse to take the expensive
+// full-page screenshot if it exceeds the configured pixel budget.
+export async function takeBoundedFullPageScreenshot(page: Page, path: string): Promise<void> {
+  const maxPixels = getCaptureMaxScreenshotPixels();
+  const { width, height } = await page.evaluate(() => ({
+    width: Math.max(
+      document.documentElement?.scrollWidth || 0,
+      document.body?.scrollWidth || 0,
+    ),
+    height: Math.max(
+      document.documentElement?.scrollHeight || 0,
+      document.body?.scrollHeight || 0,
+    ),
+  }));
+  const pixels = width * height;
+  if (pixels > maxPixels) {
+    throw new Error(
+      `Full-page screenshot too large (${width}x${height}=${pixels}px > ${maxPixels}px limit); skipped`,
+    );
+  }
+  await page.screenshot({ path, fullPage: true });
+}
+
 export async function capturePageData(
   page: Page,
   url: string,
@@ -709,7 +743,7 @@ export async function capturePageData(
     try {
       await fs.ensureDir(desktopScreenshotDir);
       const desktopPath = await getUniqueFilePath(desktopScreenshotDir, fileName, '.png');
-      await page.screenshot({ path: desktopPath, fullPage: true });
+      await takeBoundedFullPageScreenshot(page, desktopPath);
       entry.desktopScreenshot = `pageDOMs/desktopPageScreenshots/${getRelativeName(desktopPath, desktopScreenshotDir)}`;
     } catch (err) {
       entry.errors.push(
@@ -757,7 +791,7 @@ export async function capturePageData(
       try {
         await fs.ensureDir(mobileScreenshotDir);
         const mobilePath = await getUniqueFilePath(mobileScreenshotDir, fileName, '.png');
-        await page.screenshot({ path: mobilePath, fullPage: true });
+        await takeBoundedFullPageScreenshot(page, mobilePath);
         entry.mobileScreenshot = `pageDOMs/mobilePageScreenshots/${getRelativeName(mobilePath, mobileScreenshotDir)}`;
       } catch (err) {
         entry.errors.push(

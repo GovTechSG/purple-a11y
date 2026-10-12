@@ -33,11 +33,12 @@ import constants, {
   isRunningInContainer,
 } from './constants.js';
 import { consoleLogger } from '../logs.js';
-import { isUrlPdf, splitAuthHeaders, addAuthRouteHandler } from '../crawlers/commonCrawlerFunc.js';
+import { isUrlPdf, splitAuthHeaders, addAuthRouteHandler, makeHeaderScopeMatcher } from '../crawlers/commonCrawlerFunc.js';
 import {
   cleanUpAndExit,
   isFollowStrategy,
   isTelemetryDisabled,
+  isTelemetryPiiConsentGiven,
   randomThreeDigitNumberString,
   register,
 } from '../utils.js';
@@ -635,7 +636,18 @@ export const isSitemapContent = (content: string) => {
   }
 
   const regexForHtml = new RegExp('<(?:!doctype html|html|head|body)+?>', 'gmi');
-  const regexForXmlSitemap = new RegExp('<(?:urlset|sitemapindex|feed|rss)+?.*>', 'gmi');
+  // asgard-0010 (2026-10-12 re-scan): the previous pattern
+  // `<(?:urlset|sitemapindex|feed|rss)+?.*>` combines a lazy one-or-more
+  // group with a trailing `.*>` — on a long run of
+  // urlset/sitemapindex/feed/rss tokens with no closing `>`, the engine
+  // expands the group one repetition at a time and re-scans `.*` on every
+  // attempt, which is O(n^2) on attacker-sized malformed input (content here
+  // is unvalidated — validateXML already returned isValid=false by this
+  // point). Rewritten as a possessive-style check: match the literal open
+  // tag once (no repeated alternation group) and allow at most a bounded run
+  // of non-'>' characters before the closing bracket, so there is no
+  // backtracking group left to blow up regardless of input length.
+  const regexForXmlSitemap = new RegExp('<(?:urlset|sitemapindex|feed|rss)\\b[^>]{0,2000}>', 'gmi');
   if (content.match(regexForHtml) && content.match(regexForXmlSitemap)) {
     // is an XML sitemap wrapped in a HTML document
     return true;
@@ -893,6 +905,15 @@ export const getUrlsFromRobotsTxt = async (
   browserToRun: string,
   userDataDirectory: string,
   extraHTTPHeaders: Record<string, string>,
+  // asgard-0002 (2026-10-09 re-scan): the operator's full headers (including
+  // Authorization) used to be sent to whatever origin `url` resolves to. Under
+  // the default same-domain crawl strategy `url` is the page currently being
+  // scanned — which can be a sibling subdomain, not the operator's entry URL —
+  // so the credential was reaching hosts the operator never targeted directly.
+  // Pin header scoping to the operator's actual entry URL, defaulting to `url`
+  // itself for callers (prepareData, intelligent-sitemap) where the robots.txt
+  // IS for the entry URL's own origin.
+  entryUrl: string = url,
 ): Promise<void> => {
   if (!constants.robotsTxtUrls) return;
 
@@ -907,6 +928,7 @@ export const getUrlsFromRobotsTxt = async (
       browserToRun,
       userDataDirectory,
       extraHTTPHeaders,
+      entryUrl,
     );
     consoleLogger.info(`Fetched robots.txt from ${robotsUrl}`);
   } catch (e) {
@@ -987,10 +1009,38 @@ const getRobotsTxtViaPlaywright = async (
   browser: string,
   userDataDirectory: string,
   extraHTTPHeaders: Record<string, string>,
+  entryUrl: string,
 ): Promise<string> => {
   let robotsDataDir = '';
   let browserContext;
   let browserInstance;
+
+  // asgard-0002 (2026-10-09 re-scan): this fetch only ever navigates to
+  // `robotsUrl` itself (no subresources), so scoping can be computed once up
+  // front instead of via a per-request route handler. Authorization is only
+  // sent when robotsUrl is the exact entry origin (matches addAuthRouteHandler's
+  // same-origin rule elsewhere); other headers (Cookie, X-Api-Key, ...) are
+  // sent only when robotsUrl is within the entry URL's configured scope
+  // (site/origin/all, per OOBEE_SCOPE_HEADERS_TO_ORIGIN / OOBEE_UNSCOPED_OPERATOR_HEADERS).
+  const scopedHeaders = ((): Record<string, string> | undefined => {
+    if (!extraHTTPHeaders || Object.keys(extraHTTPHeaders).length === 0) return undefined;
+    const inScope = makeHeaderScopeMatcher(entryUrl);
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(extraHTTPHeaders)) {
+      if (k.toLowerCase() === 'authorization') {
+        let sameOrigin = false;
+        try {
+          sameOrigin = new URL(robotsUrl).origin === new URL(entryUrl).origin;
+        } catch {
+          sameOrigin = false;
+        }
+        if (sameOrigin) out[k] = v;
+      } else if (inScope(robotsUrl)) {
+        out[k] = v;
+      }
+    }
+    return Object.keys(out).length > 0 ? out : undefined;
+  })();
 
   // Bug in Chrome which causes browser pool crash when userDataDirectory is set in non-headless mode
   if (process.env.CRAWLEE_HEADLESS === '1') {
@@ -1005,7 +1055,7 @@ const getRobotsTxtViaPlaywright = async (
     if (process.env.CRAWLEE_HEADLESS === '1') {
       browserContext = await launchPersistentSafeContext(robotsDataDir, {
         ...getPlaywrightLaunchOptions(browser),
-        ...(extraHTTPHeaders && { extraHTTPHeaders }),
+        ...(scopedHeaders && { extraHTTPHeaders: scopedHeaders }),
         ...(process.env.OOBEE_USER_AGENT && { userAgent: process.env.OOBEE_USER_AGENT }),
       });
       register(browserContext);
@@ -1016,10 +1066,11 @@ const getRobotsTxtViaPlaywright = async (
       register(browserInstance as unknown as { close: () => Promise<void> });
 
       browserContext = await browserInstance.newContext({
-        ...(extraHTTPHeaders && { extraHTTPHeaders }),
+        ...(scopedHeaders && { extraHTTPHeaders: scopedHeaders }),
         ...(process.env.OOBEE_USER_AGENT && { userAgent: process.env.OOBEE_USER_AGENT }),
       });
     }
+
 
     const page = await browserContext.newPage();
 
@@ -1071,7 +1122,7 @@ export const getSitemapsFromRobotsTxt = async (
 
   let robotsTxt: string;
   try {
-    robotsTxt = await getRobotsTxtViaPlaywright(robotsUrl, browser, userDataDirectory, extraHTTPHeaders);
+    robotsTxt = await getRobotsTxtViaPlaywright(robotsUrl, browser, userDataDirectory, extraHTTPHeaders, url);
   } catch (e) {
     consoleLogger.info(`Unable to fetch robots.txt from ${robotsUrl} for sitemap discovery`);
     return [];
@@ -1270,6 +1321,77 @@ export async function isLinkLocalOrMetadataUrl(candidate: string): Promise<boole
   }
 }
 
+// Classifies a URL's host with ONE DNS lookup (isLinkLocalOrMetadataUrl +
+// isInternalOrLoopbackUrl did two). Same rules as those two:
+//  - non-http(s) URLs: 'skip' (not network egress);
+//  - localhost names: 'internal';
+//  - IP literals: classified directly, no DNS;
+//  - otherwise: any metadata answer -> 'metadata', any internal -> 'internal';
+//  - DNS failure: 'public' (page.goto surfaces the error), as before.
+export type UrlHostKind = 'skip' | 'metadata' | 'internal' | 'public';
+
+export async function classifyUrlHost(candidate: string): Promise<UrlHostKind> {
+  let parsed: URL;
+  try {
+    parsed = new URL(candidate);
+  } catch {
+    return 'skip';
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return 'skip';
+  const lower = parsed.hostname.toLowerCase();
+  if (!lower) return 'skip';
+  if (lower === 'localhost' || lower.endsWith('.localhost')) return 'internal';
+  const bare = lower.replace(/^\[|\]$/g, '');
+  if (isIpv4Literal(bare)) {
+    if (isMetadataIpv4(bare)) return 'metadata';
+    return isInternalIpv4(bare) ? 'internal' : 'public';
+  }
+  if (bare.includes(':')) {
+    if (isMetadataIpv6(bare)) return 'metadata';
+    return isInternalIpv6(bare) ? 'internal' : 'public';
+  }
+  try {
+    const { lookup } = await import('dns/promises');
+    const records = await lookup(bare, { all: true });
+    let internal = false;
+    for (const r of records) {
+      const v4 = r.family === 4;
+      if (v4 ? isMetadataIpv4(r.address) : isMetadataIpv6(r.address)) return 'metadata';
+      if (v4 ? isInternalIpv4(r.address) : isInternalIpv6(r.address)) internal = true;
+    }
+    return internal ? 'internal' : 'public';
+  } catch {
+    return 'public';
+  }
+}
+
+// Per-page memo of classifyUrlHost, keyed by hostname. One page's
+// before-load check, redirect hops and final URL share a single lookup per
+// host. Create one per page/navigation only: reusing it across pages would
+// let a site rebind its DNS to an internal address after its first page.
+export const makeHostKindCache = () => {
+  const byHost = new Map<string, Promise<UrlHostKind>>();
+  return (target: string): Promise<UrlHostKind> => {
+    let key: string;
+    try {
+      const u = new URL(target);
+      key = `${u.protocol}//${u.hostname.toLowerCase()}`;
+    } catch {
+      return Promise.resolve('skip');
+    }
+    let p = byHost.get(key);
+    if (!p) {
+      p = classifyUrlHost(target);
+      byHost.set(key, p);
+    }
+    return p;
+  };
+};
+
+// Egress decision from a host kind, pinned to whether the entry is internal.
+export const isRefusedHostKind = (kind: UrlHostKind, entryIsInternal: boolean): boolean =>
+  kind === 'metadata' || (kind === 'internal' && !entryIsInternal);
+
 // asgard-0001: egress policy pinned to the operator-supplied entry URL.
 // Returns true when navigating from `entryUrl` to `target` (e.g. via a
 // redirect) would pivot into an address the operator did not choose:
@@ -1285,9 +1407,10 @@ export async function isRefusedRedirectTarget(entryUrl: string, target: string):
     return false;
   }
   if (protocol !== 'http:' && protocol !== 'https:') return false;
-  if (await isLinkLocalOrMetadataUrl(target)) return true;
-  if (await isInternalOrLoopbackUrl(entryUrl)) return false;
-  return isInternalOrLoopbackUrl(target);
+  const kind = await classifyUrlHost(target);
+  if (kind === 'metadata') return true;
+  if (kind !== 'internal') return false;
+  return !(await isInternalOrLoopbackUrl(entryUrl));
 }
 
 // Returns the IP the browser connected to, or null when it can't be trusted.
@@ -1336,8 +1459,17 @@ export async function isRefusedNavigation(
   response: any,
   finalUrl?: string,
 ): Promise<string | null> {
+  // One lookup per distinct host across all hops, and the entry is
+  // classified once (only needed if some hop is internal).
+  const kindOf = makeHostKindCache();
+  let entryInternal: boolean | undefined;
   for (const hopUrl of getResponseHopUrls(response, finalUrl)) {
-    if (await isRefusedRedirectTarget(entryUrl, hopUrl)) return hopUrl;
+    const kind = await kindOf(hopUrl);
+    if (kind === 'metadata') return hopUrl;
+    if (kind === 'internal') {
+      if (entryInternal === undefined) entryInternal = await isInternalOrLoopbackUrl(entryUrl);
+      if (!entryInternal) return hopUrl;
+    }
   }
   const ip = await getDirectServerAddr(response);
   if (ip && (await isRefusedServerAddrForEntry(entryUrl, ip))) return ip;
@@ -1399,11 +1531,38 @@ export const getLinksFromSitemap = async (
   const scannedSitemaps = new Set<string>();
   const sitemapLinkCounts: Record<string, number> = {};
   const allUrls = new Set<string>(); // all discovered URLs (lightweight strings)
+  // asgard-0006 (2026-10-12 re-scan): _maxLinksCount (the crawl's
+  // maxRequestsPerCrawl) was accepted as a parameter but never read anywhere
+  // in this function — every <loc> found while walking a sitemap/sitemap-index,
+  // including recursive descent into child sitemaps, was pushed into allUrls
+  // with no size limit, so a hostile in-scope sitemap listing millions of URLs
+  // could exhaust memory before the crawler ever got a chance to apply its own
+  // maxRequestsPerCrawl (which only bounds successfully SCANNED pages, not
+  // discovery). Cap the discovery set here too. maxRequestsPerCrawl can
+  // legitimately be Infinity (operator asked for an unlimited scan), so apply
+  // a generous multiple of it as headroom for de-dup/strategy-filter slack
+  // when finite, and otherwise fall back to a fixed hard ceiling so discovery
+  // itself can never grow unbounded even when page-count is uncapped.
+  const SITEMAP_DISCOVERY_HARD_CEILING = 200_000;
+  const maxLinksToDiscover =
+    Number.isFinite(_maxLinksCount) && _maxLinksCount > 0
+      ? Math.min(Math.max(_maxLinksCount * 10, 1000), SITEMAP_DISCOVERY_HARD_CEILING)
+      : SITEMAP_DISCOVERY_HARD_CEILING;
+  let discoveryCapWarningLogged = false;
   const isImageSitemapUrl = (candidateUrl: string) =>
     /(^|\/)image-sitemap(?:-index)?(?:-\d+)?\.xml(?:$|[?#])/i.test(candidateUrl);
 
   const addToUrlList = (url: string) => {
     if (!url) return;
+    if (allUrls.size >= maxLinksToDiscover) {
+      if (!discoveryCapWarningLogged) {
+        consoleLogger.warn(
+          `Sitemap discovery cap (${maxLinksToDiscover} URLs) reached; ignoring further discovered URLs.`,
+        );
+        discoveryCapWarningLogged = true;
+      }
+      return;
+    }
     if (isDisallowedInRobotsTxt(url)) return;
     if (!isFilePath(userUrl) && !isFollowStrategy(url, userUrl, strategy)) return;
 
@@ -1595,10 +1754,12 @@ export const getLinksFromSitemap = async (
               return;
             }
           }
+          let remoteIpSeen = false;
           try {
             // Only trusted for direct connections (proxy-safe).
             const remoteIp = await getDirectServerAddr(response);
             if (remoteIp) {
+              remoteIpSeen = true;
               const bare = remoteIp.replace(/^\[|\]$/g, '').toLowerCase();
               const isInternal = isIpv4Literal(bare)
                 ? isInternalIpv4(bare)
@@ -1613,8 +1774,16 @@ export const getLinksFromSitemap = async (
             }
           } catch {
             // serverAddr() is best-effort — Chromium may not report it for
-            // service-worker/cached responses. Fall through so the operator
-            // still sees ordinary sitemap discovery for those cases.
+            // service-worker/cached responses.
+          }
+          // asgard-0012 (2026-10-09 scan): when serverAddr() gave nothing, the
+          // post-connect check above never ran. Re-resolve the host now and
+          // refuse internal answers, so a rebinding resolver must keep serving
+          // the internal IP to us as well — not just once to the browser.
+          if (!remoteIpSeen && !isFilePath(url) && (await isInternalOrLoopbackUrl(url))) {
+            consoleLogger.warn(`Refusing sitemap body: ${url} now resolves to an internal address`);
+            data = '';
+            return;
           }
         }
 
@@ -2552,6 +2721,14 @@ export const submitForm = async (
     consoleLogger.info('Skipping telemetry submission: OOBEE_DISABLE_TELEMETRY is set');
     return;
   }
+  // PII (operator-supplied email/name) is only sent when the operator has
+  // explicitly opted in via OOBEE_TELEMETRY_ALLOW_PII. Telemetry being
+  // enabled at all (i.e. OOBEE_DISABLE_TELEMETRY unset) does not, by itself,
+  // authorize sending identifying data off-device — this mirrors the gate
+  // already applied on the Sentry telemetry path in sentryTelemetry.ts
+  // (asgard-0004 / asgard-0008: this path previously sent email/name
+  // unconditionally, bypassing the PII consent gate).
+  const piiConsentGiven = isTelemetryPiiConsentGiven();
   try {
     const additionalPageDataJson = JSON.stringify({
       redirectsScanned: numberOfRedirectsScanned,
@@ -2565,8 +2742,8 @@ export const submitForm = async (
     const params = new URLSearchParams();
     params.set(formDataFields.entryUrlField, String(entryUrl ?? ''));
     params.set(formDataFields.scanTypeField, String(scanType ?? ''));
-    params.set(formDataFields.emailField, String(email ?? ''));
-    params.set(formDataFields.nameField, String(name ?? ''));
+    params.set(formDataFields.emailField, piiConsentGiven ? String(email ?? '') : '');
+    params.set(formDataFields.nameField, piiConsentGiven ? String(name ?? '') : '');
     params.set(formDataFields.resultsField, scanResultsJson);
     params.set(formDataFields.numberOfPagesScannedField, String(numberOfPagesScanned ?? 0));
     params.set(formDataFields.additionalPageDataField, additionalPageDataJson);

@@ -281,8 +281,120 @@
   // (untrusted) page. Strip anything that could execute or reach the network
   // (event handler attributes, javascript: URLs, <script>/<iframe>/etc.)
   // before the node is ever brought into the live document.
+  //
+  // asgard-0006 (10 Oct 2026 re-scan): the earlier version only blocked script
+  // EXECUTION (on*, javascript:, <script>/<iframe>/...). It left ordinary
+  // http(s) resource references untouched, so an <img src="https://evil/beacon">,
+  // a style="background:url(https://evil/x)" attribute, or an embedded
+  // <style> block all survived sanitization intact. Once the "sanitized" node
+  // is document.importNode'd into the live report DOM below and
+  // getComputedStyle() forces layout, the browser actually fetches those
+  // external resources and applies injected <style> rules document-wide —
+  // "reach the network" was the stated goal of this function and was not met.
+  // Fixed by also stripping resource-loading attributes/elements and any
+  // url(...) reference inside a style attribute, while still preserving the
+  // element's own non-url style declarations (extractElementContext reads
+  // element.style.cssText back out for the AI suggest-fix payload).
+  const RESOURCE_ATTRS = ['src', 'srcset', 'href', 'poster', 'background', 'data', 'formaction', 'action', 'xlink:href'];
+  // asgard-0009 (2026-10-10 re-scan): CSS allows a backslash-hex escape to
+  // stand in for any character (e.g. `\68` === 'h'), so `url(\68ttps://x)`
+  // decodes to `url(https://x)` while the old literal-scheme regex below
+  // never matched the raw escaped text at all. Decode those escapes before
+  // testing/replacing so the scheme check can't be bypassed this way.
+  function decodeCssEscapes(str) {
+    return String(str)
+      .replace(/\\([0-9a-fA-F]{1,6})\s?/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+      .replace(/\\(.)/g, '$1');
+  }
+
+  function isExternalUrlValue(value) {
+    // asgard-0011 (2026-10-12 re-scan): browsers (and the WHATWG URL parser)
+    // treat backslash as equivalent to forward-slash for special schemes, so
+    // `/\evil.com/x`, `\\evil.com/x` and `\/evil.com/x` all resolve to a
+    // network-path reference (`//evil.com/x`) exactly like the
+    // forward-slash-only forms this regex already caught. The previous
+    // pattern only matched literal `//` or `http(s)://`, so any backslash
+    // variant sailed through unsanitized.
+    //
+    // asgard-0007 (2026-10-12 re-scan, rescan-5): the regex approach above was
+    // still incomplete even after the backslash fix — it required a literal
+    // `//` somewhere in the value, so single-slash/no-slash special-scheme
+    // forms like `https:/evil.com/x`, `http:/evil.com/x`, `https:evil.com/x`
+    // and `http:evil.com/x` never matched, even though the WHATWG URL parser
+    // (and therefore every browser) normalizes all of them to a fully
+    // qualified `https://evil.com/x` / `http://evil.com/x`. Rather than
+    // growing the denylist regex again for the next slash-count variant,
+    // resolve the (CSS-escape-decoded, backslash-normalised) candidate against
+    // the document's own base URL with the `URL` constructor and classify by
+    // the *resolved* protocol+host — this is what a browser actually does, so
+    // it can't be bypassed by a slash-counting trick. Falls back to the
+    // previous regex-based check only if URL parsing itself throws (e.g. a
+    // value that isn't a URL at all), to fail closed rather than open.
+    const raw = String(value || '');
+    const rawNormalized = raw.replace(/\\/g, '/');
+    const decodedNormalized = decodeCssEscapes(raw).replace(/\\/g, '/');
+    const base = (typeof document !== 'undefined' && document.baseURI) || 'http://localhost/';
+    for (const candidate of [rawNormalized, decodedNormalized]) {
+      // Try an ABSOLUTE parse first (no base). This is what correctly
+      // classifies `http:/evil.example/x` / `https:evil.example/x` as
+      // external: with a base URL, the WHATWG algorithm treats a
+      // same-scheme-as-base single-slash value as a *relative* reference and
+      // resolves it against the base's own host, masking the bypass. An
+      // absolute parse has no such ambiguity — any candidate that parses
+      // without a base genuinely specifies its own scheme and host.
+      try {
+        const absolute = new URL(candidate);
+        if (absolute.protocol === 'http:' || absolute.protocol === 'https:') {
+          return true;
+        }
+        // Parsed to a non-http(s) absolute URL (e.g. data:, javascript:) —
+        // not an external http(s) fetch target, keep checking other forms.
+        continue;
+      } catch {
+        // Not parseable as an absolute URL — it's relative or malformed.
+        // Fall through to resolve it against the document base below.
+      }
+      try {
+        const resolved = new URL(candidate, base);
+        if (resolved.protocol === 'http:' || resolved.protocol === 'https:') {
+          const baseUrl = new URL(base);
+          if (resolved.host !== baseUrl.host) {
+            return true;
+          }
+        }
+      } catch {
+        // Not parseable even against the base — fall through to the regex
+        // check below for this candidate.
+      }
+    }
+    if (/^\s*(https?:)?\/\//i.test(rawNormalized)) {
+      return true;
+    }
+    return /^\s*(https?:)?\/\//i.test(decodedNormalized);
+  }
+
+  // Matches ANY url(...) token (any scheme, including CSS-escaped ones) so
+  // each one can be individually decoded and classified below. Only used
+  // with String.replace (never .test), so the /g flag's lastIndex state
+  // cannot make a later check skip a match.
+  const CSS_URL_TOKEN_RE = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*))\s*\)/gi;
+  // asgard-0007 (2026-10-10 re-scan): url(...) is not the only CSS syntax
+  // that fetches a resource. image-set()/-webkit-image-set() (and
+  // cross-fade()/-webkit-cross-fade()) take one or more quoted/bare URLs as
+  // their own argument list, not wrapped in url(...), so the url()-only
+  // regex above never matched them and an external image-set() reference
+  // survived sanitization intact. Match the whole function-call token
+  // (including nested url(...) args some engines also accept inside
+  // image-set()) so every comma-separated candidate can be classified.
+  const CSS_IMAGE_SET_TOKEN_RE =
+    /(?:-webkit-)?(?:image-set|cross-fade)\(\s*((?:[^()]|\([^()]*\))*)\)/gi;
+  // A single candidate inside image-set()'s argument list, e.g.
+  // `"https://evil/x" 1x` or `url(https://evil/x) 2x`.
+  const CSS_IMAGE_SET_CANDIDATE_RE = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*))\s*\)|"([^"]*)"|'([^']*)'/gi;
+
+
   function sanitizeElementForContext(rootElement) {
-    const DANGEROUS_TAGS = ['script', 'iframe', 'object', 'embed', 'link', 'meta', 'base', 'form'];
+    const DANGEROUS_TAGS = ['script', 'iframe', 'object', 'embed', 'link', 'meta', 'base', 'form', 'style'];
 
     if (DANGEROUS_TAGS.includes(rootElement.tagName?.toLowerCase())) {
       return null;
@@ -298,11 +410,64 @@
 
         if (name.startsWith('on') || name === 'srcdoc') {
           el.removeAttribute(attr.name);
+        } else if (name === 'srcset') {
+          // asgard-0009: srcset is a comma-separated list of candidates
+          // ("url descriptor, url descriptor, ..."); the old check only
+          // tested whether the WHOLE string started with an external
+          // scheme, so a leading relative candidate let every later
+          // absolute candidate in the list through unexamined. Test each
+          // candidate's URL individually and drop the whole attribute if
+          // any candidate is external.
+          const hasExternalCandidate = value
+            .split(',')
+            .map(candidate => candidate.trim().split(/\s+/)[0] || '')
+            .some(url => isExternalUrlValue(url));
+          if (hasExternalCandidate) el.removeAttribute(attr.name);
+        } else if (
+          [...RESOURCE_ATTRS, 'formaction', 'xlink:href'].includes(name) &&
+          isExternalUrlValue(value)
+        ) {
+          // Only external http(s)/protocol-relative references are stripped;
+          // a same-document #fragment href (used for in-page anchors) is left
+          // alone since it cannot reach the network.
+          el.removeAttribute(attr.name);
         } else if (
           ['href', 'src', 'action', 'formaction', 'xlink:href'].includes(name) &&
-          /^\s*javascript:/i.test(value)
+          /^\s*javascript:/i.test(decodeCssEscapes(value))
         ) {
           el.removeAttribute(attr.name);
+        } else if (name === 'style') {
+          // Decode CSS escapes inside each url(...) token before classifying
+          // it, so a hex-escaped scheme (e.g. `url(\68ttps://x)`, which
+          // decodes to `url(https://x)`) can't slip past the scheme check.
+          // Replace only the external tokens with `none` (a valid value
+          // wherever an image url() is) and keep the rest of the
+          // declaration block intact, since extractElementContext below
+          // reports element.style.cssText back to the caller.
+          let cleaned = value.replace(CSS_URL_TOKEN_RE, (match, dq, sq, bare) => {
+            const raw = dq !== undefined ? dq : sq !== undefined ? sq : bare;
+            return isExternalUrlValue(raw) ? 'none' : match;
+          });
+          // asgard-0007 (2026-10-10 re-scan): image-set()/-webkit-image-set()
+          // and cross-fade()/-webkit-cross-fade() carry their own list of
+          // quoted/bare URL candidates (optionally wrapped in url(...)),
+          // separate from the plain url(...) syntax handled above. Drop the
+          // whole function call to `none` if any candidate is external.
+          cleaned = cleaned.replace(CSS_IMAGE_SET_TOKEN_RE, (match, args) => {
+            let hasExternal = false;
+            let m;
+            CSS_IMAGE_SET_CANDIDATE_RE.lastIndex = 0;
+            // eslint-disable-next-line no-cond-assign
+            while ((m = CSS_IMAGE_SET_CANDIDATE_RE.exec(args)) !== null) {
+              const raw = m[1] ?? m[2] ?? m[3] ?? m[4] ?? m[5] ?? '';
+              if (isExternalUrlValue(raw)) {
+                hasExternal = true;
+                break;
+              }
+            }
+            return hasExternal ? 'none' : match;
+          });
+          if (cleaned !== value) el.setAttribute('style', cleaned);
         }
       });
     });

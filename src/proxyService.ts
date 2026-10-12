@@ -331,13 +331,54 @@ function parseMacScutil(): ProxyInfo | null {
 
 /* ============================ Windows (Registry only) ============================ */
 
+// asgard-0004 (2026-10-10 re-scan): regExeCandidates() used to keep any
+// candidate for which fs.existsSync(p) was true — existence only, not
+// identity. An actor who can influence process.env.SystemRoot AND place a
+// file at the resulting path could get spawnSync to execute an attacker
+// binary (CWE-426/427). Harden the same way keychainFindInternetPassword
+// already does on macOS: resolve the real path with fs.realpathSync and
+// require it to land inside a hardcoded, attacker-uninfluenced trusted root
+// (the real C:\Windows, discovered independently via GetWindowsDirectory-
+// equivalent env candidates and known-fixed fallback), not just under
+// whatever SystemRoot happens to say right now.
+//
+// asgard-0001 (2026-10-12 re-scan): the previous version of this guard
+// pushed fs.realpathSync(process.env.SystemRoot) into candidateRoots, which
+// made the "trusted root" set itself derived from the attacker-controlled
+// env var — defeating the whole point. If SystemRoot pointed at an
+// attacker-writable directory, realpathSync would resolve it to that same
+// directory, the containment check would trivially pass, and a planted
+// System32\reg.exe would be accepted. Do NOT widen the trusted-root set with
+// SystemRoot at all; only ever trust the hardcoded, literal Windows system
+// directories below. This still finds the real reg.exe on every standard
+// Windows install (the system drive is always C: in practice for this
+// check), and correctly refuses a SystemRoot pointed anywhere else.
+const TRUSTED_WINDOWS_ROOTS = ['C:\\Windows', 'C:\\WINDOWS', 'c:\\windows'];
+
+function isUnderTrustedWindowsRoot(realPath: string): boolean {
+  const lower = realPath.toLowerCase();
+  return TRUSTED_WINDOWS_ROOTS.some(root => lower.startsWith(`${root.toLowerCase()}\\`));
+}
+
 function regExeCandidates(): string[] {
   const root = process.env.SystemRoot || 'C:\\Windows';
   const sys32 = path.join(root, 'System32', 'reg.exe');
   const syswow64 = path.join(root, 'SysWOW64', 'reg.exe');
   const sysnative = path.join(root, 'Sysnative', 'reg.exe'); // for 32-bit node on 64-bit OS
   const set = new Set([sysnative, sys32, syswow64]);
-  return [...set].filter(p => p && fs.existsSync(p));
+  return [...set].filter(p => {
+    if (!p || !fs.existsSync(p)) return false;
+    try {
+      const real = fs.realpathSync(p);
+      // Must resolve to a file literally named reg.exe (case-insensitive) —
+      // guards against a symlink/junction swapping the binary — and must
+      // live under a trusted, hardcoded Windows system directory (never
+      // widened by SystemRoot — see asgard-0001 note above).
+      return path.basename(real).toLowerCase() === 'reg.exe' && isUnderTrustedWindowsRoot(real);
+    } catch {
+      return false;
+    }
+  });
 }
 function execReg(args: string[]): string | null {
   for (const exe of regExeCandidates()) {
@@ -345,11 +386,19 @@ function execReg(args: string[]): string | null {
       encoding: 'utf8',
       windowsHide: true,
       shell: false,
+      // asgard-0004: minimal sanitized env, same rationale as the macOS
+      // keychain spawn — don't let proxy/env vars influence reg.exe's own
+      // behavior (e.g. via *_proxy affecting some reg.exe plugin/shim).
+      env: {
+        PATH: 'C:\\Windows\\System32;C:\\Windows',
+        SystemRoot: process.env.SystemRoot || 'C:\\Windows',
+      } as NodeJS.ProcessEnv,
     });
     if (!out.error && out.stdout) return out.stdout;
   }
   return null;
 }
+
 
 type WinVals = {
   ProxyEnable?: string;
