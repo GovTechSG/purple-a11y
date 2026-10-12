@@ -1627,8 +1627,15 @@ export const getLinksFromSitemap = async (
   };
 
   const processNonStandardSitemap = (data: string) => {
+    // Match a URL anywhere on a line (not just when the whole line is the
+    // URL). The previous regex anchored to the full line (^...$), so a URL
+    // embedded inside markup — e.g. `<url>https://example.com/a</url>` or
+    // `<link href='https://example.com/b' />` — never matched, since the
+    // line also contains the surrounding tag/attribute text. Stop at
+    // whitespace or common XML/HTML delimiters so the match doesn't swallow
+    // a trailing closing tag or quote.
     const urlsFromData = crawlee
-      .extractUrls({ string: data, urlRegExp: new RegExp('^(http|https):/{2}.+$', 'gmi') });
+      .extractUrls({ string: data, urlRegExp: new RegExp('(?:http|https)://[^\\s"\'<>]+', 'gi') });
     urlsFromData.forEach(url => {
       addToUrlList(url);
     });
