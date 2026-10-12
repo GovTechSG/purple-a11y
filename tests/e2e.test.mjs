@@ -33,7 +33,6 @@ const runCli = (args, env = {}) =>
         PATH: `${extraPath}${path.delimiter}${process.env.PATH}`,
         ...(hasVera && { JAVA_HOME: path.join(backend, 'jre') }),
         OOBEE_DISABLE_TELEMETRY: '1',
-        DISABLE_OOBEE_TELEMETRY: '1',
         ...env,
       },
     });
