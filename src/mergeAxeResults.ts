@@ -249,19 +249,28 @@ const writeHTML = async (
     (async () => {
       try {
         const featuresUrl = proxyUrl + '/api/ai/features';
-        const response = await fetch(featuresUrl, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' }
-        });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        let response;
+        try {
+          response = await fetch(featuresUrl, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            signal: controller.signal
+          });
+        } finally {
+          clearTimeout(timeoutId);
+        }
         if (response.ok) {
           const features = await response.json();
           window.oobeeGenAiFeatureEnabled = features.genai_ui_enabled || false;
           console.log('GenAI UI feature flag:', window.oobeeGenAiFeatureEnabled);
         } else {
-          console.warn('Failed to fetch GenAI feature flag:', response.status);
+          console.info('GenAI feature flag unavailable (HTTP ' + response.status + '); GenAI features disabled.');
         }
       } catch (error) {
-        console.warn('Error fetching GenAI feature flag:', error);
+        // Backend unreachable (offline, CORS, blocked): keep GenAI disabled without noisy errors.
+        console.info('GenAI feature flag backend unreachable; GenAI features disabled.');
       }
     })();
   } else {
