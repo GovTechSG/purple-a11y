@@ -291,18 +291,13 @@ export const basicAuthRegex = /^.*\/\/.*:.*@.*$/i;
 export const axeScript = require.resolve('axe-core/axe.min.js');
 export class UrlsCrawled {
   siteName: string;
-  toScan: string[] = [];
   scanned: PageInfo[] = [];
   invalid: PageInfo[] = [];
   scannedRedirects: { fromUrl: string; toUrl: string }[] = [];
   notScannedRedirects: { fromUrl: string; toUrl: string }[] = [];
-  outOfDomain: PageInfo[] = [];
-  blacklisted: PageInfo[] = [];
   error: PageInfo[] = [];
-  exceededRequests: PageInfo[] = [];
   forbidden: PageInfo[] = [];
   userExcluded: PageInfo[] = [];
-  everything: string[] = [];
 
   constructor(urlsCrawled?: Partial<UrlsCrawled>) {
     if (urlsCrawled) {
@@ -1090,6 +1085,7 @@ export const STATUS_CODE_METADATA: Record<number, string> = {
   1: 'Not A Supported Document',
   2: 'Web Crawler Errored',
   3: 'Blocked by Safe Browsing',
+  4: 'Blocked by robots.txt',
 
   // 599 is set because Crawlee returns response status 100, 102, 103 as 599
   599: 'Uncommon Response Status Code Received',
