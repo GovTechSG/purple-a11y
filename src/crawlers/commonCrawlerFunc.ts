@@ -6,6 +6,8 @@ import {
   disallowedListOfPatterns,
   guiInfoStatusTypes,
   RuleFlags,
+  STATUS_CODE_METADATA,
+  UrlsCrawled,
   saflyIconSelector,
 } from '../constants/constants.js';
 import { consoleLogger, guiInfoLog, silentLogger } from '../logs.js';
@@ -2029,4 +2031,21 @@ export const shouldSkipDueToUnsupportedContent = (
   }
 
   return false;
+};
+
+// Records a URL the crawler deliberately did not scan so it appears in the unscanned-pages report.
+export const recordUserExcluded = (
+  urlsCrawled: UrlsCrawled,
+  url: string,
+  statusCode: number,
+  actualUrl: string = url,
+): void => {
+  if (urlsCrawled.userExcluded.some(item => item.url === url)) return;
+  urlsCrawled.userExcluded.push({
+    url,
+    pageTitle: url,
+    actualUrl,
+    metadata: STATUS_CODE_METADATA[statusCode],
+    httpStatusCode: statusCode === 4 ? 0 : statusCode,
+  });
 };

@@ -15,6 +15,7 @@ import {
   addScopedHeaderRoute,
   getOperatorHeaderScope,
   hasCredentialHeaders,
+  recordUserExcluded,
 } from './commonCrawlerFunc.js';
 import constants, {
   UrlsCrawled,
@@ -417,7 +418,10 @@ const crawlDomain = async ({
           if (scannedUrlSet.has(normUrl(req.url))) {
             req.skipNavigation = true;
           }
-          if (isDisallowedInRobotsTxt(req.url)) return null;
+          if (isDisallowedInRobotsTxt(req.url)) {
+            recordUserExcluded(urlsCrawled, req.url, 4);
+            return null;
+          }
           if (isBlacklisted(req.url, blacklistedPatterns)) return null;
           if (isUrlPdf(req.url)) {
             // playwright headless mode does not support navigation to pdf document
@@ -697,6 +701,9 @@ const crawlDomain = async ({
           // to handle scenario where the redirected link is not within the scanning website
           const isLoadedUrlFollowStrategy = isFollowStrategy(finalUrl, requestLabelUrl, strategy);
           if (!isLoadedUrlFollowStrategy) {
+            // Crawlee can drop this request before requestHandler runs, so record it here.
+            urlsCrawled.notScannedRedirects.push({ fromUrl: requestLabelUrl, toUrl: finalUrl });
+            recordUserExcluded(urlsCrawled, requestLabelUrl, 0, finalUrl);
             finalUrl = requestLabelUrl;
           }
 
@@ -804,6 +811,7 @@ const crawlDomain = async ({
               numScanned: urlsCrawled.scanned.length,
               urlScanned: actualUrl,
             });
+            recordUserExcluded(urlsCrawled, request.url, isBlacklisted(actualUrl, blacklistedPatterns) ? 0 : 1, actualUrl);
             return;
           }
 
@@ -825,6 +833,7 @@ const crawlDomain = async ({
           }
 
           if (isDisallowedInRobotsTxt(request.url)) {
+            recordUserExcluded(urlsCrawled, request.url, 4);
             await enqueueProcess(page, enqueueLinks, browserContext);
             return;
           }
@@ -910,6 +919,13 @@ const crawlDomain = async ({
                 fromUrl: request.url,
                 toUrl: actualUrl, // i.e. actualUrl
               });
+              urlsCrawled.userExcluded.push({
+                url: request.url,
+                pageTitle: request.url,
+                actualUrl,
+                metadata: STATUS_CODE_METADATA[0],
+                httpStatusCode: 0,
+              });
               return;
             }
 
@@ -972,8 +988,10 @@ const crawlDomain = async ({
                   uniqueKey: `5xx_${request.url}`,
                   userData: { serverErrorRetried: true },
                 });
-              } catch {}
-              return;
+                return;
+              } catch {
+                // Re-enqueue failed: fall through so the URL is recorded below.
+              }
             }
 
             if (responseStatus && responseStatus >= 300) {
@@ -991,7 +1009,10 @@ const crawlDomain = async ({
               return;
             }
 
-            if (isAbortingScanNow || page.isClosed()) return;
+            if (isAbortingScanNow) return;
+            // A closed page mid-request is a failure, not a skip: throw so the
+            // request is retried/recorded instead of silently disappearing.
+            if (page.isClosed()) throw new Error(`Page closed before scan: ${request.url}`);
 
             const results = await runAxeScript({ includeScreenshots, page, randomToken, ruleset });
 
@@ -1030,6 +1051,13 @@ const crawlDomain = async ({
                 urlsCrawled.notScannedRedirects.push({
                   fromUrl: request.url,
                   toUrl: postScanUrl,
+                });
+                urlsCrawled.userExcluded.push({
+                  url: request.url,
+                  pageTitle: request.url,
+                  actualUrl: postScanUrl,
+                  metadata: STATUS_CODE_METADATA[0],
+                  httpStatusCode: 0,
                 });
                 return;
               }
@@ -1098,20 +1126,7 @@ const crawlDomain = async ({
               await dataset.pushData(results);
             }
           } else {
-            // Don't inform the user it is skipped since web crawler is best-effort.
-            /*
-          guiInfoLog(guiInfoStatusTypes.SKIPPED, {
-            numScanned: urlsCrawled.scanned.length,
-            urlScanned: request.url,
-          });
-          urlsCrawled.userExcluded.push({
-            url: request.url,
-            pageTitle: request.url,
-            actualUrl, // because about:blank is not useful
-            metadata: STATUS_CODE_METADATA[1],
-            httpStatusCode: 0,
-          });
-          */
+            recordUserExcluded(urlsCrawled, request.url, 0, actualUrl);
           }
 
           if (followRobots)
@@ -1176,10 +1191,16 @@ const crawlDomain = async ({
             }
           }
 
-          // Do not push to urlsCrawled.error here — Crawlee will retry the request
-          // (up to maxRequestRetries, default 3). If all retries are exhausted,
-          // failedRequestHandler will record the error. Pushing here causes
-          // duplicates and false positives for URLs that succeed on retry.
+          // Rethrow so Crawlee retries (up to maxRequestRetries) and, once
+          // retries are exhausted, failedRequestHandler records the URL as an
+          // error. Swallowing here made the request look successful, so the URL
+          // vanished from both scanned and unscanned lists. Skip the rethrow
+          // when the page was already recorded as scanned (avoids a duplicate
+          // scan on retry) or the crawl is aborting.
+          const alreadyScanned = urlsCrawled.scanned.some(item => item.url === request.url);
+          if (!isAbortingScanNow && !alreadyScanned) {
+            throw e;
+          }
         }
       },
       failedRequestHandler: async ({ request, response }) => {
@@ -1233,8 +1254,10 @@ const crawlDomain = async ({
               uniqueKey: `ratelimit_${request.url}`,
               userData: { rateLimitRetried: true },
             });
-          } catch {}
-          return;
+            return;
+          } catch {
+            // Re-enqueue failed: fall through so the URL is recorded as an error.
+          }
         }
 
         if (

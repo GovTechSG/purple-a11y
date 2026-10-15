@@ -1527,6 +1527,7 @@ export const getLinksFromSitemap = async (
   extraHTTPHeaders: Record<string, string>,
   strategy: EnqueueStrategy = EnqueueStrategy.All,
   userUrl: string = userUrlInput,
+  onRobotsDisallowed?: (url: string) => void,
 ) => {
   const scannedSitemaps = new Set<string>();
   const sitemapLinkCounts: Record<string, number> = {};

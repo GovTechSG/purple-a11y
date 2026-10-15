@@ -11,6 +11,7 @@ import {
   isUrlPdf,
   splitAuthHeaders,
   hasCredentialHeaders,
+  recordUserExcluded,
 } from './commonCrawlerFunc.js';
 
 import constants, {
@@ -139,6 +140,7 @@ const crawlSitemap = async ({
     extraHTTPHeaders,
     strategy,
     userUrl || sitemapUrl,
+    robotsUrl => recordUserExcluded(urlsCrawled, robotsUrl, 4),
   );
 
   sitemapUrl = encodeURI(sitemapUrl);
@@ -651,8 +653,10 @@ const crawlSitemap = async ({
                 uniqueKey: `5xx_${request.url}`,
                 userData: { serverErrorRetried: true },
               });
-            } catch {}
-            return;
+              return;
+            } catch {
+              // Re-enqueue failed: fall through so the URL is recorded below.
+            }
           }
 
           if (isScanHtml && status < 300 && isWhitelistedContentType(contentType)) {
@@ -691,6 +695,13 @@ const crawlSitemap = async ({
                 fromUrl: request.url,
                 toUrl: actualUrl,
               });
+              urlsCrawled.userExcluded.push({
+                url: request.url,
+                pageTitle: request.url,
+                actualUrl,
+                metadata: STATUS_CODE_METADATA[0],
+                httpStatusCode: 0,
+              });
               guiInfoLog(guiInfoStatusTypes.SKIPPED, {
                 numScanned: urlsCrawled.scanned.length,
                 urlScanned: request.url,
@@ -698,7 +709,10 @@ const crawlSitemap = async ({
               return;
             }
 
-            if (isAbortingScan || page.isClosed()) return;
+            if (isAbortingScan) return;
+            // A closed page mid-request is a failure, not a skip: throw so the
+            // request is retried/recorded instead of silently disappearing.
+            if (page.isClosed()) throw new Error(`Page closed before scan: ${request.url}`);
 
             const results = await runAxeScript({ includeScreenshots, page, randomToken, ruleset });
 
@@ -737,6 +751,13 @@ const crawlSitemap = async ({
                 urlsCrawled.notScannedRedirects.push({
                   fromUrl: request.url,
                   toUrl: postScanUrl,
+                });
+                urlsCrawled.userExcluded.push({
+                  url: request.url,
+                  pageTitle: request.url,
+                  actualUrl: postScanUrl,
+                  metadata: STATUS_CODE_METADATA[0],
+                  httpStatusCode: 0,
                 });
                 guiInfoLog(guiInfoStatusTypes.SKIPPED, {
                   numScanned: urlsCrawled.scanned.length,
@@ -790,7 +811,10 @@ const crawlSitemap = async ({
                       try {
                         req.url = req.url.replace(/(?<=&|\?)utm_.*?(&|$)/gim, '');
                       } catch {}
-                      if (isDisallowedInRobotsTxt(req.url)) return null;
+                      if (isDisallowedInRobotsTxt(req.url)) {
+                        recordUserExcluded(urlsCrawled, req.url, 4);
+                        return null;
+                      }
                       // Drop URLs already scanned in this or a previous phase —
                       // no point enqueuing them at all.
                       if (scannedUrlSet?.has(normUrl(req.url))) {
@@ -849,10 +873,17 @@ const crawlSitemap = async ({
             }
           }
         } catch (e) {
-          // Do not push to urlsCrawled.error here — Crawlee will retry the request
-          // (up to maxRequestRetries, default 3). If all retries are exhausted,
-          // failedRequestHandler will record the error. Pushing here causes
-          // duplicates and false positives for URLs that succeed on retry.
+          // Rethrow so Crawlee retries (up to maxRequestRetries) and, once
+          // retries are exhausted, failedRequestHandler records the URL as an
+          // error. Swallowing here made the request look successful, so the URL
+          // vanished from both scanned and unscanned lists. Skip the rethrow
+          // when the page was already recorded as scanned (avoids a duplicate
+          // scan on retry) or the crawl is aborting (failedRequestHandler
+          // ignores aborted requests anyway).
+          const alreadyScanned = urlsCrawled.scanned.some(item => item.url === request.url);
+          if (!isAbortingScan && !alreadyScanned) {
+            throw e;
+          }
         }
       },
       failedRequestHandler: async ({ request, response, error }) => {
@@ -905,8 +936,10 @@ const crawlSitemap = async ({
               uniqueKey: `ratelimit_${request.url}`,
               userData: { rateLimitRetried: true },
             });
-          } catch {}
-          return;
+            return;
+          } catch {
+            // Re-enqueue failed: fall through so the URL is recorded as an error.
+          }
         }
 
         if (

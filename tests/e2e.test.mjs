@@ -171,6 +171,56 @@ describe('e2e: local site crawls', () => {
     }
   });
 
+  test('website crawl: every linked page is scanned or listed as not scanned', async () => {
+    const links = ['ok1', 'missing', 'err500', 'robots-blocked', 'redirect'];
+    let port;
+    const srv = http.createServer((req, res) => {
+      if (req.url === '/robots.txt') {
+        res.writeHead(200, { 'content-type': 'text/plain' });
+        return res.end('User-agent: *\nDisallow: /robots-blocked.html\n');
+      }
+      if (req.url === '/index.html') {
+        res.writeHead(200, { 'content-type': 'text/html' });
+        const a = links.map(n => `<a href="/${n}.html">${n}</a>`).join(' ');
+        return res.end(`<html lang="en"><head><title>Index</title></head><body><main><h1>Index</h1>${a}</main></body></html>`);
+      }
+      if (req.url === '/missing.html') {
+        res.writeHead(404, { 'content-type': 'text/html' });
+        return res.end('<html><body>not found</body></html>');
+      }
+      if (req.url === '/err500.html') {
+        res.writeHead(500, { 'content-type': 'text/html' });
+        return res.end('<html><body>boom</body></html>');
+      }
+      // Different hostname: not a followed redirect, so the page is never scanned.
+      if (req.url === '/redirect.html') {
+        res.writeHead(302, { location: `http://localhost:${port}/ok1.html` });
+        return res.end();
+      }
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(`<html lang="en"><head><title>${req.url}</title></head><body><main><h1>x</h1><img src="/a.png"></main></body></html>`);
+    });
+    port = await listen(srv, '127.0.0.1');
+    try {
+      const { dir, log } = await runCli(['-c', '2', '-u', `http://127.0.0.1:${port}/index.html`, '-p', '20', '-r', 'yes']);
+      assert.ok(dir, `no results dir. log tail:\n${log.slice(-800)}`);
+      const detail = readJson(dir, 'scanPagesDetail.json');
+      const scanned = new Set(scannedUrls(dir));
+      const notScanned = new Set(detail.pagesNotScanned.map(p => p.url));
+      for (const n of links) {
+        const u = `http://127.0.0.1:${port}/${n}.html`;
+        assert.ok(scanned.has(u) || notScanned.has(u), `${u} vanished: not in scanned or pagesNotScanned`);
+      }
+      const base = `http://127.0.0.1:${port}`;
+      assert.ok(scanned.has(`${base}/ok1.html`));
+      assert.ok(notScanned.has(`${base}/missing.html`), '404 page must be listed as not scanned');
+      assert.ok(notScanned.has(`${base}/err500.html`), '500 page must be listed as not scanned');
+      assert.ok(notScanned.has(`${base}/robots-blocked.html`), 'robots.txt-disallowed page must be listed as not scanned');
+    } finally {
+      srv.close();
+    }
+  });
+
   test('cloud-metadata entry URL is refused without fetching', async () => {
     let hit = false;
     const fake = http.createServer((_, res) => {
