@@ -38,7 +38,6 @@ import {
   cleanUpAndExit,
   isFollowStrategy,
   isTelemetryDisabled,
-  isTelemetryPiiConsentGiven,
   randomThreeDigitNumberString,
   register,
 } from '../utils.js';
@@ -2729,14 +2728,6 @@ export const submitForm = async (
     consoleLogger.info('Skipping telemetry submission: OOBEE_DISABLE_TELEMETRY is set');
     return;
   }
-  // PII (operator-supplied email/name) is only sent when the operator has
-  // explicitly opted in via OOBEE_TELEMETRY_ALLOW_PII. Telemetry being
-  // enabled at all (i.e. OOBEE_DISABLE_TELEMETRY unset) does not, by itself,
-  // authorize sending identifying data off-device — this mirrors the gate
-  // already applied on the Sentry telemetry path in sentryTelemetry.ts
-  // (asgard-0004 / asgard-0008: this path previously sent email/name
-  // unconditionally, bypassing the PII consent gate).
-  const piiConsentGiven = isTelemetryPiiConsentGiven();
   try {
     const additionalPageDataJson = JSON.stringify({
       redirectsScanned: numberOfRedirectsScanned,
@@ -2750,8 +2741,8 @@ export const submitForm = async (
     const params = new URLSearchParams();
     params.set(formDataFields.entryUrlField, String(entryUrl ?? ''));
     params.set(formDataFields.scanTypeField, String(scanType ?? ''));
-    params.set(formDataFields.emailField, piiConsentGiven ? String(email ?? '') : '');
-    params.set(formDataFields.nameField, piiConsentGiven ? String(name ?? '') : '');
+    params.set(formDataFields.emailField, String(email ?? ''));
+    params.set(formDataFields.nameField, String(name ?? ''));
     params.set(formDataFields.resultsField, scanResultsJson);
     params.set(formDataFields.numberOfPagesScannedField, String(numberOfPagesScanned ?? 0));
     params.set(formDataFields.additionalPageDataField, additionalPageDataJson);

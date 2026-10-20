@@ -465,6 +465,7 @@ export const init = async ({
     isEnableWcagAaa: ruleset,
     isSlowScanMode: specifiedMaxConcurrency,
     isAdhereRobots: followRobots,
+    nameEmail: { name, email },
   };
 
   const urlsCrawled = { ...constants.urlsCrawledObj };

@@ -5,7 +5,6 @@ import {
   getUserDataTxt,
   getWcagCriteriaMap,
   isTelemetryDisabled,
-  isTelemetryPiiConsentGiven,
 } from '../utils.js';
 import { resolveInspectPresetScanEnabled } from '../inspectPresetScan.js';
 import { consoleLogger } from '../logs.js';
@@ -57,17 +56,12 @@ const sendWcagBreakdownToSentry = async (
     consoleLogger.info('Skipping Sentry telemetry submission: OOBEE_DISABLE_TELEMETRY is set');
     return;
   }
-  // PII (email, name, persistent userId) is only attached to telemetry when
-  // the operator has explicitly opted in via OOBEE_TELEMETRY_ALLOW_PII.
-  // Telemetry being enabled at all does not, by itself, authorize sending
-  // identifying data off-device.
-  const piiConsentGiven = isTelemetryPiiConsentGiven();
   try {
     // Initialize Sentry
     Sentry.init(sentryConfig);
-    // Set user ID for Sentry tracking, only when PII consent has been given
-    const userData = piiConsentGiven ? getUserDataTxt() : undefined;
-    if (piiConsentGiven && userData && userData.userId) {
+    // Set user ID for Sentry tracking
+    const userData = getUserDataTxt();
+    if (userData && userData.userId) {
       setSentryUser(userData.userId);
     }
 
@@ -186,13 +180,13 @@ const sendWcagBreakdownToSentry = async (
         }),
       },
       user: {
-        ...(piiConsentGiven && scanInfo.email && scanInfo.name
+        ...(scanInfo.email && scanInfo.name
           ? {
               email: scanInfo.email,
               username: scanInfo.name,
             }
           : {}),
-        ...(piiConsentGiven && userData && userData.userId ? { id: userData.userId } : {}),
+        ...(userData && userData.userId ? { id: userData.userId } : {}),
       },
       extra: {
         additionalScanMetadata: ruleIdJson != null ? JSON.stringify(ruleIdJson) : '{}',
