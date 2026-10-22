@@ -26,11 +26,17 @@ jobs:
       - name: Build and run Docker container
         run: |
           # Build your Docker image (replace 'oobee' and 'Dockerfile' with your image name and Dockerfile path)
-          docker build -t oobee .
+          docker build --progress=plain -t oobee .
           # Run the Docker container (adjust any options as needed)
           docker run -dit --name oobee-container oobee
         # Ensure the Docker container is running before running the next step
         continue-on-error: true
+
+      - name: Check Node TLS trust of eMudhra test site inside the container
+        if: always()
+        run: |
+          docker exec oobee-container node -v
+          docker exec oobee-container node -e "require('https').get('https://dv-g3b-aaa-emudhra.we-have-a-problem.com/',()=>console.log('STILL TRUSTED')).on('error',e=>console.log('blocked: '+e.code))"
 
       - name: Run Node CLI command inside the Docker container
         # asgard-0014: pass GitHub Actions context values through the env block

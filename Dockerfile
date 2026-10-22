@@ -1,5 +1,6 @@
 # Use Microsoft Playwright image as base image
-# Node version is v22
+# Keep this tag in sync with the `playwright` version in package.json.
+# The image installs Node 24 from NodeSource apt; it is upgraded in place below.
 FROM mcr.microsoft.com/playwright:v1.61.1-noble
 
 
@@ -9,6 +10,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     zip \
     && rm -rf /var/lib/apt/lists/*
+
+# Upgrade the image's own nodejs package to the October 2026 security release
+# (drops the compromised eMudhra intermediate CA). Uses the image's signed
+# NodeSource repo, so /usr/bin/node itself is replaced, not shadowed on PATH.
+# Remove once a Playwright image built after 2026-10-21 ships >= this version.
+ARG NODEJS_DEB_VERSION=24.22.1-1nodesource1
+RUN set -e; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends --allow-downgrades "nodejs=${NODEJS_DEB_VERSION}"; \
+    apt-mark hold nodejs; \
+    rm -rf /var/lib/apt/lists/*; \
+    EXPECTED="v${NODEJS_DEB_VERSION%%-*}"; \
+    for n in $(which -a node); do \
+      echo "$n -> $($n -v)"; \
+      [ "$($n -v)" = "$EXPECTED" ] || { echo "ERROR: $n is $($n -v), expected $EXPECTED"; exit 1; }; \
+    done; \
+    echo "Node $(node -v), npm $(npm -v)"
 
 # =============================================================================
 # Google Chrome installation for Safe Browsing support
@@ -87,3 +105,6 @@ RUN ARCH="$(dpkg --print-architecture)"; \
     else \
       echo "NOTICE: Skipping Safe Browsing warmup (unsupported architecture: $ARCH)"; \
     fi
+
+# Prints "blocked: ..." if Node rejects the eMudhra test site's certificate chain.
+RUN node -e "require('https').get('https://dv-g3b-aaa-emudhra.we-have-a-problem.com/',()=>console.log('STILL TRUSTED')).on('error',e=>console.log('blocked: '+e.code))"
