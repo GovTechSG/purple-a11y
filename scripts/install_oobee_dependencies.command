@@ -2,7 +2,7 @@
 
 set -e
 
-NODE_VERSION="22.19.0"
+NODE_VERSION="24.22.1"
 
 # --- Security: SHA-256 verification for every downloaded artifact ---
 #
@@ -26,8 +26,8 @@ NODE_VERSION="22.19.0"
 #     corruption; sidecar and archive are fetched over TLS from the same
 #     origin, so this is TLS-level integrity, not signature verification.
 
-NODE_SHA256_DARWIN_ARM64="c59006db713c770d6ec63ae16cb3edc11f49ee093b5c415d667bb4f436c6526d"
-NODE_SHA256_DARWIN_X64="3cfed4795cd97277559763c5f56e711852d2cc2420bda1cea30c8aa9ac77ce0c" # guardrails-disable-line
+NODE_SHA256_DARWIN_ARM64="89c682593d76cd44233fa53b1563264e7de9cbb189cad169135c5b4fadfbc0a7"
+NODE_SHA256_DARWIN_X64="d132557e7ee2b85af08b0c8c34338e65c6430f2238d01f727728ef42dc83b035" # guardrails-disable-line
 VERAPDF_SHA256="b6c50ab65d574bff0cbc0449ffacf587e325a3a53f8a6ecc0d578966abc800ec"
 
 # Pin Corretto to a specific version + SHA-256 verified out-of-band by an oobee
