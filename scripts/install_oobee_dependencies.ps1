@@ -14,8 +14,8 @@ $ErrorActionPreference = 'Stop'
 # arrived. Every download below is now paired with an SHA-256 check
 # that terminates the script on mismatch.
 
-$NodeVersion = "22.19.0"
-$NodeSha256WinX64 = "ea3fad0e67a991d8477d8c01344b56e69c676ccb733f065b22436994b1253f86" # guardrails-disable-line
+$NodeVersion = "24.22.1"
+$NodeSha256WinX64 = "d2046d28c2c3dcd211ac5145c0bf30e2047ef9dfb306693c8c6e2eccd8b95fa5" # guardrails-disable-line
 $VeraPdfSha256   = "b6c50ab65d574bff0cbc0449ffacf587e325a3a53f8a6ecc0d578966abc800ec" # guardrails-disable-line
 
 # Pin Corretto to a versioned URL + maintainer-verified SHA-256 (asgard-0005).
