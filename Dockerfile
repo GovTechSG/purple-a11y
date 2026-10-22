@@ -105,6 +105,3 @@ RUN ARCH="$(dpkg --print-architecture)"; \
     else \
       echo "NOTICE: Skipping Safe Browsing warmup (unsupported architecture: $ARCH)"; \
     fi
-
-# Prints "blocked: ..." if Node rejects the eMudhra test site's certificate chain.
-RUN node -e "require('https').get('https://dv-g3b-aaa-emudhra.we-have-a-problem.com/',()=>console.log('STILL TRUSTED')).on('error',e=>console.log('blocked: '+e.code))"
