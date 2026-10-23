@@ -99,12 +99,19 @@ async function crawl(config) {
 }
 
 for (const extension of ['xml', 'txt']) {
-  test(`local ${extension} sitemap follows a sibling-host redirect by default`, async () => {
-    const result = await crawl({ url: proxy, destination, extension });
+  test(`local ${extension} sitemap follows a sibling-host redirect with same-domain`, async () => {
+    const result = await crawl({ url: proxy, destination, extension, strategy: 'same-domain' });
     assert.equal(result.scanned.length, 1, JSON.stringify(result));
     assert.equal(result.scanned[0].url, proxy);
     assert.equal(result.scanned[0].actualUrl, destination);
     assert.equal(result.scanned[0].pageTitle, 'Redirect destination');
+  });
+
+  test(`local ${extension} sitemap preserves same-hostname redirects by default`, async () => {
+    const result = await crawl({ url: proxy, destination, extension });
+    assert.equal(result.scanned.length, 0);
+    assert.deepEqual(result.notScannedRedirects, [{ fromUrl: proxy, toUrl: destination }]);
+    assert.ok(result.userExcluded.some(p => p.url === proxy && p.actualUrl === destination));
   });
 }
 
@@ -115,9 +122,9 @@ test('same-hostname excludes a sibling-host redirect', async () => {
   assert.ok(result.userExcluded.some(p => p.url === proxy && p.actualUrl === destination));
 });
 
-test('default scope still excludes a redirect to another parent domain', async () => {
+test('same-domain still excludes a redirect to another parent domain', async () => {
   const target = 'https://unrelated.test/page';
-  const result = await crawl({ url: proxy, destination: target });
+  const result = await crawl({ url: proxy, destination: target, strategy: 'same-domain' });
   assert.equal(result.scanned.length, 0);
   assert.deepEqual(result.notScannedRedirects, [{ fromUrl: proxy, toUrl: target }]);
 });
@@ -131,10 +138,10 @@ test('shared sitemap crawler retains its same-hostname redirect default', async 
 const liveUrls = JSON.parse(process.env.OOBEE_REDIRECT_TEST_URLS || '[]');
 test('live proxy URLs follow sibling-host redirects', { skip: !liveUrls.length }, async () => {
   for (const url of liveUrls) {
-    const result = await crawl({ url, live: true });
+    const result = await crawl({ url, live: true, strategy: 'same-domain' });
     assert.equal(result.scanned.length, 1, JSON.stringify(result));
     assert.notEqual(new URL(result.scanned[0].actualUrl).hostname, new URL(url).hostname);
-    const strict = await crawl({ url, live: true, strategy: 'same-hostname' });
+    const strict = await crawl({ url, live: true });
     assert.equal(strict.scanned.length, 0);
     assert.ok(strict.notScannedRedirects.some(p => p.fromUrl === url));
   }

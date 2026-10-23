@@ -38,7 +38,7 @@ export const crawlLocalFile = async ({
   blacklistedPatterns,
   includeScreenshots,
   extraHTTPHeaders,
-  strategy = EnqueueStrategy.SameDomain,
+  strategy = EnqueueStrategy.SameHostname,
   scanDuration = 0,
   ruleset = [],
   fromCrawlIntelligentSitemap = false,
@@ -132,8 +132,8 @@ export const crawlLocalFile = async ({
       datasetFromIntelligent,
       urlsCrawledFromIntelligent,
       crawledFromLocalFile: true,
-      // Local sitemaps have no entry hostname; scope redirects to each queued
-      // URL's parent domain by default, including proxy-to-site redirects.
+      // Preserve the legacy hostname restriction unless the caller explicitly
+      // opts into same-domain redirects, such as proxy-to-site redirects.
       redirectStrategy: strategy,
       ruleset,
     });

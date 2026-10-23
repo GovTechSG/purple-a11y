@@ -226,7 +226,9 @@ Usage: npm run cli -- -c <crawler> -d <device> -w <viewport> -u <url> OPTIONS`,
   .parse() as unknown as Answers;
 
 if (!options.strategy) {
-  options.strategy = options.scanner === ScannerTypes.SITEMAP ? 'ignore' : 'same-domain';
+  options.strategy = options.scanner === ScannerTypes.SITEMAP ? 'ignore'
+    : options.scanner === ScannerTypes.LOCALFILE ? 'same-hostname'
+    : 'same-domain';
 }
 
 if (options.websiteTag) {
