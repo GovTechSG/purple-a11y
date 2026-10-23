@@ -1,4 +1,4 @@
-import { Request, RequestList, Dataset } from 'crawlee';
+import { Request, RequestList, Dataset, EnqueueStrategy } from 'crawlee';
 import fs from 'fs';
 import path from 'path';
 import { createCrawleeSubFolders, runAxeScript, isUrlPdf } from './commonCrawlerFunc.js';
@@ -38,6 +38,7 @@ export const crawlLocalFile = async ({
   blacklistedPatterns,
   includeScreenshots,
   extraHTTPHeaders,
+  strategy = EnqueueStrategy.SameDomain,
   scanDuration = 0,
   ruleset = [],
   fromCrawlIntelligentSitemap = false,
@@ -57,6 +58,7 @@ export const crawlLocalFile = async ({
   blacklistedPatterns: string[];
   includeScreenshots: boolean;
   extraHTTPHeaders: Record<string, string>;
+  strategy?: EnqueueStrategy;
   scanDuration?: number;
   ruleset?: RuleFlags[];
   fromCrawlIntelligentSitemap?: boolean;
@@ -130,6 +132,9 @@ export const crawlLocalFile = async ({
       datasetFromIntelligent,
       urlsCrawledFromIntelligent,
       crawledFromLocalFile: true,
+      // Local sitemaps have no entry hostname; scope redirects to each queued
+      // URL's parent domain by default, including proxy-to-site redirects.
+      redirectStrategy: strategy,
       ruleset,
     });
 
